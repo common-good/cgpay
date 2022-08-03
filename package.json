@@ -1,0 +1,10 @@
+{
+  "name": "@common-good/cg-pay-pwa",
+  "type": "module",
+  "scripts": {
+    "postinstall": "lerna bootstrap"
+  },
+  "devDependencies": {
+    "lerna": "^5.2.0"
+  }
+}
