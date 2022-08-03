@@ -43,8 +43,8 @@ describe('preferences.store', () => {
     it('logs the time that the user skipped the home screen prompt', async () => {
       const preferencesStore = createPreferencesStore()
 
+      vi.useFakeTimers()
       const now = new Date()
-      vi.useFakeTimers(now)
 
       preferencesStore.skipHomeScreenPrompt()
 

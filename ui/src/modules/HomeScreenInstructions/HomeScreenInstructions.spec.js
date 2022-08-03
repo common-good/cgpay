@@ -75,4 +75,16 @@ describe('HomeScreenInstructions', () => {
       })
     })
   })
+
+  describe('on a device other than Apple or Android', () => {
+    it.skip('redirects to payment collection', () => {
+      // TODO: SPIKE
+    })
+  })
+
+  describe('when the home screen prompt has been skipped previously', () => {
+    it.skip('redirects to payment collection', () => {
+      // TODO: SPIKE
+    })
+  })
 })

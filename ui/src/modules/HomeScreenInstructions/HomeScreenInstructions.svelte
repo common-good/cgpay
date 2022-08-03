@@ -1,5 +1,6 @@
 <script>
   import { navigateTo } from 'svelte-router-spa'
+  import { onMount } from 'svelte'
 
   import AndroidInstructions from './AndroidInstructions/AndroidInstructions.svelte'
   import AppleInstructions from './AppleInstructions/AppleInstructions.svelte'
@@ -15,8 +16,19 @@
 
   function skip() {
     preferencesStore.skipHomeScreenPrompt()
-    navigateTo('/')
+    navigateTo('/pay')
   }
+
+  // --------------------------------------------
+
+  onMount(() => {
+    const hasDismissedPrompt = $preferencesStore.homeScreenPrompt.skipped
+    const onMobileDevice = onAndroidDevice || onAppleDevice
+
+    if (!onMobileDevice || hasDismissedPrompt) {
+      navigateTo('/pay')
+    }
+  })
 </script>
 
 <svelte:head>
