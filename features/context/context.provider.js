@@ -6,15 +6,6 @@ export default createContext({
   environment: process.env,
 
   configuration: {
-    mode: '[mode]',
-
-    devServer: {
-      ports: {
-        _default: 3000,
-        testing: '[cg_pay_ui_port]'
-      }
-    },
-
     membersApi: {
       location: 'https://members.cg4.us'
     }

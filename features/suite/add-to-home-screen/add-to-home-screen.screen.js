@@ -1,7 +1,7 @@
 export default (page) => {
   return {
     async visit() {
-      await page.goto('/home-screen-instructions')
+      await page.goto('/add-to-home-screen')
     },
 
     async skipHomeScreenPrompt() {
@@ -12,7 +12,7 @@ export default (page) => {
       const elements = {
         androidInstructions: '#android-instructions',
         appleInstructions: '#apple-instructions',
-        root: '#home-screen-instructions',
+        root: '#add-to-home-screen',
         skip: 'button'
       }
 

@@ -1,23 +1,16 @@
 <script>
   import { navigateTo } from 'svelte-router-spa'
 
+  import store from '#app.store.js'
+
   import AndroidInstructions from './AndroidInstructions/AndroidInstructions.svelte'
   import AppleInstructions from './AppleInstructions/AppleInstructions.svelte'
-  import preferencesStore from '../Preferences/preferences.store.js'
-
-  import cgLogo from './assets/cg-logo-300.png'
-
-  // --------------------------------------------
-
-  const { userAgent } = window.navigator
-  const onAndroidDevice = /Android/i.test(userAgent)
-  const onAppleDevice = /iPhone|iPod|iPad/i.test(userAgent)
 
   // --------------------------------------------
 
   function skip() {
-    preferencesStore.skipHomeScreenPrompt()
-    navigateTo('/')
+    store.homeScreen.skip()
+    navigateTo('/pay')
   }
 </script>
 
@@ -25,16 +18,13 @@
   <title>CG Pay - Add to Home Screen</title>
 </svelte:head>
 
-<section id='home-screen-instructions'>
-  <div class="wrapper">
-    <img src= { cgLogo } alt="Common Good logo" />
-    <h1>Add to Home Screen</h1>
-    
-    { #if onAppleDevice }
+<section id='add-to-home-screen'>
+  <div class='wrapper'>
+    { #if $store.deviceType === 'Apple' }
       <AppleInstructions { skip } />
     { /if }
 
-    { #if onAndroidDevice }
+    { #if $store.deviceType === 'Android' }
       <AndroidInstructions { skip } />
     { /if }
   </div>
@@ -45,7 +35,7 @@
     text(lg)
     font-weight bold
     margin 0 0 $s2
-  
+
   img
     margin 0 0 $s2
     width 6rem

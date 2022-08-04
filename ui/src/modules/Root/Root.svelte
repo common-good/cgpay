@@ -1,36 +1,89 @@
 <script>
+  import queryString from 'query-string'
   import { Router } from 'svelte-router-spa'
+  import { onMount } from 'svelte'
 
-  import preferencesStore from '../Preferences/preferences.store.js'
+  import store from '#app.store.js'
 
-  import HomeScreenInstructions from '../HomeScreenInstructions/HomeScreenInstructions.svelte'
-  import Pay from '../Pay/Pay.svelte'
+  import AddToHomeScreen from '#modules/AddToHomeScreen/AddToHomeScreen.svelte'
+  import Pay from '#modules/Pay/Pay.svelte'
+  import SignIn from '#modules/Account/SignIn/SignIn.svelte'
 
   // --------------------------------------------
+  // Initialization Helpers
 
-  function promptConsidered() {
-    const hasDismissedPrompt = $preferencesStore.homeScreenPrompt.skipped
-    const onMobileDevice = /Android|iPhone|iPod|iPad/i.test(window.navigator.userAgent)
+  async function validateToken() {
+    if (store.auth.isAuthenticated()) {
+      const query = queryString.stringify({ token: $store.auth.token })
+      const response = await fetch(`${ __membersApi__ }/accounts?${ query }`)
 
-    return !onMobileDevice || hasDismissedPrompt
+      try {
+        if (!response.ok) {
+          store.auth.signOut()
+        }
+
+        if (response.ok) {
+          const { account, token } = await response.json()
+          store.auth.signIn({ account, token })
+        }
+      }
+
+      catch (error) {
+        // TODO: Handle and test no server access.
+        console.error(error)
+      }
+    }
   }
 
   // --------------------------------------------
+  // Initialization
+
+  onMount(async () => {
+    await validateToken()
+  })
+
+  // --------------------------------------------
+  // Route Guards
+
+  function promptRequired() {
+    const hasNotSkippedPrompt = $store.homeScreen.skipped === false
+    const onMobileDevice = [ 'Apple', 'Android' ].includes($store.deviceType)
+
+    return onMobileDevice && hasNotSkippedPrompt
+  }
+
+  // --------------------------------------------
+  // Routes
 
   const routes = [
     {
       name: '/',
-      component: Pay,
+      component: AddToHomeScreen,
 
       onlyIf: {
-        guard: promptConsidered,
-        redirect: '/home-screen-instructions'
+        guard: promptRequired,
+        redirect: '/pay'
       }
     },
 
     {
-      name: '/home-screen-instructions',
-      component: HomeScreenInstructions
+      name: '/pay',
+      component: Pay,
+
+      onlyIf: {
+        guard: store.auth.isAuthenticated,
+        redirect: '/sign-in'
+      }
+    },
+
+    {
+      name: '/sign-in',
+      component: SignIn,
+
+      onlyIf: {
+        guard: store.auth.isNotAuthenticated,
+        redirect: '/pay'
+      }
     }
   ]
 </script>

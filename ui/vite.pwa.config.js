@@ -13,7 +13,7 @@ const icons = iconSizes.map(size => ({
 
 export default {
   devOptions: {
-    enabled: true
+    enabled: false
   },
 
   manifest: {
