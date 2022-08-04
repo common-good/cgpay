@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test'
 
-import appContext from '../context/context.provider.js'
-import createPayScreen from './pay.screen.js'
-import createSignInScreen from './sign-in.screen.js'
+import appContext from '../../context/context.provider.js'
+import createPayScreen from '../pay/pay.screen.js'
+import createSignInScreen from '../sign-in/sign-in.screen.js'
 
 // --------------------------------------------
 // As a vendor,
@@ -10,7 +10,7 @@ import createSignInScreen from './sign-in.screen.js'
 // so that I can subsequently link the app to a business account
 // and use it to charge customers.
 
-test.only('I can sign in with my personal CG account.', async ({ browser, context, page }) => {
+test('I can sign in with my personal CG account.', async ({ browser, context, page }) => {
   // --------------------------------------------
   // Set up mock API endpoints.
 

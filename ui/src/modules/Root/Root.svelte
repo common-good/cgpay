@@ -1,46 +1,69 @@
 <script>
   import queryString from 'query-string'
-  import { Router, navigateTo } from 'svelte-router-spa'
+  import { Router } from 'svelte-router-spa'
   import { onMount } from 'svelte'
 
-  import accountStore from '../Account/account.store.js'
+  import store from '#app.store.js'
 
-  import HomeScreenInstructions from '../HomeScreenInstructions/HomeScreenInstructions.svelte'
-  import Pay from '../Pay/Pay.svelte'
-  import SignIn from '../Account/SignIn/SignIn.svelte'
+  import AddToHomeScreen from '#modules/AddToHomeScreen/AddToHomeScreen.svelte'
+  import Pay from '#modules/Pay/Pay.svelte'
+  import SignIn from '#modules/Account/SignIn/SignIn.svelte'
 
   // --------------------------------------------
-
-  async function authenticated() {
-    return $accountStore.account.token !== null
-  }
+  // Initialization Helpers
 
   async function validateToken() {
-    const token = $accountStore.account?.token
-
-    if (token !== null) {
-      const response = await fetch(`${ __membersApi__ }/accounts?${ queryString.stringify({ token }) }`)
+    if (store.auth.isAuthenticated()) {
+      const query = queryString.stringify({ token: $store.auth.token })
+      const response = await fetch(`${ __membersApi__ }/accounts?${ query }`)
 
       try {
         if (!response.ok) {
-          accountStore.clear()
-          navigateTo('/')
+          store.auth.signOut()
+        }
+
+        if (response.ok) {
+          const { account, token } = await response.json()
+          store.auth.signIn({ account, token })
         }
       }
 
       catch (error) {
-        // Handle no server access.
-        console.log(error)
+        // TODO: Handle and test no server access.
+        console.error(error)
       }
     }
   }
 
   // --------------------------------------------
+  // Initialization
+
+  onMount(async () => {
+    await validateToken()
+  })
+
+  // --------------------------------------------
+  // Route Guards
+
+  function promptRequired() {
+    const hasNotSkippedPrompt = $store.homeScreen.skipped === false
+    const onMobileDevice = [ 'Apple', 'Android' ].includes($store.deviceType)
+
+    return onMobileDevice && hasNotSkippedPrompt
+  }
+
+  // --------------------------------------------
+  // Routes
 
   const routes = [
     {
       name: '/',
-      component: HomeScreenInstructions,
+      component: AddToHomeScreen,
+
+      onlyIf: {
+        guard: promptRequired,
+        redirect: '/pay'
+      }
     },
 
     {
@@ -48,20 +71,21 @@
       component: Pay,
 
       onlyIf: {
-        guard: authenticated,
+        guard: store.auth.isAuthenticated,
         redirect: '/sign-in'
       }
     },
 
     {
       name: '/sign-in',
-      component: SignIn
+      component: SignIn,
+
+      onlyIf: {
+        guard: store.auth.isNotAuthenticated,
+        redirect: '/pay'
+      }
     }
   ]
-
-  // --------------------------------------------
-
-  onMount(validateToken)
 </script>
 
 <Router { routes } />

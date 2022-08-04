@@ -1,3 +1,4 @@
+import to from '@jrh/to'
 import { VitePWA } from 'vite-plugin-pwa'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
 
@@ -16,6 +17,13 @@ export default {
     svelte(),
     VitePWA(pwaConfig)
   ],
+
+  resolve: {
+    alias: {
+      '#app.store.js': to('./src/app.store.js', import.meta.url),
+      '#modules': to('./src/modules', import.meta.url)
+    }
+  },
 
   server: {
     port: context('devServer.port')

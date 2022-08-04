@@ -11,6 +11,7 @@
   },
   "devDependencies": {
     "@jrh/adapt": "^5.5.0",
+    "@jrh/to": "^1.0.0",
     "@sveltejs/vite-plugin-svelte": "^1.0.1",
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/svelte": "^3.1.3",

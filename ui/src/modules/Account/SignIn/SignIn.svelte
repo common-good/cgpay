@@ -2,7 +2,7 @@
   import queryString from 'query-string'
   import { navigateTo } from 'svelte-router-spa'
 
-  import accountStore from '../account.store.js'
+  import store from '#app.store.js'
 
   // --------------------------------------------
 
@@ -17,11 +17,13 @@
 
   async function signIn() {
     try {
-      const response = await fetch(`${ __membersApi__ }/accounts?${ queryString.stringify(credentials) }`)
+      const query = queryString.stringify(credentials)
+      const response = await fetch(`${ __membersApi__ }/accounts?${ query }`)
 
       if (response.ok) {
-        const data = await response.json()
-        accountStore.setAccount(data)
+        const { account, token } = await response.json()
+
+        store.auth.signIn({ account, token })
         navigateTo('/pay')
       }
 
@@ -31,7 +33,8 @@
     }
 
     catch (error) {
-      console.log(error)
+      // TODO: Handle and test no server access.
+      console.error(error)
       errorMessage = 'We could not complete your request.'
     }
   }
