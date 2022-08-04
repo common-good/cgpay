@@ -1,7 +1,11 @@
 // --------------------------------------------
 // Theme Colors
 
-$c-primary = #b3f287
+$black = #000000
+$white = #ffffff
+
+$green = #b3f287
+$blue = #0270ED
 
 // --------------------------------------------
 // Typography & Spacing
@@ -32,8 +36,28 @@ text(size)
     line-height 2rem
 
 // --------------------------------------------
+// Buttons + Links
+
+buttonPrimary()
+
+buttonSecondary()
+
+link()
+  color: $blue
+  text-decoration: underline
+  text-underline-offset 1px
+
+// --------------------------------------------
 // Utilities
 
 at(threshold)
   @media screen and (min-width: threshold)
     { block }
+
+flexCenter(direction = row) 
+  display flex
+  align-items center
+  justify-content center
+
+  if direction is 'column'
+      flex-direction column
