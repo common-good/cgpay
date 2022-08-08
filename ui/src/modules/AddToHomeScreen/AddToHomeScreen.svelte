@@ -6,6 +6,8 @@
   import AndroidInstructions from './AndroidInstructions/AndroidInstructions.svelte'
   import AppleInstructions from './AppleInstructions/AppleInstructions.svelte'
 
+  import cgLogo from './assets/cg-logo-300.png'
+
   // --------------------------------------------
 
   function skip() {
@@ -20,6 +22,9 @@
 
 <section id='add-to-home-screen'>
   <div class='wrapper'>
+    <img src= { cgLogo } alt="Common Good logo" />
+    <h1>Add to Home Screen</h1>
+
     { #if $store.deviceType === 'Apple' }
       <AppleInstructions { skip } />
     { /if }
