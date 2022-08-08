@@ -32,8 +32,8 @@
 
 <style lang='stylus'>
   h1
-    text(lg)
-    font-weight bold
+    text lg
+    font-weight 600
     margin 0 0 $s2
 
   img
@@ -41,9 +41,9 @@
     width 6rem
 
   .wrapper
-    flexCenter(column)
+    flexCenter column
     background $white
     border solid 1px $black
     margin $s2
-    padding: $s2 $s2 $s3
+    padding $s2 $s2 $s3
 </style>

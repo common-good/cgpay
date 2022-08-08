@@ -35,22 +35,27 @@
 
 <style lang='stylus'>
   button
-    text('sm')
-    link()
+    text sm
+    link null
     margin 0 0 $s3
+
   h2
-    font-weight: bold
+    font-weight 600
     margin 0 0 $s1
+
   img
     margin 0 auto
     padding 0 $s1
+
   li
     margin 0 0 $s3
+
   p
     margin 0 0 $s2
+
   .icon
-    max-width: 100px
+    max-width 100px
+
   .intro
     margin 0 0 $s1
-
 </style>

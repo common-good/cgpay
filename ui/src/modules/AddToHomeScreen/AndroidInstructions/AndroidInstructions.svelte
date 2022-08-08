@@ -10,8 +10,9 @@
 
 <style lang='stylus'>
   button
-    link()
-    text('sm')
+    link null
+    text sm
+
   p
     margin 0 0 $s2
 </style>
