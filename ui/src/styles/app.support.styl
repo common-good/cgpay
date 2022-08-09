@@ -1,7 +1,13 @@
 // --------------------------------------------
 // Theme Colors
 
-$c-primary = #b3f287
+$black = #000000
+$white = #ffffff
+
+$green = #b3f287
+$blue = #0270ED
+$blue-dark = #0253AE
+$gray-light = #C4C4C4
 
 // --------------------------------------------
 // Typography & Spacing
@@ -9,6 +15,7 @@ $c-primary = #b3f287
 $s1 = 0.50rem
 $s2 = 1.50rem
 $s3 = 2.00rem
+$s4 = 3.00rem
 
 text(size)
   if size is 'sm'
@@ -32,8 +39,42 @@ text(size)
     line-height 2rem
 
 // --------------------------------------------
+// Buttons, Links + Forms
+
+buttonPrimary()
+  background $blue
+  border solid 1px $blue
+  border-radius 50px
+  color $white
+  font-weight 500
+  height 60px
+  max-width 400px
+  &:hover
+    background $blue-dark
+
+input()
+  border solid 1px $gray-light
+  height 40px
+  margin 0 0 1rem
+  max-width 400px
+  padding 0 10px
+
+link()
+  color $blue
+  text-decoration underline
+  text-underline-offset 1px
+
+// --------------------------------------------
 // Utilities
 
 at(threshold)
   @media screen and (min-width: threshold)
     { block }
+
+flexCenter(direction = row) 
+  display flex
+  align-items center
+  justify-content center
+
+  if direction is 'column'
+      flex-direction column
