@@ -12,10 +12,6 @@ const icons = iconSizes.map(size => ({
 // --------------------------------------------
 
 export default {
-  devOptions: {
-    enabled: false
-  },
-
   manifest: {
     background_color: '#b3f287',
     icons,

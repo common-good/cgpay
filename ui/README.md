@@ -7,6 +7,8 @@ The user interface for the CG Pay progressive web application.
 
 ## Developing
 
+**Note:** Use a private browsing window in order to avoid unpredictable caching behavior from the service worker.
+
 | Command | Description |
 | :-- | :-- |
 | `npm run dev` | Run a UI server for local development |

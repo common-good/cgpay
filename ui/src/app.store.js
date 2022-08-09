@@ -34,6 +34,12 @@ export const createStore = () => {
 
     homeScreen: {
       skipped: false
+    },
+
+    network: {
+      offline: null,
+      online: null,
+      restored: false
     }
   }
 
@@ -45,9 +51,7 @@ export const createStore = () => {
   // --------------------------------------------
 
   function storeStateLocally(state) {
-    localState = state
     window.localStorage.setItem(storeKey, JSON.stringify(state))
-
     return state
   }
 
@@ -102,6 +106,52 @@ export const createStore = () => {
           return storeStateLocally(newState)
         })
       }
+    },
+
+    network: {
+      reset() {
+        update(currentState => {
+          const newState = { ...currentState }
+
+          newState.network.restored = false
+
+          return newState
+        })
+      },
+
+      setOffline() {
+        update(currentState => {
+          const newState = { ...currentState }
+
+          newState.network.offline = true
+          newState.network.online = false
+
+          return newState
+        })
+      },
+
+      setOnline() {
+        update(currentState => {
+          const newState = { ...currentState }
+
+          newState.network.offline = false
+          newState.network.online = true
+
+          return newState
+        })
+      },
+
+      setRestored() {
+        update(currentState => {
+          const newState = { ...currentState }
+
+          newState.network.offline = false
+          newState.network.online = true
+          newState.network.restored = true
+
+          return newState
+        })
+      },
     }
   }
 }

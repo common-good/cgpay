@@ -40,6 +40,21 @@
 
   onMount(async () => {
     await validateToken()
+
+    window.addEventListener('offline', store.network.setOffline)
+
+    window.addEventListener('online', () => {
+      store.network.setRestored()
+      setTimeout(store.network.reset, 3000)
+    })
+
+    if (window.navigator.onLine) {
+      store.network.setOnline()
+    }
+
+    if (!window.navigator.onLine) {
+      store.network.setOffline()
+    }
   })
 
   // --------------------------------------------

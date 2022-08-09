@@ -101,6 +101,53 @@ describe('app.store', () => {
       })
     })
 
+    describe('.network', () => {
+      describe('.reset()', () => {
+        it('resets the network to basic online status', () => {
+          const store = createStore()
+          store.network.setRestored()
+          store.network.reset()
+
+          expect(store.inspect().network.offline).toEqual(false)
+          expect(store.inspect().network.online).toEqual(true)
+          expect(store.inspect().network.restored).toEqual(false)
+        })
+      })
+
+      describe('.setOffline()', () => {
+        it('sets the network status to offline', () => {
+          const store = createStore()
+          store.network.setOffline()
+
+          expect(store.inspect().network.offline).toEqual(true)
+          expect(store.inspect().network.online).toEqual(false)
+          expect(store.inspect().network.restored).toEqual(false)
+        })
+      })
+
+      describe('.setOnline()', () => {
+        it('sets the network status to online', () => {
+          const store = createStore()
+          store.network.setOnline()
+
+          expect(store.inspect().network.offline).toEqual(false)
+          expect(store.inspect().network.online).toEqual(true)
+          expect(store.inspect().network.restored).toEqual(false)
+        })
+      })
+
+      describe('.setRestored()', () => {
+        it('sets the network status to restored', () => {
+          const store = createStore()
+          store.network.setRestored()
+
+          expect(store.inspect().network.offline).toEqual(false)
+          expect(store.inspect().network.online).toEqual(true)
+          expect(store.inspect().network.restored).toEqual(true)
+        })
+      })
+    })
+
     describe('.signIn()', () => {
       it('sets the account and token', () => {
         const store = createStore()

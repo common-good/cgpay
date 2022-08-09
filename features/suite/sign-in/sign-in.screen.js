@@ -1,5 +1,13 @@
 export default (page) => {
   return {
+    async loseConnection() {
+      await page._parent.setOffline(true)
+    },
+
+    async restoreConnection() {
+      await page._parent.setOffline(false)
+    },
+
     async visit() {
       await page.goto('/sign-in')
     },
@@ -12,8 +20,9 @@ export default (page) => {
 
     element(name) {
       const elements = {
-        identifierField: 'input[type="text"]',
         errorMessage: '#sign-in-error',
+        identifierField: 'input[type="text"]',
+        networkStatus: '#network-status',
         passwordField: 'input[type="password"]',
         root: '#sign-in',
         signInButton: 'button'
