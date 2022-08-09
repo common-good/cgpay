@@ -23,6 +23,7 @@
     "svelte-preprocess": "^4.10.7",
     "svelte-router-spa": "^6.0.3",
     "vite": "^3.0.0",
+    "vite-imagetools": "^4.0.4",
     "vite-plugin-pwa": "^0.12.3",
     "vitest": "^0.19.1"
   }
