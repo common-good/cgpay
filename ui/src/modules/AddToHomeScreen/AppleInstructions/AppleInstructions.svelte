@@ -1,10 +1,10 @@
 <script>
   export let skip
 
-  import appleStepOne from './assets/apple-step-1.png'
-  import appleStepTwo from './assets/apple-step-2.png'
-  import appleStepThree from './assets/apple-step-3.png'
-  import appleStepFour from './assets/apple-step-4.png'
+  import appleStepOne from './assets/apple-step-1.png?webp'
+  import appleStepTwo from './assets/apple-step-2.png?webp'
+  import appleStepThree from './assets/apple-step-3.png?webp'
+  import appleStepFour from './assets/apple-step-4.png?webp'
   
 </script>
 

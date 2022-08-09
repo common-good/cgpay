@@ -1,5 +1,6 @@
 import to from '@jrh/to'
 import { VitePWA } from 'vite-plugin-pwa'
+import { imagetools } from 'vite-imagetools'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
 
 import context from './context/context.provider.js'
@@ -14,6 +15,7 @@ export default {
   },
 
   plugins: [
+    imagetools(),
     svelte(),
     VitePWA(pwaConfig)
   ],

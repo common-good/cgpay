@@ -6,7 +6,7 @@
   import AndroidInstructions from './AndroidInstructions/AndroidInstructions.svelte'
   import AppleInstructions from './AppleInstructions/AppleInstructions.svelte'
 
-  import cgLogo from './assets/cg-logo-300.png'
+  import cgLogo from './assets/cg-logo-300.png?webp'
 
   // --------------------------------------------
 
