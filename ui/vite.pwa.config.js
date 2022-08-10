@@ -12,11 +12,27 @@ const icons = iconSizes.map(size => ({
 // --------------------------------------------
 
 export default {
+  // Automatically update the application when a
+  // new version is available, without prompting.
+  //
+  // https://vite-plugin-pwa.netlify.app/guide/auto-update.html
+  registerType: 'autoUpdate',
+
   manifest: {
     background_color: '#b3f287',
     icons,
     name: 'CG Pay',
     short_name: 'CG Pay',
     theme_color: '#b3f287'
-  }
+  },
+
+  workbox: {
+    // Ensure that all assets are cached for
+    // offline access.
+    //
+    // https://vite-plugin-pwa.netlify.app/guide/static-assets.html#globpatterns
+    globPatterns: [
+      '**/*.{css,html,jpg,js,png,svg,webp}'
+    ]
+  },
 }
