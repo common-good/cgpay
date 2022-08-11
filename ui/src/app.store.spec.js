@@ -101,6 +101,46 @@ describe('app.store', () => {
       })
     })
 
+    describe('.business', () => {
+      describe('.isLinked()', () => {
+        describe('when there is a linked business', () => {
+          it('is true', () => {
+            setupLocalStorage({
+              business: {
+                linked: {}
+              }
+            })
+
+            const store = createStore()
+            expect(store.business.isLinked()).toEqual(true)
+          })
+        })
+
+        describe('when there is not a linked business', () => {
+          it('is false', () => {
+            setupLocalStorage({
+              business: {
+                linked: null
+              }
+            })
+
+            const store = createStore()
+            expect(store.business.isLinked()).toEqual(false)
+          })
+        })
+      })
+
+      describe('.link()', () => {
+        it('links the given business', () => {
+          const store = createStore()
+          store.business.link('Biz')
+
+          expect(getLocallyStored().business.linked).toEqual('Biz')
+          expect(store.inspect().business.linked).toEqual('Biz')
+        })
+      })
+    })
+
     describe('.network', () => {
       describe('.reset()', () => {
         it('resets the network to basic online status', () => {

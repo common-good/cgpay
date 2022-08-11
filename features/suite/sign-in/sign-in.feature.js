@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test'
 
 import appContext from '../../context/context.provider.js'
+import createLinkAccountScreen from '../link-account/link-account.screen.js'
 import createPayScreen from '../pay/pay.screen.js'
 import createSignInScreen from '../sign-in/sign-in.screen.js'
 
@@ -41,6 +42,7 @@ test('I can sign in with my personal CG account.', async ({ browser, context, pa
 
   // --------------------------------------------
 
+  const linkAccount = createLinkAccountScreen(page)
   const pay = createPayScreen(page)
   const signIn = createSignInScreen(page)
 
@@ -48,7 +50,6 @@ test('I can sign in with my personal CG account.', async ({ browser, context, pa
   // When not signed in, I see the sign in screen.
 
   await pay.visit()
-  await expect(pay.element('root')).not.toBeVisible()
   await expect(signIn.element('root')).toBeVisible()
 
   // --------------------------------------------
@@ -58,18 +59,18 @@ test('I can sign in with my personal CG account.', async ({ browser, context, pa
   await expect(signIn.element('errorMessage')).toContainText(`couldn't find`)
 
   // --------------------------------------------
-  // When I submit valid credentials, I am directed to payment collection.
+  // When I submit valid credentials, I am directed to the next step.
 
   await signIn.with({ identifier: 'valid@email.com', password: 'valid' })
   await expect(signIn.element('root')).not.toBeVisible()
-  await expect(pay.element('root')).toBeVisible()
+  await expect(linkAccount.element('root')).toBeVisible()
 
   // --------------------------------------------
   // I stay signed in with a valid token.
 
   await pay.visit()
   await expect(signIn.element('root')).not.toBeVisible()
-  await expect(pay.element('root')).toBeVisible()
+  await expect(linkAccount.element('root')).toBeVisible()
 
   // --------------------------------------------
   // I am signed out with an invalid token.

@@ -86,10 +86,10 @@
       name: '/link-account',
       component: LinkAccount,
 
-      // onlyIf: {
-      //   guard: store.auth.isAuthenticated,
-      //   redirect: '/sign-in'
-      // }
+      onlyIf: {
+        guard: store.auth.isAuthenticated,
+        redirect: '/sign-in'
+      }
     },
 
     {
@@ -97,8 +97,8 @@
       component: Pay,
 
       onlyIf: {
-        guard: store.auth.isAuthenticated,
-        redirect: '/sign-in'
+        guard: store.business.isLinked,
+        redirect: '/link-account'
       }
     },
 

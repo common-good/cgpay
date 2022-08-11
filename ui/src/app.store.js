@@ -32,6 +32,10 @@ export const createStore = () => {
       token: null
     },
 
+    business: {
+      linked: null
+    },
+
     homeScreen: {
       skipped: false
     },
@@ -90,6 +94,22 @@ export const createStore = () => {
 
           newState.auth.account = null
           newState.auth.token = null
+
+          return storeStateLocally(newState)
+        })
+      }
+    },
+
+    business: {
+      isLinked() {
+        return localState.business.linked !== null
+      },
+
+      link(business) {
+        update(currentState => {
+          const newState = { ...currentState }
+
+          newState.business.linked = business
 
           return storeStateLocally(newState)
         })
