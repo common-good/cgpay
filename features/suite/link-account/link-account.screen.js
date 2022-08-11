@@ -4,6 +4,14 @@ export default (page) => {
       await page.goto('/link-account')
     },
 
+    async loseConnection() {
+      await page._parent.setOffline(true)
+    },
+
+    async restoreConnection() {
+      await page._parent.setOffline(false)
+    },
+
     async chooseBusiness(name) {
       await this.element('businessSelector').selectOption(name)
       await this.element('submitButton').click()
@@ -13,6 +21,7 @@ export default (page) => {
       const elements = {
         businessOptions: '#select-business option',
         businessSelector: '#select-business',
+        networkStatus: '#network-status',
         root: '#link-account',
         submitButton: 'button'
       }

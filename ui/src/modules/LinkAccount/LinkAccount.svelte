@@ -2,6 +2,7 @@
   import queryString from 'query-string'
   import { onMount } from 'svelte'
 
+  import NetworkStatus from '#modules/NetworkStatus/NetworkStatus.svelte'
   import store from '#app.store.js'
 
   // --------------------------------------------
@@ -25,15 +26,18 @@
   // --------------------------------------------
 
   onMount(async () => {
-    // Should these requests be in a helper for
+    // TODO: Should these requests be in a helper for
     // easier testing?
     try {
+      console.log($store.auth)
       const { identifier } = $store.auth.account
       const query = queryString.stringify({ identifier })
       const response = await fetch(`${ __membersApi__ }/businesses?${ query }`)
 
       if (response.ok) {
         const { businesses } = await response.json()
+ 
+        // TODO: Handle edge case of no businesses.
 
         if (businesses.length === 1) {
           automaticallyLinkedBusiness = businesses[0]
@@ -47,6 +51,8 @@
       }
 
       else {
+        // TODO: Is this how we want to handle when the
+        // server is not available?
         throw new Error()
       }
     }
@@ -57,6 +63,12 @@
     }
   })
 </script>
+
+<svelte:head>
+  <title>CG Pay - Link Account</title>
+</svelte:head>
+
+<NetworkStatus />
 
 <section id='link-account'>
   { #if ready }
