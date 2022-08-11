@@ -9,8 +9,10 @@
 </section>
 
 <style lang='stylus'>
+  @import '../AddToHomeScreen.styl'
+
   button
-    link null
+    addToHomeScreenLink()
     text sm
 
   p

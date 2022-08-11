@@ -32,9 +32,11 @@
 </section>
 
 <style lang='stylus'>
+  @import '../AddToHomeScreen.styl'
+
   button
+    addToHomeScreenLink()
     text sm
-    link null
     margin 0 0 $s3
 
   h2
