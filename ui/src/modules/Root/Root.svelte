@@ -6,6 +6,7 @@
   import store from '#app.store.js'
 
   import AddToHomeScreen from '#modules/AddToHomeScreen/AddToHomeScreen.svelte'
+  import LinkAccount from '#modules/LinkAccount/LinkAccount.svelte'
   import Pay from '#modules/Pay/Pay.svelte'
   import SignIn from '#modules/Account/SignIn/SignIn.svelte'
 
@@ -79,6 +80,16 @@
         guard: promptRequired,
         redirect: '/pay'
       }
+    },
+
+    {
+      name: '/link-account',
+      component: LinkAccount,
+
+      // onlyIf: {
+      //   guard: store.auth.isAuthenticated,
+      //   redirect: '/sign-in'
+      // }
     },
 
     {

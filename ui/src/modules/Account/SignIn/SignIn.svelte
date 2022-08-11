@@ -27,7 +27,7 @@
         const { account, token } = await response.json()
 
         store.auth.signIn({ account, token })
-        navigateTo('/pay')
+        navigateTo('/link-account')
       }
 
       else {
