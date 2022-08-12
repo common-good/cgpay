@@ -10,17 +10,15 @@
   let automaticallyLinkedBusiness
   let businessOptions = []
   let manuallyLinkedBusiness
-  let selectedBusinessName
+  let selectedBusiness
 
   let ready = false
 
   // --------------------------------------------
 
   function selectBusiness() {
-    const selected = businessOptions.find(b => b.name === selectedBusinessName)
-
-    manuallyLinkedBusiness = selected
-    store.business.link(selected)
+    manuallyLinkedBusiness = selectedBusiness
+    store.business.link(manuallyLinkedBusiness)
   }
 
   // --------------------------------------------
@@ -29,7 +27,6 @@
     // TODO: Should these requests be in a helper for
     // easier testing?
     try {
-      console.log($store.auth)
       const { identifier } = $store.auth.account
       const query = queryString.stringify({ identifier })
       const response = await fetch(`${ __membersApi__ }/businesses?${ query }`)
@@ -89,9 +86,9 @@
       <form on:submit|preventDefault={ selectBusiness } >
         <label for='select-business'>Select Account:</label>
 
-        <select id='select-business' bind:value={ selectedBusinessName }>
-          { #each businessOptions as option }
-            <option value={ option.name }>{ option.name }</option>
+        <select id='select-business' bind:value={ selectedBusiness }>
+          { #each businessOptions as business }
+            <option value={ business }>{ business.name }</option>
           { /each }
         </select>
 

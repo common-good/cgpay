@@ -29,7 +29,9 @@ describe('LinkAccount', () => {
         account: {
           identifier: ''
         }
-      }
+      },
+
+      network: {}
     })
 
     vi.mocked(appStore.subscribe).mockImplementation(subscribe)
