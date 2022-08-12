@@ -45,6 +45,20 @@ describe('app.store', () => {
   })
 
   describe('.auth', () => {
+    describe('.account', () => {
+      it('is accessible', () => {
+        const store = createStore()
+        expect(store.inspect().auth.account).toEqual(null)
+      })
+    })
+
+    describe('.token', () => {
+      it('is accessible', () => {
+        const store = createStore()
+        expect(store.inspect().auth.token).toEqual(null)
+      })
+    })
+
     describe('.isAuthenticated()', () => {
       describe('when a token is set', () => {
         it('returns true', () => {
@@ -102,6 +116,13 @@ describe('app.store', () => {
     })
 
     describe('.business', () => {
+      describe('.linked', () => {
+        it('is accessible', () => {
+          const store = createStore()
+          expect(store.inspect().business.linked).toEqual(null)
+        })
+      })
+
       describe('.isLinked()', () => {
         describe('when there is a linked business', () => {
           it('is true', () => {
@@ -142,6 +163,27 @@ describe('app.store', () => {
     })
 
     describe('.network', () => {
+      describe('.offline', () => {
+        it('is accessible', () => {
+          const store = createStore()
+          expect(store.inspect().network.offline).toEqual(null)
+        })
+      })
+
+      describe('.online', () => {
+        it('is accessible', () => {
+          const store = createStore()
+          expect(store.inspect().network.online).toEqual(null)
+        })
+      })
+
+      describe('.restored', () => {
+        it('is accessible', () => {
+          const store = createStore()
+          expect(store.inspect().network.restored).toEqual(false)
+        })
+      })
+
       describe('.reset()', () => {
         it('resets the network to basic online status', () => {
           const store = createStore()
@@ -235,6 +277,13 @@ describe('app.store', () => {
   })
 
   describe('.homeScreen', () => {
+    describe('.skipped', () => {
+      it('is accessible', () => {
+        const store = createStore()
+        expect(store.inspect().homeScreen.skipped).toEqual(false)
+      })
+    })
+
     describe('.skip()', () => {
       it('logs the time that the user skipped the home screen prompt', async () => {
         const store = createStore()

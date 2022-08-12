@@ -24,8 +24,6 @@
   // --------------------------------------------
 
   onMount(async () => {
-    // TODO: Should these requests be in a helper for
-    // easier testing?
     try {
       const { identifier } = $store.auth.account
       const query = queryString.stringify({ identifier })
@@ -34,7 +32,8 @@
       if (response.ok) {
         const { businesses } = await response.json()
  
-        // TODO: Handle edge case of no businesses.
+        // TODO: Handle edge case of no businesses
+        // if this is a possible case.
 
         if (businesses.length === 1) {
           automaticallyLinkedBusiness = businesses[0]
