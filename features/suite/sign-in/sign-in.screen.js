@@ -26,7 +26,6 @@ export default (page) => {
       const elements = {
         errorMessage: '#sign-in-error',
         identifierField: 'input[type="text"]',
-        networkStatus: '#network-status',
         passwordField: 'input[type="password"]',
         root: '#sign-in',
         signInButton: 'button'

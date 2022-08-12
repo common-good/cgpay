@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test'
 
 import createLinkAccountScreen from '../link-account/link-account.screen.js'
 import createPayScreen from '../pay/pay.screen.js'
+import createRootScreen from '../root.screen.js'
 import createRoutes from '../routes.js'
 import createSignInScreen from '../sign-in/sign-in.screen.js'
 
@@ -35,6 +36,7 @@ test('I can sign in with my personal CG account.', async ({ browser, context, pa
 
   const linkAccount = createLinkAccountScreen(page)
   const pay = createPayScreen(page)
+  const root = createRootScreen(page)
   const signIn = createSignInScreen(page)
 
   // --------------------------------------------
@@ -42,6 +44,20 @@ test('I can sign in with my personal CG account.', async ({ browser, context, pa
 
   await pay.visit()
   await expect(signIn.root()).toBeVisible()
+
+  // --------------------------------------------
+  // Check that the network status banner displays properly
+  // when offline.
+
+  await expect(root.element('networkStatus')).not.toBeVisible()
+
+  await root.loseConnection()
+  await expect(root.element('networkStatus')).toBeVisible()
+  await expect(root.element('networkStatus')).toContainText('offline')
+
+  await root.restoreConnection()
+  await expect(root.element('networkStatus')).toBeVisible()
+  await expect(root.element('networkStatus')).toContainText('online')
 
   // --------------------------------------------
   // When I submit invalid credentials, I see an error message.

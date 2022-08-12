@@ -1,7 +1,7 @@
 export default (page) => {
   return {
     async visit() {
-      await page.goto('/link-account')
+      await page.goto('/')
     },
 
     async loseConnection() {
@@ -12,21 +12,14 @@ export default (page) => {
       await page._parent.setOffline(false)
     },
 
-    async chooseBusiness(name) {
-      await this.element('businessSelector').selectOption(name)
-      await this.element('submitButton').click()
-    },
-
     root() {
       return this.element('root')
     },
 
     element(name) {
       const elements = {
-        businessOptions: '#select-business option',
-        businessSelector: '#select-business',
-        root: '#link-account',
-        submitButton: 'button'
+        networkStatus: '#network-status',
+        root: 'main'
       }
 
       return page.locator(elements[name])

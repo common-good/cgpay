@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test'
 
 import createLinkAccountScreen from '../link-account/link-account.screen.js'
+import createRootScreen from '../root.screen.js'
 import createRoutes from '../routes.js'
 import createSignInScreen from '../sign-in/sign-in.screen.js'
 
@@ -36,6 +37,7 @@ test('When I have only one business account, my business is automatically linked
   // --------------------------------------------
 
   const linkAccount = createLinkAccountScreen(page)
+  const root = createRootScreen(page)
   const signIn = createSignInScreen(page)
 
   // Sign in with valid credentials.
@@ -43,8 +45,28 @@ test('When I have only one business account, my business is automatically linked
   await signIn.with({ identifier: 'one.biz@email.com', password: 'valid' })
 
   await expect(linkAccount.root()).toBeVisible()
+
+  // --------------------------------------------
+  // Check that the network status banner displays properly
+  // when offline.
+
+  await expect(root.element('networkStatus')).not.toBeVisible()
+
+  await root.loseConnection()
+  await expect(root.element('networkStatus')).toBeVisible()
+  await expect(root.element('networkStatus')).toContainText('offline')
+
+  await root.restoreConnection()
+  await expect(root.element('networkStatus')).toBeVisible()
+  await expect(root.element('networkStatus')).toContainText('online')
+
+  // --------------------------------------------
+  // Check that the only business is automatically
+  // linked.
+
   await expect(linkAccount.root()).toContainText('Business 1')
   await expect(linkAccount.root()).toContainText('automatically linked')
+
 })
 
 test('When I have multiple business accounts, I can select a business to link.', async ({ page }) => {
