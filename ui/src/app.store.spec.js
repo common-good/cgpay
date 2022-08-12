@@ -277,6 +277,56 @@ describe('app.store', () => {
   })
 
   describe('.homeScreen', () => {
+    describe('.promptRequired()', () => {
+      describe('when the user is on an Apple device and has not previously skipped the prompt', () => {
+        it('is true', () => {
+          setupLocalStorage({
+            deviceType: 'Apple',
+
+            homeScreen: {
+              skipped: false
+            }
+          })
+
+          const store = createStore()
+          expect(store.homeScreen.promptRequired()).toEqual(true)
+        })
+      })
+
+      describe('when the user is on an Android device and has not previously skipped the prompt', () => {
+        it('is true', () => {
+          setupLocalStorage({
+            deviceType: 'Android',
+
+            homeScreen: {
+              skipped: false
+            }
+          })
+
+          const store = createStore()
+          expect(store.homeScreen.promptRequired()).toEqual(true)
+        })
+      })
+
+      describe('when the user is not on a mobile device', () => {
+        it('is false', () => {
+          setupLocalStorage({
+            deviceType: 'Other',
+
+            homeScreen: {
+              skipped: false
+            }
+          })
+
+          const store = createStore()
+          expect(store.homeScreen.promptRequired()).toEqual(false)
+        })
+      })
+
+      describe('when the user has previously skipped the prompt', () => {
+        it('is false')
+      })
+    })
     describe('.skipped', () => {
       it('is accessible', () => {
         const store = createStore()

@@ -117,6 +117,13 @@ export const createStore = () => {
     },
 
     homeScreen: {
+      promptRequired() {
+        const onMobileDevice = [ 'Apple', 'Android' ].includes(localState.deviceType)
+        const hasNotSkippedPrompt = !localState.homeScreen.skipped
+
+        return onMobileDevice && hasNotSkippedPrompt
+      },
+
       skip() {
         update(currentState => {
           const newState = { ...currentState }

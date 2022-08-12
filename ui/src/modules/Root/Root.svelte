@@ -59,16 +59,6 @@
   })
 
   // --------------------------------------------
-  // Route Guards
-
-  function promptRequired() {
-    const hasNotSkippedPrompt = $store.homeScreen.skipped === false
-    const onMobileDevice = [ 'Apple', 'Android' ].includes($store.deviceType)
-
-    return onMobileDevice && hasNotSkippedPrompt
-  }
-
-  // --------------------------------------------
   // Routes
 
   const routes = [
@@ -77,7 +67,7 @@
       component: AddToHomeScreen,
 
       onlyIf: {
-        guard: promptRequired,
+        guard: store.homeScreen.promptRequired,
         redirect: '/pay'
       }
     },
