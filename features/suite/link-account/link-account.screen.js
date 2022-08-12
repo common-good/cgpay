@@ -17,6 +17,10 @@ export default (page) => {
       await this.element('submitButton').click()
     },
 
+    root() {
+      return this.element('root')
+    },
+
     element(name) {
       const elements = {
         businessOptions: '#select-business option',

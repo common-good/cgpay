@@ -42,9 +42,9 @@ test('When I have only one business account, my business is automatically linked
   await signIn.visit()
   await signIn.with({ identifier: 'one.biz@email.com', password: 'valid' })
 
-  await expect(linkAccount.element('root')).toBeVisible()
-  await expect(linkAccount.element('root')).toContainText('Business 1')
-  await expect(linkAccount.element('root')).toContainText('automatically linked')
+  await expect(linkAccount.root()).toBeVisible()
+  await expect(linkAccount.root()).toContainText('Business 1')
+  await expect(linkAccount.root()).toContainText('automatically linked')
 })
 
 test('When I have multiple business accounts, I can select a business to link.', async ({ page }) => {
@@ -82,13 +82,13 @@ test('When I have multiple business accounts, I can select a business to link.',
   await signIn.visit()
   await signIn.with({ identifier: 'multiple.biz@email.com', password: 'valid' })
 
-  await expect(linkAccount.element('root')).toBeVisible()
-  await expect(linkAccount.element('root')).not.toContainText('linked')
+  await expect(linkAccount.root()).toBeVisible()
+  await expect(linkAccount.root()).not.toContainText('linked')
   await expect(linkAccount.element('businessSelector')).toBeVisible()
   expect(await linkAccount.element('businessOptions').count()).toEqual(3)
 
   await linkAccount.chooseBusiness('Business 3')
   await expect(linkAccount.element('businessSelector')).not.toBeVisible()
-  await expect(linkAccount.element('root')).toContainText('Business 3')
-  await expect(linkAccount.element('root')).toContainText('successfully linked')
+  await expect(linkAccount.root()).toContainText('Business 3')
+  await expect(linkAccount.root()).toContainText('successfully linked')
 })

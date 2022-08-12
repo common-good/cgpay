@@ -8,6 +8,10 @@ export default (page) => {
       await this.element('skip').click()
     },
 
+    root() {
+      return this.element('root')
+    },
+
     element(name) {
       const elements = {
         androidInstructions: '#android-instructions',

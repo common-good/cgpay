@@ -41,7 +41,7 @@ test('I can see when the app is offline.', async ({ page }) => {
 
   // Check that the network status banner displays properly.
   await signIn.visit()
-  await expect(signIn.element('root')).toBeVisible()
+  await expect(signIn.root()).toBeVisible()
   await expect(signIn.element('networkStatus')).not.toBeVisible()
 
   await signIn.loseConnection()
@@ -64,7 +64,7 @@ test('I can see when the app is offline.', async ({ page }) => {
 
   // Check that the network status banner displays properly.
   await linkAccount.visit()
-  await expect(linkAccount.element('root')).toBeVisible()
+  await expect(linkAccount.root()).toBeVisible()
   await expect(linkAccount.element('networkStatus')).not.toBeVisible()
 
   await page.pause()

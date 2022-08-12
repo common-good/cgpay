@@ -9,13 +9,13 @@ import createSignInScreen from '../sign-in/sign-in.screen.js'
 async function expectAbleToSkip({ addScreen, signIn }) {
   // After skipping the instructions, display the Pay screen.
   await addScreen.skipHomeScreenPrompt()
-  await expect(addScreen.element('root')).not.toBeVisible()
-  await expect(signIn.element('root')).toBeVisible()
+  await expect(addScreen.root()).not.toBeVisible()
+  await expect(signIn.root()).toBeVisible()
 
   // When the instructions are skipped, don't display them again.
   await signIn.visit()
-  await expect(addScreen.element('root')).not.toBeVisible()
-  await expect(signIn.element('root')).toBeVisible()
+  await expect(addScreen.root()).not.toBeVisible()
+  await expect(signIn.root()).toBeVisible()
 }
 
 // --------------------------------------------
@@ -33,8 +33,8 @@ test('I am guided to add the app to my home screen before collecting payment for
   // When visiting the app for the first time, display the home
   // screen instructions.
   await page.goto('/')
-  await expect(signIn.element('root')).not.toBeVisible()
-  await expect(addScreen.element('root')).toBeVisible()
+  await expect(signIn.root()).not.toBeVisible()
+  await expect(addScreen.root()).toBeVisible()
   await expect(addScreen.element('appleInstructions')).toBeVisible()
   await expect(addScreen.element('androidInstructions')).not.toBeVisible()
 
@@ -51,8 +51,8 @@ test('I am guided to add the app to my home screen before collecting payment for
   // When visiting the app for the first time, display the home
   // screen instructions.
   await page.goto('/')
-  await expect(signIn.element('root')).not.toBeVisible()
-  await expect(addScreen.element('root')).toBeVisible()
+  await expect(signIn.root()).not.toBeVisible()
+  await expect(addScreen.root()).toBeVisible()
   await expect(addScreen.element('appleInstructions')).not.toBeVisible()
   await expect(addScreen.element('androidInstructions')).toBeVisible()
 
@@ -64,6 +64,6 @@ test('I am not prompted to add the app to my home screen when not on a mobile de
   const addScreen = createAddScreen(page)
 
   await page.goto('/')
-  await expect(signIn.element('root')).toBeVisible()
-  await expect(addScreen.element('root')).not.toBeVisible()
+  await expect(signIn.root()).toBeVisible()
+  await expect(addScreen.root()).not.toBeVisible()
 })
