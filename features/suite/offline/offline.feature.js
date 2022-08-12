@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 
-import appContext from '../../context/context.provider.js'
 import createLinkAccountScreen from '../link-account/link-account.screen.js'
+import createRoutes from '../routes.js'
 import createSignInScreen from '../sign-in/sign-in.screen.js'
 
 // --------------------------------------------
@@ -10,42 +10,29 @@ test('I can see when the app is offline.', async ({ page }) => {
   // --------------------------------------------
   // Set up mock API endpoints.
 
-  const accountsRoute = appContext('membersApi.location') + '/accounts'
-  const businessesRoute = appContext('membersApi.location') + '/businesses'
+  const routes = createRoutes({ page })
 
-  await page.route(accountsRoute + '?identifier=valid%40email.com&password=valid', route => {
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
+  await routes.accounts.get
+    .withQueryParams({ identifier: 'valid@email.com', password: 'valid' })
+    .respondsWith(200, {
+      account: {
+        identifier: 'valid@email.com'
+      },
 
-      body: JSON.stringify({
-        account: {
-          identifier: 'valid@email.com'
-        },
-
-        token: 'valid-token'
-      })
+      token: 'valid-token'
     })
-  })
 
-  await page.route(accountsRoute + '?token=valid-token', route => {
-    route.fulfill({
-      status: 200
+  await routes.accounts.get
+    .withQueryParams({ token: 'valid-token' })
+    .respondsWith(200)
+
+  await routes.businesses.get
+    .withQueryParams({ identifier: 'valid@email.com' })
+    .respondsWith(200, {
+      businesses: [
+        { name: 'Business 1' }
+      ]
     })
-  })
-
-  await page.route(businessesRoute + '?identifier=valid%40email.com', route => {
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-
-      body: JSON.stringify({
-        businesses: [
-          { name: 'Business 1' }
-        ]
-      })
-    })
-  })
 
   // --------------------------------------------
 
