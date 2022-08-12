@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test'
 
-import appContext from '../../context/context.provider.js'
 import createLinkAccountScreen from '../link-account/link-account.screen.js'
 import createPayScreen from '../pay/pay.screen.js'
+import createRoutes from '../routes.js'
 import createSignInScreen from '../sign-in/sign-in.screen.js'
 
 // --------------------------------------------
@@ -15,30 +15,21 @@ test('I can sign in with my personal CG account.', async ({ browser, context, pa
   // --------------------------------------------
   // Set up mock API endpoints.
 
-  const accountsRoute = appContext('membersApi.location') + '/accounts'
+  const routes = createRoutes({ page })
 
-  await page.route(accountsRoute + '?identifier=invalid%40email.com&password=invalid', route => {
-    route.fulfill({
-      status: 404
+  routes.accounts.get
+    .withQueryParams({ identifier: 'invalid@email.com', password: 'invalid' })
+    .respondsWith(404)
+
+  routes.accounts.get
+    .withQueryParams({ identifier: 'valid@email.com', password: 'valid' })
+    .respondsWith(200, {
+      token: 'valid-token'
     })
-  })
 
-  await page.route(accountsRoute + '?identifier=valid%40email.com&password=valid', route => {
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-
-      body: JSON.stringify({
-        token: 'valid-token'
-      })
-    })
-  })
-
-  await page.route(accountsRoute + '?token=valid-token', route => {
-    route.fulfill({
-      status: 200
-    })
-  })
+  routes.accounts.get
+    .withQueryParams({ token: 'valid-token' })
+    .respondsWith(200)
 
   // --------------------------------------------
 
@@ -89,11 +80,11 @@ test('I can sign in with my personal CG account.', async ({ browser, context, pa
   })
 
   // - Mock the API request to respond to the invalid token.
-  await invalidTokenPage.route(accountsRoute + '?token=invalid-token', route => {
-    route.fulfill({
-      status: 404
-    })
-  })
+  const invalidTokenRoutes = createRoutes({ page: invalidTokenPage })
+
+  invalidTokenRoutes.accounts.get
+    .withQueryParams({ token: 'invalid-token' })
+    .respondsWith(404)
 
   const payInvalidToken = createPayScreen(invalidTokenPage)
   const signInInvalidToken = createSignInScreen(invalidTokenPage)

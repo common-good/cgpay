@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 
-import appContext from '../../context/context.provider.js'
 import createLinkAccountScreen from '../link-account/link-account.screen.js'
+import createRoutes from '../routes.js'
 import createSignInScreen from '../sign-in/sign-in.screen.js'
 
 // --------------------------------------------
@@ -13,36 +13,25 @@ test('When I have only one business account, my business is automatically linked
   // --------------------------------------------
   // Set up mock API endpoints.
 
-  const accountsRoute = appContext('membersApi.location') + '/accounts'
-  const businessesRoute = appContext('membersApi.location') + '/businesses'
+  const routes = createRoutes({ page })
 
-  await page.route(accountsRoute + '?identifier=oneaccount%40email.com&password=valid', route => {
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
+  routes.accounts.get
+    .withQueryParams({ identifier: 'one.biz@email.com', password: 'valid' })
+    .respondsWith(200, {
+      token: 'token',
 
-      body: JSON.stringify({
-        account: {
-          identifier: 'oneaccount@email.com'
-        },
-
-        token: 'valid-token'
-      })
+      account: {
+        identifier: 'one.biz@email.com'
+      }
     })
-  })
 
-  await page.route(businessesRoute + '?identifier=oneaccount%40email.com', route => {
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-
-      body: JSON.stringify({
-        businesses: [
-          { name: 'Business 1' }
-        ]
-      })
+  routes.businesses.get
+    .withQueryParams({ identifier: 'one.biz@email.com' })
+    .respondsWith(200, {
+      businesses: [
+        { name: 'Business 1' }
+      ]
     })
-  })
 
   // --------------------------------------------
 
@@ -51,7 +40,7 @@ test('When I have only one business account, my business is automatically linked
 
   // Sign in with valid credentials.
   await signIn.visit()
-  await signIn.with({ identifier: 'oneaccount@email.com', password: 'valid' })
+  await signIn.with({ identifier: 'one.biz@email.com', password: 'valid' })
 
   await expect(linkAccount.element('root')).toBeVisible()
   await expect(linkAccount.element('root')).toContainText('Business 1')
@@ -62,38 +51,27 @@ test('When I have multiple business accounts, I can select a business to link.',
   // --------------------------------------------
   // Set up mock API endpoints.
 
-  const accountsRoute = appContext('membersApi.location') + '/accounts'
-  const businessesRoute = appContext('membersApi.location') + '/businesses'
+  const routes = createRoutes({ page })
 
-  await page.route(accountsRoute + '?identifier=oneaccount%40email.com&password=valid', route => {
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
+  await routes.accounts.get
+    .withQueryParams({ identifier: 'multiple.biz@email.com', password: 'valid' })
+    .respondsWith(200, {
+      account: {
+        identifier: 'multiple.biz@email.com'
+      },
 
-      body: JSON.stringify({
-        account: {
-          identifier: 'oneaccount@email.com'
-        },
-
-        token: 'valid-token'
-      })
+      token: 'token'
     })
-  })
 
-  await page.route(businessesRoute + '?identifier=oneaccount%40email.com', route => {
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-
-      body: JSON.stringify({
-        businesses: [
-          { name: 'Business 1' },
-          { name: 'Business 2' },
-          { name: 'Business 3' }
-        ]
-      })
+  await routes.businesses.get
+    .withQueryParams({ identifier: 'multiple.biz@email.com' })
+    .respondsWith(200, {
+      businesses: [
+        { name: 'Business 1' },
+        { name: 'Business 2' },
+        { name: 'Business 3' }
+      ]
     })
-  })
 
   // --------------------------------------------
 
@@ -102,7 +80,7 @@ test('When I have multiple business accounts, I can select a business to link.',
 
   // Sign in with valid credentials.
   await signIn.visit()
-  await signIn.with({ identifier: 'oneaccount@email.com', password: 'valid' })
+  await signIn.with({ identifier: 'multiple.biz@email.com', password: 'valid' })
 
   await expect(linkAccount.element('root')).toBeVisible()
   await expect(linkAccount.element('root')).not.toContainText('linked')

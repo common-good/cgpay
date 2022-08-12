@@ -10,6 +10,7 @@
     "@jrh/adapt": "^5.5.0",
     "@jrh/to": "^1.0.0",
     "@playwright/test": "^1.24.1",
-    "fkill": "^8.0.1"
+    "fkill": "^8.0.1",
+    "query-string": "^7.1.1"
   }
 }
