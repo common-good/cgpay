@@ -87,7 +87,7 @@
 
         <select id='select-business' bind:value={ selectedBusiness }>
           { #each businessOptions as business }
-            <option value={ business }>{ business.name }</option>
+            <option label={ business.name } value={ business }>{ business.name }</option>
           { /each }
         </select>
 

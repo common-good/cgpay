@@ -13,7 +13,7 @@ export default (page) => {
     },
 
     async chooseBusiness(name) {
-      await this.element('businessSelector').selectOption(name)
+      await this.element('businessSelector').selectOption({ label: name })
       await this.element('submitButton').click()
     },
 
