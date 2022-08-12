@@ -25,8 +25,6 @@ export const createStore = () => {
   // --------------------------------------------
 
   const defaults = {
-    deviceType: getDeviceType(),
-
     auth: {
       account: null,
       token: null
@@ -34,6 +32,10 @@ export const createStore = () => {
 
     business: {
       linked: null
+    },
+
+    device: {
+      type: getDeviceType(),
     },
 
     homeScreen: {
@@ -116,9 +118,19 @@ export const createStore = () => {
       }
     },
 
+    device: {
+      isApple() {
+        return localState.device.type === 'Apple'
+      },
+
+      isAndroid() {
+        return localState.device.type === 'Android'
+      }
+    },
+
     homeScreen: {
       promptRequired() {
-        const onMobileDevice = [ 'Apple', 'Android' ].includes(localState.deviceType)
+        const onMobileDevice = [ 'Apple', 'Android' ].includes(localState.device.type)
         const hasNotSkippedPrompt = !localState.homeScreen.skipped
 
         return onMobileDevice && hasNotSkippedPrompt

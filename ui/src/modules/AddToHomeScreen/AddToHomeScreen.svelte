@@ -31,11 +31,11 @@
     <img src= { cgLogo } alt="Common Good logo" />
     <h1>Add to Home Screen</h1>
 
-    { #if $store.deviceType === 'Apple' }
+    { #if store.device.isApple() }
       <AppleInstructions { skip } />
     { /if }
 
-    { #if $store.deviceType === 'Android' }
+    { #if store.device.isAndroid() }
       <AndroidInstructions { skip } />
     { /if }
   </div>

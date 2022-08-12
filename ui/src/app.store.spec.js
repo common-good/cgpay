@@ -276,12 +276,119 @@ describe('app.store', () => {
     })
   })
 
+  describe('.device', () => {
+    describe('.type', () => {
+      describe('when the user is on an Android mobile device', () => {
+        it('is Android', () => {
+          const originalNavigator = window.navigator
+
+          window.navigator = {
+            userAgent: 'Mozilla/5.0 (Linux; Android 12; SM-S906N Build/QP1A.190711.020; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/80.0.3987.119 Mobile Safari/537.36'
+          }
+
+          const store = createStore()
+          expect(store.inspect().device.type).toEqual('Android')
+
+          window.navigator = originalNavigator
+        })
+      })
+
+      describe('when the user is on an Apple mobile device', () => {
+        it('is Apple', () => {
+          const originalNavigator = window.navigator
+
+          window.navigator = {
+            userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 12_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.0 Mobile/15E148 Safari/604.1'
+          }
+
+          const store = createStore()
+          expect(store.inspect().device.type).toEqual('Apple')
+
+          window.navigator = originalNavigator
+        })
+      })
+
+      describe('when the user is on not on a mobile device', () => {
+        it('is Other', () => {
+          const originalNavigator = window.navigator
+
+          window.navigator = {
+            userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.81 Safari/537.36'
+          }
+
+          const store = createStore()
+          expect(store.inspect().device.type).toEqual('Other')
+
+          window.navigator = originalNavigator
+        })
+      })
+    })
+
+    describe('.isAndroid()', () => {
+      describe('when the user is on an Android device', () => {
+        it('is true', () => {
+          setupLocalStorage({
+            device: {
+              type: 'Android',
+            }
+          })
+
+          const store = createStore()
+          expect(store.device.isAndroid()).toEqual(true)
+        })
+      })
+
+      describe('when the user is not on a Android device', () => {
+        it('is false', () => {
+          setupLocalStorage({
+            device: {
+              type: 'Apple',
+            }
+          })
+
+          const store = createStore()
+          expect(store.device.isAndroid()).toEqual(false)
+        })
+      })
+    })
+
+    describe('.isApple()', () => {
+      describe('when the user is on an Apple device', () => {
+        it('is true', () => {
+          setupLocalStorage({
+            device: {
+              type: 'Apple',
+            }
+          })
+
+          const store = createStore()
+          expect(store.device.isApple()).toEqual(true)
+        })
+      })
+
+      describe('when the user is not on a Apple device', () => {
+        it('is false', () => {
+          setupLocalStorage({
+            device: {
+              type: 'Android',
+            }
+          })
+
+          const store = createStore()
+          expect(store.device.isApple()).toEqual(false)
+        })
+      })
+    })
+  })
+
   describe('.homeScreen', () => {
     describe('.promptRequired()', () => {
       describe('when the user is on an Apple device and has not previously skipped the prompt', () => {
         it('is true', () => {
           setupLocalStorage({
-            deviceType: 'Apple',
+            device: {
+              type: 'Apple'
+            },
 
             homeScreen: {
               skipped: false
@@ -296,7 +403,9 @@ describe('app.store', () => {
       describe('when the user is on an Android device and has not previously skipped the prompt', () => {
         it('is true', () => {
           setupLocalStorage({
-            deviceType: 'Android',
+            device: {
+              type: 'Android'
+            },
 
             homeScreen: {
               skipped: false
@@ -311,7 +420,9 @@ describe('app.store', () => {
       describe('when the user is not on a mobile device', () => {
         it('is false', () => {
           setupLocalStorage({
-            deviceType: 'Other',
+            device: {
+              type: 'Other'
+            },
 
             homeScreen: {
               skipped: false
@@ -324,7 +435,20 @@ describe('app.store', () => {
       })
 
       describe('when the user has previously skipped the prompt', () => {
-        it('is false')
+        it('is false', () => {
+          setupLocalStorage({
+            device: {
+              type: 'Apple'
+            },
+
+            homeScreen: {
+              skipped: true
+            }
+          })
+
+          const store = createStore()
+          expect(store.homeScreen.promptRequired()).toEqual(false)
+        })
       })
     })
     describe('.skipped', () => {
