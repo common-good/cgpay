@@ -18,6 +18,10 @@ export default (page) => {
       await this.element('signInButton').click()
     },
 
+    root() {
+      return this.element('root')
+    },
+
     element(name) {
       const elements = {
         errorMessage: '#sign-in-error',

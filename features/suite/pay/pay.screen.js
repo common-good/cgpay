@@ -4,6 +4,10 @@ export default (page) => {
       await page.goto('/')
     },
 
+    root() {
+      return this.element('root')
+    },
+
     element(name) {
       const elements = {
         root: '#pay'

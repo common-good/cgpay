@@ -41,7 +41,7 @@ test('I can sign in with my personal CG account.', async ({ browser, context, pa
   // When not signed in, I see the sign in screen.
 
   await pay.visit()
-  await expect(signIn.element('root')).toBeVisible()
+  await expect(signIn.root()).toBeVisible()
 
   // --------------------------------------------
   // When I submit invalid credentials, I see an error message.
@@ -53,15 +53,15 @@ test('I can sign in with my personal CG account.', async ({ browser, context, pa
   // When I submit valid credentials, I am directed to the next step.
 
   await signIn.with({ identifier: 'valid@email.com', password: 'valid' })
-  await expect(signIn.element('root')).not.toBeVisible()
-  await expect(linkAccount.element('root')).toBeVisible()
+  await expect(signIn.root()).not.toBeVisible()
+  await expect(linkAccount.root()).toBeVisible()
 
   // --------------------------------------------
   // I stay signed in with a valid token.
 
   await pay.visit()
-  await expect(signIn.element('root')).not.toBeVisible()
-  await expect(linkAccount.element('root')).toBeVisible()
+  await expect(signIn.root()).not.toBeVisible()
+  await expect(linkAccount.root()).toBeVisible()
 
   // --------------------------------------------
   // I am signed out with an invalid token.
@@ -91,6 +91,6 @@ test('I can sign in with my personal CG account.', async ({ browser, context, pa
 
   // - Confirm that I am signed out.
   await payInvalidToken.visit()
-  await expect(payInvalidToken.element('root')).not.toBeVisible()
-  await expect(signInInvalidToken.element('root')).toBeVisible()
+  await expect(payInvalidToken.root()).not.toBeVisible()
+  await expect(signInInvalidToken.root()).toBeVisible()
 })
