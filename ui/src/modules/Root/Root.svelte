@@ -7,6 +7,7 @@
 
   import AddToHomeScreen from '#modules/AddToHomeScreen/AddToHomeScreen.svelte'
   import LinkAccount from '#modules/LinkAccount/LinkAccount.svelte'
+  import NetworkStatus from '#modules/NetworkStatus/NetworkStatus.svelte'
   import Pay from '#modules/Pay/Pay.svelte'
   import SignIn from '#modules/Account/SignIn/SignIn.svelte'
 
@@ -104,4 +105,5 @@
   ]
 </script>
 
+<NetworkStatus />
 <Router { routes } />

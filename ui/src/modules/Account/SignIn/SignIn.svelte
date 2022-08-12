@@ -2,7 +2,6 @@
   import queryString from 'query-string'
   import { navigateTo } from 'svelte-router-spa'
 
-  import NetworkStatus from '#modules/NetworkStatus/NetworkStatus.svelte'
   import store from '#app.store.js'
 
   import cgLogo from '../../../assets/cg-logo-300.png'
@@ -46,8 +45,6 @@
 <svelte:head>
   <title>CG Pay - Sign In</title>
 </svelte:head>
-
-<NetworkStatus />
 
 <section id='sign-in' on:submit|preventDefault={ signIn }>
   <header>

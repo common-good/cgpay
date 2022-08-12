@@ -2,7 +2,6 @@
   import queryString from 'query-string'
   import { onMount } from 'svelte'
 
-  import NetworkStatus from '#modules/NetworkStatus/NetworkStatus.svelte'
   import store from '#app.store.js'
 
   // --------------------------------------------
@@ -64,8 +63,6 @@
   <title>CG Pay - Link Account</title>
 </svelte:head>
 
-<NetworkStatus />
-
 <section id='link-account'>
   { #if ready }
     { #if automaticallyLinkedBusiness }
@@ -87,7 +84,7 @@
 
         <select id='select-business' bind:value={ selectedBusiness }>
           { #each businessOptions as business }
-            <option label={ business.name } value={ business }>{ business.name }</option>
+            <option value={ business }>{ business.name }</option>
           { /each }
         </select>
 
