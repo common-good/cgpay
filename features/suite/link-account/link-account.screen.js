@@ -26,6 +26,7 @@ export default (page) => {
         businessOptions: '#select-business option',
         businessSelector: '#select-business',
         root: '#link-account',
+        scanButton: '"Scan QR Code"',
         submitButton: 'button'
       }
 

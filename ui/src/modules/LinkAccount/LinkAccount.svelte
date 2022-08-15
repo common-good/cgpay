@@ -36,6 +36,7 @@
 
         if (businesses.length === 1) {
           automaticallyLinkedBusiness = businesses[0]
+          store.business.link(automaticallyLinkedBusiness)
         }
 
         if (businesses.length > 1) {

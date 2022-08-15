@@ -1,7 +1,7 @@
 export default (page) => {
   return {
     async visit() {
-      await page.goto('/')
+      await page.goto('/scan')
     },
 
     root() {
@@ -10,7 +10,7 @@ export default (page) => {
 
     element(name) {
       const elements = {
-        root: '#pay'
+        root: '#scan'
       }
 
       return page.locator(elements[name])

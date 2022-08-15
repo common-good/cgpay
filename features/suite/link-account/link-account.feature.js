@@ -1,9 +1,10 @@
 import { test, expect } from '@playwright/test'
 
-import createLinkAccountScreen from '../link-account/link-account.screen.js'
 import createRootScreen from '../root.screen.js'
 import createRoutes from '../routes.js'
 import createSignInScreen from '../sign-in/sign-in.screen.js'
+
+import createLinkAccountScreen from './link-account.screen.js'
 
 // --------------------------------------------
 // As a signed-in vendor,

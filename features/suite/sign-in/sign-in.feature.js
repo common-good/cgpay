@@ -1,10 +1,11 @@
 import { test, expect } from '@playwright/test'
 
+import createChargeScreen from '../charge/charge.screen.js'
 import createLinkAccountScreen from '../link-account/link-account.screen.js'
-import createPayScreen from '../pay/pay.screen.js'
 import createRootScreen from '../root.screen.js'
 import createRoutes from '../routes.js'
-import createSignInScreen from '../sign-in/sign-in.screen.js'
+
+import createSignInScreen from './sign-in.screen.js'
 
 // --------------------------------------------
 // As a vendor,
@@ -35,7 +36,7 @@ test('I can sign in with my personal CG account.', async ({ browser, context, pa
   // --------------------------------------------
 
   const linkAccount = createLinkAccountScreen(page)
-  const pay = createPayScreen(page)
+  const pay = createChargeScreen(page)
   const root = createRootScreen(page)
   const signIn = createSignInScreen(page)
 
@@ -102,7 +103,7 @@ test('I can sign in with my personal CG account.', async ({ browser, context, pa
     .withQueryParams({ token: 'invalid-token' })
     .respondsWith(404)
 
-  const payInvalidToken = createPayScreen(invalidTokenPage)
+  const payInvalidToken = createChargeScreen(invalidTokenPage)
   const signInInvalidToken = createSignInScreen(invalidTokenPage)
 
   // - Confirm that I am signed out.
