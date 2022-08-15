@@ -51,3 +51,10 @@ The following features are challenging to test in an automated way and should be
 11. Ensure the network status banner displays the "back online" message.
 12. Refresh the page.
 13. Ensure the network status banner does not display.
+
+### As a vendor, I can look up customers by scanning their QR code so that I can charge for goods or services.
+
+1. In `scan.feature.js`, insert an `await page.pause()` when the Scan screen is visible.
+2. Run `scan.feature.js` in debug mode.
+3. Present a valid QR code.
+4. Ensure that the Charge screen displays with the correct details.

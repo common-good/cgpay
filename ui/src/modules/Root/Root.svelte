@@ -6,9 +6,10 @@
   import store from '#app.store.js'
 
   import AddToHomeScreen from '#modules/AddToHomeScreen/AddToHomeScreen.svelte'
+  import Charge from '#modules/Charge/Charge.svelte'
   import LinkAccount from '#modules/LinkAccount/LinkAccount.svelte'
   import NetworkStatus from '#modules/NetworkStatus/NetworkStatus.svelte'
-  import Pay from '#modules/Pay/Pay.svelte'
+  import Scan from '#modules/Scan/Scan.svelte'
   import SignIn from '#modules/Account/SignIn/SignIn.svelte'
 
   // --------------------------------------------
@@ -69,7 +70,17 @@
 
       onlyIf: {
         guard: store.homeScreen.promptRequired,
-        redirect: '/pay'
+        redirect: '/charge'
+      }
+    },
+
+    {
+      name: '/charge',
+      component: Charge,
+
+      onlyIf: {
+        guard: store.business.isLinked,
+        redirect: '/link-account'
       }
     },
 
@@ -84,8 +95,8 @@
     },
 
     {
-      name: '/pay',
-      component: Pay,
+      name: '/scan',
+      component: Scan,
 
       onlyIf: {
         guard: store.business.isLinked,
@@ -99,7 +110,7 @@
 
       onlyIf: {
         guard: store.auth.isNotAuthenticated,
-        redirect: '/pay'
+        redirect: '/charge'
       }
     }
   ]

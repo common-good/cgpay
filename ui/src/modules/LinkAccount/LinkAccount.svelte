@@ -36,6 +36,7 @@
 
         if (businesses.length === 1) {
           automaticallyLinkedBusiness = businesses[0]
+          store.business.link(automaticallyLinkedBusiness)
         }
 
         if (businesses.length > 1) {
@@ -68,12 +69,12 @@
     { #if automaticallyLinkedBusiness }
       <h1>{ automaticallyLinkedBusiness.name }</h1>
       <p>Your account has been automatically linked.</p>
+      <a href='/scan'>Scan QR Code</a>
 
     { :else if manuallyLinkedBusiness }
       <h1>{ manuallyLinkedBusiness.name } successfully linked.</h1>
       <p>You can now charge customers as { manuallyLinkedBusiness.name }.</p>
-
-      <button>Scan QR Code</button>
+      <a href='/scan'>Scan QR Code</a>
 
     { :else }
       <h1>Link Account</h1>
