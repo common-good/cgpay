@@ -32,6 +32,9 @@
     display flex
     padding $s2
 
-    img
-      padding 0 $s2 0 0
+  img
+    padding 0 $s2 0 0
+
+  p
+    text sm
 </style>
