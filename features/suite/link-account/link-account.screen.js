@@ -4,14 +4,6 @@ export default (page) => {
       await page.goto('/link-account')
     },
 
-    async loseConnection() {
-      await page._parent.setOffline(true)
-    },
-
-    async restoreConnection() {
-      await page._parent.setOffline(false)
-    },
-
     async chooseBusiness(name) {
       await this.element('businessSelector').selectOption({ label: name })
       await this.element('submitButton').click()
