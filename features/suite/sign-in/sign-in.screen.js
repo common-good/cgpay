@@ -1,13 +1,5 @@
 export default (page) => {
   return {
-    async loseConnection() {
-      await page._parent.setOffline(true)
-    },
-
-    async restoreConnection() {
-      await page._parent.setOffline(false)
-    },
-
     async visit() {
       await page.goto('/sign-in')
     },
