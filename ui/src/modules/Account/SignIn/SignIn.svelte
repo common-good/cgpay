@@ -57,11 +57,18 @@
     <p id='sign-in-error'>{ errorMessage }</p>
   { /if }
 
-  <form>
-    <input type='text' placeholder='Account ID or email address' bind:value={ credentials.identifier } required />
-    <input type='password' placeholder='Password' bind:value={ credentials.password } required />
-    <button type='submit'>Sign In</button>
-  </form>
+  { #if $store.network.offline }
+    <div class="card">
+      <p>Welcome to CG Pay!</p>
+      <p>Please connect to the internet to enable Sign In.</p>
+    </div>
+  { :else }
+    <form>
+      <input type='text' placeholder='Account ID or email address' bind:value={ credentials.identifier } required />
+      <input type='password' placeholder='Password' bind:value={ credentials.password } required />
+      <button type='submit'>Sign In</button>
+    </form>
+  { /if }
 </section>
 
 <style lang='stylus'>
@@ -77,7 +84,6 @@
 
   h2
     font-weight 600
-    margin 0 0 4rem
     text lg
 
   header
@@ -92,11 +98,22 @@
 
   form
     flexCenter column
+    margin 4rem 0 0
     width 100%
+
+  p
+    margin 0 0 1rem
 
   section
     flexCenter column
     padding $s4 $s2 0
+
+  .card
+    background $gray-light
+    border solid 1px $black
+    border-radius 5px
+    margin $s3 0 0
+    padding $s2 $s2 $s1
 
   .logo
     margin 0 20px 0 0
