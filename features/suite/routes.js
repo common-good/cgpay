@@ -44,6 +44,13 @@ export default function createRoutes({ page }) {
         baseUrl: appContext('membersApi.location') + '/businesses',
         page
       })
+    },
+
+    charges: {
+      post: createMockableRoute({
+        baseUrl: appContext('membersApi.location') + '/charges',
+        page
+      })
     }
   }
 }
