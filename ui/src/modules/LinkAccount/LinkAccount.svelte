@@ -65,15 +65,21 @@
 
 <section id='link-account'>
   { #if ready }
-    { #if automaticallyLinkedBusiness }
-      <h1>{ automaticallyLinkedBusiness.name }</h1>
-      <p>Your account has been automatically linked.</p>
+      { #if automaticallyLinkedBusiness }
+        <div class="card">
+          <h1>{ automaticallyLinkedBusiness.name } has been automatically linked</h1>
+          <p>You can now charge customers as { automaticallyLinkedBusiness.name }.</p>
+        </div>
 
-    { :else if manuallyLinkedBusiness }
-      <h1>{ manuallyLinkedBusiness.name } successfully linked.</h1>
-      <p>You can now charge customers as { manuallyLinkedBusiness.name }.</p>
+          <button class="button-primary">Scan QR Code</button>
 
-      <button>Scan QR Code</button>
+      { :else if manuallyLinkedBusiness }
+        <div class="card">
+          <h1>{ manuallyLinkedBusiness.name } successfully linked.</h1>
+          <p>You can now charge customers as { manuallyLinkedBusiness.name }.</p>
+        </div>
+
+          <button class="button-primary">Scan QR Code</button>
 
     { :else }
       <h1>Link Account</h1>
@@ -97,3 +103,26 @@
     <p>Finding your business...</p>
   { /if }
 </section>
+
+<style lang='stylus'>
+  #link-account
+    background $white
+    height 100vh
+    display flex
+    flex-direction column
+    justify-content space-between
+    padding $s2
+
+    h1
+      font-weight 600
+      margin-bottom $s1
+
+    .button-primary
+      buttonPrimary()
+
+    .card
+      background $green
+      border: solid 1px $black
+      padding $s2
+      text-align center
+</style>
