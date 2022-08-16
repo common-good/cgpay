@@ -72,10 +72,8 @@
 </section>
 
 <style lang='stylus'>
-  @import './SignIn.styl'
-
   button
-    signInButtonPrimary()
+    buttonPrimary()
     width 100%
 
   h1
