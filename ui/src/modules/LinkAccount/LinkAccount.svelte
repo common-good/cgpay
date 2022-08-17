@@ -64,22 +64,26 @@
 </svelte:head>
 
 <section id='link-account'>
+  { #if !ready }
+    <p>Finding your business...</p>
+  { /if }
+
   { #if ready }
-      { #if automaticallyLinkedBusiness }
-        <div class="card">
-          <h1>{ automaticallyLinkedBusiness.name } has been automatically linked</h1>
-          <p>You can now charge customers as { automaticallyLinkedBusiness.name }.</p>
-        </div>
+    { #if automaticallyLinkedBusiness }
+      <div class='card'>
+        <h1>{ automaticallyLinkedBusiness.name } has been automatically linked</h1>
+        <p>You can now charge customers as { automaticallyLinkedBusiness.name }.</p>
+      </div>
 
-          <a href='/scan' class="button-primary">Scan QR Code</a>
+      <a href='/scan' class='button-primary'>Scan QR Code</a>
 
-      { :else if manuallyLinkedBusiness }
-        <div class="card">
-          <h1>{ manuallyLinkedBusiness.name } successfully linked.</h1>
-          <p>You can now charge customers as { manuallyLinkedBusiness.name }.</p>
-        </div>
+    { :else if manuallyLinkedBusiness }
+      <div class='card'>
+        <h1>{ manuallyLinkedBusiness.name } successfully linked.</h1>
+        <p>You can now charge customers as { manuallyLinkedBusiness.name }.</p>
+      </div>
 
-          <a href='/scan' class="button-primary">Scan QR Code</a>
+      <a href='/scan' class='button-primary'>Scan QR Code</a>
 
     { :else }
       <h1>Link Account</h1>
@@ -97,10 +101,6 @@
         <button type='submit'>Link Account</button>
       </form>
     { /if }
-  { /if }
-
-  { #if !ready }
-    <p>Finding your business...</p>
   { /if }
 </section>
 
