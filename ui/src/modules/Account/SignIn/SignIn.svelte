@@ -2,9 +2,8 @@
   import queryString from 'query-string'
   import { navigateTo } from 'svelte-router-spa'
 
+  import cgLogo from '#modules/Root/assets/cg-logo-300.png?webp'
   import store from '#app.store.js'
-
-  import cgLogo from '../../../assets/cg-logo-300.png'
 
   // --------------------------------------------
 
@@ -49,7 +48,7 @@
 <section id='sign-in' on:submit|preventDefault={ signIn }>
   <header>
     <img class='logo' src= { cgLogo } alt="Common Good logo" />
-    <h1>CGPay</h1>
+    <h1>CG Pay</h1>
   </header>
   <h2>Sign In</h2>
 
