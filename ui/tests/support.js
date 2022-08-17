@@ -1,6 +1,4 @@
-import '@testing-library/jest-dom'
-import { cleanup, createEvent, fireEvent, render } from '@testing-library/svelte'
-import userEvent from '@testing-library/user-event'
+import { cleanup, render } from '@testing-library/svelte'
 
 // --------------------------------------------
 // Make sure all rendered components have been
@@ -12,9 +10,5 @@ beforeEach(cleanup)
 // Add global helper functions.
 
 Object.assign(global, {
-  createEvent,
-  fireEvent,
-  userEvent,
-  mock: vi.fn,
   render
 })
