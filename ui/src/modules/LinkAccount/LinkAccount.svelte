@@ -48,13 +48,11 @@
 
       else {
         // TODO: Handle an error response from the server.
-        throw new Error()
       }
     }
 
     catch (error) {
-      // TODO: Handle and test server unavailable.
-      console.error(error)
+      // TODO: Handle server unavailable.
     }
   })
 </script>
@@ -70,59 +68,84 @@
 
   { #if ready }
     { #if automaticallyLinkedBusiness }
-      <div class='card'>
-        <h1>{ automaticallyLinkedBusiness.name } has been automatically linked</h1>
+      <div class='link-account-status'>
+        <h1>{ automaticallyLinkedBusiness.name } automatically linked.</h1>
         <p>You can now charge customers as { automaticallyLinkedBusiness.name }.</p>
       </div>
 
-      <a href='/scan' class='button-primary'>Scan QR Code</a>
+      <a href='/scan'>Scan QR Code</a>
 
     { :else if manuallyLinkedBusiness }
-      <div class='card'>
+      <div class='link-account-status'>
         <h1>{ manuallyLinkedBusiness.name } successfully linked.</h1>
         <p>You can now charge customers as { manuallyLinkedBusiness.name }.</p>
       </div>
 
-      <a href='/scan' class='button-primary'>Scan QR Code</a>
+      <a href='/scan'>Scan QR Code</a>
 
     { :else }
-      <h1>Link Account</h1>
-      <p>Select a business account to link to CG Pay on this device.</p>
+      <div id='link-account-multiple' class='link-account-status'>
+        <h1>Link Account</h1>
+        <p>Select a business account to link to CG Pay on this device.</p>
 
-      <form on:submit|preventDefault={ selectBusiness } >
-        <label for='select-business'>Select Account:</label>
+        <form>
+          <label for='select-business'>Select Account:</label>
 
-        <select id='select-business' bind:value={ selectedBusiness }>
-          { #each businessOptions as business }
-            <option value={ business }>{ business.name }</option>
-          { /each }
-        </select>
+          <select id='select-business' bind:value={ selectedBusiness }>
+            { #each businessOptions as business }
+              <option value={ business }>{ business.name }</option>
+            { /each }
+          </select>
+        </form>
+      </div>
 
-        <button type='submit'>Link Account</button>
-      </form>
+      <button on:click={ selectBusiness }>Link Account</button>
     { /if }
   { /if }
 </section>
 
 <style lang='stylus'>
   #link-account
-    background $white
     display flex
     flex-direction column
-    height 100vh
     justify-content space-between
-    padding $s2
+    width 100%
 
-    h1
-      font-weight 600
-      margin-bottom $s1
-
-    .button-primary
-      buttonPrimary()
-
-    .card
-      background $green
-      border solid 1px $black
+    .link-account-status
+      background $c-green
+      border 1px solid $c-black
       padding $s2
-      text-align center
+
+      h1
+        font-weight 600
+        margin-bottom $s1
+        text lg
+        text-align center
+
+      p
+        text-align center
+
+    a, button
+      cgButton()
+      margin $s2 0
+
+    #link-account-multiple
+      p
+        contentNarrow(300px)
+        margin $s2 auto
+        text-align left
+
+      form
+        contentNarrow(300px)
+
+        label
+          display block
+          font-weight 600
+          margin-bottom $s1
+          text sm
+
+        select
+          cgField()
+
+          border 1px solid $c-black
 </style>

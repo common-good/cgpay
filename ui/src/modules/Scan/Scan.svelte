@@ -8,15 +8,13 @@
 
     if (devices?.length) {
       const cameraId = devices[0].id
-      const scanner = new Html5Qrcode('reader')
+      const scanner = new Html5Qrcode('scan-reader')
 
       scanner.start(
         cameraId, 
 
         // Configuration options.
-        {
-          qrbox: { width: 250, height: 250 }
-        },
+        {},
 
         // Handle code.
         async (decodedText, decodedResult) => {
@@ -39,10 +37,31 @@
 </script>
 
 <svelte:head>
-  <title>CG Pay - Scan Code</title>
+  <title>CG Pay - Scan QR Code</title>
 </svelte:head>
 
 <section id='scan'>
-  <h1>Scan Code</h1>
-  <div id='reader' />
+  <h1>Scan QR Code</h1>
+
+  <div id='scan-reader-container'>
+    <div id='scan-reader' />
+  </div>
 </section>
+
+<style lang='stylus'>
+  h1
+    font-weight 600
+    text lg
+    text-align center
+    margin 0 0 $s2
+
+  #scan-reader-container
+    cgCard()
+    background $c-green
+
+  #scan-reader
+    contentCentered()
+
+    :global(video)
+      width auto !important
+</style>

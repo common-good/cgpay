@@ -9,12 +9,6 @@
 
   // --------------------------------------------
 
-  const { userAgent } = window.navigator
-  const onAndroidDevice = /Android/i.test(userAgent)
-  const onAppleDevice = /iPhone|iPod|iPad/i.test(userAgent)
-
-  // --------------------------------------------
-
   function skip() {
     store.homeScreen.skip()
     navigateTo('/charge')
@@ -26,7 +20,7 @@
 </svelte:head>
 
 <section id='add-to-home-screen'>
-  <div class='wrapper'>
+  <div id='add-to-home-screen-content'>
     <img src= { cgLogo } alt="Common Good logo" />
     <h1>Add to Home Screen</h1>
 
@@ -41,19 +35,19 @@
 </section>
 
 <style lang='stylus'>
-  h1
-    text lg
-    font-weight 600
-    margin 0 0 $s2
+  #add-to-home-screen-content
+    background $c-white
+    border solid 1px $c-black
+    contentCentered(column)
+    padding $s2 $s2 $s3
 
   img
     margin 0 0 $s2
-    width 6rem
+    clampSize(20vw, 100px)
 
-  .wrapper
-    flexCenter column
-    background $white
-    border solid 1px $black
-    margin $s2
-    padding $s2 $s2 $s3
+  h1
+    font-weight 600
+    margin 0 0 $s2
+    text lg
+    text-align center
 </style>

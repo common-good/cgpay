@@ -12,6 +12,9 @@
   import Scan from '#modules/Scan/Scan.svelte'
   import SignIn from '#modules/Account/SignIn/SignIn.svelte'
 
+  import LayoutIntro from './LayoutIntro/LayoutIntro.svelte'
+  import LayoutStep from './LayoutStep/LayoutStep.svelte'
+
   // --------------------------------------------
   // Initialization Helpers
 
@@ -67,6 +70,7 @@
     {
       name: '/',
       component: AddToHomeScreen,
+      layout: LayoutIntro,
 
       onlyIf: {
         guard: store.homeScreen.promptRequired,
@@ -77,6 +81,7 @@
     {
       name: '/charge',
       component: Charge,
+      layout: LayoutStep,
 
       onlyIf: {
         guard: store.business.isLinked,
@@ -87,6 +92,7 @@
     {
       name: '/link-account',
       component: LinkAccount,
+      layout: LayoutStep,
 
       onlyIf: {
         guard: store.auth.isAuthenticated,
@@ -97,6 +103,7 @@
     {
       name: '/scan',
       component: Scan,
+      layout: LayoutStep,
 
       onlyIf: {
         guard: store.business.isLinked,
@@ -107,6 +114,7 @@
     {
       name: '/sign-in',
       component: SignIn,
+      layout: LayoutIntro,
 
       onlyIf: {
         guard: store.auth.isNotAuthenticated,

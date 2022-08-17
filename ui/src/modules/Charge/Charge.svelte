@@ -45,30 +45,72 @@
 <section id='charge'>
   { #if confirm }
     <h1>Success!</h1>
+    <h2>{ business.name } charged</h2>
 
-    <p>{ business.name } charged</p>
-
-    <section id='confirmation'>
+    <div class='charge-content' id='confirmation'>
       <img id='customer-photo' src={ account.photo } alt='Customer Photo' />
       <p id='confirmation-customer-name'>{ account.name }</p>
       <p id='confirmation-customer-location'>{ account.location }</p>
 
-      <p id='confirmation-charge-details'>
-        <span>{ transaction.description }</span>
-        <span>{ transaction.amount }</span>
-      </p>
-    </section>
+      <div id='confirmation-charge-details'>
+        <p>{ transaction.description }</p>
+        <p>{ transaction.amount }</p>
+      </div>
+    </div>
   { :else }
     <h1>{ business.name }</h1>
 
-    <img id='customer-photo' src={ account.photo } alt='Customer Photo' />
-    <p id='customer-name'>{ account.name }</p>
-    <p id='customer-location'>{ account.location }</p>
+    <div class='charge-content'>
+      <img id='customer-photo' src={ account.photo } alt='Customer Photo' />
+      <p id='customer-name'>{ account.name }</p>
+      <p id='customer-location'>{ account.location }</p>
 
-    <form on:submit|preventDefault={ charge }>
-      <input id='charge-description' type='text' placeholder='Description' bind:value={ transaction.description } />
-      <input id='charge-amount' type='number' placeholder='Amount' bind:value={ transaction.amount } />
-      <button type='submit'>Charge</button>
-    </form>
+      <form on:submit|preventDefault={ charge }>
+        <input id='charge-description' type='text' placeholder='Description' bind:value={ transaction.description } />
+        <input id='charge-amount' type='number' placeholder='Amount' bind:value={ transaction.amount } required />
+        <button type='submit'>Charge</button>
+      </form>
+    </div>
   { /if }
 </section>
+
+<style lang='stylus'>
+  #charge
+    h1
+      font-weight 600
+      text-align center
+      text lg
+      margin 0 0 $s2
+
+    h2
+      font-weight 600
+      text-align center
+      margin 0 0 $s2
+
+    .charge-content
+      cgCard()
+      background-color $c-green
+
+    img
+      clampSize(25vw, 150px)
+      margin $s2 auto
+
+    p
+      text-align center
+
+    #customer-name, #confirmation-customer-name
+      text lg
+
+    form
+      margin $s2
+
+      input
+        cgField()
+
+      button
+        cgButton()
+
+    #confirmation-charge-details
+      margin $s2 0 0
+      text lg
+</style>

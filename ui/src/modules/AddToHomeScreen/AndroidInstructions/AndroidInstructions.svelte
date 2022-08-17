@@ -13,7 +13,6 @@
 
   button
     addToHomeScreenLink()
-    text sm
 
   p
     margin 0 0 $s2

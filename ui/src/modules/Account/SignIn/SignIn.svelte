@@ -12,7 +12,7 @@
     password: null
   }
 
-  let errorMessage = null
+  let errorMessage
 
   // --------------------------------------------
 
@@ -34,8 +34,7 @@
     }
 
     catch (error) {
-      // TODO: Handle and test no server access.
-      console.error(error)
+      // TODO: Handle server unavailable.
       errorMessage = 'We could not complete your request.'
     }
   }
@@ -47,9 +46,10 @@
 
 <section id='sign-in' on:submit|preventDefault={ signIn }>
   <header>
-    <img class='logo' src= { cgLogo } alt="Common Good logo" />
+    <img src= { cgLogo } alt='Common Good Logo' />
     <h1>CG Pay</h1>
   </header>
+
   <h2>Sign In</h2>
 
   { #if errorMessage }
@@ -57,9 +57,8 @@
   { /if }
 
   { #if $store.network.offline }
-    <div class="card">
-      <p>Welcome to CG Pay!</p>
-      <p>Please connect to the internet to enable Sign In.</p>
+    <div id='sign-in-offline'>
+      <p>Please connect to the internet to sign in.</p>
     </div>
   { :else }
     <form>
@@ -71,9 +70,9 @@
 </section>
 
 <style lang='stylus'>
-  button
-    buttonPrimary()
-    width 100%
+  img
+    clampSize(15vw, 75px)
+    margin 0 $s2 0 0
 
   h1
     font-weight 600
@@ -81,38 +80,23 @@
 
   h2
     font-weight 600
+    margin $s4 0
     text lg
+    text-align center
 
   header
-    flexCenter row
-    margin 0 0 4rem
+    contentCentered()
 
   input
-    input null
-    width 100%
-    &:last-of-type
-      margin-bottom $s3
+    cgField()
 
-  form
-    flexCenter column
-    margin 4rem 0 0
-    width 100%
+  button
+    cgButton()
 
-  p
-    margin 0 0 1rem
+  #sign-in-error
+    margin 0 0 $s2
+    text-align center
 
-  section
-    flexCenter column
-    padding $s4 $s2 0
-
-  .card
-    background $gray-light
-    border solid 1px $black
-    border-radius 5px
-    margin $s3 0 0
-    padding $s2 $s2 $s1
-
-  .logo
-    margin 0 20px 0 0
-    width 80px
+  #sign-in-offline
+    cgCard()
 </style>
