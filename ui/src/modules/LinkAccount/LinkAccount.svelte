@@ -72,7 +72,7 @@
           <p>You can now charge customers as { automaticallyLinkedBusiness.name }.</p>
         </div>
 
-          <button class="button-primary">Scan QR Code</button>
+          <a href='/scan' class="button-primary">Scan QR Code</a>
 
       { :else if manuallyLinkedBusiness }
         <div class="card">
@@ -80,7 +80,7 @@
           <p>You can now charge customers as { manuallyLinkedBusiness.name }.</p>
         </div>
 
-          <button class="button-primary">Scan QR Code</button>
+          <a href='/scan' class="button-primary">Scan QR Code</a>
 
     { :else }
       <h1>Link Account</h1>
