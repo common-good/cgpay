@@ -31,7 +31,7 @@
       if (response.ok) {
         const { businesses } = await response.json()
  
-        // TODO: Handle edge case of no businesses
+        // TODO: Handle edge case of no businesses,
         // if this is a possible case.
 
         if (businesses.length === 1) {
@@ -47,14 +47,13 @@
       }
 
       else {
-        // TODO: Is this how we want to handle when the
-        // server is not available?
+        // TODO: Handle an error response from the server.
         throw new Error()
       }
     }
 
     catch (error) {
-      // TODO: Handle and test no server access.
+      // TODO: Handle and test server unavailable.
       console.error(error)
     }
   })
@@ -108,9 +107,9 @@
 <style lang='stylus'>
   #link-account
     background $white
-    height 100vh
     display flex
     flex-direction column
+    height 100vh
     justify-content space-between
     padding $s2
 
@@ -123,7 +122,7 @@
 
     .card
       background $green
-      border: solid 1px $black
+      border solid 1px $black
       padding $s2
       text-align center
 </style>
