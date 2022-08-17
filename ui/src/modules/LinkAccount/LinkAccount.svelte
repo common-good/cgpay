@@ -84,7 +84,7 @@
 
     { :else }
       <h1>Link Account</h1>
-      <p>Select a business account to link to CGPay on this device.</p>
+      <p>Select a business account to link to CG Pay on this device.</p>
 
       <form on:submit|preventDefault={ selectBusiness } >
         <label for='select-business'>Select Account:</label>

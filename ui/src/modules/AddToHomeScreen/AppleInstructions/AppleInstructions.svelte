@@ -8,7 +8,7 @@
 </script>
 
 <section id='apple-instructions'>
-  <p class="intro">CGPay is easy to use when you add it to your device home screen.</p>
+  <p class="intro">CG Pay is easy to use when you add it to your device home screen.</p>
   <button on:click={ skip }>Skip for now</button>
   <h2>Steps to save:</h2>
   <ul>
@@ -21,11 +21,11 @@
       <img src={ appleStepTwo } alt='Instructions Step 2' />
     </li>
     <li>
-      <p>3. Tap “Add” to save CGPay to your home screen.</p>
+      <p>3. Tap “Add” to save CG Pay to your home screen.</p>
       <img src={ appleStepThree } alt='Instructions Step 3' />
     </li>
     <li>
-      <p>4. The CGPay icon will be saved to your home screen. Tap it to open CGPay and continue.</p>
+      <p>4. The CG Pay icon will be saved to your home screen. Tap it to open CG Pay and continue.</p>
       <img src={ appleStepFour } alt='Instructions Step 4' class="icon" />
     </li>
   </ul>
