@@ -89,10 +89,10 @@ test('I can scan a valid customer QR code.', async ({ page }) => {
   await expect(charge.root()).toBeVisible()
 
   await expect(charge.element('businessName')).toHaveText('Business 1')
-  await expect(charge.element('customerName')).toHaveText('Customer One')
-  await expect(charge.element('customerLocation')).toHaveText('Brooklyn, NY')
+  await expect(charge.element('profile')).toContainText('Customer One')
+  await expect(charge.element('profile')).toContainText('Brooklyn, NY')
 
-  await expect(charge.element('customerPhoto'))
+  await expect(charge.element('profilePhoto'))
     .toHaveAttribute('src', 'https://members.cg4.us/customer-one.png')
 })
 

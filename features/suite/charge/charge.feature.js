@@ -3,6 +3,7 @@ import { test, expect } from '@playwright/test'
 import createLinkAccountScreen from '../link-account/link-account.screen.js'
 import createRootScreen from '../root.screen.js'
 import createRoutes from '../routes.js'
+import createScanScreen from '../scan/scan.screen.js'
 import createSignInScreen from '../sign-in/sign-in.screen.js'
 
 import createChargeScreen from './charge.screen.js'
@@ -60,6 +61,7 @@ test('I can charge an identified customer.', async ({ page }) => {
   const charge = createChargeScreen(page)
   const linkAccount = createLinkAccountScreen(page)
   const root = createRootScreen(page)
+  const scan = createScanScreen(page)
   const signIn = createSignInScreen(page)
 
   // --------------------------------------------
@@ -93,10 +95,14 @@ test('I can charge an identified customer.', async ({ page }) => {
   })
 
   await expect(charge.root()).toContainText('Success')
-  await expect(charge.element('confirmation')).toContainText('Customer One')
-  await expect(charge.element('confirmation')).toContainText('Brooklyn, NY')
-  await expect(charge.element('confirmation')).toContainText('10')
-  await expect(charge.element('confirmation')).toContainText('Burrito')
+  await expect(charge.element('profile')).toContainText('Customer One')
+  await expect(charge.element('profile')).toContainText('Brooklyn, NY')
+  await expect(charge.element('transactionDetails')).toContainText('10')
+  await expect(charge.element('transactionDetails')).toContainText('Burrito')
+
+  await charge.scanAgain()
+  await expect(charge.root()).not.toBeVisible()
+  await expect(scan.root()).toBeVisible()
 })
 
 test('I cannot charge an identified customer without being signed in.', async ({ page }) => {

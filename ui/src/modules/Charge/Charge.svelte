@@ -1,44 +1,19 @@
 <script>
   import store from '#app.store.js'
 
+  import Profile from './Profile/Profile.svelte'
+  import SubmitCharge from './SubmitCharge/SubmitCharge.svelte'
+
   // --------------------------------------------
 
   let account = $store.auth.account
   let business = $store.business.linked
-  let confirm = false
-
-  let transaction = {
-    amount: null,
-    description: null
-  }
+  let transaction
 
   // --------------------------------------------
 
-  async function charge() {
-    try {
-      const response = await fetch(`${ __membersApi__ }/charges`, {
-        method: 'POST',
-        headers: {
-          'authorization': `Bearer ${ $store.auth.token }`,
-          'content-type': 'application/json'
-        },
-        body: JSON.stringify(transaction)
-      })
-
-      if (response.ok) {
-        confirm = true
-      }
-
-      else {
-        errorMessage = `We couldn't complete the charge. Please try again.`
-      }
-    }
-
-    catch (error) {
-      // TODO: Handle and test no server access.
-      console.error(error)
-      errorMessage = 'We could not complete your request.'
-    }
+  function handleSubmitCharge(event) {
+    transaction = event.detail
   }
 </script>
 
@@ -47,34 +22,32 @@
 </svelte:head>
 
 <section id='charge'>
-  { #if confirm }
-    <h1>Success!</h1>
-    <h2>{ business.name } charged</h2>
+  <div class='charge-message'>
+    { #if transaction }
+      <h1>Success!</h1>
+      <h2>{ business.name } charged</h2>
+    { :else }
+      <h1>{ business.name }</h1>
+    { /if }
+  </div>
 
-    <div class='charge-content' id='confirmation'>
-      <img id='customer-photo' src={ account.photo } alt='Customer Photo' />
-      <p id='confirmation-customer-name'>{ account.name }</p>
-      <p id='confirmation-customer-location'>{ account.location }</p>
-
-      <div id='confirmation-charge-details'>
-        <p>{ transaction.description }</p>
-        <p>{ transaction.amount }</p>
-      </div>
-    </div>
-  { :else }
-    <h1>{ business.name }</h1>
-
+  { #if transaction }
     <div class='charge-content'>
-      <img id='customer-photo' src={ account.photo } alt='Customer Photo' />
-      <p id='customer-name'>{ account.name }</p>
-      <p id='customer-location'>{ account.location }</p>
-
-      <form on:submit|preventDefault={ charge }>
-        <input id='charge-description' type='text' placeholder='Description' bind:value={ transaction.description } />
-        <input id='charge-amount' type='number' placeholder='Amount' bind:value={ transaction.amount } required />
-        <button type='submit'>Charge</button>
-      </form>
+      <Profile { account } />
     </div>
+
+    <div id='charge-transaction-details'>
+      { #if transaction.description }
+        <p>{ transaction.description }</p>
+      { /if }
+
+      <p>{ transaction.amount }</p>
+    </div>
+
+    <a href='/scan'>Scan Again</a>
+
+  { :else }
+    <SubmitCharge { account } on:complete={ handleSubmitCharge } />
   { /if }
 </section>
 
@@ -95,26 +68,11 @@
       cgCard()
       background-color $c-green
 
-    img
-      clampSize(25vw, 150px)
-      margin $s2 auto
-
-    p
+    #charge-transaction-details
+      margin $s2 0
+      text lg
       text-align center
 
-    #customer-name, #confirmation-customer-name
-      text lg
-
-    form
-      margin $s2
-
-      input
-        cgField()
-
-      button
-        cgButton()
-
-    #confirmation-charge-details
-      margin $s2 0 0
-      text lg
+    a
+      cgButton()
 </style>
