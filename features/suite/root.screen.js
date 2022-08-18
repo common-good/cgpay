@@ -1,9 +1,5 @@
 export default (page) => {
   return {
-    async visit() {
-      await page.goto('/')
-    },
-
     async loseConnection() {
       await page._parent.setOffline(true)
     },
@@ -12,8 +8,8 @@ export default (page) => {
       await page._parent.setOffline(false)
     },
 
-    root() {
-      return this.element('root')
+    async visit() {
+      await page.goto('/')
     },
 
     element(name) {
@@ -23,6 +19,10 @@ export default (page) => {
       }
 
       return page.locator(elements[name])
+    },
+
+    root() {
+      return this.element('root')
     }
   }
 }

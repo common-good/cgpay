@@ -1,9 +1,5 @@
 export default (page) => {
   return {
-    root() {
-      return this.element('root')
-    },
-
     async scanAgain() {
       await this.element('scanButton').click()
     },
@@ -32,6 +28,10 @@ export default (page) => {
       }
 
       return page.locator(elements[name])
+    },
+
+    root() {
+      return this.element('root')
     }
   }
 }

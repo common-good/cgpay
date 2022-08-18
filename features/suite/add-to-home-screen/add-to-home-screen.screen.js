@@ -1,15 +1,11 @@
 export default (page) => {
   return {
-    async visit() {
-      await page.goto('/add-to-home-screen')
-    },
-
     async skipHomeScreenPrompt() {
       await this.element('skip').click()
     },
 
-    root() {
-      return this.element('root')
+    async visit() {
+      await page.goto('/add-to-home-screen')
     },
 
     element(name) {
@@ -21,6 +17,10 @@ export default (page) => {
       }
 
       return page.locator(elements[name])
+    },
+
+    root() {
+      return this.element('root')
     }
   }
 }

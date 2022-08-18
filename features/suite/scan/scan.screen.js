@@ -4,16 +4,16 @@ export default (page) => {
       await page.goto('/scan')
     },
 
-    root() {
-      return this.element('root')
-    },
-
     element(name) {
       const elements = {
         root: '#scan'
       }
 
       return page.locator(elements[name])
+    },
+
+    root() {
+      return this.element('root')
     }
   }
 }
