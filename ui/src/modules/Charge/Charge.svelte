@@ -1,6 +1,8 @@
 <script>
   import store from '#app.store.js'
 
+  // --------------------------------------------
+
   let account = $store.auth.account
   let business = $store.business.linked
   let confirm = false
@@ -9,6 +11,8 @@
     amount: null,
     description: null
   }
+
+  // --------------------------------------------
 
   async function charge() {
     try {

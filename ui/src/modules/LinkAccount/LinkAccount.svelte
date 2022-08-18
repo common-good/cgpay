@@ -4,20 +4,20 @@
 
   import store from '#app.store.js'
 
+  import SelectBusiness from './SelectBusiness/SelectBusiness.svelte'
+
   // --------------------------------------------
 
-  let automaticallyLinkedBusiness
   let businessOptions = []
-  let manuallyLinkedBusiness
-  let selectedBusiness
-
+  let linkedBusiness
+  let message
   let ready = false
 
   // --------------------------------------------
 
-  function selectBusiness() {
-    manuallyLinkedBusiness = selectedBusiness
-    store.business.link(manuallyLinkedBusiness)
+  function handleSelectBusiness(event) {
+    linkedBusiness = event.detail
+    message = `${ linkedBusiness.name } successfully linked.`
   }
 
   // --------------------------------------------
@@ -35,8 +35,9 @@
         // if this is a possible case.
 
         if (businesses.length === 1) {
-          automaticallyLinkedBusiness = businesses[0]
-          store.business.link(automaticallyLinkedBusiness)
+          linkedBusiness = businesses[0]
+          store.business.link(linkedBusiness)
+          message = `${ linkedBusiness.name } automatically linked.`
         }
 
         if (businesses.length > 1) {
@@ -67,85 +68,34 @@
   { /if }
 
   { #if ready }
-    { #if automaticallyLinkedBusiness }
-      <div class='link-account-status'>
-        <h1>{ automaticallyLinkedBusiness.name } automatically linked.</h1>
-        <p>You can now charge customers as { automaticallyLinkedBusiness.name }.</p>
-      </div>
+    { #if linkedBusiness }
+      <section id='link-account-automatic'>
+        <div class='link-account-content'>
+          <h1>{ message }</h1>
+          <p>You can now charge customers as { linkedBusiness.name }.</p>
+        </div>
 
-      <a href='/scan'>Scan QR Code</a>
-
-    { :else if manuallyLinkedBusiness }
-      <div class='link-account-status'>
-        <h1>{ manuallyLinkedBusiness.name } successfully linked.</h1>
-        <p>You can now charge customers as { manuallyLinkedBusiness.name }.</p>
-      </div>
-
-      <a href='/scan'>Scan QR Code</a>
+        <a class='link-account-action' href='/scan'>Scan QR Code</a>
+      </section>
 
     { :else }
-      <div id='link-account-multiple' class='link-account-status'>
-        <h1>Link Account</h1>
-        <p>Select a business account to link to CG Pay on this device.</p>
-
-        <form>
-          <label for='select-business'>Select Account:</label>
-
-          <select id='select-business' bind:value={ selectedBusiness }>
-            { #each businessOptions as business }
-              <option value={ business }>{ business.name }</option>
-            { /each }
-          </select>
-        </form>
-      </div>
-
-      <button on:click={ selectBusiness }>Link Account</button>
+      <SelectBusiness { businessOptions } on:complete={ handleSelectBusiness } />
     { /if }
   { /if }
 </section>
 
 <style lang='stylus'>
+  @import './LinkAccount.styl'
+
   #link-account
     display flex
     flex-direction column
     justify-content space-between
     width 100%
 
-    .link-account-status
-      background $c-green
-      border 1px solid $c-black
-      padding $s2
+    .link-account-action
+      linkAccountAction()
 
-      h1
-        font-weight 600
-        margin-bottom $s1
-        text lg
-        text-align center
-
-      p
-        text-align center
-
-    a, button
-      cgButton()
-      margin $s2 0
-
-    #link-account-multiple
-      p
-        contentNarrow(300px)
-        margin $s2 auto
-        text-align left
-
-      form
-        contentNarrow(300px)
-
-        label
-          display block
-          font-weight 600
-          margin-bottom $s1
-          text sm
-
-        select
-          cgField()
-
-          border 1px solid $c-black
+    .link-account-content
+      linkAccountContent()
 </style>
