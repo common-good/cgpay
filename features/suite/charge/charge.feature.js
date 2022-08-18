@@ -98,3 +98,12 @@ test('I can charge an identified customer.', async ({ page }) => {
   await expect(charge.element('confirmation')).toContainText('10')
   await expect(charge.element('confirmation')).toContainText('Burrito')
 })
+
+test('I cannot charge an identified customer without being signed in.', async ({ page }) => {
+  const charge = createChargeScreen(page)
+  const signIn = createSignInScreen(page)
+
+  await charge.visit()
+  await expect(charge.root()).not.toBeVisible()
+  await expect(signIn.root()).toBeVisible()
+})

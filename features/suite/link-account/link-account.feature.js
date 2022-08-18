@@ -115,3 +115,12 @@ test('When I have multiple business accounts, I can select a business to link.',
   await expect(linkAccount.root()).toContainText('Business 3')
   await expect(linkAccount.root()).toContainText('successfully linked')
 })
+
+test('I cannot link an account without being signed in.', async ({ page }) => {
+  const linkAccount = createLinkAccountScreen(page)
+  const signIn = createSignInScreen(page)
+
+  await linkAccount.visit()
+  await expect(linkAccount.root()).not.toBeVisible()
+  await expect(signIn.root()).toBeVisible()
+})

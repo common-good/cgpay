@@ -96,10 +96,11 @@ test('I can scan a valid customer QR code.', async ({ page }) => {
     .toHaveAttribute('src', 'https://members.cg4.us/customer-one.png')
 })
 
-test('I cannot scan a valid customer QR code without being signed in with a linked account.', async ({ page }) => {
+test('I cannot scan a valid customer QR code without being signed in.', async ({ page }) => {
   const scan = createScanScreen(page)
   const signIn = createSignInScreen(page)
 
   await scan.visit()
+  await expect(scan.root()).not.toBeVisible()
   await expect(signIn.root()).toBeVisible()
 })

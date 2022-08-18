@@ -4,7 +4,7 @@ import createRootScreen from '../root.screen.js'
 
 // --------------------------------------------
 
-test('I can see when the app is offline.', async ({ page }) => {
+test('I can see when the app is offline and when connection is restored.', async ({ page }) => {
   const root = createRootScreen(page)
 
   // --------------------------------------------
