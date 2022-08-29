@@ -451,6 +451,7 @@ describe('app.store', () => {
         })
       })
     })
+
     describe('.skipped', () => {
       it('is accessible', () => {
         const store = createStore()
@@ -474,6 +475,103 @@ describe('app.store', () => {
         expect(getLocallyStored().homeScreen.skipped).toEqual(now.toISOString())
         expect(store.inspect().homeScreen.skipped).toEqual(now)
         store.subscribe(state => expect(state.homeScreen.skipped).toEqual(now))
+      })
+    })
+  })
+
+  describe('.transactions', () => {
+    describe('.dequeue', () => {
+      it('dequeues the transaction with given ID', () => {
+        const store = createStore()
+
+        store.transactions.queue({ id: '1' })
+        store.transactions.queue({ id: '2' })
+        store.transactions.queue({ id: '3' })
+
+        store.transactions.dequeue('2')
+
+        // Confirm that all forms of store access are updated.
+        expect(getLocallyStored().transactions.queued).toHaveLength(2)
+        expect(store.inspect().transactions.queued).toHaveLength(2)
+        store.subscribe(state => expect(state.transactions.queued).toHaveLength(2))
+
+        expect(store.inspect().transactions.queued).toEqual([
+          { id: '1' },
+          { id: '3' }
+        ])
+      })
+    })
+
+    describe('.flush', () => {
+      it('sends all requests', async () => {
+        const sendChargeRequest = vi.fn()
+        const store = createStore()
+
+        store.transactions.queue({ id: '1', amount: 1, description: '1' })
+        store.transactions.queue({ id: '2', amount: 2, description: '2' })
+        store.transactions.queue({ id: '3', amount: 3, description: '3' })
+
+        await store.transactions.flush({ sendChargeRequest })
+
+        expect(sendChargeRequest.calls).toHaveLength(3)
+        expect(sendChargeRequest.calls[0][0].transaction).toEqual({ id: '1', amount: 1, description: '1' })
+        expect(sendChargeRequest.calls[1][0].transaction).toEqual({ id: '2', amount: 2, description: '2' })
+        expect(sendChargeRequest.calls[2][0].transaction).toEqual({ id: '3', amount: 3, description: '3' })
+      })
+
+      describe('when a request is successful', () => {
+        it('dequeues the request', async () => {
+          const sendChargeRequest = vi.fn()
+          const store = createStore()
+
+          store.transactions.queue({ id: '1', amount: 1, description: '1' })
+          store.transactions.queue({ id: '2', amount: 2, description: '2' })
+          store.transactions.queue({ id: '3', amount: 3, description: '3' })
+
+          expect(store.inspect().transactions.queued).toHaveLength(3)
+          await store.transactions.flush({ sendChargeRequest })
+          expect(store.inspect().transactions.queued).toHaveLength(0)
+        })
+      })
+
+      describe('when a request fails', () => {
+        it('keeps the request in the queue', async () => {
+          let callCount = 0
+
+          async function sendChargeRequest() {
+            callCount++
+
+            if (callCount === 2) {
+              throw new Error()
+            }
+          }
+
+          const store = createStore()
+
+          store.transactions.queue({ id: '1' })
+          store.transactions.queue({ id: '2' })
+          store.transactions.queue({ id: '3' })
+
+          expect(store.inspect().transactions.queued).toHaveLength(3)
+          await store.transactions.flush({ sendChargeRequest })
+          expect(store.inspect().transactions.queued).toHaveLength(1)
+
+          expect(store.inspect().transactions.queued[0]).toEqual({ id: '2' })
+        })
+      })
+    })
+
+    describe('.queue', () => {
+      it('stores the transaction', () => {
+        const store = createStore()
+        store.transactions.queue({ id: '1' })
+
+        // Confirm that all forms of store access are updated.
+        expect(getLocallyStored().transactions.queued).toHaveLength(1)
+        expect(store.inspect().transactions.queued).toHaveLength(1)
+        store.subscribe(state => expect(state.transactions.queued).toHaveLength(1))
+
+        expect(store.inspect().transactions.queued[0]).toEqual({ id: '1' })
       })
     })
   })

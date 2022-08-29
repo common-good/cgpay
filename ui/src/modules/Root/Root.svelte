@@ -41,6 +41,26 @@
     }
   }
 
+  async function sendChargeRequest({ transaction }) {
+    try {
+      const response = await fetch(`${ __membersApi__ }/charges`, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json'
+        },
+        body: JSON.stringify(transaction)
+      })
+
+      if (!response.ok) {
+        throw new Error('Response was not OK.')
+      }
+    }
+
+    catch (error) {
+      throw new Error('Could not complete charge request.')
+    }
+  }
+
   // --------------------------------------------
   // Initialization
 
@@ -51,11 +71,13 @@
 
     window.addEventListener('online', () => {
       store.network.setRestored()
+      store.transactions.flush({ sendChargeRequest })
       setTimeout(store.network.reset, 3000)
     })
 
     if (window.navigator.onLine) {
       store.network.setOnline()
+      store.transactions.flush({ sendChargeRequest })
     }
 
     if (!window.navigator.onLine) {

@@ -22,6 +22,12 @@
   // --------------------------------------------
 
   async function charge() {
+    if ($store.network.offline) {
+      store.transactions.queue(transaction)
+      dispatch('complete', transaction)
+      return
+    }
+
     try {
       const response = await fetch(`${ __membersApi__ }/charges`, {
         method: 'POST',

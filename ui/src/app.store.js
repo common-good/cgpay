@@ -46,6 +46,10 @@ export const createStore = () => {
       offline: null,
       online: null,
       restored: false
+    },
+
+    transactions: {
+      queued: []
     }
   }
 
@@ -191,6 +195,45 @@ export const createStore = () => {
           return newState
         })
       },
+    },
+
+    transactions: {
+      async flush({ sendChargeRequest }) {
+        const { queued } = localState.transactions
+
+        for (let i = 0; i < queued.length; i++) {
+          try {
+            await sendChargeRequest({ transaction: queued[i] })
+            this.dequeue(queued[i].id)
+          }
+
+          catch (error) {
+            // TODO Handle charge request error.
+          }
+        }
+      },
+
+      dequeue(id) {
+        update(currentState => {
+          const newState = { ...currentState }
+
+          newState.transactions.queued = newState.transactions.queued.filter(item => {
+            return item.id !== id
+          })
+
+          return storeStateLocally(newState)
+        })
+      },
+
+      queue(transaction) {
+        update(currentState => {
+          const newState = { ...currentState }
+
+          newState.transactions.queued = [ ...newState.transactions.queued, transaction ]
+
+          return storeStateLocally(newState)
+        })
+      }
     }
   }
 }

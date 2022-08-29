@@ -88,17 +88,65 @@ test('I can charge an identified customer.', async ({ page }) => {
   await expect(root.element('networkStatus')).toContainText('online')
 
   // --------------------------------------------
+  // Confirm charge goes through when online.
 
   await charge.with({
     amount: '10.00',
-    description: 'Burrito'
+    description: 'Item 1'
   })
 
   await expect(charge.root()).toContainText('Success')
   await expect(charge.element('profile')).toContainText('Customer One')
   await expect(charge.element('profile')).toContainText('Brooklyn, NY')
   await expect(charge.element('transactionDetails')).toContainText('10')
-  await expect(charge.element('transactionDetails')).toContainText('Burrito')
+  await expect(charge.element('transactionDetails')).toContainText('Item 1')
+
+  let chargeRequests = routes.record.calls
+    .filter(call => call[0].url.includes('charges'))
+    .flat()
+
+  expect(chargeRequests).toHaveLength(1)
+
+  // --------------------------------------------
+  // Confirm charges are queued when offline.
+
+  await charge.visit()
+
+  await root.loseConnection()
+  await expect(root.element('networkStatus')).toBeVisible()
+  await expect(root.element('networkStatus')).toContainText('offline')
+
+  await charge.with({
+    amount: '13.00',
+    description: 'Item 2'
+  })
+
+  await expect(charge.root()).toContainText('Success')
+  await expect(charge.element('transactionDetails')).toContainText('13')
+  await expect(charge.element('transactionDetails')).toContainText('Item 2')
+
+  chargeRequests = routes.record.calls
+    .filter(call => call[0].url.includes('charges'))
+    .flat()
+
+  expect(chargeRequests).toHaveLength(1)
+  expect(chargeRequests[0].body.description).toEqual('Item 1')
+
+  // --------------------------------------------
+  // Confirm charges are sent when back online.
+
+  await root.restoreConnection()
+  await page.waitForTimeout(1000)
+
+  chargeRequests = routes.record.calls
+    .filter(call => call[0].url.includes('charges'))
+    .flat()
+
+  expect(chargeRequests).toHaveLength(2)
+  expect(chargeRequests[1].body.description).toEqual('Item 2')
+
+  // --------------------------------------------
+  // Ensure Scan Again button redirects properly.
 
   await charge.scanAgain()
   await expect(charge.root()).not.toBeVisible()
