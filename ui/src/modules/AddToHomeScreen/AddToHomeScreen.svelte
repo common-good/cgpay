@@ -11,7 +11,7 @@
 
   function skip() {
     store.homeScreen.skip()
-    navigateTo('/charge')
+    navigateTo('/scan')
   }
 </script>
 

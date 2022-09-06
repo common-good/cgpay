@@ -1,3 +1,5 @@
+import store from '#app.store.js'
+
 import Scan from './Scan.svelte'
 
 // --------------------------------------------
@@ -10,8 +12,9 @@ vi.mock('html5-qrcode', () => ({
 
 // --------------------------------------------
 
-describe.skip('Scan', () => {
+describe('Scan', () => {
   it('renders', () => {
+    store.accounts.link({})
     render(Scan)
   })
 })

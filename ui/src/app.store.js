@@ -30,15 +30,6 @@ export const createStore = () => {
       possible: null
     },
 
-    // auth: {
-    //   account: null,
-    //   token: null
-    // },
-    //
-    // business: {
-    //   linked: null
-    // },
-
     device: {
       type: getDeviceType(),
     },
@@ -90,6 +81,18 @@ export const createStore = () => {
         })
       },
 
+      hasLinkedAccount() {
+        return !!localState.accounts.linked
+      },
+
+      hasNoPossibleAccounts() {
+        return !localState.accounts.possible
+      },
+
+      hasPossibleAccounts() {
+        return !!localState.accounts.possible
+      },
+
       setPossibleAccounts(accounts) {
         update(currentState => {
           const newState = { ...currentState }
@@ -100,54 +103,6 @@ export const createStore = () => {
         })
       }
     },
-
-    // auth: {
-    //   isAuthenticated() {
-    //     return localState.auth.token !== null
-    //   },
-    //
-    //   isNotAuthenticated() {
-    //     return localState.auth.token === null
-    //   },
-    //
-    //   signIn({ account, token }) {
-    //     update(currentState => {
-    //       const newState = { ...currentState }
-    //
-    //       newState.auth.account = account
-    //       newState.auth.token = token
-    //
-    //       return storeStateLocally(newState)
-    //     })
-    //   },
-    //
-    //   signOut() {
-    //     update(currentState => {
-    //       const newState = { ...currentState }
-    //
-    //       newState.auth.account = null
-    //       newState.auth.token = null
-    //
-    //       return storeStateLocally(newState)
-    //     })
-    //   }
-    // },
-    //
-    // business: {
-    //   isLinked() {
-    //     return localState.business.linked !== null
-    //   },
-    //
-    //   link(business) {
-    //     update(currentState => {
-    //       const newState = { ...currentState }
-    //
-    //       newState.business.linked = business
-    //
-    //       return storeStateLocally(newState)
-    //     })
-    //   }
-    // },
 
     device: {
       isApple() {

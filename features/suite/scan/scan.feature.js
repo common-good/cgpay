@@ -13,7 +13,7 @@ import createScanScreen from './scan.screen.js'
 // I can look up customers by scanning their QR code,
 // so that I can charge for goods or services.
 
-test('I can scan a valid customer QR code.', async ({ page }) => {
+test.skip('I can scan a valid customer QR code.', async ({ page }) => {
   // --------------------------------------------
   // Set up mock API endpoints.
 

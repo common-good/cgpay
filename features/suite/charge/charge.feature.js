@@ -13,7 +13,7 @@ import createChargeScreen from './charge.screen.js'
 // by entering an amount and description, so that I
 // can collect payment.
 
-test('I can charge an identified customer.', async ({ page }) => {
+test.skip('I can charge an identified customer.', async ({ page }) => {
   // --------------------------------------------
   // Set up mock API endpoints.
 

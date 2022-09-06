@@ -78,13 +78,23 @@
     {
       name: '/charge',
       component: Charge,
-      layout: LayoutStep
+      layout: LayoutStep,
+
+      onlyIf: {
+        guard: store.accounts.hasLinkedAccount,
+        redirect: '/link-account'
+      }
     },
 
     {
       name: '/link-account',
       component: LinkAccount,
-      layout: LayoutStep
+      layout: LayoutStep,
+
+      onlyIf: {
+        guard: store.accounts.hasPossibleAccounts,
+        redirect: '/sign-in'
+      }
     },
 
     {
@@ -92,10 +102,10 @@
       component: Scan,
       layout: LayoutStep,
 
-      // onlyIf: {
-      //   guard: store.business.isLinked,
-      //   redirect: '/link-account'
-      // }
+      onlyIf: {
+        guard: store.accounts.hasLinkedAccount,
+        redirect: '/link-account'
+      }
     },
 
     {
@@ -103,10 +113,10 @@
       component: SignIn,
       layout: LayoutIntro,
 
-      // onlyIf: {
-      //   guard: store.business.isNotLinked,
-      //   redirect: '/scan'
-      // }
+      onlyIf: {
+        guard: store.accounts.hasNoPossibleAccounts,
+        redirect: '/link-account'
+      }
     }
   ]
 </script>

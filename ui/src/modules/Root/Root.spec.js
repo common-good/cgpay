@@ -13,7 +13,7 @@ vi.mock('html5-qrcode', () => ({
 
 // --------------------------------------------
 
-describe.skip('Root', () => {
+describe('Root', () => {
   it('renders', () => {
     render(Root)
   })

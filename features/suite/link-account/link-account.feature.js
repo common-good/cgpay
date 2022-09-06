@@ -87,7 +87,7 @@ test('When I have only one account, my account is automatically linked.', async 
   await expect(scan.root()).toContainText('Account 1')
 })
 
-test('When I have multiple account accounts, I can select a account to link.', async ({ page }) => {
+test('When I have multiple accounts, I can select a account to link.', async ({ page }) => {
   // --------------------------------------------
   // Set up mock API endpoints.
 
