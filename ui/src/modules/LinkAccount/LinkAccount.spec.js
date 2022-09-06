@@ -1,5 +1,4 @@
-import appStore from '#app.store.js'
-import { writable } from 'svelte/store'
+import store from '#app.store.js'
 
 import LinkAccount from './LinkAccount.svelte'
 
@@ -17,24 +16,18 @@ async function mockFetch() {
   }
 }
 
-vi.mock('#app.store.js')
 vi.stubGlobal('fetch', mockFetch)
 
 // --------------------------------------------
 
 describe('LinkAccount', () => {
   it('renders', () => {
-    const { subscribe } = writable({
-      auth: {
-        account: {
-          identifier: ''
-        }
-      },
+    store.accounts.setPossibleAccounts([
+      { id: 1 },
+      { id: 2 },
+      { id: 3 }
+    ])
 
-      network: {}
-    })
-
-    vi.mocked(appStore.subscribe).mockImplementation(subscribe)
     render(LinkAccount)
   })
 })

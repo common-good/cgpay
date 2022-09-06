@@ -4,56 +4,28 @@
 
   import store from '#app.store.js'
 
-  import SelectBusiness from './SelectBusiness/SelectBusiness.svelte'
+  import SelectAccount from './SelectAccount/SelectAccount.svelte'
 
   // --------------------------------------------
 
-  let businessOptions = []
-  let linkedBusiness
   let message
-  let ready = false
+
+  $: linkedAccount = $store.accounts.linked
+  $: possibleAccounts = $store.accounts.possible
 
   // --------------------------------------------
 
-  function handleSelectBusiness(event) {
-    linkedBusiness = event.detail
-    message = `${ linkedBusiness.name } successfully linked.`
+  function handleSelectAccount(event) {
+    store.accounts.link(event.detail)
+    message = `${ $store.accounts.linked.name } successfully linked.`
   }
 
   // --------------------------------------------
 
   onMount(async () => {
-    try {
-      const { identifier } = $store.auth.account
-      const query = queryString.stringify({ identifier })
-      const response = await fetch(`${ __membersApi__ }/businesses?${ query }`)
-
-      if (response.ok) {
-        const { businesses } = await response.json()
- 
-        // TODO: Handle edge case of no businesses,
-        // if this is a possible case.
-
-        if (businesses.length === 1) {
-          linkedBusiness = businesses[0]
-          store.business.link(linkedBusiness)
-          message = `${ linkedBusiness.name } automatically linked.`
-        }
-
-        if (businesses.length > 1) {
-          businessOptions = businesses
-        }
-
-        ready = true
-      }
-
-      else {
-        // TODO: Handle an error response from the server.
-      }
-    }
-
-    catch (error) {
-      // TODO: Handle server unavailable.
+    if (possibleAccounts.length === 1) {
+      store.accounts.link(possibleAccounts[0])
+      message = `${ $store.accounts.linked.name } automatically linked.`
     }
   })
 </script>
@@ -63,24 +35,18 @@
 </svelte:head>
 
 <section id='link-account'>
-  { #if !ready }
-    <p>Finding your business...</p>
-  { /if }
+  { #if linkedAccount }
+    <section id='link-account-automatic'>
+      <div class='link-account-content'>
+        <h1>{ message }</h1>
+        <p>You can now charge customers as { linkedAccount.name }.</p>
+      </div>
 
-  { #if ready }
-    { #if linkedBusiness }
-      <section id='link-account-automatic'>
-        <div class='link-account-content'>
-          <h1>{ message }</h1>
-          <p>You can now charge customers as { linkedBusiness.name }.</p>
-        </div>
+      <a class='link-account-action' href='/scan'>Scan QR Code</a>
+    </section>
 
-        <a class='link-account-action' href='/scan'>Scan QR Code</a>
-      </section>
-
-    { :else }
-      <SelectBusiness { businessOptions } on:complete={ handleSelectBusiness } />
-    { /if }
+  { :else }
+    <SelectAccount options={ possibleAccounts } on:complete={ handleSelectAccount } />
   { /if }
 </section>
 

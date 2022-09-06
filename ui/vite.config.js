@@ -34,6 +34,7 @@ export default {
     environment: 'jsdom',
     globals: true,
     mockReset: true,
-    setupFiles: './tests/support.js'
+    setupFiles: './tests/support.js',
+    reporters: 'verbose'
   }
 }

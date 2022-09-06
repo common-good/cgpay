@@ -18,29 +18,6 @@
   // --------------------------------------------
   // Initialization Helpers
 
-  async function validateToken() {
-    if (store.auth.isAuthenticated()) {
-      const query = queryString.stringify({ token: $store.auth.token })
-      const response = await fetch(`${ __membersApi__ }/accounts?${ query }`)
-
-      try {
-        if (!response.ok) {
-          store.auth.signOut()
-        }
-
-        if (response.ok) {
-          const { account, token } = await response.json()
-          store.auth.signIn({ account, token })
-        }
-      }
-
-      catch (error) {
-        // TODO: Handle and test no server access.
-        console.error(error)
-      }
-    }
-  }
-
   async function sendChargeRequest({ transaction }) {
     try {
       const response = await fetch(`${ __membersApi__ }/charges`, {
@@ -65,8 +42,6 @@
   // Initialization
 
   onMount(async () => {
-    await validateToken()
-
     window.addEventListener('offline', store.network.setOffline)
 
     window.addEventListener('online', () => {
@@ -96,30 +71,20 @@
 
       onlyIf: {
         guard: store.homeScreen.promptRequired,
-        redirect: '/charge'
+        redirect: '/scan'
       }
     },
 
     {
       name: '/charge',
       component: Charge,
-      layout: LayoutStep,
-
-      onlyIf: {
-        guard: store.business.isLinked,
-        redirect: '/link-account'
-      }
+      layout: LayoutStep
     },
 
     {
       name: '/link-account',
       component: LinkAccount,
-      layout: LayoutStep,
-
-      onlyIf: {
-        guard: store.auth.isAuthenticated,
-        redirect: '/sign-in'
-      }
+      layout: LayoutStep
     },
 
     {
@@ -127,10 +92,10 @@
       component: Scan,
       layout: LayoutStep,
 
-      onlyIf: {
-        guard: store.business.isLinked,
-        redirect: '/link-account'
-      }
+      // onlyIf: {
+      //   guard: store.business.isLinked,
+      //   redirect: '/link-account'
+      // }
     },
 
     {
@@ -138,10 +103,10 @@
       component: SignIn,
       layout: LayoutIntro,
 
-      onlyIf: {
-        guard: store.auth.isNotAuthenticated,
-        redirect: '/charge'
-      }
+      // onlyIf: {
+      //   guard: store.business.isNotLinked,
+      //   redirect: '/scan'
+      // }
     }
   ]
 </script>

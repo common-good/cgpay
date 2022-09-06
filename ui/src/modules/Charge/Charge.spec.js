@@ -3,7 +3,7 @@ import store from '#app.store.js'
 
 // --------------------------------------------
 
-describe('Charge', () => {
+describe.skip('Charge', () => {
   it('renders', () => {
     store.auth.signIn({ account: {} })
     store.business.link({ name: 'Business' })

@@ -22,9 +22,9 @@
       const response = await fetch(`${ __membersApi__ }/accounts?${ query }`)
 
       if (response.ok) {
-        const { account, token } = await response.json()
+        const { accounts } = await response.json()
 
-        store.auth.signIn({ account, token })
+        store.accounts.setPossibleAccounts(accounts)
         navigateTo('/link-account')
       }
 
@@ -34,6 +34,7 @@
     }
 
     catch (error) {
+      console.log(error)
       // TODO: Handle server unavailable.
       errorMessage = 'We could not complete your request.'
     }

@@ -25,14 +25,19 @@ export const createStore = () => {
   // --------------------------------------------
 
   const defaults = {
-    auth: {
-      account: null,
-      token: null
+    accounts: {
+      linked: null,
+      possible: null
     },
 
-    business: {
-      linked: null
-    },
+    // auth: {
+    //   account: null,
+    //   token: null
+    // },
+    //
+    // business: {
+    //   linked: null
+    // },
 
     device: {
       type: getDeviceType(),
@@ -74,53 +79,75 @@ export const createStore = () => {
       return localState
     },
 
-    auth: {
-      isAuthenticated() {
-        return localState.auth.token !== null
-      },
-
-      isNotAuthenticated() {
-        return localState.auth.token === null
-      },
-
-      signIn({ account, token }) {
+    accounts: {
+      link(account) {
         update(currentState => {
           const newState = { ...currentState }
 
-          newState.auth.account = account
-          newState.auth.token = token
+          newState.accounts.linked = account
 
           return storeStateLocally(newState)
         })
       },
 
-      signOut() {
+      setPossibleAccounts(accounts) {
         update(currentState => {
           const newState = { ...currentState }
 
-          newState.auth.account = null
-          newState.auth.token = null
+          newState.accounts.possible = accounts
 
           return storeStateLocally(newState)
         })
       }
     },
 
-    business: {
-      isLinked() {
-        return localState.business.linked !== null
-      },
-
-      link(business) {
-        update(currentState => {
-          const newState = { ...currentState }
-
-          newState.business.linked = business
-
-          return storeStateLocally(newState)
-        })
-      }
-    },
+    // auth: {
+    //   isAuthenticated() {
+    //     return localState.auth.token !== null
+    //   },
+    //
+    //   isNotAuthenticated() {
+    //     return localState.auth.token === null
+    //   },
+    //
+    //   signIn({ account, token }) {
+    //     update(currentState => {
+    //       const newState = { ...currentState }
+    //
+    //       newState.auth.account = account
+    //       newState.auth.token = token
+    //
+    //       return storeStateLocally(newState)
+    //     })
+    //   },
+    //
+    //   signOut() {
+    //     update(currentState => {
+    //       const newState = { ...currentState }
+    //
+    //       newState.auth.account = null
+    //       newState.auth.token = null
+    //
+    //       return storeStateLocally(newState)
+    //     })
+    //   }
+    // },
+    //
+    // business: {
+    //   isLinked() {
+    //     return localState.business.linked !== null
+    //   },
+    //
+    //   link(business) {
+    //     update(currentState => {
+    //       const newState = { ...currentState }
+    //
+    //       newState.business.linked = business
+    //
+    //       return storeStateLocally(newState)
+    //     })
+    //   }
+    // },
 
     device: {
       isApple() {

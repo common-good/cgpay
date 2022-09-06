@@ -26,30 +26,34 @@ test('I can sign in with my personal CG account.', async ({ browser, context, pa
   routes.accounts.get
     .withQueryParams({ identifier: 'valid@email.com', password: 'valid' })
     .respondsWith(200, {
-      token: 'valid-token'
+      accounts: [
+        {
+          cardId: 'card-id',
+          deviceId: 'device-id',
+          name: 'account-name'
+        }
+      ]
     })
-
-  routes.accounts.get
-    .withQueryParams({ token: 'valid-token' })
-    .respondsWith(200)
 
   // --------------------------------------------
 
   const linkAccount = createLinkAccountScreen(page)
-  const pay = createChargeScreen(page)
+  const charge = createChargeScreen(page)
   const root = createRootScreen(page)
   const signIn = createSignInScreen(page)
 
   // --------------------------------------------
   // When not signed in, I see the sign in screen.
 
-  await pay.visit()
-  await expect(signIn.root()).toBeVisible()
+  // await charge.visit()
+  // await expect(signIn.root()).toBeVisible()
 
   // --------------------------------------------
   // Check that the network status banner displays properly
   // when offline.
 
+  await signIn.visit()
+  await expect(signIn.root()).toBeVisible()
   await expect(root.element('networkStatus')).not.toBeVisible()
 
   await root.loseConnection()
@@ -72,42 +76,4 @@ test('I can sign in with my personal CG account.', async ({ browser, context, pa
   await signIn.with({ identifier: 'valid@email.com', password: 'valid' })
   await expect(signIn.root()).not.toBeVisible()
   await expect(linkAccount.root()).toBeVisible()
-
-  // --------------------------------------------
-  // I stay signed in with a valid token.
-
-  await pay.visit()
-  await expect(signIn.root()).not.toBeVisible()
-  await expect(linkAccount.root()).toBeVisible()
-
-  // --------------------------------------------
-  // I am signed out with an invalid token.
-
-  // Set up invalid token context:
-  // - Change the token in local storage to an invalid token.
-  const storageState = await context.storageState()
-  const invalidTokenState = { ...storageState }
-
-  invalidTokenState.origins[0].localStorage
-    .find(item => item.name = 'cg.pay.account')
-    .value = JSON.stringify({ account: { token: 'invalid-token' } })
-
-  const invalidTokenPage = await browser.newPage({
-    storageState: invalidTokenState
-  })
-
-  // - Mock the API request to respond to the invalid token.
-  const invalidTokenRoutes = createRoutes({ page: invalidTokenPage })
-
-  invalidTokenRoutes.accounts.get
-    .withQueryParams({ token: 'invalid-token' })
-    .respondsWith(404)
-
-  const payInvalidToken = createChargeScreen(invalidTokenPage)
-  const signInInvalidToken = createSignInScreen(invalidTokenPage)
-
-  // - Confirm that I am signed out.
-  await payInvalidToken.visit()
-  await expect(payInvalidToken.root()).not.toBeVisible()
-  await expect(signInInvalidToken.root()).toBeVisible()
 })

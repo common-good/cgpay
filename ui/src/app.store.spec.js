@@ -14,7 +14,7 @@ function setupLocalStorage(data) {
 
 // --------------------------------------------
 
-describe('app.store', () => {
+describe.only('app.store', () => {
   beforeEach(() => {
     window.localStorage.setItem(storeKey, null)
   })
@@ -44,234 +44,274 @@ describe('app.store', () => {
     })
   })
 
-  describe('.auth', () => {
-    describe('.account', () => {
+  describe('.accounts', () => {
+    describe('.linked', () => {
       it('is accessible', () => {
         const store = createStore()
-        expect(store.inspect().auth.account).toEqual(null)
+        expect(store.inspect().accounts.linked).toEqual(null)
       })
     })
 
-    describe('.token', () => {
+    describe('.possible', () => {
       it('is accessible', () => {
         const store = createStore()
-        expect(store.inspect().auth.token).toEqual(null)
+        expect(store.inspect().accounts.possible).toEqual(null)
       })
     })
 
-    describe('.isAuthenticated()', () => {
-      describe('when a token is set', () => {
-        it('returns true', () => {
-          setupLocalStorage({
-            auth: {
-              token: 'token'
-            }
-          })
-
-          const store = createStore()
-          expect(store.auth.isAuthenticated()).toEqual(true)
-        })
-      })
-
-      describe('when a token is not set', () => {
-        it('returns false', () => {
-          setupLocalStorage({
-            auth: {
-              token: null
-            }
-          })
-
-          const store = createStore()
-          expect(store.auth.isAuthenticated()).toEqual(false)
-        })
-      })
-    })
-
-    describe('.isNotAuthenticated()', () => {
-      describe('when a token is set', () => {
-        it('returns false', () => {
-          setupLocalStorage({
-            auth: {
-              token: 'token'
-            }
-          })
-
-          const store = createStore()
-          expect(store.auth.isNotAuthenticated()).toEqual(false)
-        })
-      })
-
-      describe('when a token is not set', () => {
-        it('returns false', () => {
-          setupLocalStorage({
-            auth: {
-              token: null
-            }
-          })
-
-          const store = createStore()
-          expect(store.auth.isNotAuthenticated()).toEqual(true)
-        })
-      })
-    })
-
-    describe('.business', () => {
-      describe('.linked', () => {
-        it('is accessible', () => {
-          const store = createStore()
-          expect(store.inspect().business.linked).toEqual(null)
-        })
-      })
-
-      describe('.isLinked()', () => {
-        describe('when there is a linked business', () => {
-          it('is true', () => {
-            setupLocalStorage({
-              business: {
-                linked: {}
-              }
-            })
-
-            const store = createStore()
-            expect(store.business.isLinked()).toEqual(true)
-          })
-        })
-
-        describe('when there is not a linked business', () => {
-          it('is false', () => {
-            setupLocalStorage({
-              business: {
-                linked: null
-              }
-            })
-
-            const store = createStore()
-            expect(store.business.isLinked()).toEqual(false)
-          })
-        })
-      })
-
-      describe('.link()', () => {
-        it('links the given business', () => {
-          const store = createStore()
-          store.business.link('Biz')
-
-          expect(getLocallyStored().business.linked).toEqual('Biz')
-          expect(store.inspect().business.linked).toEqual('Biz')
-        })
-      })
-    })
-
-    describe('.network', () => {
-      describe('.offline', () => {
-        it('is accessible', () => {
-          const store = createStore()
-          expect(store.inspect().network.offline).toEqual(null)
-        })
-      })
-
-      describe('.online', () => {
-        it('is accessible', () => {
-          const store = createStore()
-          expect(store.inspect().network.online).toEqual(null)
-        })
-      })
-
-      describe('.restored', () => {
-        it('is accessible', () => {
-          const store = createStore()
-          expect(store.inspect().network.restored).toEqual(false)
-        })
-      })
-
-      describe('.reset()', () => {
-        it('resets the network to basic online status', () => {
-          const store = createStore()
-          store.network.setRestored()
-          store.network.reset()
-
-          expect(store.inspect().network.offline).toEqual(false)
-          expect(store.inspect().network.online).toEqual(true)
-          expect(store.inspect().network.restored).toEqual(false)
-        })
-      })
-
-      describe('.setOffline()', () => {
-        it('sets the network status to offline', () => {
-          const store = createStore()
-          store.network.setOffline()
-
-          expect(store.inspect().network.offline).toEqual(true)
-          expect(store.inspect().network.online).toEqual(false)
-          expect(store.inspect().network.restored).toEqual(false)
-        })
-      })
-
-      describe('.setOnline()', () => {
-        it('sets the network status to online', () => {
-          const store = createStore()
-          store.network.setOnline()
-
-          expect(store.inspect().network.offline).toEqual(false)
-          expect(store.inspect().network.online).toEqual(true)
-          expect(store.inspect().network.restored).toEqual(false)
-        })
-      })
-
-      describe('.setRestored()', () => {
-        it('sets the network status to restored', () => {
-          const store = createStore()
-          store.network.setRestored()
-
-          expect(store.inspect().network.offline).toEqual(false)
-          expect(store.inspect().network.online).toEqual(true)
-          expect(store.inspect().network.restored).toEqual(true)
-        })
-      })
-    })
-
-    describe('.signIn()', () => {
-      it('sets the account and token', () => {
+    describe('.link()', () => {
+      it('sets the linked account', () => {
         const store = createStore()
-
-        store.auth.signIn({ account: 'account', token: 'token' })
+        store.accounts.link({ id: 1 })
 
         // Confirm that all forms of store access are updated.
-        expect(getLocallyStored().auth.account).toEqual('account')
-        expect(store.inspect().auth.account).toEqual('account')
-        store.subscribe(state => expect(state.auth.account).toEqual('account'))
-
-        expect(getLocallyStored().auth.token).toEqual('token')
-        expect(store.inspect().auth.token).toEqual('token')
-        store.subscribe(state => expect(state.auth.token).toEqual('token'))
+        expect(getLocallyStored().accounts.linked).toEqual({ id: 1 })
+        expect(store.inspect().accounts.linked).toEqual({ id : 1 })
+        store.subscribe(state => expect(state.accounts.linked).toEqual({ id: 1 }))
       })
     })
 
-    describe('.signOut()', () => {
-      it('clears the account and token', () => {
-        setupLocalStorage({
-          auth: {
-            account: 'account',
-            token: 'token'
-          }
-        })
-
+    describe('.setPossibleAccounts()', () => {
+      it('sets possible accounts', () => {
         const store = createStore()
-
-        // Confirm initial values are set.
-        expect(store.inspect().auth.account).not.toEqual(null)
-        expect(store.inspect().auth.token).not.toEqual(null)
-
-        store.auth.signOut()
+        store.accounts.setPossibleAccounts([ 1, 2, 3 ])
 
         // Confirm that all forms of store access are updated.
-        expect(getLocallyStored().auth.account).toEqual(null)
-        expect(store.inspect().auth.account).toEqual(null)
-        store.subscribe(state => expect(state.auth.account).toEqual(null))
+        expect(getLocallyStored().accounts.possible).toEqual([ 1, 2, 3 ])
+        expect(store.inspect().accounts.possible).toEqual([ 1, 2, 3 ])
+        store.subscribe(state => expect(state.accounts.possible).toEqual([ 1, 2, 3 ]))
+      })
+    })
+  })
 
-        expect(getLocallyStored().auth.token).toEqual(null)
-        expect(store.inspect().auth.token).toEqual(null)
-        store.subscribe(state => expect(state.auth.token).toEqual(null))
+  // describe('.auth', () => {
+  //   describe('.account', () => {
+  //     it('is accessible', () => {
+  //       const store = createStore()
+  //       expect(store.inspect().auth.account).toEqual(null)
+  //     })
+  //   })
+  //
+  //   describe('.token', () => {
+  //     it('is accessible', () => {
+  //       const store = createStore()
+  //       expect(store.inspect().auth.token).toEqual(null)
+  //     })
+  //   })
+  //
+  //   describe('.isAuthenticated()', () => {
+  //     describe('when a token is set', () => {
+  //       it('returns true', () => {
+  //         setupLocalStorage({
+  //           auth: {
+  //             token: 'token'
+  //           }
+  //         })
+  //
+  //         const store = createStore()
+  //         expect(store.auth.isAuthenticated()).toEqual(true)
+  //       })
+  //     })
+  //
+  //     describe('when a token is not set', () => {
+  //       it('returns false', () => {
+  //         setupLocalStorage({
+  //           auth: {
+  //             token: null
+  //           }
+  //         })
+  //
+  //         const store = createStore()
+  //         expect(store.auth.isAuthenticated()).toEqual(false)
+  //       })
+  //     })
+  //   })
+  //
+  //   describe('.isNotAuthenticated()', () => {
+  //     describe('when a token is set', () => {
+  //       it('returns false', () => {
+  //         setupLocalStorage({
+  //           auth: {
+  //             token: 'token'
+  //           }
+  //         })
+  //
+  //         const store = createStore()
+  //         expect(store.auth.isNotAuthenticated()).toEqual(false)
+  //       })
+  //     })
+  //
+  //     describe('when a token is not set', () => {
+  //       it('returns false', () => {
+  //         setupLocalStorage({
+  //           auth: {
+  //             token: null
+  //           }
+  //         })
+  //
+  //         const store = createStore()
+  //         expect(store.auth.isNotAuthenticated()).toEqual(true)
+  //       })
+  //     })
+  //   })
+
+  // describe('.signIn()', () => {
+  //   it('sets the account and token', () => {
+  //     const store = createStore()
+  //
+  //     store.auth.signIn({ account: 'account', token: 'token' })
+  //
+  //     // Confirm that all forms of store access are updated.
+  //     expect(getLocallyStored().auth.account).toEqual('account')
+  //     expect(store.inspect().auth.account).toEqual('account')
+  //     store.subscribe(state => expect(state.auth.account).toEqual('account'))
+  //
+  //     expect(getLocallyStored().auth.token).toEqual('token')
+  //     expect(store.inspect().auth.token).toEqual('token')
+  //     store.subscribe(state => expect(state.auth.token).toEqual('token'))
+  //   })
+  // })
+  //
+  // describe('.signOut()', () => {
+  //   it('clears the account and token', () => {
+  //     setupLocalStorage({
+  //       auth: {
+  //         account: 'account',
+  //         token: 'token'
+  //       }
+  //     })
+  //
+  //     const store = createStore()
+  //
+  //     // Confirm initial values are set.
+  //     expect(store.inspect().auth.account).not.toEqual(null)
+  //     expect(store.inspect().auth.token).not.toEqual(null)
+  //
+  //     store.auth.signOut()
+  //
+  //     // Confirm that all forms of store access are updated.
+  //     expect(getLocallyStored().auth.account).toEqual(null)
+  //     expect(store.inspect().auth.account).toEqual(null)
+  //     store.subscribe(state => expect(state.auth.account).toEqual(null))
+  //
+  //     expect(getLocallyStored().auth.token).toEqual(null)
+  //     expect(store.inspect().auth.token).toEqual(null)
+  //     store.subscribe(state => expect(state.auth.token).toEqual(null))
+  //   })
+  // })
+  //
+  //
+  // describe('.business', () => {
+  //   describe('.linked', () => {
+  //     it('is accessible', () => {
+  //       const store = createStore()
+  //       expect(store.inspect().business.linked).toEqual(null)
+  //     })
+  //   })
+  //
+  //   describe('.isLinked()', () => {
+  //     describe('when there is a linked business', () => {
+  //       it('is true', () => {
+  //         setupLocalStorage({
+  //           business: {
+  //             linked: {}
+  //           }
+  //         })
+  //
+  //         const store = createStore()
+  //         expect(store.business.isLinked()).toEqual(true)
+  //       })
+  //     })
+  //
+  //     describe('when there is not a linked business', () => {
+  //       it('is false', () => {
+  //         setupLocalStorage({
+  //           business: {
+  //             linked: null
+  //           }
+  //         })
+  //
+  //         const store = createStore()
+  //         expect(store.business.isLinked()).toEqual(false)
+  //       })
+  //     })
+  //   })
+  //
+  //   describe('.link()', () => {
+  //     it('links the given business', () => {
+  //       const store = createStore()
+  //       store.business.link('Biz')
+  //
+  //       expect(getLocallyStored().business.linked).toEqual('Biz')
+  //       expect(store.inspect().business.linked).toEqual('Biz')
+  //     })
+  //   })
+  // })
+
+  describe('.network', () => {
+    describe('.offline', () => {
+      it('is accessible', () => {
+        const store = createStore()
+        expect(store.inspect().network.offline).toEqual(null)
+      })
+    })
+
+    describe('.online', () => {
+      it('is accessible', () => {
+        const store = createStore()
+        expect(store.inspect().network.online).toEqual(null)
+      })
+    })
+
+    describe('.restored', () => {
+      it('is accessible', () => {
+        const store = createStore()
+        expect(store.inspect().network.restored).toEqual(false)
+      })
+    })
+
+    describe('.reset()', () => {
+      it('resets the network to basic online status', () => {
+        const store = createStore()
+        store.network.setRestored()
+        store.network.reset()
+
+        expect(store.inspect().network.offline).toEqual(false)
+        expect(store.inspect().network.online).toEqual(true)
+        expect(store.inspect().network.restored).toEqual(false)
+      })
+    })
+
+    describe('.setOffline()', () => {
+      it('sets the network status to offline', () => {
+        const store = createStore()
+        store.network.setOffline()
+
+        expect(store.inspect().network.offline).toEqual(true)
+        expect(store.inspect().network.online).toEqual(false)
+        expect(store.inspect().network.restored).toEqual(false)
+      })
+    })
+
+    describe('.setOnline()', () => {
+      it('sets the network status to online', () => {
+        const store = createStore()
+        store.network.setOnline()
+
+        expect(store.inspect().network.offline).toEqual(false)
+        expect(store.inspect().network.online).toEqual(true)
+        expect(store.inspect().network.restored).toEqual(false)
+      })
+    })
+
+    describe('.setRestored()', () => {
+      it('sets the network status to restored', () => {
+        const store = createStore()
+        store.network.setRestored()
+
+        expect(store.inspect().network.offline).toEqual(false)
+        expect(store.inspect().network.online).toEqual(true)
+        expect(store.inspect().network.restored).toEqual(true)
       })
     })
   })

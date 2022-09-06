@@ -7,7 +7,7 @@ export default createContext({
 
   configuration: {
     membersApi: {
-      location: 'https://members.cg4.us'
+      location: 'https://new-testing.commongood.earth/api'
     }
   }
 })

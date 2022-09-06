@@ -3,6 +3,10 @@
   import { navigateTo } from 'svelte-router-spa'
   import { onMount } from 'svelte'
 
+  import store from '#app.store.js'
+
+  // --------------------------------------------
+
   onMount(async () => {
     const devices = await Html5Qrcode.getCameras()
 
@@ -16,7 +20,7 @@
         // Configuration options.
         {},
 
-        // Handle code.
+        // Handle scanned code.
         async (decodedText, decodedResult) => {
           // TODO: Do something with this.
           console.log(decodedText, decodedResult)
@@ -25,12 +29,12 @@
           navigateTo('/charge')
         },
 
-        // Handle scan error.
+        // Handle error while scanning code.
         (errorMessage) => {
         })
 
         // Handle library/startup error.
-        .catch((err) => {
+        .catch(error => {
         })
     }
   })
@@ -42,6 +46,7 @@
 
 <section id='scan'>
   <h1>Scan QR Code</h1>
+  <p>{ $store.accounts.linked.name }</p>
 
   <div id='scan-reader-container'>
     <div id='scan-reader' />

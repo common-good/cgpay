@@ -16,7 +16,12 @@ export default createContext({
     },
 
     membersApi: {
-      location: 'https://members.cg4.us'
+      locations: {
+        testing: 'https://new-testing.commongood.earth/api',
+        dev: 'https://demo.commongood.earth/api',
+        staging: 'https://new-staging.commongood.earth/api',
+        production: 'https://new.commongood.earth/api'
+      }
     }
   }
 })

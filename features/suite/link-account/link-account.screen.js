@@ -1,7 +1,7 @@
 export default (page) => {
   return {
-    async chooseBusiness(name) {
-      await this.element('businessSelector').selectOption({ label: name })
+    async chooseAccount(name) {
+      await this.element('accountSelector').selectOption({ label: name })
       await this.element('submitButton').click()
     },
 
@@ -9,10 +9,14 @@ export default (page) => {
       await page.goto('/link-account')
     },
 
+    async proceedToScan() {
+      await this.element('scanButton').click()
+    },
+
     element(name) {
       const elements = {
-        businessOptions: '#select-business option',
-        businessSelector: '#select-business select',
+        accountOptions: '#select-account option',
+        accountSelector: '#select-account select',
         root: '#link-account',
         scanButton: '"Scan QR Code"',
         submitButton: 'button'
