@@ -1,0 +1,38 @@
+version: 2.1
+
+orbs:
+  node: circleci/node@5.0.3
+
+parameters:
+  run-feature-job:
+    type: boolean
+    default: false
+  run-ui-job:
+    type: boolean
+    default: false
+
+workflows:
+  run-feature-job:
+    when: << pipeline.parameters.run-feature-job >>
+    jobs:
+      test:
+        executor:
+          name: node/default
+          tag: '16.18.0'
+        steps:
+          - checkout
+          - node/install-packages
+          - run:
+              command: npm run test
+  run-ui-job:
+    when: << pipeline.parameters.run-ui-job >>
+    jobs:
+      test:
+        executor:
+          name: node/default
+          tag: '16.18.0'
+        steps:
+          - checkout
+          - node/install-packages
+          - run:
+              command: npm run test
