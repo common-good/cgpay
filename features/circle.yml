@@ -1,0 +1,10 @@
+jobs:
+  run-feature-tests:
+    steps:
+      - checkout
+      - run: cd feature && npm test
+
+workflows:
+  feature:
+    jobs:
+      - run-feature-tests
