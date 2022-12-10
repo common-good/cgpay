@@ -10,7 +10,7 @@ A progressive web application for collecting payments with Common Good.
 
 ## Set Up
 
-Windows developers start [here](https://docs.google.com/document/d/1d1pGjS5Z9sP_BgYYOFaVamekzxdeOWgg9lOAemVVQKU/edit).
+Windows developers do [this](https://docs.google.com/document/d/1d1pGjS5Z9sP_BgYYOFaVamekzxdeOWgg9lOAemVVQKU/edit) instead of the setup commands in the table below.
 
 | Command | Purpose |
 | :-- | :-- |
