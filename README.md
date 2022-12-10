@@ -10,6 +10,8 @@ A progressive web application for collecting payments with Common Good.
 
 ## Set Up
 
+Windows developers start [here](https://docs.google.com/document/d/1d1pGjS5Z9sP_BgYYOFaVamekzxdeOWgg9lOAemVVQKU/edit).
+
 | Command | Purpose |
 | :-- | :-- |
 | `sudo apt update && sudo apt -y upgrade && sudo apt -y autoremove` | update all packages |
