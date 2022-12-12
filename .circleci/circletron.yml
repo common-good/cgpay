@@ -1,1 +1,1 @@
-targetBranches: ^(main$|develop$)
+targetBranches: ^(main$|develop$|feature/*)
