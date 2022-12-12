@@ -1,1 +1,1 @@
-targetBranches: ^(main$|preview$)
+targetBranches: ^(main$|develop$)
