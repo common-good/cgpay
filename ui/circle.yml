@@ -2,7 +2,7 @@ jobs:
   run-ui-tests:
     steps:
       - checkout
-      - run: cd ui && npm test
+      - run: npm test
 
 workflows:
   ui:

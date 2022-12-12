@@ -2,7 +2,7 @@ jobs:
   run-feature-tests:
     steps:
       - checkout
-      - run: cd feature && npm test
+      - run: npm test
 
 workflows:
   feature:
