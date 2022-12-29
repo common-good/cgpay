@@ -8,27 +8,19 @@ A progressive web application for collecting payments with Common Good.
 - [Development Workflow](#development-workflow)
 - [Deploying](#deploying)
 
-## Set Up
+## Setting Up
 
-Windows developers do [this](https://docs.google.com/document/d/1d1pGjS5Z9sP_BgYYOFaVamekzxdeOWgg9lOAemVVQKU/edit) instead of the setup commands in the table below.
+### Install System Dependencies
 
-| Command | Purpose |
+| Dependency | Version |
 | :-- | :-- |
-| `sudo apt update && sudo apt -y upgrade && sudo apt -y autoremove` | update all packages |
-| `curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh `<code>&#124;</code>` bash` | install nvm |
-| `nvm install --lts` | install production version of node |
-| `nvm install node` | install latest development version of node |
-| `cd <development directory>` | |
-| `mkdir cgpay` | create a directory for the repository |
-| `cd cgpay` | |
-| `git clone git@github.com:common-good/cg-pay-pwa.git .` | |
-| `git checkout preview` | choose the development branch |
-| `nvm use` | use the required node version for this project (16.x), as stored in .nvmrc |
-| `npm install` | install the project's dependencies |
-| `npm i @sveltejs/kit` | install user interface framework |
-| `cd features` | |
-| `npx playwright install` | install test framework and headless browsers |
-| `npx playwright install-deps` | install test framework dependencies |
+| `node` | `16.x` |
+
+### Install Project Dependencies
+
+| Directory | Command |
+| :-- | :-- |
+| `/` | `npm install` |
 
 ## Developing (Quickstart)
 
@@ -56,7 +48,7 @@ For more information, see the [Features documentation](/features) and [UI docume
 
 ## Deploying
 
-Deployments used to be automatic via Vercel's GitHub integration. We are no longer using that, but have no replacement yet.
+Deployments are automatic via Vercel's GitHub integration.
 
 Pushing a new commit to the following branches will trigger a deployment:
 
