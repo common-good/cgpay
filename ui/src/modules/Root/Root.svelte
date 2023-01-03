@@ -18,29 +18,6 @@
   // --------------------------------------------
   // Initialization Helpers
 
-  async function validateToken() {
-    if (store.auth.isAuthenticated()) {
-      const query = queryString.stringify({ token: $store.auth.token })
-      const response = await fetch(`${ __membersApi__ }/accounts?${ query }`)
-
-      try {
-        if (!response.ok) {
-          store.auth.signOut()
-        }
-
-        if (response.ok) {
-          const { account, token } = await response.json()
-          store.auth.signIn({ account, token })
-        }
-      }
-
-      catch (error) {
-        // TODO: Handle and test no server access.
-        console.error(error)
-      }
-    }
-  }
-
   async function sendChargeRequest({ transaction }) {
     try {
       const response = await fetch(`${ __membersApi__ }/charges`, {
@@ -65,8 +42,6 @@
   // Initialization
 
   onMount(async () => {
-    await validateToken()
-
     window.addEventListener('offline', store.network.setOffline)
 
     window.addEventListener('online', () => {
@@ -91,23 +66,12 @@
   const routes = [
     {
       name: '/',
-      component: AddToHomeScreen,
+      component: SignIn,
       layout: LayoutIntro,
 
       onlyIf: {
-        guard: store.homeScreen.promptRequired,
-        redirect: '/charge'
-      }
-    },
-
-    {
-      name: '/charge',
-      component: Charge,
-      layout: LayoutStep,
-
-      onlyIf: {
-        guard: store.business.isLinked,
-        redirect: '/link-account'
+        guard: store.myAccount === null,
+        redirect: '/add-home'
       }
     },
 
@@ -117,8 +81,19 @@
       layout: LayoutStep,
 
       onlyIf: {
-        guard: store.auth.isAuthenticated,
-        redirect: '/sign-in'
+        guard: store.myAccount === null,
+        redirect: '/scan'
+      }
+    },
+    
+    {
+      name: '/add-home',
+      component: AddToHomeScreen,
+      layout: LayoutIntro,
+
+      onlyIf: {
+        guard: store.homeScreen.promptRequired,
+        redirect: '/scan'
       }
     },
 
@@ -128,21 +103,22 @@
       layout: LayoutStep,
 
       onlyIf: {
-        guard: store.business.isLinked,
-        redirect: '/link-account'
+        guard: store.myAccount !== null,
+        redirect: '/sign-in'
       }
     },
 
     {
-      name: '/sign-in',
-      component: SignIn,
-      layout: LayoutIntro,
+      name: '/charge',
+      component: Charge,
+      layout: LayoutStep,
 
       onlyIf: {
-        guard: store.auth.isNotAuthenticated,
-        redirect: '/charge'
+        guard: store.myAccount !== null,
+        redirect: '/sign-in'
       }
-    }
+    },
+
   ]
 </script>
 

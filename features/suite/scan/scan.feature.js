@@ -13,14 +13,15 @@ import createScanScreen from './scan.screen.js'
 // I can look up customers by scanning their QR code,
 // so that I can charge for goods or services.
 
-test('I can scan a valid customer QR code.', async ({ page }) => {
+test('I can identify a valid account by its QR code.', async ({ page }) => {
   // --------------------------------------------
   // Set up mock API endpoints.
 
   const routes = createRoutes({ page })
+  const validDeviceId = 'GrfaVyHkxnTf4cxsyIEjkWyNdK0wUoDK153r2LIBoFocvw73T';
 
   routes.accounts.get
-    .withQueryParams({ identifier: 'customer@email.com', password: 'valid' })
+    .withQueryParams({ identifier: 'newaad', password: 'Newaad1!' })
     .respondsWith(200, {
       token: 'valid-token',
 

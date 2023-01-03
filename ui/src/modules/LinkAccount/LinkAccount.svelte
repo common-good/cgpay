@@ -4,57 +4,49 @@
 
   import store from '#app.store.js'
 
-  import SelectBusiness from './SelectBusiness/SelectBusiness.svelte'
+  import SelectAccount from './SelectBusiness/SelectBusiness.svelte'
 
   // --------------------------------------------
 
-  let businessOptions = []
-  let linkedBusiness
+  let accountOptions = []
+  let myAccount
   let message
   let ready = false
-
+  let errorMessage
+  let accounts
+    
   // --------------------------------------------
 
-  function handleSelectBusiness(event) {
-    linkedBusiness = event.detail
-    message = `${ linkedBusiness.name } successfully linked.`
+  function getCookie(name) {
+    var v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+    return v ? v[2] : null;
+  }
+
+  function gotAccount(e) {
+    myAccount = accounts[e.detail]
+    store.myAccount.set(myAccount)
+    message = `This device is now linked to ${ myAccount.name }.`
   }
 
   // --------------------------------------------
 
   onMount(async () => {
-    try {
-      const { identifier } = $store.auth.account
-      const query = queryString.stringify({ identifier })
-      const response = await fetch(`${ __membersApi__ }/businesses?${ query }`)
+    accounts = JSON.parse(getCookie('accountChoices'))
+    console.log(accounts);
 
-      if (response.ok) {
-        const { businesses } = await response.json()
- 
-        // TODO: Handle edge case of no businesses,
-        // if this is a possible case.
-
-        if (businesses.length === 1) {
-          linkedBusiness = businesses[0]
-          store.business.link(linkedBusiness)
-          message = `${ linkedBusiness.name } automatically linked.`
-        }
-
-        if (businesses.length > 1) {
-          businessOptions = businesses
-        }
-
-        ready = true
+    if (accounts.length === 1) {
+      myAccount = accounts[0]
+      store.myAccount.set(myAccount)
+      message = `This device is now linked to ${ myAccount.name }.` // personal accounts cannot be linked yet
+    } else if (accounts.length > 1) {
+      for (let i = 0; i < accounts.length; i++) {
+        accountOptions[i] = {id: i, name: accounts[i].name}
       }
-
-      else {
-        // TODO: Handle an error response from the server.
-      }
+      console.log(accountOptions);
+    } else {
+      errorMessage = `You do not have access to any company account. Ask a manager of your company account to connect your account and give you the appropriate permissions.`
     }
-
-    catch (error) {
-      // TODO: Handle server unavailable.
-    }
+    ready = true
   })
 </script>
 
@@ -63,24 +55,22 @@
 </svelte:head>
 
 <section id='link-account'>
-  { #if !ready }
-    <p>Finding your business...</p>
-  { /if }
-
   { #if ready }
-    { #if linkedBusiness }
+    { #if myAccount }
       <section id='link-account-automatic'>
         <div class='link-account-content'>
           <h1>{ message }</h1>
-          <p>You can now charge customers as { linkedBusiness.name }.</p>
+          <p>You are ready to charge customers!</p>
         </div>
 
         <a class='link-account-action' href='/scan'>Scan QR Code</a>
       </section>
 
     { :else }
-      <SelectBusiness { businessOptions } on:complete={ handleSelectBusiness } />
+      <SelectAccount { accountOptions } on:complete={ gotAccount } />
     { /if }
+  { :else }
+    <p>Finding your business...</p>
   { /if }
 </section>
 

@@ -6,5 +6,9 @@
   },
   "devDependencies": {
     "lerna": "^5.5.0"
+  },
+  "dependencies": {
+    "@sveltejs/kit": "^1.0.1",
+    "svelte-select": "^4.3.1"
   }
 }

@@ -6,8 +6,8 @@
 
   // --------------------------------------------
 
-  let account = $store.auth.account
-  let business = $store.business.linked
+  let myAccount = store.myAccount
+  let account = 'customer name'
   let transaction
 
   // --------------------------------------------
@@ -25,9 +25,9 @@
   <div class='charge-message'>
     { #if transaction }
       <h1>Success!</h1>
-      <h2>{ business.name } charged</h2>
+      <h2>{ myAccount.name } charged</h2>
     { :else }
-      <h1>{ business.name }</h1>
+      <h1>{ myAccount.name }</h1>
     { /if }
   </div>
 

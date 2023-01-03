@@ -11,8 +11,8 @@ export default (page) => {
 
     element(name) {
       const elements = {
-        businessOptions: '#select-business option',
-        businessSelector: '#select-business select',
+        businessOptions: '#select-account option',
+        businessSelector: '#select-account select',
         root: '#link-account',
         scanButton: '"Scan QR Code"',
         submitButton: 'button'

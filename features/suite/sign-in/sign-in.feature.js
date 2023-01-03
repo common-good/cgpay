@@ -69,7 +69,7 @@ test('I can sign in with my personal CG account.', async ({ browser, context, pa
   // --------------------------------------------
   // When I submit valid credentials, I am directed to the next step.
 
-  await signIn.with({ identifier: 'valid@email.com', password: 'valid' })
+  await signIn.with({ identifier: 'newaad', password: 'Newaad1!' })
   await expect(signIn.root()).not.toBeVisible()
   await expect(linkAccount.root()).toBeVisible()
 

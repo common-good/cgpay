@@ -25,14 +25,9 @@ export const createStore = () => {
   // --------------------------------------------
 
   const defaults = {
-    auth: {
-      account: null,
-      token: null
-    },
-
-    business: {
-      linked: null
-    },
+    auth: null,
+    
+    myAccount: {name: null},
 
     device: {
       type: getDeviceType(),
@@ -60,11 +55,20 @@ export const createStore = () => {
 
   // --------------------------------------------
 
-  function storeStateLocally(state) {
+  function storeLocal(state) {
     window.localStorage.setItem(storeKey, JSON.stringify(state))
+    localState = state
     return state
   }
-
+  
+  function setLocal(k, v) {
+    update(currentState => {
+      const newState = { ...currentState }
+      newState[k] = v
+      return storeLocal(newState)
+    })
+  }
+  
   // --------------------------------------------
 
   return {
@@ -74,62 +78,22 @@ export const createStore = () => {
       return localState
     },
 
-    auth: {
-      isAuthenticated() {
-        return localState.auth.token !== null
-      },
-
-      isNotAuthenticated() {
-        return localState.auth.token === null
-      },
-
-      signIn({ account, token }) {
+    myAccount: {
+      set(account) {
         update(currentState => {
           const newState = { ...currentState }
-
-          newState.auth.account = account
-          newState.auth.token = token
-
-          return storeStateLocally(newState)
+          newState.myAccount = {...newState.myAccount, ...account}
+          console.log(newState);
+          return storeLocal(newState)
         })
+//        return setLocal('myAccount', account)
       },
-
-      signOut() {
-        update(currentState => {
-          const newState = { ...currentState }
-
-          newState.auth.account = null
-          newState.auth.token = null
-
-          return storeStateLocally(newState)
-        })
-      }
-    },
-
-    business: {
-      isLinked() {
-        return localState.business.linked !== null
-      },
-
-      link(business) {
-        update(currentState => {
-          const newState = { ...currentState }
-
-          newState.business.linked = business
-
-          return storeStateLocally(newState)
-        })
-      }
+      has() {return localState.myAccount.name !== null},
     },
 
     device: {
-      isApple() {
-        return localState.device.type === 'Apple'
-      },
-
-      isAndroid() {
-        return localState.device.type === 'Android'
-      }
+      isApple() {return localState.device.type === 'Apple'},
+      isAndroid() {return localState.device.type === 'Android'}
     },
 
     homeScreen: {
@@ -143,10 +107,8 @@ export const createStore = () => {
       skip() {
         update(currentState => {
           const newState = { ...currentState }
-
           newState.homeScreen.skipped = new Date()
-
-          return storeStateLocally(newState)
+          return storeLocal(newState)
         })
       }
     },
@@ -155,9 +117,7 @@ export const createStore = () => {
       reset() {
         update(currentState => {
           const newState = { ...currentState }
-
           newState.network.restored = false
-
           return newState
         })
       },
@@ -165,10 +125,8 @@ export const createStore = () => {
       setOffline() {
         update(currentState => {
           const newState = { ...currentState }
-
           newState.network.offline = true
           newState.network.online = false
-
           return newState
         })
       },
@@ -176,10 +134,8 @@ export const createStore = () => {
       setOnline() {
         update(currentState => {
           const newState = { ...currentState }
-
           newState.network.offline = false
           newState.network.online = true
-
           return newState
         })
       },
@@ -187,11 +143,9 @@ export const createStore = () => {
       setRestored() {
         update(currentState => {
           const newState = { ...currentState }
-
           newState.network.offline = false
           newState.network.online = true
           newState.network.restored = true
-
           return newState
         })
       },
@@ -216,22 +170,18 @@ export const createStore = () => {
       dequeue(id) {
         update(currentState => {
           const newState = { ...currentState }
-
           newState.transactions.queued = newState.transactions.queued.filter(item => {
             return item.id !== id
           })
-
-          return storeStateLocally(newState)
+          return storeLocal(newState)
         })
       },
 
       queue(transaction) {
         update(currentState => {
           const newState = { ...currentState }
-
           newState.transactions.queued = [ ...newState.transactions.queued, transaction ]
-
-          return storeStateLocally(newState)
+          return storeLocal(newState)
         })
       }
     }
