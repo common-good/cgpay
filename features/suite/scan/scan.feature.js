@@ -18,40 +18,25 @@ test('I can identify a valid account by its QR code.', async ({ page }) => {
   // Set up mock API endpoints.
 
   const routes = createRoutes({ page })
-  const validDeviceId = 'GrfaVyHkxnTf4cxsyIEjkWyNdK0wUoDK153r2LIBoFocvw73T';
+  const validDeviceId = 'GrfaVyHkxnTf4cxsyIEjkWyNdK0wUoDK153r2LIBoFocvw73T'
+  const susan = 'G6VM0RZzhWMCq0zcBowqw' // Susan Shopper QR
 
-  routes.accounts.get
-    .withQueryParams({ identifier: 'newaad', password: 'Newaad1!' })
+  routes.identity.get
+    .withQueryParams({ deviceId: validDeviceId, otherId: susan })
     .respondsWith(200, {
-      token: 'valid-token',
-
-      account: {
-        identifier: 'customer@email.com',
-        location: 'Brooklyn, NY',
-        name: 'Customer One',
-        photo: 'https://members.cg4.us/customer-one.png'
-      }
+      name: 'Susan Shopper',
+      agent: '',
+      location: 'Demoville, MA',
     })
 
-  routes.accounts.get
-    .withQueryParams({ token: 'valid-token' })
-    .respondsWith(200, {
-      token: 'valid-token',
-
-      account: {
-        identifier: 'customer@email.com',
-        location: 'Brooklyn, NY',
-        name: 'Customer One',
-        photo: 'https://members.cg4.us/customer-one.png'
-      }
+  routes.idPhoto.get
+    .withQueryParams({ 
+      deviceID: validDeviceId, 
+      accountId: 'G6VM01', 
+      code: 'GrfaVyHkxnTf4cxsyIEjkWyNdK0wUoDK153r2LIBoFocvw73T4wrVS6LS1m2B2cCwpwcMN3fMJRTKp9Xc_zFra4bMDk5_Z3M1rXYAT6DAeR5cHLikO1g-nnmyRUzt_yGwweGFU4tnKJihNaqRTZSe9CHrltl5VvgsyV_wOOInzsjE_jqCkyMcPieTdFBwf3MNr5_DvtUeiEwNX4CHhviL5atGbaQb-xkdRGy-3z8-_isGoM8fCV6D8y7Ya5npmIvydfnMo1jKYPfvmZKKuYhijqgpJKErlUOcmYzsu6Q7SekpgTGhyZODoPRK_DtHA7bUwDUiN6v1dfOqt_08DUxfg'
     })
-
-  routes.businesses.get
-    .withQueryParams({ identifier: 'customer@email.com' })
     .respondsWith(200, {
-      businesses: [
-        { name: 'Business 1' }
-      ]
+
     })
 
   // --------------------------------------------
@@ -65,7 +50,7 @@ test('I can identify a valid account by its QR code.', async ({ page }) => {
   // --------------------------------------------
 
   await signIn.visit()
-  await signIn.with({ identifier: 'customer@email.com', password: 'valid' })
+  await signIn.with({ identifier: 'newaad', password: 'Newaad1!' })
   await linkAccount.element('scanButton').click()
   await expect(scan.root()).toBeVisible()
 

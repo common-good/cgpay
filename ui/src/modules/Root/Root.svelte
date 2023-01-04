@@ -10,7 +10,7 @@
   import LinkAccount from '#modules/LinkAccount/LinkAccount.svelte'
   import NetworkStatus from '#modules/NetworkStatus/NetworkStatus.svelte'
   import Scan from '#modules/Scan/Scan.svelte'
-  import SignIn from '#modules/Account/SignIn/SignIn.svelte'
+  import SignIn from '#modules/SignIn/SignIn.svelte'
 
   import LayoutIntro from './LayoutIntro/LayoutIntro.svelte'
   import LayoutStep from './LayoutStep/LayoutStep.svelte'
@@ -64,14 +64,26 @@
   // Routes
 
   const routes = [
+  
     {
       name: '/',
+      component: AddToHomeScreen,
+      layout: LayoutIntro,
+
+      onlyIf: {
+        guard: store.homeScreen.promptRequired,
+        redirect: '/sign-in'
+      }
+    },
+    
+    {
+      name: '/sign-in',
       component: SignIn,
       layout: LayoutIntro,
 
       onlyIf: {
-        guard: store.myAccount === null,
-        redirect: '/add-home'
+        guard: !store.myAccount.has,
+        redirect: '/scan'
       }
     },
 
@@ -81,29 +93,18 @@
       layout: LayoutStep,
 
       onlyIf: {
-        guard: store.myAccount === null,
+        guard: !store.myAccount.has,
         redirect: '/scan'
       }
     },
     
-    {
-      name: '/add-home',
-      component: AddToHomeScreen,
-      layout: LayoutIntro,
-
-      onlyIf: {
-        guard: store.homeScreen.promptRequired,
-        redirect: '/scan'
-      }
-    },
-
     {
       name: '/scan',
       component: Scan,
       layout: LayoutStep,
 
       onlyIf: {
-        guard: store.myAccount !== null,
+        guard: store.myAccount.has,
         redirect: '/sign-in'
       }
     },
@@ -114,7 +115,7 @@
       layout: LayoutStep,
 
       onlyIf: {
-        guard: store.myAccount !== null,
+        guard: store.myAccount.has,
         redirect: '/sign-in'
       }
     },

@@ -4,7 +4,7 @@
 
   import store from '#app.store.js'
 
-  import SelectAccount from './SelectBusiness/SelectBusiness.svelte'
+  import SelectAccount from './SelectAccount/SelectAccount.svelte'
 
   // --------------------------------------------
 

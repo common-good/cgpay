@@ -15,6 +15,10 @@
   function handleSubmitCharge(event) {
     transaction = event.detail
   }
+  
+  onMount(async () => {
+    
+  })
 </script>
 
 <svelte:head>

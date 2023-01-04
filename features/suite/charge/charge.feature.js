@@ -18,8 +18,8 @@ test('I can charge an identified customer.', async ({ page }) => {
   // Set up mock API endpoints.
 
   const routes = createRoutes({ page })
-
-  routes.accounts.get
+/*
+  routes.transactions.post
     .withQueryParams({ identifier: 'customer@email.com', password: 'valid' })
     .respondsWith(200, {
       token: 'valid-token',
@@ -31,30 +31,7 @@ test('I can charge an identified customer.', async ({ page }) => {
         photo: 'https://members.cg4.us/customer-one.png'
       }
     })
-
-  routes.accounts.get
-    .withQueryParams({ token: 'valid-token' })
-    .respondsWith(200, {
-      token: 'valid-token',
-
-      account: {
-        identifier: 'customer@email.com',
-        location: 'Brooklyn, NY',
-        name: 'Customer One',
-        photo: 'https://members.cg4.us/customer-one.png'
-      }
-    })
-
-  routes.businesses.get
-    .withQueryParams({ identifier: 'customer@email.com' })
-    .respondsWith(200, {
-      businesses: [
-        { name: 'Business 1' }
-      ]
-    })
-
-  routes.charges.post
-    .respondsWith(200)
+*/
 
   // --------------------------------------------
 
