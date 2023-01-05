@@ -25,7 +25,7 @@
 
       if (res.ok) {
         const obj = await res.json()
-        document.cookie = 'accountChoices=' + JSON.stringify(obj.accounts);
+        store.accountChoices.set(obj.accounts)
         navigateTo('/link-account')
       } else {
         errorMessage = `We couldn't find an account with that information. Please try again.`

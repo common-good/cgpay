@@ -1,17 +1,18 @@
 <script>
-  export let account
+  export let other
 </script>
 
 <section id='charge-profile'>
-  <img id='customer-photo' src={ account.photo } alt='Customer Photo' />
-  <p id='confirmation-customer-name'>{ account.name }</p>
-  <p id='confirmation-customer-location'>{ account.location }</p>
+  <img id='customer-photo' src={ other.photo } alt='{ other.photoAlt }' />
+  <p id='confirmation-customer-agent'>{ other.agent }</p>
+  <p id='confirmation-customer-name'>{ other.name }</p>
+  <p id='confirmation-customer-location'>{ other.location }</p>
 </section>
 
 <style lang='stylus'>
   #charge-profile
     img
-      clampSize(25vw, 150px)
+      profilePhoto(25vw, 150px)
       margin $s2 auto
 
     p
@@ -19,4 +20,7 @@
 
     #customer-name, #confirmation-customer-name
       text lg
+      
+    #confirmation-customer-agent
+      text md
 </style>

@@ -17,32 +17,25 @@
     
   // --------------------------------------------
 
-  function getCookie(name) {
-    var v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
-    return v ? v[2] : null;
-  }
-
   function gotAccount(e) {
     myAccount = accounts[e.detail]
     store.myAccount.set(myAccount)
+    console.log($store.myAccount)
     message = `This device is now linked to ${ myAccount.name }.`
   }
 
   // --------------------------------------------
 
   onMount(async () => {
-    accounts = JSON.parse(getCookie('accountChoices'))
+    accounts = store.accountChoices.get() // JSON.parse(getCookie('accountChoices'))
     console.log(accounts);
 
     if (accounts.length === 1) {
-      myAccount = accounts[0]
-      store.myAccount.set(myAccount)
-      message = `This device is now linked to ${ myAccount.name }.` // personal accounts cannot be linked yet
+      gotAccount({detail: accounts[0]}) // simulate selection of the only option in a <select>
     } else if (accounts.length > 1) {
       for (let i = 0; i < accounts.length; i++) {
         accountOptions[i] = {id: i, name: accounts[i].name}
       }
-      console.log(accountOptions);
     } else {
       errorMessage = `You do not have access to any company account. Ask a manager of your company account to connect your account and give you the appropriate permissions.`
     }

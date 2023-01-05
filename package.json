@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@sveltejs/kit": "^1.0.1",
+    "openpgp": "^5.5.0",
     "svelte-select": "^4.3.1"
   }
 }

@@ -2,8 +2,11 @@
   import { Html5Qrcode } from 'html5-qrcode'
   import { navigateTo } from 'svelte-router-spa'
   import { onMount } from 'svelte'
+  import store from '#app.store.js'
 
   onMount(async () => {
+    store.qr.set('H6VM0G0NyCBBlUF1qWNZ2k'); navigateTo('/charge')
+    /*
     const devices = await Html5Qrcode.getCameras()
 
     if (devices?.length) {
@@ -18,8 +21,7 @@
 
         // Handle code.
         async (decodedText, decodedResult) => {
-          // TODO: Do something with this.
-          console.log(decodedText, decodedResult)
+          store.qr.set(decodedText);
 
           await scanner.stop()
           navigateTo('/charge')
@@ -32,7 +34,7 @@
         // Handle library/startup error.
         .catch((err) => {
         })
-    }
+    }*/
   })
 </script>
 

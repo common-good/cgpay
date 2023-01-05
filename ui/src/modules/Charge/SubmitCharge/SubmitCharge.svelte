@@ -3,10 +3,12 @@
 
   import Profile from '#modules/Charge/Profile/Profile.svelte'
   import store from '#app.store.js'
+  // https://github.com/canutin/svelte-currency-input
 
   // --------------------------------------------
 
-  export let account
+  export let other
+  export let transaction
 
   // --------------------------------------------
 
@@ -14,10 +16,6 @@
 
   let errorMessage
 
-  let transaction = {
-    amount: null,
-    description: null
-  }
 
   // --------------------------------------------
 
@@ -29,7 +27,7 @@
     }
 
     try {
-      const response = await fetch(`${ __membersApi__ }/charges`, {
+      const response = await fetch(`${ __membersApi__ }/transaction`, {
         method: 'POST',
         headers: {
           'authorization': `Bearer ${ $store.auth.token }`,
@@ -58,7 +56,7 @@
 <section id='submit-charge'>
   <form on:submit|preventDefault={ charge }>
     <div class='charge-content'>
-      <Profile { account } />
+      <Profile { other } />
 
       { #if errorMessage }
         <p>{ errorMessage }</p>
@@ -66,7 +64,7 @@
 
       <fieldset>
         <input id='charge-description' type='text' placeholder='Description' bind:value={ transaction.description } />
-        <input id='charge-amount' type='number' placeholder='Amount' bind:value={ transaction.amount } required />
+        <input id='charge-amount' type='number' min="0.01" step="0.01" max="9999.99" placeholder='Amount' bind:value={ transaction.amount } required />
       </fieldset>
     </div>
 

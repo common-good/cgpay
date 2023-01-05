@@ -1,6 +1,7 @@
 import { writable } from 'svelte/store'
 
 // --------------------------------------------
+// use this example for set() and get(): https://svelte.dev/repl/ccbc94cb1b4c493a9cf8f117badaeb31?version=3.16.7
 
 export const createStore = () => {
   const storeKey = 'cgpay.store'
@@ -69,6 +70,22 @@ export const createStore = () => {
     })
   }
   
+  function setCookie(name, value) {
+    document.cookie = `${ name }=${ JSON.stringify(value) }`
+  }
+
+  function getCookie(name) {
+    var v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+    return v ? JSON.parse(v[2]) : null;
+  }
+/* 
+  function cookieOps(name) {
+    return {
+      set: (v) => { return setCookie(name, v) },
+      get: () => { return getCookie(name) }
+    }
+  }
+  */
   // --------------------------------------------
 
   return {
@@ -83,17 +100,26 @@ export const createStore = () => {
         update(currentState => {
           const newState = { ...currentState }
           newState.myAccount = {...newState.myAccount, ...account}
-          console.log(newState);
+          newState.myAccount.deviceId = 'GrfaVyHkxnTf4cxsyIEjkWyNdK0wUoDK153r2LIBoFocvw73T'; newState.myAccount.items = ['test food']
           return storeLocal(newState)
         })
-//        return setLocal('myAccount', account)
       },
       has() {return localState.myAccount.name !== null},
     },
+    
+    accountChoices: {
+      set(v) { return setCookie('accountChoices', v) },
+      get() { return getCookie('accountChoices') }
+    },
+    
+    qr: {
+      set(v) { return setCookie('qr', v) },
+      get() { return getCookie('qr') }
+    },
 
     device: {
-      isApple() {return localState.device.type === 'Apple'},
-      isAndroid() {return localState.device.type === 'Android'}
+      isApple() { return localState.device.type === 'Apple' },
+      isAndroid() { return localState.device.type === 'Android' }
     },
 
     homeScreen: {
