@@ -1,43 +1,62 @@
 <script>
   import { createEventDispatcher } from 'svelte'
-
+  import queryString from 'query-string'
   import Profile from '#modules/Charge/Profile/Profile.svelte'
   import store from '#app.store.js'
+  import { sha256 } from 'js-sha256'
   // https://github.com/canutin/svelte-currency-input
 
   // --------------------------------------------
 
   export let other
-  export let transaction
+  export let tx
 
   // --------------------------------------------
-
-  const dispatch = createEventDispatcher()
 
   let errorMessage
-
+  const dispatch = createEventDispatcher()
 
   // --------------------------------------------
 
-  async function charge() {
-    if ($store.network.offline) {
-      store.transactions.queue(transaction)
-      dispatch('complete', transaction)
-      return
-    }
+  function hash(s) {
+    const hash = sha256.create()
+    hash.update(s)
+    return hash.hex()
+  }
 
+  function queueTx(tx) {
+    tx.offline = true
+    store.txs.queue(tx)
+    dispatch('complete', tx)
+    return
+  }
+  
+  async function charge() {
+    tx.created = Math.floor(Date.now() / 1000) // Unix timestamp
+    tx.amount = (+tx.amount).toFixed(2)
+    tx.proof = hash(tx.actorId + tx.amount + tx.otherId.split(/[.-]/) + tx.created)
+    console.log(tx.actorId + tx.amount + tx.otherId.split(/[.-]/) + tx.created)
+    if ($store.network.offline) return queueTx(tx);
+
+    console.log(tx)
     try {
-      const response = await fetch(`${ __membersApi__ }/transaction`, {
+      const response = await fetch(`${ __membersApi__ }/transactions`, {
         method: 'POST',
         headers: {
-          'authorization': `Bearer ${ $store.auth.token }`,
-          'content-type': 'application/json'
+//          'authorization': `Bearer ${ $store.myAccount.deviceId }`,
+//          'Accept': 'application/json',
+//          'Content-type': 'application/json',
+          'Content-type': 'application/x-www-form-urlencoded',
         },
-        body: JSON.stringify(transaction)
+        mode: 'cors',
+        cache: 'default',
+//        body: JSON.stringify(tx)
+        body: queryString.stringify(tx)
       })
-
+      console.log(queryString.stringify(tx))
+      console.log(response)
       if (response.ok) {
-        dispatch('complete', transaction)
+        dispatch('complete', tx)
       }
 
       else {
@@ -63,8 +82,8 @@
       { /if }
 
       <fieldset>
-        <input id='charge-description' type='text' placeholder='Description' bind:value={ transaction.description } />
-        <input id='charge-amount' type='number' min="0.01" step="0.01" max="9999.99" placeholder='Amount' bind:value={ transaction.amount } required />
+        <input id='charge-description' type='text' placeholder='Description' bind:value={ tx.description } />
+        <input id='charge-amount' type='number' min="0.01" step="0.01" max="9999.99" placeholder='Amount' bind:value={ tx.amount } required />
       </fieldset>
     </div>
 

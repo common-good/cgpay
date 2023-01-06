@@ -7,25 +7,51 @@
 //  import { encrypt, createMessage, readKey } from 'openpgp'
 
   // --------------------------------------------
+  
+  // Example with curl: curl -d "actorId=G6VM03&amount=1234.98&created=1672959981&description=test%20food&deviceId=GrfaVyHkxnTf4cxsyIEjkWyNdK0wUoDK153r2LIBoFocvw73T&offline=false&otherId=H6VM0G0NyCBBlUF1qWNZ2k&proof=d0e4eaeb4e9c1dc9d80bef9eeb3ad1342fd24997156cb57575479bd3ac19d00b" -X POST -H "Content-type: application/x-www-form-urlencoded" 'https://demo.commongood.earth/api/transactions'
 
+  const otherId = store.qr.get()
+
+  const fmts = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  const regionLens = '111111112222222233333333333344444444'
+  const acctLens = '222233332222333322223333444444445555'
+  const agentLens = '012301230123012301230123012301230123'
+  
   let other = {
-    photoAlt: 'Retrieving Customer Account...',
-    agent: 'agt',
-    name: 'nm',
-    location: 'loc',
+    photoAlt: 'Retrieving Customer Profile...',
+    agent: '',
+    name: '',
+    location: '',
   }
-  let transaction = {
+  
+  let tx = {
     amount: null,
-    description: null
+    description: null,
+    deviceId: $store.myAccount.deviceId,
+    actorId: noCardCode($store.myAccount.accountId),
+    otherId: otherId,
+    created: null,
+    proof: null,
+    offline: false,
   }
+  
   let errorMessage
   let myName
   let gotTx = false
 
   // --------------------------------------------
 
+  /**
+   * Return the cardId with cardCode (and everything that follows) removed
+   */
+  function noCardCode(cardId) {
+    const i = fmts.indexOf(cardId[0])
+    const len = regionLens[i] + acctLens[i] + agentLens[i]
+    return cardId.substr(0, len)
+  }
+  
   function handleSubmitCharge(event) {
-    transaction = event.detail
+    tx = {...tx, ...event.detail}
     gotTx = true
   }
   /*
@@ -44,9 +70,9 @@
   async function getPhoto(query) {
   
 /*    const deviceId = $store.myAccount.deviceId;
-    const crypt = await cgEncrypt(deviceId.substr(0, 50) + qr)
+    const crypt = await cgEncrypt(deviceId.substr(0, 50) + otherId)
     const code = btoa(crypt).replace('+', '-').replace('_', '/')
-    q = {deviceId: deviceId, accountId: qr.substr(0, 6), code: code}
+    q = {deviceId: deviceId, accountId: otherId.substr(0, 6), code: code}
     console.log(q)
     const query = queryString.stringify(q)
     */
@@ -61,14 +87,13 @@
       errorMessage = `We couldn't find an account with that information. Please try again.`
     }
   }
-  
+    
   onMount(async () => {
-    errorMessage = 'Finding your account(s)...'
+    errorMessage = 'Finding the customer account...'
     try {
-      const qr = store.qr.get();
       myName = $store.myAccount.name
       console.log(myName);
-      const q = {deviceId: $store.myAccount.deviceId, otherId: qr}
+      const q = {deviceId: $store.myAccount.deviceId, otherId: otherId}
       const query = queryString.stringify(q)
       console.log(q)
       fetch(`${ __membersApi__ }/identity?${ query }`)
@@ -78,7 +103,7 @@
           const obj = await res.json()
           other = {...other, ...obj}
           const firstItem = { ...$store.myAccount.items }[0]
-          if (firstItem) transaction.description = firstItem
+          if (firstItem) tx.description = firstItem
         } else {
           errorMessage = `We couldn't find an account with that information. Please try again.`
         }
@@ -108,21 +133,18 @@
 
   { #if gotTx }
     <div class='charge-content'>
-      <Profile { other } />
+      <p id='confirmation-customer-name'>{ other.name }</p>
     </div>
 
     <div id='charge-transaction-details'>
-      { #if transaction.description }
-        <p>{ transaction.description }</p>
-      { /if }
-
-      <p>{ transaction.amount }</p>
+      <p>{ tx.amount }</p>
+      <p>for { tx.description }</p>
     </div>
 
-    <a href='/scan'>Scan Again</a>
+    <a href='/scan'>Scan Another QR</a>
 
   { :else }
-    <SubmitCharge { other }, { transaction } on:complete={ handleSubmitCharge } />
+    <SubmitCharge { other }, { tx } on:complete={ handleSubmitCharge } />
   { /if }
 </section>
 
