@@ -5,7 +5,7 @@
   import store from '#app.store.js'
 
   onMount(async () => {
-    store.qr.set('H6VM0G0NyCBBlUF1qWNZ2k'); navigateTo('/charge')
+    store.qr.set('HTTP://6VM.RC4.ME/H0G0NyCBBlUF1qWNZ2k'); navigateTo('/charge') // HTTP://6VM.RC4.ME/H0G0NyCBBlUF1qWNZ2k or H6VM0G0NyCBBlUF1qWNZ2k.
     /*
     const devices = await Html5Qrcode.getCameras()
 

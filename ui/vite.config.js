@@ -22,7 +22,8 @@ export default {
   resolve: {
     alias: {
       '#app.store.js': to('./src/app.store.js', import.meta.url),
-      '#modules': to('./src/modules', import.meta.url)
+      '#utils.js': to('./src/utils.js', import.meta.url),
+      '#modules': to('./src/modules', import.meta.url),
     }
   },
 

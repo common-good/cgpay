@@ -74,10 +74,15 @@ export const createStore = () => {
     document.cookie = `${ name }=${ JSON.stringify(value) }`
   }
 
-  function getCookie(name) {
+  function getCookie(name, once = false) {
     var v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
-    return v ? JSON.parse(v[2]) : null;
+    const res = v ? JSON.parse(v[2]) : null;
+    console.log(res)
+    if (once) setCookie(name, null)
+    return res
   }
+  
+  function getCookieOnce(name) { return getCookie(name, true) }
 /* 
   function cookieOps(name) {
     return {
@@ -109,12 +114,17 @@ export const createStore = () => {
     
     accountChoices: {
       set(v) { return setCookie('accountChoices', v) },
-      get() { return getCookie('accountChoices') }
+      get() { return getCookieOnce('accountChoices') }
     },
     
     qr: {
       set(v) { return setCookie('qr', v) },
       get() { return getCookie('qr') }
+    },
+    
+    errMsg: {
+      set(v) { return setCookie('errMsg', v) },
+      get() { return getCookie('errMsg') }
     },
 
     device: {

@@ -1,6 +1,8 @@
 <script>
   import store from '#app.store.js'
+  import { cgFetch, CgError } from '#utils.js'
   import { onMount } from 'svelte'
+  import { navigateTo } from 'svelte-router-spa'
   import queryString from 'query-string'
   import Profile from './Profile/Profile.svelte'
   import SubmitCharge from './SubmitCharge/SubmitCharge.svelte'
@@ -10,9 +12,7 @@
   
   // Example with curl: curl -d "actorId=G6VM03&amount=1234.98&created=1672959981&description=test%20food&deviceId=GrfaVyHkxnTf4cxsyIEjkWyNdK0wUoDK153r2LIBoFocvw73T&offline=false&otherId=H6VM0G0NyCBBlUF1qWNZ2k&proof=d0e4eaeb4e9c1dc9d80bef9eeb3ad1342fd24997156cb57575479bd3ac19d00b" -X POST -H "Content-type: application/x-www-form-urlencoded" 'https://demo.commongood.earth/api/transactions'
 
-  const otherId = store.qr.get()
-
-  const fmts = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  const dig36 = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
   const regionLens = '111111112222222233333333333344444444'
   const acctLens = '222233332222333322223333444444445555'
   const agentLens = '012301230123012301230123012301230123'
@@ -29,7 +29,7 @@
     description: null,
     deviceId: $store.myAccount.deviceId,
     actorId: noCardCode($store.myAccount.accountId),
-    otherId: otherId,
+    otherId: null,
     created: null,
     proof: null,
     offline: false,
@@ -45,7 +45,7 @@
    * Return the cardId with cardCode (and everything that follows) removed
    */
   function noCardCode(cardId) {
-    const i = fmts.indexOf(cardId[0])
+    const i = dig36.indexOf(cardId[0])
     const len = regionLens[i] + acctLens[i] + agentLens[i]
     return cardId.substr(0, len)
   }
@@ -54,65 +54,69 @@
     tx = {...tx, ...event.detail}
     gotTx = true
   }
-  /*
-  async function cgEncrypt(text) {
-  console.log('before readKey');
-    const publicKey = await readKey({ armoredKey: cgPublicKey });
-    console.log('after readKey');
-    const crypt = await encrypt({
-      message: await createMessage({ text: text }), // input as Message object
-      encryptionKeys: publicKey,
-    });
 
-    return crypt
-  }
-  */
   async function getPhoto(query) {
-  
-/*    const deviceId = $store.myAccount.deviceId;
-    const crypt = await cgEncrypt(deviceId.substr(0, 50) + otherId)
-    const code = btoa(crypt).replace('+', '-').replace('_', '/')
-    q = {deviceId: deviceId, accountId: otherId.substr(0, 6), code: code}
-    console.log(q)
-    const query = queryString.stringify(q)
-    */
-    
     console.log('before idPhoto')
-    const res = await fetch(`${ __membersApi__ }/idPhoto?${ query }`)
-    if (res.ok) {
-      other.photoAlt = 'Customer Photo'
-      const blob = await res.blob()
-      other.photo = URL.createObjectURL(blob)
-    } else {
-      errorMessage = `We couldn't find an account with that information. Please try again.`
-    }
+    const blob = await cgFetch(`${ __membersApi__ }/idPhoto?${ query }`, { type: 'blob' })
+    other.photoAlt = 'Customer Photo'
+    other.photo = URL.createObjectURL(blob)
   }
-    
+  
+  /**
+   * Parse the given account identifier, return {acct:, test:, count:} where acct is what to send to the server
+   * Note that the cardCode part of the account identifier ranges from 9-15 chars (and may be extended to 20 someday)
+   */
+  function qrParse(qr) {
+    const parts = qr.split(/[\/.]/)
+    if ((new RegExp('^[0-9A-Za-z]{12,29}[\.!]$')).test(qr)) { // like H6VM0G0NyCBBlUF1qWNZ2k.
+      return {acct: parts[0], test: qr.substring(-1) == '.'}
+    }
+    if ((new RegExp('^HTTP://[0-9A-Za-z]{1,4}\.RC[24]\.ME/[0-9A-Za-z]{11,28}$')).test(qr)) { // like HTTP://6VM.RC4.ME/KDJJ34kjdfKJ4
+      return {acct: parts[5][0] + parts[2] + parts[5].substring(1), test: qr.includes('.RC4.')}
+    }
+    console.log('bad qr: ' + qr)
+    throw new CgError('That is not a valid Common Good card.')
+  }
+  
+  /**
+   * Return just the region and acct parts of the QR.
+   * @todo: change the format character (acct[0]) to show agentLen = 0
+   */
+  function acctOnly(acct) { 
+    const i = dig36.indexOf(acct[0])
+    return acct.substring(0, 1 + regionLens[i] + acctLens[i] + agentLens[i])
+  }
+
   onMount(async () => {
     errorMessage = 'Finding the customer account...'
+    
     try {
+      const qr = store.qr.get() //
+      console.log(qr)
+      const card = qrParse(qr) // does not return if format is bad
+      tx.otherId = acctOnly(card.acct)
       myName = $store.myAccount.name
       console.log(myName);
-      const q = {deviceId: $store.myAccount.deviceId, otherId: otherId}
+      
+      const q = {deviceId: $store.myAccount.deviceId, otherId: card.acct}
       const query = queryString.stringify(q)
       console.log(q)
-      fetch(`${ __membersApi__ }/identity?${ query }`)
-      .then(async (res) => {
-        console.log(res)
-        if (res.ok) {
-          const obj = await res.json()
-          other = {...other, ...obj}
-          const firstItem = { ...$store.myAccount.items }[0]
-          if (firstItem) tx.description = firstItem
-        } else {
-          errorMessage = `We couldn't find an account with that information. Please try again.`
-        }
-      })
-      .then(getPhoto(query))
+      const body = await cgFetch(`${ __membersApi__ }/identity?${ query }`)
+      other = {...other, ...body}
+      const firstItem = { ...$store.myAccount.items }[0]
+      if (firstItem) tx.description = firstItem
+      getPhoto(query)
 
-    } catch (error) {
-      console.log(error);
-      errorMessage = `The server is unavailable. Check your internet connection and try again?`
+    } catch (e) {
+      console.log(e);
+      if (e.name == 'AbortError') { // internet unavailable; recognize a repeat customer or limit CG's liability
+        errorMessage = 'Profile unavailable: Continue if you trust this member for the intended amount (or ask for ID).'
+        other.name = errorMessage
+      } else {
+        store.errMsg.set(e.message)
+        navigateTo('/home') // this doesn't exist yet
+        console.log(e);
+      }
     }
   })
 </script>
