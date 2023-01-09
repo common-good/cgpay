@@ -23,6 +23,7 @@ export default {
     alias: {
       '#app.store.js': to('./src/app.store.js', import.meta.url),
       '#utils.js': to('./src/utils.js', import.meta.url),
+      '#db.js': to('./src/db.js', import.meta.url),
       '#modules': to('./src/modules', import.meta.url),
     }
   },

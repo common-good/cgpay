@@ -187,17 +187,15 @@ export const createStore = () => {
       },
     },
 
-    transactions: {
+    txs: {
       async flush({ sendChargeRequest }) {
-        const { queued } = localState.transactions
+        const { queued } = localState.txs
 
         for (let i = 0; i < queued.length; i++) {
           try {
-            await sendChargeRequest({ transaction: queued[i] })
+            await sendChargeRequest(queued[i])
             this.dequeue(queued[i].id)
-          }
-
-          catch (error) {
+          } catch (e) {
             // TODO Handle charge request error.
           }
         }
@@ -206,17 +204,15 @@ export const createStore = () => {
       dequeue(id) {
         update(currentState => {
           const newState = { ...currentState }
-          newState.transactions.queued = newState.transactions.queued.filter(item => {
-            return item.id !== id
-          })
+          newState.txs.queued = newState.txs.queued.filter(item => { return item.id !== id })
           return storeLocal(newState)
         })
       },
 
-      queue(transaction) {
+      queue(tx) {
         update(currentState => {
           const newState = { ...currentState }
-          newState.transactions.queued = [ ...newState.transactions.queued, transaction ]
+          newState.txs.queued = [ ...newState.txs.queued, tx ]
           return storeLocal(newState)
         })
       }

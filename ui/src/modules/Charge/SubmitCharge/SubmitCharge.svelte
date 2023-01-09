@@ -3,6 +3,7 @@
   import queryString from 'query-string'
   import Profile from '#modules/Charge/Profile/Profile.svelte'
   import store from '#app.store.js'
+  import { cgFetch, CgError } from '#utils.js'
   import { sha256 } from 'js-sha256'
   // https://github.com/canutin/svelte-currency-input
 
@@ -31,6 +32,19 @@
     return
   }
   
+  function sendTxRequest(tx) {
+    const res = await cgFetch(`${ __membersApi__ }/transactions`, {
+      method: 'POST',
+      headers: { 'Content-type': 'application/x-www-form-urlencoded' },
+      mode: 'cors',
+      cache: 'default',
+      body: queryString.stringify(tx)
+    })
+    console.log(queryString.stringify(tx))
+    console.log(response)
+    if (!res.ok) thow new CgError(res.message)
+  }
+  
   async function charge() {
     tx.created = Math.floor(Date.now() / 1000) // Unix timestamp
     tx.amount = (+tx.amount).toFixed(2)
@@ -40,34 +54,18 @@
 
     console.log(tx)
     try {
-      const response = await fetch(`${ __membersApi__ }/transactions`, {
-        method: 'POST',
-        headers: {
-//          'authorization': `Bearer ${ $store.myAccount.deviceId }`,
-//          'Accept': 'application/json',
-//          'Content-type': 'application/json',
-          'Content-type': 'application/x-www-form-urlencoded',
-        },
-        mode: 'cors',
-        cache: 'default',
-//        body: JSON.stringify(tx)
-        body: queryString.stringify(tx)
-      })
-      console.log(queryString.stringify(tx))
-      console.log(response)
-      if (response.ok) {
-        dispatch('complete', tx)
+      sendTxRequest(tx)
+      dispatch('complete', tx)
+    } catch (e) {
+      console.log(e);
+      if (e.name == 'AbortError') { // internet unavailable; queue it and treat it like a success
+        queueTx(tx)
+      } else {
+        store.errMsg.set(e.message)
+        navigateTo('/home') // this doesn't exist yet
+        console.log(e);
       }
-
-      else {
-        errorMessage = `We couldn't complete the charge. Please try again.`
-      }
-    }
-
-    catch (error) {
-      // TODO: Handle and test no server access.
-      console.error(error)
-      errorMessage = 'We could not complete your request.'
+      // state success, show undo/tip/done buttons, set timer to return to home
     }
   }
 </script>

@@ -31,4 +31,11 @@ function disableBack() {
 
 */
 
+/* for POST auth in HTTP header (any advantage?)
+        'authorization': `Bearer ${ $store.myAccount.deviceId }`,
+        'Accept': 'application/json',
+        'Content-type': 'application/json',
+        body: JSON.stringify(tx)
+*/
+
 export { CgError, cgFetch }
