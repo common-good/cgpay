@@ -1,12 +1,12 @@
 <script>
-  export let other
+  export let otherAccount
 </script>
 
 <section id='charge-profile'>
-  <img id='customer-photo' src={ other.photo } alt='{ other.photoAlt }' />
-  <p id='confirmation-customer-agent'>{ other.agent }</p>
-  <p id='confirmation-customer-name'>{ other.name }</p>
-  <p id='confirmation-customer-location'>{ other.location }</p>
+  <img id='customer-photo' src={ otherAccount.photo } alt='{ otherAccount.photoAlt }' />
+  <p id='confirmation-customer-agent'>{ otherAccount.agent }</p>
+  <p id='confirmation-customer-name'>{ otherAccount.name }</p>
+  <p id='confirmation-customer-location'>{ otherAccount.location }</p>
 </section>
 
 <style lang='stylus'>

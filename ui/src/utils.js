@@ -1,6 +1,6 @@
 function CgError(msg, name = 'CgError') { this.message = msg; this.name = name }
 
-async function cgFetch(url, options = {}) {
+async function timedFetch(url, options = {}) {
   const { timeout = 1000, type = 'json' } = options;
   const aborter = new AbortController();
   aborter.name = 'Timeout'
@@ -38,4 +38,4 @@ function disableBack() {
         body: JSON.stringify(tx)
 */
 
-export { CgError, cgFetch }
+export { CgError, timedFetch }

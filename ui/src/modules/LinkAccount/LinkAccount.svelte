@@ -17,8 +17,8 @@
     
   // --------------------------------------------
 
-  function gotAccount(e) {
-    myAccount = accounts[e.detail]
+  function gotAccount(ev) {
+    myAccount = accounts[ev.detail]
     store.myAccount.set(myAccount)
     console.log($store.myAccount)
     message = `This device is now linked to ${ myAccount.name }.`
@@ -31,7 +31,7 @@
     console.log(accounts);
 
     if (accounts.length === 1) {
-      gotAccount({detail: accounts[0]}) // simulate selection of the only option in a <select>
+      gotAccount({detail: accounts[0]}) // simulate event (selection of this option in a <select>)
     } else if (accounts.length > 1) {
       for (let i = 0; i < accounts.length; i++) {
         accountOptions[i] = {id: i, name: accounts[i].name}

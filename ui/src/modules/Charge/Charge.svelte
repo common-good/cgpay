@@ -1,6 +1,6 @@
 <script>
   import store from '#app.store.js'
-  import { cgFetch, CgError } from '#utils.js'
+  import { timedFetch, CgError } from '#utils.js'
   import { onMount } from 'svelte'
   import { navigateTo } from 'svelte-router-spa'
   import queryString from 'query-string'
@@ -17,7 +17,7 @@
   const acctLens = '222233332222333322223333444444445555'
   const agentLens = '012301230123012301230123012301230123'
   
-  let other = {
+  let otherAccount = {
     photoAlt: 'Retrieving Customer Profile...',
     agent: '',
     name: '',
@@ -50,16 +50,16 @@
     return cardId.substr(0, len)
   }
   
-  function handleSubmitCharge(event) {
-    tx = {...tx, ...event.detail}
+  function handleSubmitCharge(ev) {
     gotTx = true
+    tx = {...tx, ...ev.detail}
   }
 
   async function getPhoto(query) {
     console.log('before idPhoto')
-    const blob = await cgFetch(`${ __membersApi__ }/idPhoto?${ query }`, { type: 'blob' })
-    other.photoAlt = 'Customer Photo'
-    other.photo = URL.createObjectURL(blob)
+    const blob = await timedFetch(`${ __membersApi__ }/idPhoto?${ query }`, { type: 'blob' })
+    otherAccount.photoAlt = 'Customer Photo'
+    otherAccount.photo = URL.createObjectURL(blob)
   }
   
   /**
@@ -94,28 +94,29 @@
       const qr = store.qr.get() //
       console.log(qr)
       const card = qrParse(qr) // does not return if format is bad
-      tx.otherId = acctOnly(card.acct)
+      tx.otherId = card.acct
       myName = $store.myAccount.name
       console.log(myName);
       
       const q = {deviceId: $store.myAccount.deviceId, otherId: card.acct}
       const query = queryString.stringify(q)
       console.log(q)
-      const body = await cgFetch(`${ __membersApi__ }/identity?${ query }`)
-      other = {...other, ...body}
+      const body = await timedFetch(`${ __membersApi__ }/identity?${ query }`)
+      otherAccount = { ...otherAccount, ...body }
       const firstItem = { ...$store.myAccount.items }[0]
       if (firstItem) tx.description = firstItem
       getPhoto(query)
 
-    } catch (e) {
-      console.log(e);
-      if (e.name == 'AbortError') { // internet unavailable; recognize a repeat customer or limit CG's liability
+    } catch (er) {
+      console.log(er);
+      if (er.name == 'AbortError') { // internet unavailable; recognize a repeat customer or limit CG's liability
         errorMessage = 'Profile unavailable: Continue if you trust this member for the intended amount (or ask for ID).'
-        other.name = errorMessage
+        otherAccount.name = errorMessage
       } else {
-        store.errMsg.set(e.message)
-        navigateTo('/home') // this doesn't exist yet
-        console.log(e);
+        store.errMsg.set(er.message)
+//        navigateTo('/home') // this doesn't exist yet
+        otherAccount.name = errorMessage
+        console.log(er);
       }
     }
   })
@@ -137,7 +138,7 @@
 
   { #if gotTx }
     <div class='charge-content'>
-      <p id='confirmation-customer-name'>{ other.name }</p>
+      <p id='confirmation-customer-name'>{ otherAccount.name }</p>
     </div>
 
     <div id='charge-transaction-details'>
@@ -148,7 +149,7 @@
     <a href='/scan'>Scan Another QR</a>
 
   { :else }
-    <SubmitCharge { other }, { tx } on:complete={ handleSubmitCharge } />
+    <SubmitCharge { otherAccount }, { tx } on:complete={ handleSubmitCharge } />
   { /if }
 </section>
 

@@ -82,7 +82,7 @@
       layout: LayoutIntro,
 
       onlyIf: {
-        guard: !store.myAccount.has,
+        guard: !store.myAccount.exists,
         redirect: '/scan'
       }
     },
@@ -93,7 +93,7 @@
       layout: LayoutStep,
 
       onlyIf: {
-        guard: !store.myAccount.has,
+        guard: !store.myAccount.exists,
         redirect: '/scan'
       }
     },
@@ -104,7 +104,7 @@
       layout: LayoutStep,
 
       onlyIf: {
-        guard: store.myAccount.has,
+        guard: store.myAccount.exists,
         redirect: '/sign-in'
       }
     },
@@ -115,7 +115,7 @@
       layout: LayoutStep,
 
       onlyIf: {
-        guard: store.myAccount.has,
+        guard: store.myAccount.exists,
         redirect: '/sign-in'
       }
     },

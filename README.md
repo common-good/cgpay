@@ -59,12 +59,12 @@ For more information, see the [Features documentation](/features) and [UI docume
 
 Deployments used to be automatic via Vercel's GitHub integration. We are no longer using that, but have no replacement yet.
 
-Deploy branches to the following URLs:
+Deploy branches to the following URLs (Note: these are not settled yet):
 
-| Git Branch | Environment | URL |
-| :-- | :-- | :-- |
-| `master` | `production` | https://pay.cg4.us |
-| `develop` | `develop` | https://cgpay.commongood.earth |
+| Git Branch | Environment | URL | Shortcut |
+| :-- | :-- | :-- | :-- |
+| `master` | `production` | https://cgpay.commongood.earth | cg4.us/app |
+| `develop` | `develop` | https://cgpay2.commongood.earth | cg4.us/app2 |
 
 ### Deployment Checklist
 

@@ -109,7 +109,7 @@ export const createStore = () => {
           return storeLocal(newState)
         })
       },
-      has() {return localState.myAccount.name !== null},
+      exists() {return localState.myAccount.name !== null},
     },
     
     accountChoices: {
@@ -195,7 +195,7 @@ export const createStore = () => {
           try {
             await sendChargeRequest(queued[i])
             this.dequeue(queued[i].id)
-          } catch (e) {
+          } catch (er) {
             // TODO Handle charge request error.
           }
         }
