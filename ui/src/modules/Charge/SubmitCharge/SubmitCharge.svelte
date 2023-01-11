@@ -2,14 +2,15 @@
   import { createEventDispatcher } from 'svelte'
   import queryString from 'query-string'
   import Profile from '#modules/Charge/Profile/Profile.svelte'
+  import { navigateTo } from 'svelte-router-spa'
   import store from '#app.store.js'
-  import { cgFetch, CgError } from '#utils.js'
+  import { timedFetch, CgError } from '#utils.js'
   import { sha256 } from 'js-sha256'
   // https://github.com/canutin/svelte-currency-input
 
   // --------------------------------------------
 
-  export let other
+  export let otherAccount
   export let tx
 
   // --------------------------------------------
@@ -32,8 +33,8 @@
     return
   }
   
-  function sendTxRequest(tx) {
-    const res = await cgFetch(`${ __membersApi__ }/transactions`, {
+  async function sendTxRequest(tx) {
+    const res = await timedFetch(`${ __membersApi__ }/transactions`, {
       method: 'POST',
       headers: { 'Content-type': 'application/x-www-form-urlencoded' },
       mode: 'cors',
@@ -41,29 +42,29 @@
       body: queryString.stringify(tx)
     })
     console.log(queryString.stringify(tx))
-    console.log(response)
-    if (!res.ok) thow new CgError(res.message)
+    console.log(res)
+//    if (!res.ok) throw new CgError(res.message)
   }
   
   async function charge() {
     tx.created = Math.floor(Date.now() / 1000) // Unix timestamp
     tx.amount = (+tx.amount).toFixed(2)
-    tx.proof = hash(tx.actorId + tx.amount + tx.otherId.split(/[.-]/) + tx.created)
-    console.log(tx.actorId + tx.amount + tx.otherId.split(/[.-]/) + tx.created)
+    tx.proof = hash(tx.actorId + tx.amount + tx.otherId.split(/[.!]/)[0] + tx.created)
+    console.log(tx.actorId + tx.amount + tx.otherId.split(/[.!]/)[0] + tx.created)
     if ($store.network.offline) return queueTx(tx);
 
     console.log(tx)
     try {
-      sendTxRequest(tx)
+      await sendTxRequest(tx)
       dispatch('complete', tx)
-    } catch (e) {
-      console.log(e);
-      if (e.name == 'AbortError') { // internet unavailable; queue it and treat it like a success
+    } catch (er) {
+      console.log(er);
+      if (er.name == 'AbortError') { // internet unavailable; queue it and treat it like a success
         queueTx(tx)
       } else {
-        store.errMsg.set(e.message)
-        navigateTo('/home') // this doesn't exist yet
-        console.log(e);
+        store.errMsg.set(er.message)
+//        navigateTo('/home') // this doesn't exist yet
+        console.log(er);
       }
       // state success, show undo/tip/done buttons, set timer to return to home
     }
@@ -73,7 +74,7 @@
 <section id='submit-charge'>
   <form on:submit|preventDefault={ charge }>
     <div class='charge-content'>
-      <Profile { other } />
+      <Profile { otherAccount } />
 
       { #if errorMessage }
         <p>{ errorMessage }</p>

@@ -51,14 +51,14 @@ describe('app.store', () => {
       expect(store.inspect().myAccount.name).toEqual(null)
     })
 
-    describe('.has()', () => {
+    describe('.exists()', () => {
       describe('when there is a linked account', () => {
         it('is true', () => {
           setupLocalStorage({
             myAccount: {name: 'bar'}
           })
           const store = createStore()
-          expect(store.myAccount.has()).toEqual(true)
+          expect(store.myAccount.exists()).toEqual(true)
         })
       })
 
@@ -69,7 +69,7 @@ describe('app.store', () => {
           })
 
           const store = createStore()
-          expect(store.myAccount.has()).toEqual(false)
+          expect(store.myAccount.exists()).toEqual(false)
         })
       })
     })
