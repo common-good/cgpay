@@ -1,49 +1,46 @@
 <script>
   import { createEventDispatcher } from 'svelte'
 
-  import store from '#app.store.js'
-
   // --------------------------------------------
 
-  export let businessOptions = []
+  export let accountOptions = []
 
   // --------------------------------------------
 
   const dispatch = createEventDispatcher()
 
-  let selectedBusiness
+  let selectedAccount
 
   // --------------------------------------------
 
-  function handleSelectBusiness() {
-    store.business.link(selectedBusiness)
-    dispatch('complete', selectedBusiness)
+  function gotAccount() {
+    dispatch('complete', selectedAccount)
   }
 </script>
 
-<section id='select-business'>
+<section id='select-account'>
   <div class='link-account-content'>
     <h1>Link Account</h1>
-    <p>Select a business account to link to CG Pay on this device.</p>
+    <p>Select an account to link to CG Pay on this device.</p>
 
     <form>
-      <label for='link-account-select-business'>Select Account:</label>
+      <label for='link-account-select-account'>Select Account:</label>
 
-      <select id='link-account-select-business' bind:value={ selectedBusiness }>
-        { #each businessOptions as business }
-          <option value={ business }>{ business.name }</option>
+      <select id='link-account-select-account' bind:value={ selectedAccount }>
+        { #each accountOptions as account }
+          <option value={ account.id }>{ account.name }</option>
         { /each }
       </select>
     </form>
   </div>
 
-  <button class='link-account-action' on:click={ handleSelectBusiness }>Link Account</button>
+  <button class='link-account-action' on:click={ gotAccount }>Link Account</button>
 </section>
 
 <style lang='stylus'>
   @import '../LinkAccount.styl'
 
-  #select-business
+  #select-account
     p
       contentNarrow(300px)
       margin $s2 auto

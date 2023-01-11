@@ -24,14 +24,26 @@ test('I can sign in with my personal CG account.', async ({ browser, context, pa
     .respondsWith(404)
 
   routes.accounts.get
-    .withQueryParams({ identifier: 'valid@email.com', password: 'valid' })
+    .withQueryParams({ identifier: 'newaad', password: 'Newadd1!' })
     .respondsWith(200, {
-      token: 'valid-token'
+      accounts: [
+        {
+          "accountId": "G6VM03",
+          "deviceId": "UVgYXbc4z1WLynrZq4DPBjPQkLJajD72g2baYM3LvLxfY1qlwDxv_jyJTi058xNao5KxhWOiyn5VUhAq1QEe1i4C3h8EascRdKGT2zmI5aXHsSg8M9inbHTjWl7ijYh-b1FFUym7ELaBhhHpGeVNRM73UXRAiZRz9JgZIzJbxp_zbx_5Gm1Nd3u7A98ct2X8BWbXa8VLqv3rtQO2m_Q4ntyGID1ysjwxYWgxzyMFLTFQgVPUbLYbYyNvI9AZkmJC4f4FSTZlnplk6x08l8zAy9zAD_I7ehqKg5rYCaipNB7MaCFTQE6bTbPtV0pDN8CIsbcf9pMgbWkk8Q1GShgjoQ",
+          "name": "Cathy Cashier"
+        },
+        {
+          "accountId": "G6VM01",
+          "deviceId": "Lmaj_r4G0YyilrL345J6JlBIbe1HEB3Hu6Q6bsrriw5L4aJX1jLRVFguOUWwNzD-Dl8Tf7aEt0zutdiVjDhNyR_nwcEAvjOIC6UofNhewRf6JLqd9LH9ipe4xl8XFU7DqYumLyFHKbgSQ8MKlYm-gkTp_WmLRTdYHs3T-rKu049WSWLlxASv_-PpmT5n-W0wWvcjNWhdueLr2lrwbwS2qZ1Ma3F_0Lr53nMb2p07cOxE6Q7NI-RAbVoNpnKTqoxeCNOazL4ZCSK0cnyRQawclDTbqO9dLd_x027kvVKlwyOpdj1yyqv16mjWeIJqiTVrWRuXQZzoC1r-0rM8TXUMtg",
+          "name": "Corner Store"
+        },
+        {
+          "accountId": "G7TO00",
+          "deviceId": "aY3AUZ4vHBLkkPwdRKzCqFoEhUy65wJjevHLQOhGcwayCDJBofMeXUhWW5pcEt8BgxdxtLNHSHYtgIhIA_K-9bN3v7CUiC9thaFywlGlCGP6hG4w2DER9D8vepNl4FgdXT6xGkBiGNeKMPUtm7AnutCwcPgvfFQChztQkKOVOzEgRusP2ewJmrRgNMc_9gj5Lv-yYR4YPGxTuTt6-2YwAkf0VxZ3uVUmhbj7qSxV0zAjCZ9XtGHKTW5_zh3fhJ2MztZp56JH40FOmbtOnzbyzEWVPSjU8hIwrmNIslgShMniIXI8_Sf0Fn0JBPzE4Fpfh_bD6xJZFRB3fvAWzAsdBA",
+          "name": "Octopus Woodworking Academy"
+        }
+      ]
     })
-
-  routes.accounts.get
-    .withQueryParams({ token: 'valid-token' })
-    .respondsWith(200)
 
   // --------------------------------------------
 
@@ -41,7 +53,7 @@ test('I can sign in with my personal CG account.', async ({ browser, context, pa
   const signIn = createSignInScreen(page)
 
   // --------------------------------------------
-  // When not signed in, I see the sign in screen.
+  // When not signed in, I see the sign-in screen.
 
   await pay.visit()
   await expect(signIn.root()).toBeVisible()
@@ -69,7 +81,7 @@ test('I can sign in with my personal CG account.', async ({ browser, context, pa
   // --------------------------------------------
   // When I submit valid credentials, I am directed to the next step.
 
-  await signIn.with({ identifier: 'valid@email.com', password: 'valid' })
+  await signIn.with({ identifier: 'newaad', password: 'Newaad1!' })
   await expect(signIn.root()).not.toBeVisible()
   await expect(linkAccount.root()).toBeVisible()
 

@@ -1,6 +1,7 @@
 import { writable } from 'svelte/store'
 
 // --------------------------------------------
+// use this example for set() and get(): https://svelte.dev/repl/ccbc94cb1b4c493a9cf8f117badaeb31?version=3.16.7
 
 export const createStore = () => {
   const storeKey = 'cgpay.store'
@@ -25,14 +26,9 @@ export const createStore = () => {
   // --------------------------------------------
 
   const defaults = {
-    auth: {
-      account: null,
-      token: null
-    },
-
-    business: {
-      linked: null
-    },
+    auth: null,
+    
+    myAccount: {name: null},
 
     device: {
       type: getDeviceType(),
@@ -60,11 +56,41 @@ export const createStore = () => {
 
   // --------------------------------------------
 
-  function storeStateLocally(state) {
+  function storeLocal(state) {
     window.localStorage.setItem(storeKey, JSON.stringify(state))
+    localState = state
     return state
   }
+  
+  function setLocal(k, v) {
+    update(currentState => {
+      const newState = { ...currentState }
+      newState[k] = v
+      return storeLocal(newState)
+    })
+  }
+  
+  function setCookie(name, value) {
+    document.cookie = `${ name }=${ JSON.stringify(value) }`
+  }
 
+  function getCookie(name, once = false) {
+    var v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+    const res = v ? JSON.parse(v[2]) : null;
+    console.log(res)
+    if (once) setCookie(name, null)
+    return res
+  }
+  
+  function getCookieOnce(name) { return getCookie(name, true) }
+/* 
+  function cookieOps(name) {
+    return {
+      set: (v) => { return setCookie(name, v) },
+      get: () => { return getCookie(name) }
+    }
+  }
+  */
   // --------------------------------------------
 
   return {
@@ -74,62 +100,36 @@ export const createStore = () => {
       return localState
     },
 
-    auth: {
-      isAuthenticated() {
-        return localState.auth.token !== null
-      },
-
-      isNotAuthenticated() {
-        return localState.auth.token === null
-      },
-
-      signIn({ account, token }) {
+    myAccount: {
+      set(account) {
         update(currentState => {
           const newState = { ...currentState }
-
-          newState.auth.account = account
-          newState.auth.token = token
-
-          return storeStateLocally(newState)
+          newState.myAccount = {...newState.myAccount, ...account}
+          newState.myAccount.deviceId = 'GrfaVyHkxnTf4cxsyIEjkWyNdK0wUoDK153r2LIBoFocvw73T'; newState.myAccount.items = ['test food']
+          return storeLocal(newState)
         })
       },
-
-      signOut() {
-        update(currentState => {
-          const newState = { ...currentState }
-
-          newState.auth.account = null
-          newState.auth.token = null
-
-          return storeStateLocally(newState)
-        })
-      }
+      exists() {return localState.myAccount.name !== null},
     },
-
-    business: {
-      isLinked() {
-        return localState.business.linked !== null
-      },
-
-      link(business) {
-        update(currentState => {
-          const newState = { ...currentState }
-
-          newState.business.linked = business
-
-          return storeStateLocally(newState)
-        })
-      }
+    
+    accountChoices: {
+      set(v) { return setCookie('accountChoices', v) },
+      get() { return getCookieOnce('accountChoices') }
+    },
+    
+    qr: {
+      set(v) { return setCookie('qr', v) },
+      get() { return getCookie('qr') }
+    },
+    
+    errMsg: {
+      set(v) { return setCookie('errMsg', v) },
+      get() { return getCookie('errMsg') }
     },
 
     device: {
-      isApple() {
-        return localState.device.type === 'Apple'
-      },
-
-      isAndroid() {
-        return localState.device.type === 'Android'
-      }
+      isApple() { return localState.device.type === 'Apple' },
+      isAndroid() { return localState.device.type === 'Android' }
     },
 
     homeScreen: {
@@ -143,10 +143,8 @@ export const createStore = () => {
       skip() {
         update(currentState => {
           const newState = { ...currentState }
-
           newState.homeScreen.skipped = new Date()
-
-          return storeStateLocally(newState)
+          return storeLocal(newState)
         })
       }
     },
@@ -155,9 +153,7 @@ export const createStore = () => {
       reset() {
         update(currentState => {
           const newState = { ...currentState }
-
           newState.network.restored = false
-
           return newState
         })
       },
@@ -165,10 +161,8 @@ export const createStore = () => {
       setOffline() {
         update(currentState => {
           const newState = { ...currentState }
-
           newState.network.offline = true
           newState.network.online = false
-
           return newState
         })
       },
@@ -176,10 +170,8 @@ export const createStore = () => {
       setOnline() {
         update(currentState => {
           const newState = { ...currentState }
-
           newState.network.offline = false
           newState.network.online = true
-
           return newState
         })
       },
@@ -187,27 +179,23 @@ export const createStore = () => {
       setRestored() {
         update(currentState => {
           const newState = { ...currentState }
-
           newState.network.offline = false
           newState.network.online = true
           newState.network.restored = true
-
           return newState
         })
       },
     },
 
-    transactions: {
+    txs: {
       async flush({ sendChargeRequest }) {
-        const { queued } = localState.transactions
+        const { queued } = localState.txs
 
         for (let i = 0; i < queued.length; i++) {
           try {
-            await sendChargeRequest({ transaction: queued[i] })
+            await sendChargeRequest(queued[i])
             this.dequeue(queued[i].id)
-          }
-
-          catch (error) {
+          } catch (er) {
             // TODO Handle charge request error.
           }
         }
@@ -216,22 +204,16 @@ export const createStore = () => {
       dequeue(id) {
         update(currentState => {
           const newState = { ...currentState }
-
-          newState.transactions.queued = newState.transactions.queued.filter(item => {
-            return item.id !== id
-          })
-
-          return storeStateLocally(newState)
+          newState.txs.queued = newState.txs.queued.filter(item => { return item.id !== id })
+          return storeLocal(newState)
         })
       },
 
-      queue(transaction) {
+      queue(tx) {
         update(currentState => {
           const newState = { ...currentState }
-
-          newState.transactions.queued = [ ...newState.transactions.queued, transaction ]
-
-          return storeStateLocally(newState)
+          newState.txs.queued = [ ...newState.txs.queued, tx ]
+          return storeLocal(newState)
         })
       }
     }

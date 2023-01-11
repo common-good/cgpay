@@ -37,6 +37,16 @@ function createMockableRoute({ baseUrl, page, record }) {
   }
 }
 
+function routeObj(gorp, endPt, page, record) {
+  return {
+    [gorp]: createMockableRoute({
+      baseUrl: appContext('membersApi.location') + '/' + endPt,
+      page,
+      record
+    })
+  }
+}
+
 // --------------------------------------------
 
 export default function createRoutes({ page }) {
@@ -45,28 +55,9 @@ export default function createRoutes({ page }) {
   return {
     record,
 
-    accounts: {
-      get: createMockableRoute({
-        baseUrl: appContext('membersApi.location') + '/accounts',
-        page,
-        record
-      })
-    },
-
-    businesses: {
-      get: createMockableRoute({ 
-        baseUrl: appContext('membersApi.location') + '/businesses',
-        page,
-        record
-      })
-    },
-
-    charges: {
-      post: createMockableRoute({
-        baseUrl: appContext('membersApi.location') + '/charges',
-        page,
-        record
-      })
-    }
+    accounts: routeObj('get', 'accounts', page, record),
+    identity: routeObj('get', 'identity', page, record),
+    idPhoto: routeObj('get', 'idPhoto', page, record),
+    transactions: routeObj('post', 'transactions', page, record),
   }
 }

@@ -8,34 +8,31 @@
   // --------------------------------------------
 
   const credentials = {
-    identifier: null,
-    password: null
+    identifier: 'newaad', // set these for now, to make debugging much faster
+    password: 'Newaad1!'
   }
 
   let errorMessage
+  let accountChoices = {}
 
   // --------------------------------------------
 
   async function signIn() {
+    errorMessage = 'Finding your account(s)...'
     try {
       const query = queryString.stringify(credentials)
-      const response = await fetch(`${ __membersApi__ }/accounts?${ query }`)
+      const res = await fetch(`${ __membersApi__ }/accounts?${ query }`)
 
-      if (response.ok) {
-        const { account, token } = await response.json()
-
-        store.auth.signIn({ account, token })
+      if (res.ok) {
+        const obj = await res.json()
+        store.accountChoices.set(obj.accounts)
         navigateTo('/link-account')
-      }
-
-      else {
+      } else {
         errorMessage = `We couldn't find an account with that information. Please try again.`
       }
-    }
-
-    catch (error) {
-      // TODO: Handle server unavailable.
-      errorMessage = 'We could not complete your request.'
+    } catch (error) {
+      console.log(error);
+      errorMessage = `The server is unavailable. Check your internet connection and try again?`
     }
   }
 </script>

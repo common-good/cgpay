@@ -24,7 +24,7 @@ async function expectAbleToSkip({ addScreen, root, signIn }) {
 // I can add the CGPay app to my mobile home screen
 // so that it is easy to access.
 
-test('I am guided to add the app to my home screen before collecting payment for the first time on an Apple device.', async ({ browser }) => {
+test('I am guided to add the app to my home screen after linking an account on an Apple device.', async ({ browser }) => {
   const context = await browser.newContext({ userAgent: 'iPhone' })
   const page = await context.newPage()
 
@@ -43,7 +43,7 @@ test('I am guided to add the app to my home screen before collecting payment for
   await expectAbleToSkip({ addScreen, root, signIn })
 })
 
-test('I am guided to add the app to my home screen before collecting payment for the first time on an Android device.', async ({ browser }) => {
+test('I am guided to add the app to my home screen after linking an account on an Android device.', async ({ browser }) => {
   const context = await browser.newContext({ userAgent: 'Android' })
   const page = await context.newPage()
 
