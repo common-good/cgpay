@@ -59,7 +59,7 @@ For more information, see the [Features documentation](/features) and [UI docume
 
 Deployments used to be automatic via Vercel's GitHub integration. We are no longer using that, but have no replacement yet.
 
-Deploy branches to the following URLs:
+Deploy branches to the following URLs (Note: these are not settled yet):
 
 | Git Branch | Environment | URL |
 | :-- | :-- | :-- |
