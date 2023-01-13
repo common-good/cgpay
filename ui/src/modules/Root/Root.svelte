@@ -4,6 +4,7 @@
   import { onMount } from 'svelte'
 
   import store from '#app.store.js'
+  import { sendTxRequest } from '#utils.js'
 
   import AddToHomeScreen from '#modules/AddToHomeScreen/AddToHomeScreen.svelte'
   import Charge from '#modules/Charge/Charge.svelte'
@@ -18,25 +19,7 @@
   // --------------------------------------------
   // Initialization Helpers
 
-  async function sendChargeRequest({ transaction }) {
-    try {
-      const response = await fetch(`${ __membersApi__ }/charges`, {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json'
-        },
-        body: JSON.stringify(transaction)
-      })
-
-      if (!response.ok) {
-        throw new Error('Response was not OK.')
-      }
-    }
-
-    catch (error) {
-      throw new Error('Could not complete charge request.')
-    }
-  }
+  function onlyIf(condition, elseGoTo) { return { guard: condition, redirect: elseGoTo } }
 
   // --------------------------------------------
   // Initialization
@@ -46,13 +29,13 @@
 
     window.addEventListener('online', () => {
       store.network.setRestored()
-      store.transactions.flush({ sendChargeRequest })
+      store.transactions.flush({ sendTxRequest })
       setTimeout(store.network.reset, 3000)
     })
 
     if (window.navigator.onLine) {
       store.network.setOnline()
-      store.transactions.flush({ sendChargeRequest })
+      store.transactions.flush({ sendTxRequest })
     }
 
     if (!window.navigator.onLine) {
@@ -69,55 +52,35 @@
       name: '/',
       component: AddToHomeScreen,
       layout: LayoutIntro,
-
-      onlyIf: {
-        guard: store.homeScreen.promptRequired,
-        redirect: '/sign-in'
-      }
+      onlyIf: onlyIf(store.homeScreen.promptRequired, '/sign-in')
     },
     
     {
       name: '/sign-in',
       component: SignIn,
       layout: LayoutIntro,
-
-      onlyIf: {
-        guard: !store.myAccount.exists,
-        redirect: '/scan'
-      }
+      onlyIf: onlyIf(!store.myAccount.exists, '/scan')
     },
 
     {
       name: '/link-account',
       component: LinkAccount,
       layout: LayoutStep,
-
-      onlyIf: {
-        guard: !store.myAccount.exists,
-        redirect: '/scan'
-      }
+      onlyIf: onlyIf(!store.myAccount.exists, '/scan')
     },
     
     {
       name: '/scan',
       component: Scan,
       layout: LayoutStep,
-
-      onlyIf: {
-        guard: store.myAccount.exists,
-        redirect: '/sign-in'
-      }
+      onlyIf: onlyIf(store.myAccount.exists, '/sign-in')
     },
 
     {
       name: '/charge',
       component: Charge,
       layout: LayoutStep,
-
-      onlyIf: {
-        guard: store.myAccount.exists,
-        redirect: '/sign-in'
-      }
+      onlyIf: onlyIf(store.myAccount.exists, '/sign-in')
     },
 
   ]

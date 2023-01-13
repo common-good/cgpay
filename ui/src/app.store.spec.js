@@ -429,24 +429,24 @@ describe('app.store', () => {
 
     describe('.flush', () => {
       it('sends all requests', async () => {
-        const sendChargeRequest = vi.fn()
+        const sendTxRequest = vi.fn()
         const store = createStore()
 
         store.transactions.queue({ id: '1', amount: 1, description: '1' })
         store.transactions.queue({ id: '2', amount: 2, description: '2' })
         store.transactions.queue({ id: '3', amount: 3, description: '3' })
 
-        await store.transactions.flush({ sendChargeRequest })
+        await store.transactions.flush({ sendTxRequest })
 
-        expect(sendChargeRequest.calls).toHaveLength(3)
-        expect(sendChargeRequest.calls[0][0].transaction).toEqual({ id: '1', amount: 1, description: '1' })
-        expect(sendChargeRequest.calls[1][0].transaction).toEqual({ id: '2', amount: 2, description: '2' })
-        expect(sendChargeRequest.calls[2][0].transaction).toEqual({ id: '3', amount: 3, description: '3' })
+        expect(sendTxRequest.calls).toHaveLength(3)
+        expect(sendTxRequest.calls[0][0].transaction).toEqual({ id: '1', amount: 1, description: '1' })
+        expect(sendTxRequest.calls[1][0].transaction).toEqual({ id: '2', amount: 2, description: '2' })
+        expect(sendTxRequest.calls[2][0].transaction).toEqual({ id: '3', amount: 3, description: '3' })
       })
 
       describe('when a request is successful', () => {
         it('dequeues the request', async () => {
-          const sendChargeRequest = vi.fn()
+          const sendTxRequest = vi.fn()
           const store = createStore()
 
           store.transactions.queue({ id: '1', amount: 1, description: '1' })
@@ -454,7 +454,7 @@ describe('app.store', () => {
           store.transactions.queue({ id: '3', amount: 3, description: '3' })
 
           expect(store.inspect().transactions.queued).toHaveLength(3)
-          await store.transactions.flush({ sendChargeRequest })
+          await store.transactions.flush({ sendTxRequest })
           expect(store.inspect().transactions.queued).toHaveLength(0)
         })
       })
@@ -463,7 +463,7 @@ describe('app.store', () => {
         it('keeps the request in the queue', async () => {
           let callCount = 0
 
-          async function sendChargeRequest() {
+          async function sendTxRequest() {
             callCount++
 
             if (callCount === 2) {
@@ -478,7 +478,7 @@ describe('app.store', () => {
           store.transactions.queue({ id: '3' })
 
           expect(store.inspect().transactions.queued).toHaveLength(3)
-          await store.transactions.flush({ sendChargeRequest })
+          await store.transactions.flush({ sendTxRequest })
           expect(store.inspect().transactions.queued).toHaveLength(1)
 
           expect(store.inspect().transactions.queued[0]).toEqual({ id: '2' })

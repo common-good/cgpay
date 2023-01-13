@@ -10,7 +10,7 @@ import pwaConfig from './vite.pwa.config.js'
 
 export default {
   define: {
-    __membersApi__: JSON.stringify(context('membersApi.location'))
+    __serverApi__: JSON.stringify(context('serverApi.dev'))
   },
 
   plugins: [

@@ -21,8 +21,7 @@
 
         // Handle code.
         async (decodedText, decodedResult) => {
-          store.qr.set(decodedText);
-
+          store.qr.set(decodedText)
           await scanner.stop()
           navigateTo('/charge')
         },

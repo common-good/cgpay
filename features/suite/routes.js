@@ -40,7 +40,7 @@ function createMockableRoute({ baseUrl, page, record }) {
 function routeObj(gorp, endPt, page, record) {
   return {
     [gorp]: createMockableRoute({
-      baseUrl: appContext('membersApi.location') + '/' + endPt,
+      baseUrl: appContext('serverApi.dev') + '/' + endPt,
       page,
       record
     })

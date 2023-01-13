@@ -26,9 +26,14 @@ export const createStore = () => {
   // --------------------------------------------
 
   const defaults = {
-    auth: null,
-    
-    myAccount: {name: null},
+    test: false, // using test API and test database?
+
+    myAccount: {
+      accountId: null,
+      deviceId: null,
+      name: null,
+      items: []
+    },
 
     device: {
       type: getDeviceType(),
@@ -44,9 +49,11 @@ export const createStore = () => {
       restored: false
     },
 
-    transactions: {
+    txs: {
       queued: []
-    }
+    },
+
+    accts: [],
   }
 
   // --------------------------------------------
@@ -100,13 +107,14 @@ export const createStore = () => {
       return localState
     },
 
+    api() { return localState.test ? __serverApi__ : __serverApi__ },
+    
     myAccount: {
-      set(account) {
-        update(currentState => {
-          const newState = { ...currentState }
-          newState.myAccount = {...newState.myAccount, ...account}
-          newState.myAccount.deviceId = 'GrfaVyHkxnTf4cxsyIEjkWyNdK0wUoDK153r2LIBoFocvw73T'; newState.myAccount.items = ['test food']
-          return storeLocal(newState)
+      set(acct) {
+        update(st => {
+          st.myAccount = { ...st.myAccount, ...acct }
+          st.myAccount.deviceId = 'GrfaVyHkxnTf4cxsyIEjkWyNdK0wUoDK153r2LIBoFocvw73T'; st.myAccount.items = ['test food'] // DEBUG
+          return storeLocal(st)
         })
       },
       exists() {return localState.myAccount.name !== null},
@@ -114,7 +122,7 @@ export const createStore = () => {
     
     accountChoices: {
       set(v) { return setCookie('accountChoices', v) },
-      get() { return getCookieOnce('accountChoices') }
+      get() { return getCookie('accountChoices') }
     },
     
     qr: {
@@ -141,59 +149,68 @@ export const createStore = () => {
       },
 
       skip() {
-        update(currentState => {
-          const newState = { ...currentState }
-          newState.homeScreen.skipped = new Date()
-          return storeLocal(newState)
+        update(st => {
+          st.homeScreen.skipped = new Date()
+          return storeLocal(st)
         })
       }
     },
 
     network: {
       reset() {
-        update(currentState => {
-          const newState = { ...currentState }
-          newState.network.restored = false
-          return newState
+        update(st => {
+          st.network.restored = false
+          return st
         })
       },
 
       setOffline() {
-        update(currentState => {
-          const newState = { ...currentState }
-          newState.network.offline = true
-          newState.network.online = false
-          return newState
+        update(st => {
+          st.network.offline = true
+          st.network.online = false
+          return st
         })
       },
 
       setOnline() {
-        update(currentState => {
-          const newState = { ...currentState }
-          newState.network.offline = false
-          newState.network.online = true
-          return newState
+        update(st => {
+          st.network.offline = false
+          st.network.online = true
+          return st
         })
       },
 
       setRestored() {
-        update(currentState => {
-          const newState = { ...currentState }
-          newState.network.offline = false
-          newState.network.online = true
-          newState.network.restored = true
-          return newState
+        update(st => {
+          st.network.offline = false
+          st.network.online = true
+          st.network.restored = true
+          return st
         })
       },
     },
 
+    accts: {
+      put(acct) {
+        update(st => {
+          st.accts.push(acct)
+          return st
+        })
+      },
+      get(card) {
+        const res = localState.accts.find(obj => obj.acct == card.acct)
+        return res === undefined ? null : res
+      }
+    },
+
     txs: {
-      async flush({ sendChargeRequest }) {
+      async flush({ sendTxRequest }) {
+        return // DEBUG
         const { queued } = localState.txs
 
         for (let i = 0; i < queued.length; i++) {
           try {
-            await sendChargeRequest(queued[i])
+            await sendTxRequest(queued[i])
             this.dequeue(queued[i].id)
           } catch (er) {
             // TODO Handle charge request error.
@@ -201,20 +218,15 @@ export const createStore = () => {
         }
       },
 
-      dequeue(id) {
-        update(currentState => {
-          const newState = { ...currentState }
-          newState.txs.queued = newState.txs.queued.filter(item => { return item.id !== id })
-          return storeLocal(newState)
+      dequeue() {
+        update(st => {
+          const res = st.txs.queued.shift()
+          return storeLocal(st)
         })
       },
 
       queue(tx) {
-        update(currentState => {
-          const newState = { ...currentState }
-          newState.txs.queued = [ ...newState.txs.queued, tx ]
-          return storeLocal(newState)
-        })
+        console.log(tx)
       }
     }
   }
