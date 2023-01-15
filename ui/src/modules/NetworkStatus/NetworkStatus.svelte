@@ -1,5 +1,5 @@
 <script>
-  import store from '#app.store.js'
+  import store from '#store.js'
   import { onMount } from 'svelte'
 
   import iconOffline from './assets/icon-offline.svg'

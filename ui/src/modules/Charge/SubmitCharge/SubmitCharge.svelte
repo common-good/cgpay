@@ -3,7 +3,7 @@
   import queryString from 'query-string'
   import Profile from '#modules/Charge/Profile/Profile.svelte'
   import { navigateTo } from 'svelte-router-spa'
-  import store from '#app.store.js'
+  import store from '#store.js'
   import { timedFetch, CgError, filterObj, log, isTimeout, sendTxRequest } from '#utils.js'
   import { sha256 } from 'js-sha256'
   // https://github.com/canutin/svelte-currency-input

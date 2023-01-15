@@ -1,5 +1,5 @@
 <script>
-  import store from '#app.store.js'
+  import store from '#store.js'
   import assert from 'assert'
   import { timedFetch, CgError, filterObj, log, isTimeout } from '#utils.js'
   import { onMount } from 'svelte'

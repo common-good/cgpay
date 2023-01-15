@@ -3,7 +3,7 @@
   import { Router } from 'svelte-router-spa'
   import { onMount } from 'svelte'
 
-  import store from '#app.store.js'
+  import store from '#store.js'
   import { sendTxRequest } from '#utils.js'
 
   import AddToHomeScreen from '#modules/AddToHomeScreen/AddToHomeScreen.svelte'

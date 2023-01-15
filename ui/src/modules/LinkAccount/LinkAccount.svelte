@@ -1,7 +1,7 @@
 <script>
   import queryString from 'query-string'
   import { onMount } from 'svelte'
-  import store from '#app.store.js'
+  import store from '#store.js'
   import { htmlQuote } from '#utils.js'
   import SelectAccount from './SelectAccount/SelectAccount.svelte'
 // FAILS  import { page } from '$app/stores'

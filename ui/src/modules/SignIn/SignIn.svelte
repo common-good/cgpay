@@ -3,7 +3,7 @@
   import { navigateTo } from 'svelte-router-spa'
   import { timedFetch, CgError, log, isTimeout } from '#utils.js'
   import cgLogo from '#modules/Root/assets/cg-logo-300.png?webp'
-  import store from '#app.store.js'
+  import store from '#store.js'
 
   // --------------------------------------------
 

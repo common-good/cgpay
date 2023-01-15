@@ -1,4 +1,4 @@
-import store from '#app.store.js'
+import store from '#store.js'
 import queryString from 'query-string'
 
 function CgError(msg, name = 'CgError') { this.message = msg; this.name = name }
