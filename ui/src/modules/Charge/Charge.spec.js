@@ -1,5 +1,5 @@
 import Charge from './Charge.svelte'
-import store from '#app.store.js'
+import store from '#store.js'
 
 // --------------------------------------------
 

@@ -20,27 +20,18 @@
   // Initialization Helpers
 
   function onlyIf(condition, elseGoTo) { return { guard: condition, redirect: elseGoTo } }
+  function timeOut() {
+    store.network.reset()
+    setTimeout(timeOut, 3000)
+  }
 
   // --------------------------------------------
   // Initialization
 
   onMount(async () => {
-    window.addEventListener('offline', store.network.setOffline)
-
-    window.addEventListener('online', () => {
-      store.network.setRestored()
-      store.transactions.flush({ sendTxRequest })
-      setTimeout(store.network.reset, 3000)
-    })
-
-    if (window.navigator.onLine) {
-      store.network.setOnline()
-      store.transactions.flush({ sendTxRequest })
-    }
-
-    if (!window.navigator.onLine) {
-      store.network.setOffline()
-    }
+    window.addEventListener('offline', () => { store.network.setOnline(false) })
+    window.addEventListener('online', () => { store.network.setOnline(true) })
+    timeOut()
   })
 
   // --------------------------------------------
@@ -52,7 +43,7 @@
       name: '/',
       component: AddToHomeScreen,
       layout: LayoutIntro,
-      onlyIf: onlyIf(store.homeScreen.promptRequired, '/sign-in')
+      onlyIf: onlyIf(store.homeScreen.promptRequired, store.myAccount.exists() ? '/scan' : '/sign-in')
     },
     
     {

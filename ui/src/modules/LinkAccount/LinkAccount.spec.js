@@ -1,4 +1,4 @@
-import appStore from '#app.store.js'
+import appStore from '#store.js'
 import { writable } from 'svelte/store'
 
 import LinkAccount from './LinkAccount.svelte'

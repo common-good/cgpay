@@ -1,7 +1,7 @@
 <script>
   import queryString from 'query-string'
   import { navigateTo } from 'svelte-router-spa'
-  import { timedFetch, CgError, log, isTimeout } from '#utils.js'
+  import { timedFetch, CgError, isTimeout } from '#utils.js'
   import cgLogo from '#modules/Root/assets/cg-logo-300.png?webp'
   import store from '#store.js'
 
@@ -22,11 +22,11 @@
     try {
       const query = queryString.stringify(credentials)
       const obj = await timedFetch(`accounts?${ query }`)
-      log(obj)
+      console.log(obj)
       store.accountChoices.set(obj.accounts)
       navigateTo(`/link-account?accounts=${ obj.accounts }`)
     } catch (er) {
-      log(er);
+      console.log(er);
       if (isTimeout(er)) {
         errorMessage = `The server is unavailable. Check your internet connection and try again?`
       } else {

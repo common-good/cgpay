@@ -1,7 +1,7 @@
 <script>
   import store from '#store.js'
   import assert from 'assert'
-  import { timedFetch, CgError, filterObj, log, isTimeout } from '#utils.js'
+  import { timedFetch, CgError, filterObj, isTimeout } from '#utils.js'
   import { onMount } from 'svelte'
   import { navigateTo } from 'svelte-router-spa'
   import queryString from 'query-string'
@@ -36,9 +36,13 @@
     offline: false,
   }
   
+  const onlineLimit = 10000
+  const offlineLimit = 250
+
   let errorMessage
   let myName
   let gotTx = false
+  let limit = null
 
   // --------------------------------------------
 
@@ -51,10 +55,12 @@
     return cardId.substr(0, len)
   }
   
-  function handleSubmitCharge(ev) {gotTx = true}
+  function handleSubmitCharge(ev) { // state success, show undo/tip/done buttons, set timer to return to home
+    gotTx = true
+  }
 
   async function getPhoto(query) {
-    log('before idPhoto')
+    console.log('before idPhoto')
     const blob = await timedFetch(`idPhoto?${ query }`, { type: 'blob' })
     otherAccount.photoAlt = 'Customer Photo'
     otherAccount.photo = URL.createObjectURL(blob)
@@ -72,7 +78,7 @@
     if ((new RegExp('^HTTP://[0-9A-Za-z]{1,4}\.RC[24]\.ME/[0-9A-Za-z]{11,28}$')).test(qr)) { // like HTTP://6VM.RC4.ME/KDJJ34kjdfKJ4
       return {acct: parts[5][0] + parts[2] + parts[5].substring(1), test: qr.includes('.RC4.')}
     }
-    log('bad qr: ' + qr)
+    console.log('bad qr: ' + qr)
     throw new CgError('That is not a valid Common Good card.')
   }
   
@@ -85,44 +91,52 @@
     return acct.substring(0, 1 + regionLens[i] + acctLens[i] + agentLens[i])
   }
 
+  function profileOffline() {
+    errorMessage = 'OFFLINE. Trust this member or ask for ID.'
+    limit = Math.min(offlineLimit, limit == null ? offlineLimit : limit)
+  }
+
   onMount(async () => {
-    errorMessage = 'Finding the customer account...'
-    
     try {
       const qr = store.qr.get()
-      log(qr)
+      console.log(qr)
       const card = qrParse(qr) // does not return if format is bad
       const acctInfo = store.accts.get(card) // retrieve and/or update stored customer account info
       if (acctInfo) otherAccount = { ...otherAccount, ...acctInfo }
+      console.log(acctInfo)
+      console.log($store.accts)
       
       // check network to see whether to try getting customer info
       tx.otherId = card.acct
       myName = $store.myAccount.name
-      log(myName);
+      console.log(myName);
       
-      const q = {deviceId: $store.myAccount.deviceId, actorId: $store.myAccount.accountId, otherId: card.acct}
-      const query = queryString.stringify(q)
-      log(q)
-      const body = await timedFetch(`identity?${ query }`)
-      log(body)
-      const { items } = body
-      log(items)
-      if (items.length) tx.description = items[0]
-      store.myAccount.set({ ...$store.myAccount, items })
-      otherAccount = { ...otherAccount, ...filterObj(body, ([key]) => key != 'items')}
-      await store.accts.put(otherAccount) // store and/or update stored customer account info
-      getPhoto(query)
+      if (!$store.network.online) {
+        profileOffline()
+      } else  {
+        const q = {deviceId: $store.myAccount.deviceId, actorId: $store.myAccount.accountId, otherId: card.acct}
+        const query = queryString.stringify(q)
+        console.log(q)
+        const body = await timedFetch(`identity?${ query }`)
+        console.log(body)
+        const { items } = body
+        console.log(items)
+        if (items.length) tx.description = items[0]
+        await store.myAccount.set({ ...$store.myAccount, items })
+        otherAccount = filterObj({ ...otherAccount, ...body }, ([key]) => key != 'items' && !key.includes('photo'))
+        limit = Math.min(otherAccount.limit, onlineLimit)
+        await store.accts.put(card, otherAccount) // store and/or update stored customer account info
 
+        getPhoto(query)
+      }
     } catch (er) {
-      log(er);
+      console.log(er);
       if (isTimeout(er)) { // internet unavailable; recognize a repeat customer or limit CG's liability
-        errorMessage = 'Profile unavailable: Continue if you trust this member for the intended amount (or ask for ID).'
-        otherAccount.name = errorMessage
+        profileOffline()
       } else {
         store.errMsg.set(er.message)
 //        navigateTo('/home') // this doesn't exist yet
-        otherAccount.name = errorMessage
-        log(er)
+        console.log(er)
       }
     }
   })
@@ -155,7 +169,7 @@
       <h2 class='action'>{ myName }</h2>
       <p class='transaction-action'>charge</p>
     </div>
-    <SubmitCharge { otherAccount } { tx } on:complete={ handleSubmitCharge } />
+    <SubmitCharge { otherAccount } { tx } {errorMessage} {limit} on:complete={ handleSubmitCharge } />
   { /if }
 </section>
 

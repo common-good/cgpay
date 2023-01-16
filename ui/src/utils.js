@@ -25,7 +25,6 @@ async function timedFetch(url, options = {}) {
   return body
 }
 
-function log(s) {console.log(s)}
 function isTimeout(er) { return (er.name == 'AbortError' || er.name == 'TypeError') }
 function htmlQuote(s) { return `<pre>${s}</pre>` }
 
@@ -40,6 +39,7 @@ function filterObj(obj, fn) {
 }
 
 async function sendTxRequest(tx) {
+  console.log('tx request: transactions?' + queryString.stringify(tx))
   const res = await timedFetch(`transactions`, {
     method: 'POST',
     headers: { 'Content-type': 'application/x-www-form-urlencoded' },
@@ -47,9 +47,7 @@ async function sendTxRequest(tx) {
     cache: 'default',
     body: queryString.stringify(tx)
   })
-  log(queryString.stringify(tx))
-  log(res)
-//    if (!res.ok) throw new CgError(res.message)
+  return res
 }
 
 /*
@@ -79,4 +77,4 @@ function disableBack() {
         body: JSON.stringify(tx)
 */
 
-export { CgError, timedFetch, log, isTimeout, htmlQuote, filterObj, sendTxRequest }
+export { CgError, timedFetch, isTimeout, htmlQuote, filterObj, sendTxRequest }

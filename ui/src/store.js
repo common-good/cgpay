@@ -1,4 +1,5 @@
 import { writable } from 'svelte/store'
+import { sendTxRequest, isTimeout } from '#utils.js'
 
 // --------------------------------------------
 // use this example for set() and get(): https://svelte.dev/repl/ccbc94cb1b4c493a9cf8f117badaeb31?version=3.16.7
@@ -63,6 +64,10 @@ export const createStore = () => {
 
   // --------------------------------------------
 
+  function setOnline() { res.network.setOnline(false) }
+  function flushTxs() { res.txs.flush() }
+  function cardAcct(card) { return card.acct + (card.test ? '.' : '!') }
+
   function storeLocal(state) {
     window.localStorage.setItem(storeKey, JSON.stringify(state))
     localState = state
@@ -90,17 +95,17 @@ export const createStore = () => {
   }
   
   function getCookieOnce(name) { return getCookie(name, true) }
-/* 
+
   function cookieOps(name) {
     return {
-      set: (v) => { return setCookie(name, v) },
-      get: () => { return getCookie(name) }
+      set(v) { return setCookie(name, v) },
+      get() { return getCookie(name) }
     }
   }
-  */
+
   // --------------------------------------------
 
-  return {
+  const res = {
     subscribe,
 
     inspect() {
@@ -110,13 +115,11 @@ export const createStore = () => {
     api() { return localState.test ? __serverApi__ : __serverApi__ },
     
     myAccount: {
-      set(acct) {
-        update(st => {
+      set(acct) { update(st => {
           st.myAccount = { ...st.myAccount, ...acct }
           st.myAccount.deviceId = 'GrfaVyHkxnTf4cxsyIEjkWyNdK0wUoDK153r2LIBoFocvw73T'; st.myAccount.items = ['test food'] // DEBUG
           return storeLocal(st)
-        })
-      },
+      })},
       exists() {return localState.myAccount.name !== null},
     },
     
@@ -148,88 +151,81 @@ export const createStore = () => {
         return onMobileDevice && hasNotSkippedPrompt
       },
 
-      skip() {
-        update(st => {
+      skip() { update(st => {
           st.homeScreen.skipped = new Date()
           return storeLocal(st)
-        })
-      }
+      })}
     },
 
     network: {
-      reset() {
-        update(st => {
-          st.network.restored = false
+      reset() { update(st => {
+          this.setOnline(window.navigator.onLine)
           return st
-        })
-      },
+      })},
 
-      setOffline() {
+      setOnline(yesno) {
+//        console.log('online: ' + (yesno ? 'YES' : 'NO'))
+        if (yesno) flushTxs()
         update(st => {
-          st.network.offline = true
-          st.network.online = false
-          return st
-        })
-      },
-
-      setOnline() {
-        update(st => {
-          st.network.offline = false
-          st.network.online = true
-          return st
-        })
-      },
-
-      setRestored() {
-        update(st => {
-          st.network.offline = false
-          st.network.online = true
-          st.network.restored = true
+          st.network.online = yesno
           return st
         })
       },
     },
 
     accts: {
-      put(acct) {
-        update(st => {
-          st.accts.push(acct)
+      put(card, acct) { update(st => {
+          st.accts[cardAcct(card)] = acct
           return st
-        })
-      },
+      })},
       get(card) {
-        const res = localState.accts.find(obj => obj.acct == card.acct)
+        const res = localState.accts[cardAcct(card)]
         return res === undefined ? null : res
       }
     },
 
     txs: {
-      async flush({ sendTxRequest }) {
-        return // DEBUG
+// was:      async flush({ sendTxRequest }) {
+      async flush() {
         const { queued } = localState.txs
+//        console.log(queued)
+        let i
 
-        for (let i = 0; i < queued.length; i++) {
+        for (i in queued) {
           try {
             await sendTxRequest(queued[i])
-            this.dequeue(queued[i].id)
+            this.dequeue(i)
           } catch (er) {
-            // TODO Handle charge request error.
+            if (isTimeout(er)) {
+              setOnline()
+              return
+            }
+            console.log(er.message)
+            console.log(queued[i])
+            throw(er)
           }
         }
       },
 
-      dequeue() {
-        update(st => {
-          const res = st.txs.queued.shift()
+      dequeue(i) { update(st => {
+          st.txs.queued = st.txs.queued.filter((_, index) => { index !== i })
+          console.log(st.txs.queued)
           return storeLocal(st)
-        })
-      },
+      })},
 
       queue(tx) {
-        console.log(tx)
+        const key = Date.now() // this index will always be unique
+        tx.offline = true
+        update(st => {
+          st.txs.queued[key] = tx
+          console.log(st.txs.queued)
+          return storeLocal(st)
+        })
+        return key
       }
     }
   }
+  return res
 }
 
 // --------------------------------------------

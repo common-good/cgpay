@@ -1,10 +1,10 @@
-import { createStore } from './app.store.js'
+import { createStore } from './store.js'
 
 // --------------------------------------------
 
 const storeKey = 'cgpay.store'
 
-function getLocallyStored() {
+function storeLocal() {
   return JSON.parse(window.localStorage.getItem(storeKey))
 }
 
@@ -79,7 +79,7 @@ describe('app.store', () => {
         const store = createStore()
         store.myAccount.set({name: 'Biz'})
 
-        expect(getLocallyStored().myAccount.name).toEqual('Biz')
+        expect(storeLocal().myAccount.name).toEqual('Biz')
         expect(store.inspect().myAccount.name).toEqual('Biz')
       })
     })
@@ -100,57 +100,27 @@ describe('app.store', () => {
       })
     })
 
-    describe('.restored', () => {
-      it('is accessible', () => {
-        const store = createStore()
-        expect(store.inspect().network.restored).toEqual(false)
-      })
-    })
-
     describe('.reset()', () => {
       it('resets the network to basic online status', () => {
         const store = createStore()
-        store.network.setRestored()
         store.network.reset()
 
-        expect(store.inspect().network.offline).toEqual(false)
-        expect(store.inspect().network.online).toEqual(true)
-        expect(store.inspect().network.restored).toEqual(false)
+        expect(store.inspect().network.online).toEqual(window.navigator.onLine)
       })
     })
 
-    describe('.setOffline()', () => {
-      it('sets the network status to offline', () => {
+    describe('.setOnline(yesno)', () => {
+      it('sets the network status to online or offline', () => {
         const store = createStore()
-        store.network.setOffline()
 
-        expect(store.inspect().network.offline).toEqual(true)
+        store.network.setOnline(true)
+        expect(store.inspect().network.online).toEqual(true)
+
+        store.network.setOnline(false)
         expect(store.inspect().network.online).toEqual(false)
-        expect(store.inspect().network.restored).toEqual(false)
       })
     })
 
-    describe('.setOnline()', () => {
-      it('sets the network status to online', () => {
-        const store = createStore()
-        store.network.setOnline()
-
-        expect(store.inspect().network.offline).toEqual(false)
-        expect(store.inspect().network.online).toEqual(true)
-        expect(store.inspect().network.restored).toEqual(false)
-      })
-    })
-
-    describe('.setRestored()', () => {
-      it('sets the network status to restored', () => {
-        const store = createStore()
-        store.network.setRestored()
-
-        expect(store.inspect().network.offline).toEqual(false)
-        expect(store.inspect().network.online).toEqual(true)
-        expect(store.inspect().network.restored).toEqual(true)
-      })
-    })
   })
 
 /*
@@ -161,11 +131,11 @@ describe('app.store', () => {
         store.auth.signIn({ account: 'account', token: 'token' })
 
         // Confirm that all forms of store access are updated.
-        expect(getLocallyStored().auth.account).toEqual('account')
+        expect(storeLocal().auth.account).toEqual('account')
         expect(store.inspect().auth.account).toEqual('account')
         store.subscribe(state => expect(state.auth.account).toEqual('account'))
 
-        expect(getLocallyStored().auth.token).toEqual('token')
+        expect(storeLocal().auth.token).toEqual('token')
         expect(store.inspect().auth.token).toEqual('token')
         store.subscribe(state => expect(state.auth.token).toEqual('token'))
       })
@@ -189,11 +159,11 @@ describe('app.store', () => {
         store.auth.signOut()
 
         // Confirm that all forms of store access are updated.
-        expect(getLocallyStored().auth.account).toEqual(null)
+        expect(storeLocal().auth.account).toEqual(null)
         expect(store.inspect().auth.account).toEqual(null)
         store.subscribe(state => expect(state.auth.account).toEqual(null))
 
-        expect(getLocallyStored().auth.token).toEqual(null)
+        expect(storeLocal().auth.token).toEqual(null)
         expect(store.inspect().auth.token).toEqual(null)
         store.subscribe(state => expect(state.auth.token).toEqual(null))
       })
@@ -397,32 +367,33 @@ describe('app.store', () => {
         store.homeScreen.skip()
 
         // Confirm that all forms of store access are updated.
-        expect(getLocallyStored().homeScreen.skipped).toEqual(now.toISOString())
+        expect(storeLocal().homeScreen.skipped).toEqual(now.toISOString())
         expect(store.inspect().homeScreen.skipped).toEqual(now)
         store.subscribe(state => expect(state.homeScreen.skipped).toEqual(now))
       })
     })
   })
 
-  describe('.transactions', () => {
+  describe('.txs', () => {
     describe('.dequeue', () => {
-      it('dequeues the transaction with given ID', () => {
+      it('dequeues the transaction with given key', () => {
         const store = createStore()
+        let keys = []
 
-        store.transactions.queue({ id: '1' })
-        store.transactions.queue({ id: '2' })
-        store.transactions.queue({ id: '3' })
+        keys[1] = store.txs.queue({ id: 1 })
+        keys[2] = store.txs.queue({ id: 2 })
+        keys[3] = store.txs.queue({ id: 3 })
 
-        store.transactions.dequeue('2')
+        store.txs.dequeue(2)
 
         // Confirm that all forms of store access are updated.
-        expect(getLocallyStored().transactions.queued).toHaveLength(2)
-        expect(store.inspect().transactions.queued).toHaveLength(2)
-        store.subscribe(state => expect(state.transactions.queued).toHaveLength(2))
+        expect(storeLocal().txs.queued).toHaveLength(2)
+        expect(store.inspect().txs.queued).toHaveLength(2)
+        store.subscribe(state => expect(state.txs.queued).toHaveLength(2))
 
-        expect(store.inspect().transactions.queued).toEqual([
-          { id: '1' },
-          { id: '3' }
+        expect(store.inspect().txs.queued).toEqual([
+          { id: 1 },
+          { id: 3 }
         ])
       })
     })
@@ -431,17 +402,18 @@ describe('app.store', () => {
       it('sends all requests', async () => {
         const sendTxRequest = vi.fn()
         const store = createStore()
+        let keys = []
 
-        store.transactions.queue({ id: '1', amount: 1, description: '1' })
-        store.transactions.queue({ id: '2', amount: 2, description: '2' })
-        store.transactions.queue({ id: '3', amount: 3, description: '3' })
+        keys[1] = store.txs.queue({ id: '1', amount: 1, description: '1' })
+        keys[2] = store.txs.queue({ id: '2', amount: 2, description: '2' })
+        keys[3] = store.txs.queue({ id: '3', amount: 3, description: '3' })
 
-        await store.transactions.flush({ sendTxRequest })
+        await store.txs.flush({ sendTxRequest })
 
         expect(sendTxRequest.calls).toHaveLength(3)
-        expect(sendTxRequest.calls[0][0].transaction).toEqual({ id: '1', amount: 1, description: '1' })
-        expect(sendTxRequest.calls[1][0].transaction).toEqual({ id: '2', amount: 2, description: '2' })
-        expect(sendTxRequest.calls[2][0].transaction).toEqual({ id: '3', amount: 3, description: '3' })
+        expect(sendTxRequest.calls[0][0].tx).toEqual({ id: '1', amount: 1, description: '1' })
+        expect(sendTxRequest.calls[1][0].tx).toEqual({ id: '2', amount: 2, description: '2' })
+        expect(sendTxRequest.calls[2][0].tx).toEqual({ id: '3', amount: 3, description: '3' })
       })
 
       describe('when a request is successful', () => {
@@ -449,13 +421,13 @@ describe('app.store', () => {
           const sendTxRequest = vi.fn()
           const store = createStore()
 
-          store.transactions.queue({ id: '1', amount: 1, description: '1' })
-          store.transactions.queue({ id: '2', amount: 2, description: '2' })
-          store.transactions.queue({ id: '3', amount: 3, description: '3' })
+          store.txs.queue({ id: '1', amount: 1, description: '1' })
+          store.txs.queue({ id: '2', amount: 2, description: '2' })
+          store.txs.queue({ id: '3', amount: 3, description: '3' })
 
-          expect(store.inspect().transactions.queued).toHaveLength(3)
-          await store.transactions.flush({ sendTxRequest })
-          expect(store.inspect().transactions.queued).toHaveLength(0)
+          expect(store.inspect().txs.queued).toHaveLength(3)
+          await store.txs.flush({ sendTxRequest })
+          expect(store.inspect().txs.queued).toHaveLength(0)
         })
       })
 
@@ -473,15 +445,15 @@ describe('app.store', () => {
 
           const store = createStore()
 
-          store.transactions.queue({ id: '1' })
-          store.transactions.queue({ id: '2' })
-          store.transactions.queue({ id: '3' })
+          store.txs.queue({ id: '1' })
+          store.txs.queue({ id: '2' })
+          store.txs.queue({ id: '3' })
 
-          expect(store.inspect().transactions.queued).toHaveLength(3)
-          await store.transactions.flush({ sendTxRequest })
-          expect(store.inspect().transactions.queued).toHaveLength(1)
+          expect(store.inspect().txs.queued).toHaveLength(3)
+          await store.txs.flush({ sendTxRequest })
+          expect(store.inspect().txs.queued).toHaveLength(1)
 
-          expect(store.inspect().transactions.queued[0]).toEqual({ id: '2' })
+          expect(store.inspect().txs.queued[0]).toEqual({ id: '2' })
         })
       })
     })
@@ -489,14 +461,14 @@ describe('app.store', () => {
     describe('.queue', () => {
       it('stores the transaction', () => {
         const store = createStore()
-        store.transactions.queue({ id: '1' })
+        const key = store.txs.queue({ id: '1' })
 
         // Confirm that all forms of store access are updated.
-        expect(getLocallyStored().transactions.queued).toHaveLength(1)
-        expect(store.inspect().transactions.queued).toHaveLength(1)
-        store.subscribe(state => expect(state.transactions.queued).toHaveLength(1))
+        expect(storeLocal().txs.queued).toHaveLength(1)
+        expect(store.inspect().txs.queued).toHaveLength(1)
+        store.subscribe(state => expect(state.txs.queued).toHaveLength(1))
 
-        expect(store.inspect().transactions.queued[0]).toEqual({ id: '1' })
+        expect(store.inspect().txs.queued[key]).toEqual({ id: '1' })
       })
     })
   })
