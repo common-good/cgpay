@@ -10,8 +10,8 @@
     "tests:watch": "mode=dev vitest"
   },
   "devDependencies": {
-    "@jrh/adapt": "^5.5.0",
-    "@jrh/to": "^1.0.0",
+    "@adaptably/adapt": "^8.1.0",
+    "@adaptably/to": "^1.0.1",
     "@sveltejs/vite-plugin-svelte": "^1.0.4",
     "@testing-library/svelte": "^3.2.1",
     "html5-qrcode": "^2.2.1",
