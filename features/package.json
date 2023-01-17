@@ -7,8 +7,8 @@
     "test:debug": "PWDEBUG=1 npm test"
   },
   "devDependencies": {
-    "@jrh/adapt": "^5.5.0",
-    "@jrh/to": "^1.0.0",
+    "@adaptably/adapt": "^8.1.0",
+    "@adaptably/to": "^1.0.1",
     "@playwright/test": "^1.25.1",
     "fkill": "^8.0.1",
     "query-string": "^7.1.1",

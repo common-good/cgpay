@@ -1,4 +1,4 @@
-import appContext from '../context/context.provider.js'
+import adapt from '@adaptably/adapt'
 import queryString from 'query-string'
 import { spy } from 'tinyspy'
 
@@ -40,7 +40,7 @@ function createMockableRoute({ baseUrl, page, record }) {
 function routeObj(gorp, endPt, page, record) {
   return {
     [gorp]: createMockableRoute({
-      baseUrl: appContext('serverApi.dev') + '/' + endPt,
+      baseUrl: adapt('membersApi.location') + '/' + endPt,
       page,
       record
     })
