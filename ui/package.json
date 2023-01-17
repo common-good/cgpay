@@ -10,7 +10,7 @@
     "tests:watch": "mode=dev vitest"
   },
   "devDependencies": {
-    "@adaptably/adapt": "^8.1.0",
+    "@adaptably/adapt": "github:adaptably/adapt",
     "@adaptably/to": "^1.0.1",
     "@sveltejs/vite-plugin-svelte": "^1.0.4",
     "@testing-library/svelte": "^3.2.1",
