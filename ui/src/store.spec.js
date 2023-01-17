@@ -14,7 +14,7 @@ function setupLocalStorage(data) {
 
 // --------------------------------------------
 
-describe('app.store', () => {
+describe('store', () => {
   beforeEach(() => {
     window.localStorage.setItem(storeKey, null)
   })
@@ -44,6 +44,10 @@ describe('app.store', () => {
     })
   })
 
+  /* .api()
+    when we are in test mode (having scanned a test card), return the test api url (demo.commongood.earth/api)
+    when we are in production mode (having scanned a test card), return the production api url (commongood.earth/api))
+  */
 
   describe('.myAccount', () => {
     it('is accessible', () => {
@@ -62,7 +66,7 @@ describe('app.store', () => {
         })
       })
 
-      describe('when there is not a linked business', () => {
+      describe('when there is not a linked account', () => {
         it('is false', () => {
           setupLocalStorage({
             myAccount: {name: null}
@@ -85,6 +89,13 @@ describe('app.store', () => {
     })
   })
 
+  /* various cookie-setting and retrieving
+  for accountChoices, qr, and erMsg (call it "thing")
+    when we do store.thing.get(), we get null back
+    when we do store.thing.set(x), then store.thing.get(), we get x back
+    then when we do store.thing.set(null), then store.thing.get(), we get null back
+  */
+
   describe('.network', () => {
     describe('.offline', () => {
       it('is accessible', () => {
@@ -101,10 +112,9 @@ describe('app.store', () => {
     })
 
     describe('.reset()', () => {
-      it('resets the network to basic online status', () => {
+      it('resets the network to correct online status', () => {
         const store = createStore()
         store.network.reset()
-
         expect(store.inspect().network.online).toEqual(window.navigator.onLine)
       })
     })
