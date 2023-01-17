@@ -25,7 +25,6 @@ Windows developers do [this](https://docs.google.com/document/d/1d1pGjS5Z9sP_BgY
 | `git checkout develop` | choose the development branch |
 | `nvm install` | install and use the required node version for this project (16.x), as stored in .nvmrc |
 | `npm install` | install the project's dependencies |
-| `npm i @sveltejs/kit` | install user interface framework |
 | `cd features` | |
 | `npx playwright install` | install test framework and headless browsers |
 | `npx playwright install-deps` | install test framework dependencies |
