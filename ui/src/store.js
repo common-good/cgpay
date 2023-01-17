@@ -112,7 +112,7 @@ export const createStore = () => {
       return localState
     },
 
-    api() { return localState.test ? __serverApi__ : __serverApi__ },
+    api() { return localState.test ? __membersApi__ : __membersApi__ },
     
     myAccount: {
       set(acct) { update(st => {
