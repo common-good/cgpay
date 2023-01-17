@@ -29,7 +29,7 @@ export default {
   },
 
   test: {
-    environment: 'jsdom',
+    environment: "jsdom",
     globals: true,
     mockReset: true,
     setupFiles: './tests/support.js',

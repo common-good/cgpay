@@ -21,6 +21,6 @@ export default function setup() {
   }
 
   return async function teardown() {
-    await fkill(processes.ui.pid)
-  }
+    await fkill(processes.ui.pid);
+  };
 }
