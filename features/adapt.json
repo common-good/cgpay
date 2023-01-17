@@ -1,0 +1,8 @@
+{
+  "app": {
+    "name": "@common-good/cg-pay-pwa.features"
+  },
+  "membersApi": {
+    "location": "https://demo.commongood.earth/api"
+  }
+}

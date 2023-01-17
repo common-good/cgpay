@@ -1,41 +1,37 @@
-import to from '@jrh/to'
-import { VitePWA } from 'vite-plugin-pwa'
-import { imagetools } from 'vite-imagetools'
-import { svelte } from '@sveltejs/vite-plugin-svelte'
+import to from "@adaptably/to";
+import { VitePWA } from "vite-plugin-pwa";
+import { imagetools } from "vite-imagetools";
+import { svelte } from "@sveltejs/vite-plugin-svelte";
 
-import context from './context/context.provider.js'
-import pwaConfig from './vite.pwa.config.js'
+import adapt from "@adaptably/adapt";
+import pwaConfig from "./vite.pwa.config.js";
 
 // --------------------------------------------
 
 export default {
   define: {
-    __membersApi__: JSON.stringify(context('membersApi.location'))
+    __membersApi__: JSON.stringify(adapt("membersApi.location")),
   },
 
-  plugins: [
-    imagetools(),
-    svelte(),
-    VitePWA(pwaConfig)
-  ],
+  plugins: [imagetools(), svelte(), VitePWA(pwaConfig)],
 
   resolve: {
     alias: {
-      '#app.store.js': to('./src/app.store.js', import.meta.url),
-      '#utils.js': to('./src/utils.js', import.meta.url),
-      '#db.js': to('./src/db.js', import.meta.url),
-      '#modules': to('./src/modules', import.meta.url),
-    }
+      "#app.store.js": to("./src/app.store.js", { from: import.meta.url }),
+      "#utils.js": to("./src/utils.js", { from: import.meta.url }),
+      "#db.js": to("./src/db.js", { from: import.meta.url }),
+      "#modules": to("./src/modules", { from: import.meta.url }),
+    },
   },
 
   server: {
-    port: context('devServer.port')
+    port: adapt("devServer.port"),
   },
 
   test: {
-    environment: 'jsdom',
+    environment: "jsdom",
     globals: true,
     mockReset: true,
-    setupFiles: './tests/support.js'
-  }
-}
+    setupFiles: "./tests/support.js",
+  },
+};
