@@ -395,11 +395,10 @@ describe('store', () => {
     describe('.dequeue', () => {
       it('dequeues the transaction with given key', () => {
         const store = createStore()
-        let keys = []
 
-        keys[1] = store.txs.queue({ id: 1 })
-        keys[2] = store.txs.queue({ id: 2 })
-        keys[3] = store.txs.queue({ id: 3 })
+        store.txs.queue({ created: 1 })
+        store.txs.queue({ created: 2 })
+        store.txs.queue({ created: 3 })
 
         store.txs.dequeue(2)
 
@@ -409,8 +408,8 @@ describe('store', () => {
         store.subscribe(state => expect(state.txs.queued).toHaveLength(2))
 
         expect(store.inspect().txs.queued).toEqual([
-          { id: 1 },
-          { id: 3 }
+          { created: 1 },
+          { created: 3 }
         ])
       })
     })
@@ -485,7 +484,7 @@ describe('store', () => {
         expect(store.inspect().txs.queued).toHaveLength(1)
         store.subscribe(state => expect(state.txs.queued).toHaveLength(1))
 
-        expect(store.inspect().txs.queued[key]).toEqual({ id: '1' })
+        expect(store.inspect().txs.queued[0]).toEqual({ id: '1' })
       })
     })
   })

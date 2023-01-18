@@ -207,21 +207,20 @@ export const createStore = () => {
         }
       },
 
-      dequeue(i) { update(st => {
-          st.txs.queued = st.txs.queued.filter((_, index) => { index !== i })
-          console.log(st.txs.queued)
+      dequeue(created) { update(st => {
+          const newSt = { ...st }
+          newSt.txs.queued = newSt.txs.queued.filter(tx => tx.created !== created)
+
           return storeLocal(st)
       })},
 
       queue(tx) {
-        const key = Date.now() // this index will always be unique
-        tx.offline = true
         update(st => {
-          st.txs.queued[key] = tx
-          console.log(st.txs.queued)
-          return storeLocal(st)
+          const newSt = { ...st }
+          newSt.txs.queued = [...newSt.txs.queued, tx]
+
+          return storeLocal(newSt)
         })
-        return key
       }
     }
   }
