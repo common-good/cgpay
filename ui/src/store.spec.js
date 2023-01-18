@@ -89,12 +89,19 @@ describe('store', () => {
     })
   })
 
-  /* various cookie-setting and retrieving
-  for accountChoices, qr, and erMsg (call it "thing")
+  /* various other setting and retrieving -- .set() and .get()
+    for accountChoices, qr, and erMsg (call it "thing")
     when we do store.thing.get(), we get null back
     when we do store.thing.set(x), then store.thing.get(), we get x back
     then when we do store.thing.set(null), then store.thing.get(), we get null back
   */
+
+  /* .accts
+    .put(card, acct) remembers information about a customer account represented by a given card code
+    specifically sets st.accts[card] equal to acct
+    .get(card) retrieves customer account information object for that card code
+    object includes keys for name, agent, location, limit, creditLine, avgBalance, trustRatio, and since (see API definition -- these are returned from the server)
+   */
 
   describe('.network', () => {
     describe('.offline', () => {
