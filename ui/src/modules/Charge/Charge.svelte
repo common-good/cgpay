@@ -33,7 +33,6 @@
     otherId: null,
     created: null,
     proof: null,
-    offline: false,
   }
   
   const onlineLimit = 10000

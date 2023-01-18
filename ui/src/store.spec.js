@@ -59,7 +59,7 @@ describe('store', () => {
       describe('when there is a linked account', () => {
         it('is true', () => {
           setupLocalStorage({
-            myAccount: {name: 'bar'}
+            myAccount: { name: 'bar' }
           })
           const store = createStore()
           expect(store.myAccount.exists()).toEqual(true)
@@ -69,7 +69,7 @@ describe('store', () => {
       describe('when there is not a linked account', () => {
         it('is false', () => {
           setupLocalStorage({
-            myAccount: {name: null}
+            myAccount: { name: null }
           })
 
           const store = createStore()
@@ -81,7 +81,7 @@ describe('store', () => {
     describe('.set()', () => {
       it('links the given account', () => {
         const store = createStore()
-        store.myAccount.set({name: 'Biz'})
+        store.myAccount.set({ name: 'Biz' })
 
         expect(storeLocal().myAccount.name).toEqual('Biz')
         expect(store.inspect().myAccount.name).toEqual('Biz')
@@ -130,10 +130,9 @@ describe('store', () => {
         expect(store.inspect().network.online).toEqual(false)
       })
     })
-
   })
 
-/*
+  /*
     describe('.signIn()', () => {
       it('gets a list of options for an account to link', () => {
         const store = createStore()
@@ -188,7 +187,8 @@ describe('store', () => {
           const originalNavigator = window.navigator
 
           window.navigator = {
-            userAgent: 'Mozilla/5.0 (Linux; Android 12; SM-S906N Build/QP1A.190711.020; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/80.0.3987.119 Mobile Safari/537.36'
+            userAgent:
+              'Mozilla/5.0 (Linux; Android 12; SM-S906N Build/QP1A.190711.020; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/80.0.3987.119 Mobile Safari/537.36'
           }
 
           const store = createStore()
@@ -203,7 +203,8 @@ describe('store', () => {
           const originalNavigator = window.navigator
 
           window.navigator = {
-            userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 12_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.0 Mobile/15E148 Safari/604.1'
+            userAgent:
+              'Mozilla/5.0 (iPhone; CPU iPhone OS 12_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.0 Mobile/15E148 Safari/604.1'
           }
 
           const store = createStore()
@@ -218,7 +219,8 @@ describe('store', () => {
           const originalNavigator = window.navigator
 
           window.navigator = {
-            userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.81 Safari/537.36'
+            userAgent:
+              'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.81 Safari/537.36'
           }
 
           const store = createStore()
@@ -234,7 +236,7 @@ describe('store', () => {
         it('is true', () => {
           setupLocalStorage({
             device: {
-              type: 'Android',
+              type: 'Android'
             }
           })
 
@@ -247,7 +249,7 @@ describe('store', () => {
         it('is false', () => {
           setupLocalStorage({
             device: {
-              type: 'Apple',
+              type: 'Apple'
             }
           })
 
@@ -262,7 +264,7 @@ describe('store', () => {
         it('is true', () => {
           setupLocalStorage({
             device: {
-              type: 'Apple',
+              type: 'Apple'
             }
           })
 
@@ -275,7 +277,7 @@ describe('store', () => {
         it('is false', () => {
           setupLocalStorage({
             device: {
-              type: 'Android',
+              type: 'Android'
             }
           })
 
@@ -379,7 +381,9 @@ describe('store', () => {
         // Confirm that all forms of store access are updated.
         expect(storeLocal().homeScreen.skipped).toEqual(now.toISOString())
         expect(store.inspect().homeScreen.skipped).toEqual(now)
-        store.subscribe(state => expect(state.homeScreen.skipped).toEqual(now))
+        store.subscribe((state) =>
+          expect(state.homeScreen.skipped).toEqual(now)
+        )
       })
     })
   })
@@ -388,22 +392,21 @@ describe('store', () => {
     describe('.dequeue', () => {
       it('dequeues the transaction with given key', () => {
         const store = createStore()
-        let keys = []
 
-        keys[1] = store.txs.queue({ id: 1 })
-        keys[2] = store.txs.queue({ id: 2 })
-        keys[3] = store.txs.queue({ id: 3 })
+        store.txs.queue({ created: 1 })
+        store.txs.queue({ created: 2 })
+        store.txs.queue({ created: 3 })
 
         store.txs.dequeue(2)
 
         // Confirm that all forms of store access are updated.
         expect(storeLocal().txs.queued).toHaveLength(2)
         expect(store.inspect().txs.queued).toHaveLength(2)
-        store.subscribe(state => expect(state.txs.queued).toHaveLength(2))
+        store.subscribe((state) => expect(state.txs.queued).toHaveLength(2))
 
         expect(store.inspect().txs.queued).toEqual([
-          { id: 1 },
-          { id: 3 }
+          { created: 1 },
+          { created: 3 }
         ])
       })
     })
@@ -421,9 +424,21 @@ describe('store', () => {
         await store.txs.flush({ sendTxRequest })
 
         expect(sendTxRequest.calls).toHaveLength(3)
-        expect(sendTxRequest.calls[0][0].tx).toEqual({ id: '1', amount: 1, description: '1' })
-        expect(sendTxRequest.calls[1][0].tx).toEqual({ id: '2', amount: 2, description: '2' })
-        expect(sendTxRequest.calls[2][0].tx).toEqual({ id: '3', amount: 3, description: '3' })
+        expect(sendTxRequest.calls[0][0].tx).toEqual({
+          id: '1',
+          amount: 1,
+          description: '1'
+        })
+        expect(sendTxRequest.calls[1][0].tx).toEqual({
+          id: '2',
+          amount: 2,
+          description: '2'
+        })
+        expect(sendTxRequest.calls[2][0].tx).toEqual({
+          id: '3',
+          amount: 3,
+          description: '3'
+        })
       })
 
       describe('when a request is successful', () => {
@@ -471,14 +486,14 @@ describe('store', () => {
     describe('.queue', () => {
       it('stores the transaction', () => {
         const store = createStore()
-        const key = store.txs.queue({ id: '1' })
+        store.txs.queue({ id: '1' })
 
         // Confirm that all forms of store access are updated.
         expect(storeLocal().txs.queued).toHaveLength(1)
         expect(store.inspect().txs.queued).toHaveLength(1)
-        store.subscribe(state => expect(state.txs.queued).toHaveLength(1))
+        store.subscribe((state) => expect(state.txs.queued).toHaveLength(1))
 
-        expect(store.inspect().txs.queued[key]).toEqual({ id: '1' })
+        expect(store.inspect().txs.queued[0]).toEqual({ id: '1' })
       })
     })
   })

@@ -37,7 +37,7 @@ export const createStore = () => {
     },
 
     device: {
-      type: getDeviceType(),
+      type: getDeviceType()
     },
 
     homeScreen: {
@@ -54,7 +54,7 @@ export const createStore = () => {
       queued: []
     },
 
-    accts: [],
+    accts: []
   }
 
   // --------------------------------------------
@@ -64,42 +64,54 @@ export const createStore = () => {
 
   // --------------------------------------------
 
-  function setOnline() { res.network.setOnline(false) }
-  function flushTxs() { res.txs.flush() }
-  function cardAcct(card) { return card.acct + (card.test ? '.' : '!') }
+  function setOnline() {
+    res.network.setOnline(false)
+  }
+  function flushTxs() {
+    res.txs.flush()
+  }
+  function cardAcct(card) {
+    return card.acct + (card.test ? '.' : '!')
+  }
 
   function storeLocal(state) {
     window.localStorage.setItem(storeKey, JSON.stringify(state))
     localState = state
     return state
   }
-  
+
   function setLocal(k, v) {
-    update(currentState => {
+    update((currentState) => {
       const newState = { ...currentState }
       newState[k] = v
       return storeLocal(newState)
     })
   }
-  
+
   function setCookie(name, value) {
-    document.cookie = `${ name }=${ JSON.stringify(value) }`
+    document.cookie = `${name}=${JSON.stringify(value)}`
   }
 
   function getCookie(name, once = false) {
-    var v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
-    const res = v ? JSON.parse(v[2]) : null;
+    var v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)')
+    const res = v ? JSON.parse(v[2]) : null
     console.log(res)
     if (once) setCookie(name, null)
     return res
   }
-  
-  function getCookieOnce(name) { return getCookie(name, true) }
+
+  function getCookieOnce(name) {
+    return getCookie(name, true)
+  }
 
   function cookieOps(name) {
     return {
-      set(v) { return setCookie(name, v) },
-      get() { return getCookie(name) }
+      set(v) {
+        return setCookie(name, v)
+      },
+      get() {
+        return getCookie(name)
+      }
     }
   }
 
@@ -112,72 +124,104 @@ export const createStore = () => {
       return localState
     },
 
-    api() { return localState.test ? __membersApi__ : __membersApi__ },
-    
+    api() {
+      return localState.test ? __membersApi__ : __membersApi__
+    },
+
     myAccount: {
-      set(acct) { update(st => {
+      set(acct) {
+        update((st) => {
           st.myAccount = { ...st.myAccount, ...acct }
-          st.myAccount.deviceId = 'GrfaVyHkxnTf4cxsyIEjkWyNdK0wUoDK153r2LIBoFocvw73T'; st.myAccount.items = ['test food'] // DEBUG
+          st.myAccount.deviceId =
+            'GrfaVyHkxnTf4cxsyIEjkWyNdK0wUoDK153r2LIBoFocvw73T'
+          st.myAccount.items = ['test food'] // DEBUG
           return storeLocal(st)
-      })},
-      exists() {return localState.myAccount.name !== null},
+        })
+      },
+      exists() {
+        return localState.myAccount.name !== null
+      }
     },
-    
+
     accountChoices: {
-      set(v) { return setCookie('accountChoices', v) },
-      get() { return getCookie('accountChoices') }
+      set(v) {
+        return setCookie('accountChoices', v)
+      },
+      get() {
+        return getCookie('accountChoices')
+      }
     },
-    
+
     qr: {
-      set(v) { return setCookie('qr', v) },
-      get() { return getCookie('qr') }
+      set(v) {
+        return setCookie('qr', v)
+      },
+      get() {
+        return getCookie('qr')
+      }
     },
-    
+
     errMsg: {
-      set(v) { return setCookie('errMsg', v) },
-      get() { return getCookie('errMsg') }
+      set(v) {
+        return setCookie('errMsg', v)
+      },
+      get() {
+        return getCookie('errMsg')
+      }
     },
 
     device: {
-      isApple() { return localState.device.type === 'Apple' },
-      isAndroid() { return localState.device.type === 'Android' }
+      isApple() {
+        return localState.device.type === 'Apple'
+      },
+      isAndroid() {
+        return localState.device.type === 'Android'
+      }
     },
 
     homeScreen: {
       promptRequired() {
-        const onMobileDevice = [ 'Apple', 'Android' ].includes(localState.device.type)
+        const onMobileDevice = ['Apple', 'Android'].includes(
+          localState.device.type
+        )
         const hasNotSkippedPrompt = !localState.homeScreen.skipped
 
         return onMobileDevice && hasNotSkippedPrompt
       },
 
-      skip() { update(st => {
+      skip() {
+        update((st) => {
           st.homeScreen.skipped = new Date()
           return storeLocal(st)
-      })}
+        })
+      }
     },
 
     network: {
-      reset() { update(st => {
+      reset() {
+        update((st) => {
           this.setOnline(window.navigator.onLine)
-          return st
-      })},
-
-      setOnline(yesno) {
-//        console.log('online: ' + (yesno ? 'YES' : 'NO'))
-        if (yesno) flushTxs()
-        update(st => {
-          st.network.online = yesno
           return st
         })
       },
+
+      setOnline(yesno) {
+        //        console.log('online: ' + (yesno ? 'YES' : 'NO'))
+        if (yesno) flushTxs()
+        update((st) => {
+          st.network.online = yesno
+          return st
+        })
+      }
     },
 
     accts: {
-      put(card, acct) { update(st => {
+      put(card, acct) {
+        update((st) => {
           st.accts[cardAcct(card)] = acct
           return st
-      })},
+        })
+      },
       get(card) {
         const res = localState.accts[cardAcct(card)]
         return res === undefined ? null : res
@@ -185,10 +229,10 @@ export const createStore = () => {
     },
 
     txs: {
-// was:      async flush({ sendTxRequest }) {
+      // was:      async flush({ sendTxRequest }) {
       async flush() {
         const { queued } = localState.txs
-//        console.log(queued)
+        //        console.log(queued)
         let i
 
         for (i in queued) {
@@ -200,28 +244,32 @@ export const createStore = () => {
               setOnline()
               return
             }
-            console.log(er.message)
-            console.log(queued[i])
-            throw(er)
+            // console.log(er.message);
+            // console.log(queued[i]);
+            throw er
           }
         }
       },
 
-      dequeue(i) { update(st => {
-          st.txs.queued = st.txs.queued.filter((_, index) => { index !== i })
-          console.log(st.txs.queued)
-          return storeLocal(st)
-      })},
+      dequeue(created) {
+        update((st) => {
+          const newSt = { ...st }
+
+          newSt.txs.queued = newSt.txs.queued.filter(
+            (tx) => tx.created !== created
+          )
+          // console.log(st.txs.queued);
+          return storeLocal(newSt)
+        })
+      },
 
       queue(tx) {
-        const key = Date.now() // this index will always be unique
-        tx.offline = true
-        update(st => {
-          st.txs.queued[key] = tx
-          console.log(st.txs.queued)
-          return storeLocal(st)
+        update((st) => {
+          const newSt = { ...st }
+          newSt.txs.queued = [...newSt.txs.queued, tx]
+
+          return storeLocal(newSt)
         })
-        return key
       }
     }
   }
