@@ -6,6 +6,9 @@
   import SelectAccount from './SelectAccount/SelectAccount.svelte'
 // FAILS  import { page } from '$app/stores'
 
+  export let currentRoute // else Svelte complains (I don't know why yet)
+  export let params // else Svelte complains (I don't know why yet)
+
   // --------------------------------------------
 
   let accountOptions = []

@@ -3,6 +3,8 @@
 
   import cgLogo from '#modules/Root/assets/cg-logo-300.png?webp'
 
+  export let params // else Svelte complains (I don't know why yet)
+
   // --------------------------------------------
 
   export let currentRoute

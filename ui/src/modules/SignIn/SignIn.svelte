@@ -5,6 +5,9 @@
   import cgLogo from '#modules/Root/assets/cg-logo-300.png?webp'
   import store from '#store.js'
 
+  export let currentRoute // else Svelte complains (I don't know why yet)
+  export let params // else Svelte complains (I don't know why yet)
+
   // --------------------------------------------
 
   const credentials = {

@@ -1,17 +1,18 @@
 <script>
   import store from '#store.js'
-  import assert from 'assert'
-  import { timedFetch, CgError, filterObj, isTimeout } from '#utils.js'
+  import { timedFetch, CgError, filterObjByKey, isTimeout } from '#utils.js'
   import { onMount } from 'svelte'
   import { navigateTo } from 'svelte-router-spa'
   import queryString from 'query-string'
-  import Profile from './Profile/Profile.svelte'
   import SubmitCharge from './SubmitCharge/SubmitCharge.svelte'
 //  import { encrypt, createMessage, readKey } from 'openpgp'
 
   // --------------------------------------------
   
   // Example with curl: curl -d "actorId=G6VM03&amount=1234.98&created=1672959981&description=test%20food&deviceId=GrfaVyHkxnTf4cxsyIEjkWyNdK0wUoDK153r2LIBoFocvw73T&offline=false&otherId=H6VM0G0NyCBBlUF1qWNZ2k&proof=d0e4eaeb4e9c1dc9d80bef9eeb3ad1342fd24997156cb57575479bd3ac19d00b" -X POST -H "Content-type: application/x-www-form-urlencoded" 'https://demo.commongood.earth/api/transactions'
+
+  export let currentRoute // else Svelte complains (I don't know why yet)
+  export let params // else Svelte complains (I don't know why yet)
 
   const dig36 = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
   const regionLens = '111111112222222233333333333344444444'
@@ -38,6 +39,7 @@
   
   const onlineLimit = 10000
   const offlineLimit = 250
+  let tipable = false
 
   let errorMessage
   let myName
@@ -106,7 +108,6 @@
       console.log(acctInfo)
       console.log($store.accts)
       
-      // check network to see whether to try getting customer info
       tx.otherId = card.acct
       myName = $store.myAccount.name
       console.log(myName);
@@ -123,7 +124,7 @@
         console.log(items)
         if (items.length) tx.description = items[0]
         await store.myAccount.set({ ...$store.myAccount, items })
-        otherAccount = filterObj({ ...otherAccount, ...body }, ([key]) => key != 'items' && !key.includes('photo'))
+        otherAccount = filterObjByKey({ ...otherAccount, ...body }, (key) => key != 'items' && !key.includes('photo'))
         limit = Math.min(otherAccount.limit, onlineLimit)
         await store.accts.put(card, otherAccount) // store and/or update stored customer account info
 
@@ -135,7 +136,7 @@
         profileOffline()
       } else {
         store.errMsg.set(er.message)
-//        navigateTo('/home') // this doesn't exist yet
+        navigateTo('/home')
         console.log(er)
       }
     }
@@ -148,10 +149,10 @@
 
 <section id='charge'>
   { #if gotTx }
+    <h2 class='action'>{ myName }</h2>
     <div class='charge-message'>
       <h1>Success!</h1>
-      <h2 class='action'>{ myName }</h2>
-      <p class='transaction-action'>charged</p>
+      <p class='transaction-action'>You charged</p>
     </div>
     <div class='charge-content'>
       <p id='confirmation-customer-name'>{ otherAccount.name }</p>
@@ -162,11 +163,14 @@
       <p>for { tx.description }</p>
     </div>
 
-    <a href='/scan'>Scan Another QR</a>
+    { #if tipable }<a href='/tip'>Add Tip</a>{ /if }
+    <!-- button>Receipt</button -->
+    <button>Undo</button>
+    <a href='/home'>Done</a>
 
   { :else }
+    <h2 class='action'>{ myName }</h2>
     <div class='charge-message'>
-      <h2 class='action'>{ myName }</h2>
       <p class='transaction-action'>charge</p>
     </div>
     <SubmitCharge { otherAccount } { tx } {errorMessage} {limit} on:complete={ handleSubmitCharge } />
@@ -202,6 +206,6 @@
       text lg
       text-align center
 
-    a
+    a, button
       cgButton()
 </style>

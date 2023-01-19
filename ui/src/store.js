@@ -73,15 +73,6 @@ export const createStore = () => {
     localState = state
     return state
   }
-  function storeState() { return localState }
-  
-  function setLocal(k, v) {
-    update(currentState => {
-      const newState = { ...currentState }
-      newState[k] = v
-      return storeLocal(newState)
-    })
-  }
   
   function setCookie(name, value) {
     document.cookie = `${ name }=${ JSON.stringify(value) }`
@@ -134,9 +125,9 @@ export const createStore = () => {
       get() { return getCookie('qr') }
     },
     
-    errMsg: {
-      set(v) { return setCookie('errMsg', v) },
-      get() { return getCookie('errMsg') }
+    erMsg: {
+      set(v) { return setCookie('erMsg', v) },
+      get() { return getCookie('erMsg') }
     },
 
     device: {

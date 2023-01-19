@@ -20,6 +20,7 @@ async function timedFetch(url, options = {}) {
   aborter.name = 'Timeout'
   const timeoutId = setTimeout(() => aborter.abort(), timeout)
   const res = await fetch(store.api() + '/' + url, {...options, signal: aborter.signal });
+  console.log(res)
   let body; if (res.ok && type != 'none') body = await (type == 'blob' ? res.blob() : res.json())
   clearTimeout(timeoutId);
   return body
