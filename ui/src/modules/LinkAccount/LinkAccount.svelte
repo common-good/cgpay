@@ -1,10 +1,10 @@
 <script>
   import queryString from 'query-string'
   import { onMount } from 'svelte'
-
-  import store from '#app.store.js'
-
+  import store from '#store.js'
+  import { htmlQuote } from '#utils.js'
   import SelectAccount from './SelectAccount/SelectAccount.svelte'
+// FAILS  import { page } from '$app/stores'
 
   // --------------------------------------------
 
@@ -21,12 +21,13 @@
     myAccount = accounts[ev.detail]
     store.myAccount.set(myAccount)
     console.log($store.myAccount)
-    message = `This device is now linked to ${ myAccount.name }.`
+    message = 'This device is now linked' + htmlQuote(`to ${myAccount.name}.`)
   }
 
   // --------------------------------------------
 
   onMount(async () => {
+//    const accounts2 = JSON.parse($page.url.searchParams('accounts'))
     accounts = store.accountChoices.get() // JSON.parse(getCookie('accountChoices'))
     console.log(accounts);
 
@@ -52,7 +53,7 @@
     { #if myAccount }
       <section id='link-account-automatic'>
         <div class='link-account-content'>
-          <h1>{ message }</h1>
+          <h1>{@html message }</h1>
           <p>You are ready to charge customers!</p>
         </div>
 

@@ -1,4 +1,5 @@
 import { writable } from 'svelte/store'
+import { sendTxRequest, isTimeout } from '#utils.js'
 
 // --------------------------------------------
 // use this example for set() and get(): https://svelte.dev/repl/ccbc94cb1b4c493a9cf8f117badaeb31?version=3.16.7
@@ -26,9 +27,14 @@ export const createStore = () => {
   // --------------------------------------------
 
   const defaults = {
-    auth: null,
-    
-    myAccount: {name: null},
+    test: false, // using test API and test database?
+
+    myAccount: {
+      accountId: null,
+      deviceId: null,
+      name: null,
+      items: []
+    },
 
     device: {
       type: getDeviceType(),
@@ -44,9 +50,11 @@ export const createStore = () => {
       restored: false
     },
 
-    transactions: {
+    txs: {
       queued: []
-    }
+    },
+
+    accts: [],
   }
 
   // --------------------------------------------
@@ -56,11 +64,16 @@ export const createStore = () => {
 
   // --------------------------------------------
 
+  function setOnline() { res.network.setOnline(false) }
+  function flushTxs() { res.txs.flush() }
+  function cardAcct(card) { return card.acct + (card.test ? '.' : '!') }
+
   function storeLocal(state) {
     window.localStorage.setItem(storeKey, JSON.stringify(state))
     localState = state
     return state
   }
+  function storeState() { return localState }
   
   function setLocal(k, v) {
     update(currentState => {
@@ -83,38 +96,37 @@ export const createStore = () => {
   }
   
   function getCookieOnce(name) { return getCookie(name, true) }
-/* 
+
   function cookieOps(name) {
     return {
-      set: (v) => { return setCookie(name, v) },
-      get: () => { return getCookie(name) }
+      set(v) { return setCookie(name, v) },
+      get() { return getCookie(name) }
     }
   }
-  */
+
   // --------------------------------------------
 
-  return {
+  const res = {
     subscribe,
 
     inspect() {
       return localState
     },
 
+    api() { return localState.test ? __membersApi__ : __membersApi__ },
+    
     myAccount: {
-      set(account) {
-        update(currentState => {
-          const newState = { ...currentState }
-          newState.myAccount = {...newState.myAccount, ...account}
-          newState.myAccount.deviceId = 'GrfaVyHkxnTf4cxsyIEjkWyNdK0wUoDK153r2LIBoFocvw73T'; newState.myAccount.items = ['test food']
-          return storeLocal(newState)
-        })
-      },
+      set(acct) { update(st => {
+          st.myAccount = { ...st.myAccount, ...acct }
+          st.myAccount.deviceId = 'GrfaVyHkxnTf4cxsyIEjkWyNdK0wUoDK153r2LIBoFocvw73T'; st.myAccount.items = ['test food'] // DEBUG
+          return storeLocal(st)
+      })},
       exists() {return localState.myAccount.name !== null},
     },
     
     accountChoices: {
       set(v) { return setCookie('accountChoices', v) },
-      get() { return getCookieOnce('accountChoices') }
+      get() { return getCookie('accountChoices') }
     },
     
     qr: {
@@ -140,84 +152,77 @@ export const createStore = () => {
         return onMobileDevice && hasNotSkippedPrompt
       },
 
-      skip() {
-        update(currentState => {
-          const newState = { ...currentState }
-          newState.homeScreen.skipped = new Date()
-          return storeLocal(newState)
-        })
-      }
+      skip() { update(st => {
+          st.homeScreen.skipped = new Date()
+          return storeLocal(st)
+      })}
     },
 
     network: {
-      reset() {
-        update(currentState => {
-          const newState = { ...currentState }
-          newState.network.restored = false
-          return newState
-        })
-      },
+      reset() { update(st => {
+          this.setOnline(window.navigator.onLine)
+          return st
+      })},
 
-      setOffline() {
-        update(currentState => {
-          const newState = { ...currentState }
-          newState.network.offline = true
-          newState.network.online = false
-          return newState
-        })
-      },
-
-      setOnline() {
-        update(currentState => {
-          const newState = { ...currentState }
-          newState.network.offline = false
-          newState.network.online = true
-          return newState
-        })
-      },
-
-      setRestored() {
-        update(currentState => {
-          const newState = { ...currentState }
-          newState.network.offline = false
-          newState.network.online = true
-          newState.network.restored = true
-          return newState
+      setOnline(yesno) {
+//        console.log('online: ' + (yesno ? 'YES' : 'NO'))
+        if (yesno) flushTxs()
+        update(st => {
+          st.network.online = yesno
+          return st
         })
       },
     },
 
-    txs: {
-      async flush({ sendChargeRequest }) {
-        const { queued } = localState.txs
+    accts: {
+      put(card, acct) { update(st => {
+          st.accts[cardAcct(card)] = acct
+          return st
+      })},
+      get(card) {
+        const res = localState.accts[cardAcct(card)]
+        return res === undefined ? null : res
+      }
+    },
 
-        for (let i = 0; i < queued.length; i++) {
+    txs: {
+// was:      async flush({ sendTxRequest }) {
+      async flush() {
+        const queued = { ...localState.txs.queued }
+        let i
+        for (i in queued) {
           try {
-            await sendChargeRequest(queued[i])
-            this.dequeue(queued[i].id)
+            await sendTxRequest(queued[i])
+            this.dequeue()
           } catch (er) {
-            // TODO Handle charge request error.
+            if (isTimeout(er)) {
+              setOnline()
+              return
+            }
+            console.log(er.message)
+            console.log(localState.txs.queued[0])
+            throw(er)
           }
         }
       },
 
-      dequeue(id) {
-        update(currentState => {
-          const newState = { ...currentState }
-          newState.txs.queued = newState.txs.queued.filter(item => { return item.id !== id })
-          return storeLocal(newState)
+      dequeue() { 
+        update(st => {
+          st.txs.queued.shift()
+          return storeLocal(st)
         })
       },
 
       queue(tx) {
-        update(currentState => {
-          const newState = { ...currentState }
-          newState.txs.queued = [ ...newState.txs.queued, tx ]
-          return storeLocal(newState)
+        tx.offline = true
+        update(st => {
+          st.txs.queued.push(tx)
+          return storeLocal(st)
         })
       }
     }
   }
+  return res
 }
 
 // --------------------------------------------

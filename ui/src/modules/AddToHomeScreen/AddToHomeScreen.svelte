@@ -2,7 +2,7 @@
   import { navigateTo } from 'svelte-router-spa'
 
   import cgLogo from '#modules/Root/assets/cg-logo-300.png?webp'
-  import store from '#app.store.js'
+  import store from '#store.js'
 
   import AndroidInstructions from './AndroidInstructions/AndroidInstructions.svelte'
   import AppleInstructions from './AppleInstructions/AppleInstructions.svelte'

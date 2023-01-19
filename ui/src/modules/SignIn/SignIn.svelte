@@ -1,9 +1,9 @@
 <script>
   import queryString from 'query-string'
   import { navigateTo } from 'svelte-router-spa'
-
+  import { timedFetch, CgError, isTimeout } from '#utils.js'
   import cgLogo from '#modules/Root/assets/cg-logo-300.png?webp'
-  import store from '#app.store.js'
+  import store from '#store.js'
 
   // --------------------------------------------
 
@@ -21,18 +21,17 @@
     errorMessage = 'Finding your account(s)...'
     try {
       const query = queryString.stringify(credentials)
-      const res = await fetch(`${ __membersApi__ }/accounts?${ query }`)
-
-      if (res.ok) {
-        const obj = await res.json()
-        store.accountChoices.set(obj.accounts)
-        navigateTo('/link-account')
+      const obj = await timedFetch(`accounts?${ query }`)
+      console.log(obj)
+      store.accountChoices.set(obj.accounts)
+      navigateTo(`/link-account?accounts=${ obj.accounts }`)
+    } catch (er) {
+      console.log(er);
+      if (isTimeout(er)) {
+        errorMessage = `The server is unavailable. Check your internet connection and try again?`
       } else {
         errorMessage = `We couldn't find an account with that information. Please try again.`
       }
-    } catch (error) {
-      console.log(error);
-      errorMessage = `The server is unavailable. Check your internet connection and try again?`
     }
   }
 </script>
