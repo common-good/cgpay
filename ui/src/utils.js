@@ -30,12 +30,14 @@ function htmlQuote(s) { return `<pre>${s}</pre>` }
 
 /**
  * Filter an object by key and/or value (just like for an array)
- * @param {*} obj 
- * @param {*} fn: callback function like ([key, value]) => <truthy expression>
+ * @param {*} obj0 
+ * @param {*} fn: callback function like (key) => <truthy expression>
  * @returns the filtered object
  */
-function filterObj(obj, fn) {
-  return Object.fromEntries(Object.entries(obj).filter(fn))
+function filterObjByKey(obj0, fn) {
+  return Object.keys(obj0)
+  .filter(fn)
+  .reduce((obj, key) => { obj[key] = obj0[key]; return obj }, {})
 }
 
 async function sendTxRequest(tx) {
@@ -77,4 +79,4 @@ function disableBack() {
         body: JSON.stringify(tx)
 */
 
-export { CgError, timedFetch, isTimeout, htmlQuote, filterObj, sendTxRequest }
+export { CgError, timedFetch, isTimeout, htmlQuote, filterObjByKey, sendTxRequest }

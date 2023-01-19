@@ -73,6 +73,7 @@ export const createStore = () => {
     localState = state
     return state
   }
+  function storeState() { return localState }
   
   function setLocal(k, v) {
     update(currentState => {
@@ -187,41 +188,37 @@ export const createStore = () => {
     txs: {
 // was:      async flush({ sendTxRequest }) {
       async flush() {
-        const { queued } = localState.txs
-//        console.log(queued)
+        const queued = { ...localState.txs.queued }
         let i
-
         for (i in queued) {
           try {
             await sendTxRequest(queued[i])
-            this.dequeue(i)
+            this.dequeue()
           } catch (er) {
             if (isTimeout(er)) {
               setOnline()
               return
             }
             console.log(er.message)
-            console.log(queued[i])
+            console.log(localState.txs.queued[0])
             throw(er)
           }
         }
       },
 
-      dequeue(i) { update(st => {
-          st.txs.queued = st.txs.queued.filter((_, index) => { index !== i })
-          console.log(st.txs.queued)
-          return storeLocal(st)
-      })},
-
-      queue(tx) {
-        const key = Date.now() // this index will always be unique
-        tx.offline = true
+      dequeue() { 
         update(st => {
-          st.txs.queued[key] = tx
-          console.log(st.txs.queued)
+          st.txs.queued.shift()
           return storeLocal(st)
         })
-        return key
+      },
+
+      queue(tx) {
+        tx.offline = true
+        update(st => {
+          st.txs.queued.push(tx)
+          return storeLocal(st)
+        })
       }
     }
   }

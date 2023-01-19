@@ -33,7 +33,7 @@
     tx.amount = (+tx.amount).toFixed(2)
     tx.proof = hash(tx.actorId + tx.amount + tx.otherId.split(/[.!]/)[0] + tx.created)
     console.log(tx.actorId + tx.amount + tx.otherId.split(/[.!]/)[0] + tx.created)
-    const txid = store.txs.queue(tx)
+    store.txs.queue(tx)
     console.log(tx)
 
     try {

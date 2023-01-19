@@ -1,10 +1,16 @@
 import { createStore } from './store.js'
+import { sendTxRequest, isTimeout } from '#utils.js'
+import { vi } from 'vitest'
+vi.mock('#utils.js', () => ({
+  sendTxRequest: vi.fn(),
+  isTimeout: vi.fn()
+}))
 
 // --------------------------------------------
 
 const storeKey = 'cgpay.store'
 
-function storeLocal() {
+function storeState() {
   return JSON.parse(window.localStorage.getItem(storeKey))
 }
 
@@ -14,9 +20,10 @@ function setupLocalStorage(data) {
 
 // --------------------------------------------
 
-describe('app.store', () => {
+describe('store', () => {
   beforeEach(() => {
     window.localStorage.setItem(storeKey, null)
+    sendTxRequest = vi.fn()
   })
 
   describe('when there are existing values in local storage', () => {
@@ -79,7 +86,7 @@ describe('app.store', () => {
         const store = createStore()
         store.myAccount.set({name: 'Biz'})
 
-        expect(storeLocal().myAccount.name).toEqual('Biz')
+        expect(storeState().myAccount.name).toEqual('Biz')
         expect(store.inspect().myAccount.name).toEqual('Biz')
       })
     })
@@ -122,54 +129,6 @@ describe('app.store', () => {
     })
 
   })
-
-/*
-    describe('.signIn()', () => {
-      it('gets a list of options for an account to link', () => {
-        const store = createStore()
-
-        store.auth.signIn({ account: 'account', token: 'token' })
-
-        // Confirm that all forms of store access are updated.
-        expect(storeLocal().auth.account).toEqual('account')
-        expect(store.inspect().auth.account).toEqual('account')
-        store.subscribe(state => expect(state.auth.account).toEqual('account'))
-
-        expect(storeLocal().auth.token).toEqual('token')
-        expect(store.inspect().auth.token).toEqual('token')
-        store.subscribe(state => expect(state.auth.token).toEqual('token'))
-      })
-    })
-
-    describe('.signOut()', () => {
-      it('clears the account and token', () => {
-        setupLocalStorage({
-          auth: {
-            account: 'account',
-            token: 'token'
-          }
-        })
-
-        const store = createStore()
-
-        // Confirm initial values are set.
-        expect(store.inspect().auth.account).not.toEqual(null)
-        expect(store.inspect().auth.token).not.toEqual(null)
-
-        store.auth.signOut()
-
-        // Confirm that all forms of store access are updated.
-        expect(storeLocal().auth.account).toEqual(null)
-        expect(store.inspect().auth.account).toEqual(null)
-        store.subscribe(state => expect(state.auth.account).toEqual(null))
-
-        expect(storeLocal().auth.token).toEqual(null)
-        expect(store.inspect().auth.token).toEqual(null)
-        store.subscribe(state => expect(state.auth.token).toEqual(null))
-      })
-    })
-  })
-    */
 
   describe('.device', () => {
     describe('.type', () => {
@@ -367,7 +326,7 @@ describe('app.store', () => {
         store.homeScreen.skip()
 
         // Confirm that all forms of store access are updated.
-        expect(storeLocal().homeScreen.skipped).toEqual(now.toISOString())
+        expect(storeState().homeScreen.skipped).toEqual(now.toISOString())
         expect(store.inspect().homeScreen.skipped).toEqual(now)
         store.subscribe(state => expect(state.homeScreen.skipped).toEqual(now))
       })
@@ -376,44 +335,44 @@ describe('app.store', () => {
 
   describe('.txs', () => {
     describe('.dequeue', () => {
-      it('dequeues the transaction with given key', () => {
+      it('dequeues the first transaction in the queue', () => {
         const store = createStore()
-        let keys = []
 
-        keys[1] = store.txs.queue({ id: 1 })
-        keys[2] = store.txs.queue({ id: 2 })
-        keys[3] = store.txs.queue({ id: 3 })
+        store.txs.queue({ id: 1 })
+        store.txs.queue({ id: 2 })
+        store.txs.queue({ id: 3 })
 
-        store.txs.dequeue(2)
+        store.txs.dequeue()
 
         // Confirm that all forms of store access are updated.
-        expect(storeLocal().txs.queued).toHaveLength(2)
+        expect(storeState().txs.queued).toHaveLength(2)
         expect(store.inspect().txs.queued).toHaveLength(2)
         store.subscribe(state => expect(state.txs.queued).toHaveLength(2))
 
         expect(store.inspect().txs.queued).toEqual([
-          { id: 1 },
-          { id: 3 }
+          { id: 2, offline: true },
+          { id: 3, offline: true }
         ])
       })
     })
 
     describe('.flush', () => {
       it('sends all requests', async () => {
-        const sendTxRequest = vi.fn()
+        
+//        const sendTxRequest = vi.fn()
         const store = createStore()
         let keys = []
 
-        keys[1] = store.txs.queue({ id: '1', amount: 1, description: '1' })
-        keys[2] = store.txs.queue({ id: '2', amount: 2, description: '2' })
-        keys[3] = store.txs.queue({ id: '3', amount: 3, description: '3' })
+        store.txs.queue({ id: '1', amount: 1, description: '1' })
+        store.txs.queue({ id: '2', amount: 2, description: '2' })
+        store.txs.queue({ id: '3', amount: 3, description: '3' })
 
-        await store.txs.flush({ sendTxRequest })
+        await store.txs.flush()
 
         expect(sendTxRequest.calls).toHaveLength(3)
-        expect(sendTxRequest.calls[0][0].tx).toEqual({ id: '1', amount: 1, description: '1' })
-        expect(sendTxRequest.calls[1][0].tx).toEqual({ id: '2', amount: 2, description: '2' })
-        expect(sendTxRequest.calls[2][0].tx).toEqual({ id: '3', amount: 3, description: '3' })
+        expect(sendTxRequest.calls[0][0]).toEqual({ id: '1', amount: 1, description: '1', offline: true })
+        expect(sendTxRequest.calls[1][0]).toEqual({ id: '2', amount: 2, description: '2', offline: true })
+        expect(sendTxRequest.calls[2][0]).toEqual({ id: '3', amount: 3, description: '3', offline: true })
       })
 
       describe('when a request is successful', () => {
@@ -426,7 +385,7 @@ describe('app.store', () => {
           store.txs.queue({ id: '3', amount: 3, description: '3' })
 
           expect(store.inspect().txs.queued).toHaveLength(3)
-          await store.txs.flush({ sendTxRequest })
+          await store.txs.flush()
           expect(store.inspect().txs.queued).toHaveLength(0)
         })
       })
@@ -435,13 +394,12 @@ describe('app.store', () => {
         it('keeps the request in the queue', async () => {
           let callCount = 0
 
-          async function sendTxRequest() {
-            callCount++
-
-            if (callCount === 2) {
-              throw new Error()
-            }
+//          async function sendTxRequest(tx) {
+          sendTxRequest = async function (tx) {
+              callCount++
+            if (callCount > 1) throw new Error()
           }
+          isTimeout = function (er) { return true }
 
           const store = createStore()
 
@@ -450,10 +408,10 @@ describe('app.store', () => {
           store.txs.queue({ id: '3' })
 
           expect(store.inspect().txs.queued).toHaveLength(3)
-          await store.txs.flush({ sendTxRequest })
-          expect(store.inspect().txs.queued).toHaveLength(1)
+          await store.txs.flush()
+          expect(store.inspect().txs.queued).toHaveLength(2)
 
-          expect(store.inspect().txs.queued[0]).toEqual({ id: '2' })
+          expect(store.inspect().txs.queued[0]).toEqual({ id: '2', offline: true })
         })
       })
     })
@@ -461,14 +419,14 @@ describe('app.store', () => {
     describe('.queue', () => {
       it('stores the transaction', () => {
         const store = createStore()
-        const key = store.txs.queue({ id: '1' })
+        store.txs.queue({ id: '1' })
 
         // Confirm that all forms of store access are updated.
-        expect(storeLocal().txs.queued).toHaveLength(1)
+        expect(storeState().txs.queued).toHaveLength(1)
         expect(store.inspect().txs.queued).toHaveLength(1)
         store.subscribe(state => expect(state.txs.queued).toHaveLength(1))
 
-        expect(store.inspect().txs.queued[key]).toEqual({ id: '1' })
+        expect(store.inspect().txs.queued[0]).toEqual({ id: '1', offline: true })
       })
     })
   })
