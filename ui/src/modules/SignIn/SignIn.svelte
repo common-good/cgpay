@@ -1,7 +1,7 @@
 <script>
   import queryString from 'query-string'
   import { navigateTo } from 'svelte-router-spa'
-  import { timedFetch, CgError, isTimeout } from '#utils.js'
+  import { timedFetch, isTimeout } from '#utils.js'
   import cgLogo from '#modules/Root/assets/cg-logo-300.png?webp'
   import store from '#store.js'
 
@@ -24,10 +24,10 @@
     errorMessage = 'Finding your account(s)...'
     try {
       const query = queryString.stringify(credentials)
-      const obj = await timedFetch(`accounts?${ query }`)
-      console.log(obj)
-      store.accountChoices.set(obj.accounts)
-      navigateTo(`/link-account?accounts=${ obj.accounts }`)
+      const { result } = await timedFetch(`accounts?${ query }`)
+      console.log(result)
+      store.accountChoices.set(result.accounts)
+      navigateTo('/link-account')
     } catch (er) {
       console.log(er);
       if (isTimeout(er)) {

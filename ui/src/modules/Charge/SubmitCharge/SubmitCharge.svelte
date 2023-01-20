@@ -1,9 +1,8 @@
 <script>
   import { createEventDispatcher } from 'svelte'
   import Profile from '#modules/Charge/Profile/Profile.svelte'
-  import { navigateTo } from 'svelte-router-spa'
   import store from '#store.js'
-  import { isTimeout, sendTxRequest } from '#utils.js'
+  import { isTimeout, sendTxRequest, goEr } from '#utils.js'
   import { sha256 } from 'js-sha256'
   // https://github.com/canutin/svelte-currency-input
 
@@ -30,22 +29,24 @@
     tx.created = Math.floor(Date.now() / 1000) // Unix timestamp
     tx.amount = (+tx.amount).toFixed(2)
     tx.proof = hash(tx.actorId + tx.amount + tx.otherId.split(/[.!]/)[0] + tx.created)
+    tx.offline = false
     console.log(tx.actorId + tx.amount + tx.otherId.split(/[.!]/)[0] + tx.created)
     console.log(tx)
 
     try {
-      await sendTxRequest(tx)
-      dispatch('complete') // update display
+      const res = await sendTxRequest(tx)
+      console.log(res)
+      if (res.ok) dispatch('complete'); else errorMessage = res.message // update display
     } catch (er) {
       if (isTimeout(er)) { // internet unavailable; queue it and treat it like a success
         console.log('timeout er')
+        console.log(er)
         store.txs.queue(tx)
         if (!otherAccount.name) otherAccount.name = 'Unidentified Customer'
         errorMessage = 'OFFLINE'
         dispatch('complete') // update display
       } else {
-        store.erMsg.set(er.message)
-        navigateTo('/home') // this doesn't exist yet
+        goEr(er.message)
       }
     }
   }

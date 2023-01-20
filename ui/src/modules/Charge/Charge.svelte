@@ -1,8 +1,7 @@
 <script>
   import store from '#store.js'
-  import { timedFetch, CgError, filterObjByKey, isTimeout } from '#utils.js'
+  import { goEr, timedFetch, CgError, filterObjByKey, isTimeout } from '#utils.js'
   import { onMount } from 'svelte'
-  import { navigateTo } from 'svelte-router-spa'
   import queryString from 'query-string'
   import SubmitCharge from './SubmitCharge/SubmitCharge.svelte'
 //  import { encrypt, createMessage, readKey } from 'openpgp'
@@ -63,9 +62,9 @@
 
   async function getPhoto(query) {
     console.log('before idPhoto')
-    const blob = await timedFetch(`idPhoto?${ query }`, { type: 'blob' })
+    const { result } = await timedFetch(`idPhoto?${ query }`, { type: 'blob' })
     otherAccount.photoAlt = 'Customer Photo'
-    otherAccount.photo = URL.createObjectURL(blob)
+    otherAccount.photo = URL.createObjectURL(result)
   }
   
   /**
@@ -88,7 +87,7 @@
    * Return just the region and acct parts of the QR.
    * @todo: change the format character (acct[0]) to show agentLen = 0
    */
-  function acctOnly(acct) { 
+  function mainAcct(acct) { 
     const i = dig36.indexOf(acct[0])
     return acct.substring(0, 1 + regionLens[i] + acctLens[i] + agentLens[i])
   }
@@ -101,16 +100,12 @@
   onMount(async () => {
     try {
       const qr = store.qr.get()
-      console.log(qr)
       const card = qrParse(qr) // does not return if format is bad
       const acctInfo = store.accts.get(card) // retrieve and/or update stored customer account info
       if (acctInfo) otherAccount = { ...otherAccount, ...acctInfo }
-      console.log(acctInfo)
-      console.log($store.accts)
       
       tx.otherId = card.acct
       myName = $store.myAccount.name
-      console.log(myName);
       
       if (!$store.network.online) {
         profileOffline()
@@ -118,16 +113,14 @@
         const q = {deviceId: $store.myAccount.deviceId, actorId: $store.myAccount.accountId, otherId: card.acct}
         const query = queryString.stringify(q)
         console.log(q)
-        const body = await timedFetch(`identity?${ query }`)
-        console.log(body)
-        const { items } = body
-        console.log(items)
+        const res = await timedFetch(`identity?${ query }`)
+        const result = res.result
+        const { items } = result
         if (items.length) tx.description = items[0]
         await store.myAccount.set({ ...$store.myAccount, items })
-        otherAccount = filterObjByKey({ ...otherAccount, ...body }, (key) => key != 'items' && !key.includes('photo'))
+        otherAccount = filterObjByKey({ ...otherAccount, ...result }, (key) => key != 'items' && !key.includes('photo'))
         limit = Math.min(otherAccount.limit, onlineLimit)
         await store.accts.put(card, otherAccount) // store and/or update stored customer account info
-
         getPhoto(query)
       }
     } catch (er) {
@@ -135,9 +128,7 @@
       if (isTimeout(er)) { // internet unavailable; recognize a repeat customer or limit CG's liability
         profileOffline()
       } else {
-        store.errMsg.set(er.message)
-        navigateTo('/home')
-        console.log(er)
+        goEr(er.message)
       }
     }
   })

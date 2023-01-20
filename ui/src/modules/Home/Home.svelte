@@ -14,7 +14,6 @@
   }
 
   onMount(async () => {
-    store.erMsg.set('Test error message. If this had been a real error message, you would have been instructed.')
     erMsg = store.erMsg.get()
     myName = $store.myAccount.name
   })

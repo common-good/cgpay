@@ -80,8 +80,7 @@ export const createStore = () => {
 
   function getCookie(name, once = false) {
     var v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
-    const res = v ? JSON.parse(v[2]) : null;
-    console.log(res)
+    const res = v ? JSON.parse(v[2]) : null
     if (once) setCookie(name, null)
     return res
   }
@@ -177,7 +176,6 @@ export const createStore = () => {
     },
 
     txs: {
-// was:      async flush({ sendTxRequest }) {
       async flush() {
         const queued = { ...localState.txs.queued }
         let i
