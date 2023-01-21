@@ -1,9 +1,11 @@
 <script>
   import store from '#store.js'
-  import { goEr, timedFetch, CgError, filterObjByKey, isTimeout } from '#utils.js'
+  import { goEr, goHome, timedFetch, CgError, filterObjByKey, isTimeout } from '#utils.js'
   import { onMount } from 'svelte'
   import queryString from 'query-string'
   import SubmitCharge from './SubmitCharge/SubmitCharge.svelte'
+  import Modal from '../Modal.svelte'
+  
 //  import { encrypt, createMessage, readKey } from 'openpgp'
 
   // --------------------------------------------
@@ -40,10 +42,11 @@
   const offlineLimit = 250
   let tipable = false
 
-  let errorMessage
+  let erMsg
   let myName
   let gotTx = false
   let limit = null
+  let showConfirm = false
 
   // --------------------------------------------
 
@@ -61,7 +64,6 @@
   }
 
   async function getPhoto(query) {
-    console.log('before idPhoto')
     const { result } = await timedFetch(`idPhoto?${ query }`, { type: 'blob' })
     otherAccount.photoAlt = 'Customer Photo'
     otherAccount.photo = URL.createObjectURL(result)
@@ -79,7 +81,6 @@
     if ((new RegExp('^HTTP://[0-9A-Za-z]{1,4}\.RC[24]\.ME/[0-9A-Za-z]{11,28}$')).test(qr)) { // like HTTP://6VM.RC4.ME/KDJJ34kjdfKJ4
       return {acct: parts[5][0] + parts[2] + parts[5].substring(1), test: qr.includes('.RC4.')}
     }
-    console.log('bad qr: ' + qr)
     throw new CgError('That is not a valid Common Good card.')
   }
   
@@ -93,8 +94,20 @@
   }
 
   function profileOffline() {
-    errorMessage = 'OFFLINE. Trust this member or ask for ID.'
+    erMsg = 'OFFLINE. Trust this member or ask for ID.'
     limit = Math.min(offlineLimit, limit == null ? offlineLimit : limit)
+  }
+  
+  /**
+   * Undo the transaction.
+   * To avoid timing issues with store.txs.flush(), queue the reversed transaction,
+   * then delete both transactions at once.
+   */
+  async function Undo() {
+    tx.amount = -tx.amount
+    store.txs.queue(tx)
+    store.txs.undo(tx)
+    goHome('The transaction has been reversed.')
   }
 
   onMount(async () => {
@@ -112,7 +125,6 @@
       } else  {
         const q = {deviceId: $store.myAccount.deviceId, actorId: $store.myAccount.accountId, otherId: card.acct}
         const query = queryString.stringify(q)
-        console.log(q)
         const res = await timedFetch(`identity?${ query }`)
         const result = res.result
         const { items } = result
@@ -124,7 +136,6 @@
         getPhoto(query)
       }
     } catch (er) {
-      console.log(er);
       if (isTimeout(er)) { // internet unavailable; recognize a repeat customer or limit CG's liability
         profileOffline()
       } else {
@@ -156,7 +167,7 @@
 
     { #if tipable }<a href='/tip'>Add Tip</a>{ /if }
     <!-- button>Receipt</button -->
-    <button>Undo</button>
+    <button on:click={ () => showConfirm = true }>Undo</button>
     <a href='/home'>Done</a>
 
   { :else }
@@ -164,9 +175,16 @@
     <div class='charge-message'>
       <p class='transaction-action'>charge</p>
     </div>
-    <SubmitCharge { otherAccount } { tx } {errorMessage} {limit} on:complete={ handleSubmitCharge } />
+    <SubmitCharge {otherAccount} {tx} {erMsg} {limit} on:complete={ handleSubmitCharge } />
   { /if }
 </section>
+
+<Modal show={showConfirm}
+  title="Confirm"
+  text="Reverse the transaction?"
+  labels="Yes, No"
+  on:fn1={Undo} on:fn2={ () => showConfirm = false }
+/>
 
 <style lang='stylus'>
   #charge
@@ -199,4 +217,5 @@
 
     a, button
       cgButton()
+  
 </style>

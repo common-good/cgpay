@@ -195,7 +195,16 @@ export const createStore = () => {
         }
       },
 
-      dequeue() { 
+      undo() {
+        update(st => {
+          const st0 = st
+          const tx2 = st.txs.queued.pop()
+          const tx1 = st.txs.queued.pop()
+          return storeLocal((tx1 && tx2 && tx2.created == tx1.created && tx2.amount == -tx1.amount) ? st : st0)
+        })
+      },
+
+      dequeue() { // called only from flush() and tests
         update(st => {
           st.txs.queued.shift()
           return storeLocal(st)

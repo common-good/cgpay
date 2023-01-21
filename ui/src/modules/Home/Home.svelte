@@ -2,6 +2,7 @@
   import { navigateTo } from 'svelte-router-spa'
   import { onMount } from 'svelte'
   import store from '#store.js'
+  import Modal from '../Modal.svelte'
 
   export let currentRoute // else Svelte complains (I don't know why yet)
   export let params // else Svelte complains (I don't know why yet)
@@ -19,21 +20,19 @@
   })
 </script>
 
+<Modal show={erMsg}
+  title="Alert" text={erMsg} labels="OK, "
+  on:fn1={ handleOkay }
+/>
+
 <svelte:head>
   <title>CG Pay</title>
 </svelte:head>
 
 <section id='home'>
   <h2>{ myName }</h2>
-
-  { #if erMsg }
-    <h1>Error</h1>
-    <p>{ erMsg }</p>
-    <button on:click={ handleOkay }>Okay</button>
-  { :else }
-    <h2>Ready to charge customers</h2>
-    <a href='/scan'>Scan QR</a>
-  { /if }
+  <h2>Ready to charge customers</h2>
+  <a href='/scan'>Scan QR</a>
 </section>
 
 <style lang='stylus'>

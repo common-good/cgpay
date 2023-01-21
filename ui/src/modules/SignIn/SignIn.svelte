@@ -4,6 +4,7 @@
   import { timedFetch, isTimeout } from '#utils.js'
   import cgLogo from '#modules/Root/assets/cg-logo-300.png?webp'
   import store from '#store.js'
+  import Modal from '../Modal.svelte'
 
   export let currentRoute // else Svelte complains (I don't know why yet)
   export let params // else Svelte complains (I don't know why yet)
@@ -15,25 +16,24 @@
     password: 'Newaad1!'
   }
 
-  let errorMessage
-  let accountChoices = {}
+  let erMsg = ''
+  let statusMsg = ''
 
   // --------------------------------------------
 
   async function signIn() {
-    errorMessage = 'Finding your account(s)...'
+    statusMsg = 'Finding your account(s)...'
     try {
       const query = queryString.stringify(credentials)
       const { result } = await timedFetch(`accounts?${ query }`)
-      console.log(result)
       store.accountChoices.set(result.accounts)
       navigateTo('/link-account')
     } catch (er) {
-      console.log(er);
-      if (isTimeout(er)) {
-        errorMessage = `The server is unavailable. Check your internet connection and try again?`
+      store.network.reset()
+      if (isTimeout(er) || !store.network.online) {
+        erMsg = `The server is unavailable. Check your internet connection and try again.`
       } else {
-        errorMessage = `We couldn't find an account with that information. Please try again.`
+        erMsg = `We couldn't find an account with that information. Please try again.`
       }
     }
   }
@@ -51,10 +51,6 @@
 
   <h2>Sign In</h2>
 
-  { #if errorMessage }
-    <p id='sign-in-error'>{ errorMessage }</p>
-  { /if }
-
   { #if $store.network.offline }
     <div id='sign-in-offline'>
       <p>Please connect to the internet to sign in.</p>
@@ -65,8 +61,15 @@
       <input type='password' placeholder='Password' bind:value={ credentials.password } required />
       <button type='submit'>Sign In</button>
     </form>
+    <p>{ statusMsg }</p>
   { /if }
 </section>
+
+<Modal show={erMsg}
+  title="Alert" text={erMsg}
+  labels="OK, "
+  on:fn1={ () => { erMsg = statusMsg = '' }}
+/>
 
 <style lang='stylus'>
   img

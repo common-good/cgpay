@@ -4,7 +4,12 @@ import { navigateTo } from 'svelte-router-spa'
 
 function goEr(msg) {
   store.erMsg.set(msg)
-  navigateTo('/home') // this doesn't exist yet
+  navigateTo('/home')
+}
+
+function goHome(msg) {
+  store.erMsg.set(msg)
+  navigateTo('/home')
 }
 
 function CgError(msg, name = 'CgError') { this.message = msg; this.name = name }
@@ -31,10 +36,8 @@ async function timedFetch(url, options = {}) {
   aborter.name = 'Timeout'
   const timeoutId = setTimeout(() => aborter.abort(), timeout)
   let res = await fetch(store.api() + '/' + url, {...options, signal: aborter.signal })
-  console.log(res)
   if (res.ok && type != 'none') {
     res.result = await (type == 'blob' ? res.blob() : res.json())
-    console.log(res.result)
     if (options.method == 'POST') res = res.result // a JSON string: {ok, message}
   }
   clearTimeout(timeoutId);
@@ -42,6 +45,7 @@ async function timedFetch(url, options = {}) {
 }
 
 function isTimeout(er) { return (er.name == 'AbortError') }
+
 function htmlQuote(s) { return `<pre>${s}</pre>` }
 
 /**
@@ -57,7 +61,7 @@ function filterObjByKey(obj0, fn) {
 }
 
 async function sendTxRequest(tx) {
-  console.log('tx request: transactions?' + queryString.stringify(tx))
+//  console.log('tx request: transactions?' + queryString.stringify(tx))
   const res = await timedFetch(`transactions`, {
     method: 'POST',
     headers: { 'Content-type': 'application/x-www-form-urlencoded' },
@@ -95,4 +99,4 @@ function disableBack() {
         body: JSON.stringify(tx)
 */
 
-export { goEr, CgError, timedFetch, isTimeout, htmlQuote, filterObjByKey, sendTxRequest }
+export { goEr, goHome, CgError, timedFetch, isTimeout, htmlQuote, filterObjByKey, sendTxRequest }
