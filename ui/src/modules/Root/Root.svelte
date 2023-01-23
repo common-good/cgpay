@@ -7,6 +7,7 @@
   import { sendTxRequest } from '#utils.js'
 
   import AddToHomeScreen from '#modules/AddToHomeScreen/AddToHomeScreen.svelte'
+  import Home from '#modules/Home/Home.svelte'
   import Charge from '#modules/Charge/Charge.svelte'
   import LinkAccount from '#modules/LinkAccount/LinkAccount.svelte'
   import NetworkStatus from '#modules/NetworkStatus/NetworkStatus.svelte'
@@ -60,6 +61,13 @@
       onlyIf: onlyIf(!store.myAccount.exists, '/scan')
     },
     
+    {
+      name: '/home',
+      component: Home,
+      layout: LayoutStep,
+      onlyIf: onlyIf(store.myAccount.exists, '/')
+    },
+
     {
       name: '/scan',
       component: Scan,

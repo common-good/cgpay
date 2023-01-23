@@ -1,4 +1,4 @@
-import { writable } from 'svelte/store'
+import { get, writable } from 'svelte/store'
 import { sendTxRequest, isTimeout } from '#utils.js'
 
 // --------------------------------------------
@@ -6,29 +6,13 @@ import { sendTxRequest, isTimeout } from '#utils.js'
 
 export const createStore = () => {
   const storeKey = 'cgpay.store'
-  const storedState = JSON.parse(window.localStorage.getItem(storeKey))
-
-  // --------------------------------------------
-
-  function getDeviceType() {
-    const { userAgent } = window.navigator
-
-    if (/Android/i.test(userAgent)) {
-      return 'Android'
-    }
-
-    if (/iPhone|iPod|iPad/i.test(userAgent)) {
-      return 'Apple'
-    }
-
-    return 'Other'
-  }
-
-  // --------------------------------------------
+  const testingKey = 'cgpay.testing'
+  const testModeKey = 'cgpay.testMode'
+//  const testing = window.localStorage.getItem(testModeKey)
+  const testing = true
+  const storedState = JSON.parse(window.localStorage.getItem(testing ? testingKey : storeKey))
 
   const defaults = {
-    test: false, // using test API and test database?
-
     myAccount: {
       accountId: null,
       deviceId: null,
@@ -64,23 +48,20 @@ export const createStore = () => {
 
   // --------------------------------------------
 
+  function getDeviceType() {
+    const { userAgent } = window.navigator
+    if (/Android/i.test(userAgent)) { return 'Android' }
+    if (/iPhone|iPod|iPad/i.test(userAgent)) { return 'Apple' }
+    return 'Other'
+  }
+
   function setOnline() { res.network.setOnline(false) }
   function flushTxs() { res.txs.flush() }
-  function cardAcct(card) { return card.acct + (card.test ? '.' : '!') }
 
   function storeLocal(state) {
     window.localStorage.setItem(storeKey, JSON.stringify(state))
     localState = state
     return state
-  }
-  function storeState() { return localState }
-  
-  function setLocal(k, v) {
-    update(currentState => {
-      const newState = { ...currentState }
-      newState[k] = v
-      return storeLocal(newState)
-    })
   }
   
   function setCookie(name, value) {
@@ -89,8 +70,7 @@ export const createStore = () => {
 
   function getCookie(name, once = false) {
     var v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
-    const res = v ? JSON.parse(v[2]) : null;
-    console.log(res)
+    const res = v ? JSON.parse(v[2]) : null
     if (once) setCookie(name, null)
     return res
   }
@@ -109,11 +89,14 @@ export const createStore = () => {
   const res = {
     subscribe,
 
-    inspect() {
-      return localState
+    inspect() { return localState },
+
+    testing: {
+      set(yesno) { window.localStorage.setItem(testModeKey, yesno) },
+      get() { return testing }
     },
 
-    api() { return localState.test ? __membersApi__ : __membersApi__ },
+    api() { return testing ? _demoApi_ : _realApi_ },
     
     myAccount: {
       set(acct) { update(st => {
@@ -134,9 +117,9 @@ export const createStore = () => {
       get() { return getCookie('qr') }
     },
     
-    errMsg: {
-      set(v) { return setCookie('errMsg', v) },
-      get() { return getCookie('errMsg') }
+    erMsg: {
+      set(v) { return setCookie('erMsg', v) },
+      get() { return getCookie('erMsg') }
     },
 
     device: {
@@ -158,7 +141,7 @@ export const createStore = () => {
       })}
     },
 
-    network: {
+    network: { // no need to store this information in localStore
       reset() { update(st => {
           this.setOnline(window.navigator.onLine)
           return st
@@ -175,18 +158,26 @@ export const createStore = () => {
     },
 
     accts: {
-      put(card, acct) { update(st => {
-          st.accts[cardAcct(card)] = acct
+      /**
+       * Store the given data about a customer account
+       * @param {*} card: account identification parsed from QR
+       * @param {*} acctData: information about a customer
+       */
+      put(card, acctData) { update(st => {
+          st.accts[card.acct] = { hash: card.hash, data: acctData }
+          console.log(st.accts)
           return st
       })},
       get(card) {
-        const res = localState.accts[cardAcct(card)]
-        return res === undefined ? null : res
+        const acct = localState.accts[card.acct]
+        if (acct == undefined) return null
+        if (card.hash != acct.hash) return null // if new hash is valid, this will get updated
+        console.log(acct.data)
+        return data
       }
     },
 
     txs: {
-// was:      async flush({ sendTxRequest }) {
       async flush() {
         const queued = { ...localState.txs.queued }
         let i
@@ -206,7 +197,20 @@ export const createStore = () => {
         }
       },
 
-      dequeue() { 
+      undo() {
+        update(st => {
+          const st0 = st
+          const tx2 = st.txs.queued.pop()
+          const tx1 = st.txs.queued.pop()
+          console.log(tx1, tx2, st.txs.queued)
+          console.log(tx1 && tx2 && tx2.created == tx1.created && tx2.amount == -tx1.amount)
+          console.log(tx1 && tx2)
+          if (tx1 && tx2 && tx2.created == tx1.created && tx2.amount == -tx1.amount) return storeLocal(st)
+          return st = st0
+        })
+      },
+
+      dequeue() { // called only from flush() and tests
         update(st => {
           st.txs.queued.shift()
           return storeLocal(st)
@@ -217,6 +221,7 @@ export const createStore = () => {
         tx.offline = true
         update(st => {
           st.txs.queued.push(tx)
+          console.log(st.txs.queued)
           return storeLocal(st)
         })
       }

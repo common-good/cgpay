@@ -4,6 +4,7 @@
   // --------------------------------------------
 
   export let accountOptions = []
+  export let size
 
   // --------------------------------------------
 
@@ -26,7 +27,7 @@
     <form>
       <label for='link-account-select-account'>Select Account:</label>
 
-      <select id='link-account-select-account' bind:value={ selectedAccount }>
+      <select id='link-account-select-account' size="{ size }" bind:value={ selectedAccount }>
         { #each accountOptions as account }
           <option value={ account.id }>{ account.name }</option>
         { /each }

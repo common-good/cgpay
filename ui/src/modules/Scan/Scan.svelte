@@ -4,9 +4,12 @@
   import { onMount } from 'svelte'
   import store from '#store.js'
 
+  export let currentRoute // else Svelte complains (I don't know why yet)
+  export let params // else Svelte complains (I don't know why yet)
+
   onMount(async () => {
     store.qr.set('HTTP://6VM.RC4.ME/H0G0NyCBBlUF1qWNZ2k'); navigateTo('/charge') // HTTP://6VM.RC4.ME/H0G0NyCBBlUF1qWNZ2k or H6VM0G0NyCBBlUF1qWNZ2k.
-    /*
+    return
     const devices = await Html5Qrcode.getCameras()
 
     if (devices?.length) {
@@ -33,7 +36,7 @@
         // Handle library/startup error.
         .catch((err) => {
         })
-    }*/
+    }
   })
 </script>
 

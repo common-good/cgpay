@@ -1,56 +1,33 @@
 <script>
   import { createEventDispatcher } from 'svelte'
-  import queryString from 'query-string'
   import Profile from '#modules/Charge/Profile/Profile.svelte'
-  import { navigateTo } from 'svelte-router-spa'
   import store from '#store.js'
-  import { timedFetch, CgError, filterObj, isTimeout, sendTxRequest } from '#utils.js'
-  import { sha256 } from 'js-sha256'
+  import { sendTxRequest, hash } from '#utils.js'
   // https://github.com/canutin/svelte-currency-input
 
   // --------------------------------------------
 
   export let otherAccount
   export let tx
-  export let gotTx
-  export let errorMessage
   export let limit
-  
-  // --------------------------------------------
-
+ 
   const dispatch = createEventDispatcher()
 
   // --------------------------------------------
-
-  function hash(s) {
-    const hash = sha256.create()
-    hash.update(s)
-    return hash.hex()
-  }
 
   async function charge() {
     tx.created = Math.floor(Date.now() / 1000) // Unix timestamp
     tx.amount = (+tx.amount).toFixed(2)
     tx.proof = hash(tx.actorId + tx.amount + tx.otherId.split(/[.!]/)[0] + tx.created)
-    console.log(tx.actorId + tx.amount + tx.otherId.split(/[.!]/)[0] + tx.created)
-    store.txs.queue(tx)
-    console.log(tx)
+    tx.offline = false
 
     try {
-      await sendTxRequest(tx)
-      dispatch('complete') // update display
-    } catch (er) {
-      console.log(er);
-      if (isTimeout(er)) { // internet unavailable; queue it and treat it like a success
+      const res = await sendTxRequest(tx)
+      if (res.ok) dispatch('complete'); else dispatch('er', res.message) // update display
+    } catch (er) { // no matter what the error, queue it and treat it as success
+        store.txs.queue(tx)
         if (!otherAccount.name) otherAccount.name = 'Unidentified Customer'
-        errorMessage = 'OFFLINE'
         dispatch('complete') // update display
-      } else {
-        store.errMsg.set(er.message)
-//        navigateTo('/home') // this doesn't exist yet
-        errorMessage = er.message
-        console.log(er);
-      }
     }
   }
 </script>
@@ -60,10 +37,8 @@
     <div class='charge-content'>
       <Profile { otherAccount } />
 
-      { #if errorMessage }<p>{ errorMessage }</p>{ /if }
-
       <fieldset>
-        <input id='charge-description' type='text' placeholder='Description' bind:value={ tx.description } />
+        <input id='charge-description' type='text' placeholder='Description' bind:value={ tx.description } required />
         <input id='charge-amount' type='number' min="0.01" step="0.01" max="{ limit }" placeholder='Amount' bind:value={ tx.amount } required />
       </fieldset>
     </div>

@@ -1,5 +1,32 @@
 import store from '#store.js'
 import queryString from 'query-string'
+import { navigateTo } from 'svelte-router-spa'
+import { sha256 } from 'js-sha256'
+
+function dlg(title, text, labels, m1, m2) {
+  const m0 = [true, title, text, labels]
+  return { m0, m1, m2 }
+}
+
+function yesno(question, m1, m2) {
+  return dlg('Confirm', question, 'Yes, No', m1, m2)
+}
+
+function hash(s) {
+  const hash = sha256.create()
+  hash.update(s)
+  return hash.hex()
+}
+
+function goEr(msg) {
+  store.erMsg.set(msg)
+  navigateTo('/home')
+}
+
+function goHome(msg) {
+  store.erMsg.set(msg)
+  navigateTo('/home')
+}
 
 function CgError(msg, name = 'CgError') { this.message = msg; this.name = name }
 
@@ -9,7 +36,12 @@ function CgError(msg, name = 'CgError') { this.message = msg; this.name = name }
  * @param {*} options: 
  *   timeout: the number of miliseconds
  *   type: 'json' (default) or 'blob'
- * @returns an object or a blob (string)
+ *   method: 'POST' or 'GET'
+ *   etc.
+ * @returns: the result of the fetch plus a "result" property whose value is either:
+ *   On SUCCESS: an object or a blob (a large string)
+ *   On FAILURE: (GET status not 200 OR POST status not 201) an error message
+ *   if POST error, res.ok is true, so caller must check res.status != 201 (can't set res.ok)
  * @throws an AbortError if the fetch times out
  *   in the catch block use: if (er.name == 'AbortError' || er.name == 'TypeError') {}
  *   (AbortError is timeout, TypeError means network blocked during testing)
@@ -19,13 +51,18 @@ async function timedFetch(url, options = {}) {
   const aborter = new AbortController();
   aborter.name = 'Timeout'
   const timeoutId = setTimeout(() => aborter.abort(), timeout)
-  const res = await fetch(store.api() + '/' + url, {...options, signal: aborter.signal });
-  let body; if (res.ok && type != 'none') body = await (type == 'blob' ? res.blob() : res.json())
+  console.log(store.api())
+  let res = await fetch(store.api() + '/' + url, {...options, signal: aborter.signal })
+  if (res.ok && type != 'none') {
+    res.result = await (type == 'blob' ? res.blob() : res.json())
+    if (options.method == 'POST') res = res.result // a JSON string: {ok, message}
+  }
   clearTimeout(timeoutId);
-  return body
+  return res
 }
 
-function isTimeout(er) { return (er.name == 'AbortError' || er.name == 'TypeError') }
+function isTimeout(er) { return (er.name == 'AbortError') }
+
 function htmlQuote(s) { return `<pre>${s}</pre>` }
 
 /**
@@ -41,7 +78,7 @@ function filterObjByKey(obj0, fn) {
 }
 
 async function sendTxRequest(tx) {
-  console.log('tx request: transactions?' + queryString.stringify(tx))
+//  console.log('tx request: transactions?' + queryString.stringify(tx))
   const res = await timedFetch(`transactions`, {
     method: 'POST',
     headers: { 'Content-type': 'application/x-www-form-urlencoded' },
@@ -79,4 +116,4 @@ function disableBack() {
         body: JSON.stringify(tx)
 */
 
-export { CgError, timedFetch, isTimeout, htmlQuote, filterObjByKey, sendTxRequest }
+export { yesno, dlg, hash, goEr, goHome, CgError, timedFetch, isTimeout, htmlQuote, filterObjByKey, sendTxRequest }

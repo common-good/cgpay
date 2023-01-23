@@ -1,14 +1,13 @@
 {
   "app": {
-    "name": "@common-good/cg-pay-pwa.features"
+    "name": "CG Pay"
   },
-  "devServer": {
-    "ports": {
-      "_default": 3000,
-      "testing": "[cg_pay_ui_port]"
-    }
+  "ports": {
+    "_default": 3000,
+    "testing": "[cg_pay_ui_port]"
   },
-  "membersApi": {
-    "location": "https://demo.commongood.earth/api"
+  "apis": {
+    "dev": "https://demo.commongood.earth/api",
+    "production": "https://new.commongood.earth"
   }
 }

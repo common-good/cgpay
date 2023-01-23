@@ -7,6 +7,9 @@
   import AndroidInstructions from './AndroidInstructions/AndroidInstructions.svelte'
   import AppleInstructions from './AppleInstructions/AppleInstructions.svelte'
 
+  export let currentRoute // else Svelte complains (I don't know why yet)
+  export let params // else Svelte complains (I don't know why yet)
+
   // --------------------------------------------
 
   function skip() {

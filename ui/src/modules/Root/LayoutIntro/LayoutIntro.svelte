@@ -3,7 +3,9 @@
 
   // --------------------------------------------
 
-  export let currentRoute
+  export let currentRoute // else Svelte complains (I don't know why yet)
+  export let params // else Svelte complains (I don't know why yet)
+
 </script>
 
 <div id='layout-intro'>
