@@ -63,8 +63,6 @@ async function timedFetch(url, options = {}) {
 
 function isTimeout(er) { return (er.name == 'AbortError') }
 
-function htmlQuote(s) { return `<pre>${s}</pre>` }
-
 /**
  * Filter an object by key and/or value (just like for an array)
  * @param {*} obj0 
@@ -116,4 +114,4 @@ function disableBack() {
         body: JSON.stringify(tx)
 */
 
-export { yesno, dlg, hash, goEr, goHome, CgError, timedFetch, isTimeout, htmlQuote, filterObjByKey, sendTxRequest }
+export { yesno, dlg, hash, goEr, goHome, CgError, timedFetch, isTimeout, filterObjByKey, sendTxRequest }
