@@ -1,10 +1,11 @@
 <script>
   import store from '#store.js'
-  import { goEr, goHome, timedFetch, CgError, filterObjByKey, isTimeout } from '#utils.js'
+  import { yesno, dlg, hash, goEr, goHome, timedFetch, CgError, filterObjByKey, isTimeout } from '#utils.js'
   import { onMount } from 'svelte'
+  import { navigateTo } from 'svelte-router-spa'
   import queryString from 'query-string'
   import SubmitCharge from './SubmitCharge/SubmitCharge.svelte'
-  import Modal from '../Modal.svelte'
+  import Modal from '../Modal.svelte'; let m0, m1, m2
   
 //  import { encrypt, createMessage, readKey } from 'openpgp'
 
@@ -42,7 +43,6 @@
   const offlineLimit = 250
   let tipable = false
 
-  let erMsg
   let myName
   let gotTx = false
   let limit = null
@@ -50,7 +50,21 @@
 
   // --------------------------------------------
 
-  /**
+  function askUndo() { ({ m0, m1, m2 } = yesno('Reverse the transaction?', Undo, () => m0 = false)); m0=m0; m1=m1; m2=m2 }
+  function er(msg0) {
+    let msg = typeof msg0 == 'object' ? msg0.detail : msg0 // receive string or dispatch from SubmitCharge
+    msg = msg; // this needs to be responsive
+    ({ m0, m1, m2 } = dlg('Alert', msg, 'OK', () => m0 = false)); m0=m0; m1=m1; m2=m2 
+  }
+
+  function changeMode(testing) {
+    const mode = testing ? 'TEST' : 'REAL'
+    store.test.set(testing)
+    ({ m0, m1, m2 } = dlg('Mode Change', 'Changing to ${ mode } mode.', 'OK', () => m0 = false)); m0=m0; m1=m1; m2=m2
+    navigateTo('/charge') // reloading this page to change which data and api we use
+  }
+
+    /**
    * Return the cardId with cardCode (and everything that follows) removed
    */
   function noCardCode(cardId) {
@@ -59,10 +73,8 @@
     return cardId.substr(0, len)
   }
   
-  function handleSubmitCharge(ev) { // state success, show undo/tip/done buttons, set timer to return to home
-    gotTx = true
-  }
-
+  function handleSubmitCharge() { gotTx = true } // state success, show undo/tip/done/receipt buttons
+    
   async function getPhoto(query) {
     const { result } = await timedFetch(`idPhoto?${ query }`, { type: 'blob' })
     otherAccount.photoAlt = 'Customer Photo'
@@ -70,18 +82,27 @@
   }
   
   /**
-   * Parse the given account identifier, return {acct:, test:, count:} where acct is what to send to the server
+   * Parse the given account identifier from a QR code.
    * Note that the cardCode part of the account identifier ranges from 9-15 chars (and may be extended to 20 someday)
+   * @param qr: the QR code to parse
+   * @return { acct, code, hash } where the accountId is separated into acct and code and hash is the cardCode hashed for storage
    */
   function qrParse(qr) {
+    let acct, testing
     const parts = qr.split(/[\/.]/)
+
     if ((new RegExp('^[0-9A-Za-z]{12,29}[\.!]$')).test(qr)) { // like H6VM0G0NyCBBlUF1qWNZ2k.
-      return {acct: parts[0], test: qr.substring(-1) == '.'}
-    }
-    if ((new RegExp('^HTTP://[0-9A-Za-z]{1,4}\.RC[24]\.ME/[0-9A-Za-z]{11,28}$')).test(qr)) { // like HTTP://6VM.RC4.ME/KDJJ34kjdfKJ4
-      return {acct: parts[5][0] + parts[2] + parts[5].substring(1), test: qr.includes('.RC4.')}
-    }
-    throw new CgError('That is not a valid Common Good card.')
+      acct = parts[0]
+      testing = qr.substring(-1) == '.'
+    } else if ((new RegExp('^HTTP://[0-9A-Za-z]{1,4}\.RC[24]\.ME/[0-9A-Za-z]{11,28}$')).test(qr)) { // like HTTP://6VM.RC4.ME/KDJJ34kjdfKJ4
+      acct = parts[5][0] + parts[2] + parts[5].substring(1)
+      testing = qr.includes('.RC4.')
+    } else throw new CgError('That is not a valid Common Good card.')
+
+    if (testing != store.testing.get()) changeMode(testing)
+    const main = mainAcct(acct)
+    const code = acct.replace(main, '')
+    return { acct: main, code: code, hash: hash(code) }
   }
   
   /**
@@ -94,7 +115,7 @@
   }
 
   function profileOffline() {
-    erMsg = 'OFFLINE. Trust this member or ask for ID.'
+    er('OFFLINE. Trust this member or ask for ID.')
     limit = Math.min(offlineLimit, limit == null ? offlineLimit : limit)
   }
   
@@ -104,6 +125,7 @@
    * then delete both transactions at once.
    */
   async function Undo() {
+    console.log('in Undo')
     tx.amount = -tx.amount
     store.txs.queue(tx)
     store.txs.undo(tx)
@@ -116,14 +138,14 @@
       const card = qrParse(qr) // does not return if format is bad
       const acctInfo = store.accts.get(card) // retrieve and/or update stored customer account info
       if (acctInfo) otherAccount = { ...otherAccount, ...acctInfo }
-      
-      tx.otherId = card.acct
+    
+      tx.otherId = card.acct + card.code
       myName = $store.myAccount.name
       
       if (!$store.network.online) {
         profileOffline()
       } else  {
-        const q = {deviceId: $store.myAccount.deviceId, actorId: $store.myAccount.accountId, otherId: card.acct}
+        const q = {deviceId: $store.myAccount.deviceId, actorId: $store.myAccount.accountId, otherId: tx.otherId}
         const query = queryString.stringify(q)
         const res = await timedFetch(`identity?${ query }`)
         const result = res.result
@@ -167,7 +189,7 @@
 
     { #if tipable }<a href='/tip'>Add Tip</a>{ /if }
     <!-- button>Receipt</button -->
-    <button on:click={ () => showConfirm = true }>Undo</button>
+    <button on:click={ askUndo }>Undo</button>
     <a href='/home'>Done</a>
 
   { :else }
@@ -175,16 +197,11 @@
     <div class='charge-message'>
       <p class='transaction-action'>charge</p>
     </div>
-    <SubmitCharge {otherAccount} {tx} {erMsg} {limit} on:complete={ handleSubmitCharge } />
+    <SubmitCharge {otherAccount} {tx} {limit} on:er={er} on:complete={handleSubmitCharge} />
   { /if }
 </section>
 
-<Modal show={showConfirm}
-  title="Confirm"
-  text="Reverse the transaction?"
-  labels="Yes, No"
-  on:fn1={Undo} on:fn2={ () => showConfirm = false }
-/>
+<Modal m0={m0} on:m1={m1} on:m2={m2} />
 
 <style lang='stylus'>
   #charge

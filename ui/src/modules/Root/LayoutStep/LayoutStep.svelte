@@ -1,19 +1,18 @@
 <script>
   import { Route } from 'svelte-router-spa'
-
   import cgLogo from '#modules/Root/assets/cg-logo-300.png?webp'
+  import { navigateTo } from 'svelte-router-spa'
 
   export let params // else Svelte complains (I don't know why yet)
+  export let currentRoute
 
   // --------------------------------------------
-
-  export let currentRoute
 </script>
 
 <div id='layout-step'>
   <header>
     <div id='layout-step-header-content'>
-      <img src={ cgLogo } alt='Common Good Logo' />
+      <img src={ cgLogo } alt='Common Good Logo' on:click={ () => navigateTo('/home') } />
     </div>
   </header>
 

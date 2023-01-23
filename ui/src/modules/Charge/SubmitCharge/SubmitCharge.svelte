@@ -2,29 +2,18 @@
   import { createEventDispatcher } from 'svelte'
   import Profile from '#modules/Charge/Profile/Profile.svelte'
   import store from '#store.js'
-  import { isTimeout, sendTxRequest, goEr } from '#utils.js'
-  import Modal from '../../Modal.svelte'
-  import { sha256 } from 'js-sha256'
+  import { sendTxRequest, hash } from '#utils.js'
   // https://github.com/canutin/svelte-currency-input
 
   // --------------------------------------------
 
   export let otherAccount
   export let tx
-  export let erMsg
   export let limit
-  
-  // --------------------------------------------
-
+ 
   const dispatch = createEventDispatcher()
 
   // --------------------------------------------
-
-  function hash(s) {
-    const hash = sha256.create()
-    hash.update(s)
-    return hash.hex()
-  }
 
   async function charge() {
     tx.created = Math.floor(Date.now() / 1000) // Unix timestamp
@@ -34,15 +23,11 @@
 
     try {
       const res = await sendTxRequest(tx)
-      if (res.ok) dispatch('complete'); else erMsg = res.message // update display
+      if (res.ok) dispatch('complete'); else dispatch('er', res.message) // update display
     } catch (er) { // no matter what the error, queue it and treat it as success
-//      if (isTimeout(er)) { // internet unavailable; queue it and treat it like a success
         store.txs.queue(tx)
         if (!otherAccount.name) otherAccount.name = 'Unidentified Customer'
         dispatch('complete') // update display
-//      } else {
-//        goEr(er.message)
-//      }
     }
   }
 </script>
@@ -61,11 +46,6 @@
     <button type='submit'>Charge</button>
   </form>
 </section>
-
-<Modal show={erMsg}
-  title="Alert" text={erMsg} labels="OK, "
-  on:fn1={ () => { erMsg = '' }}
-/>
 
 <style lang='stylus'>
   form

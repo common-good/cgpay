@@ -4,7 +4,7 @@
   import { timedFetch, isTimeout } from '#utils.js'
   import cgLogo from '#modules/Root/assets/cg-logo-300.png?webp'
   import store from '#store.js'
-  import Modal from '../Modal.svelte'
+  import Modal from '../Modal.svelte'; let m0, m1
 
   export let currentRoute // else Svelte complains (I don't know why yet)
   export let params // else Svelte complains (I don't know why yet)
@@ -16,10 +16,11 @@
     password: 'Newaad1!'
   }
 
-  let erMsg = ''
   let statusMsg = ''
 
   // --------------------------------------------
+
+  function er(msg) { ({ m0, m1 } = dlg('Alert', msg, 'OK', () => m0 = false)); m0=m0; m1=m1 }
 
   async function signIn() {
     statusMsg = 'Finding your account(s)...'
@@ -31,9 +32,9 @@
     } catch (er) {
       store.network.reset()
       if (isTimeout(er) || !store.network.online) {
-        erMsg = `The server is unavailable. Check your internet connection and try again.`
+        er('The server is unavailable. Check your internet connection and try again.')
       } else {
-        erMsg = `We couldn't find an account with that information. Please try again.`
+        er('We couldn\'t find an account with that information. Please try again.')
       }
     }
   }
@@ -65,11 +66,7 @@
   { /if }
 </section>
 
-<Modal show={erMsg}
-  title="Alert" text={erMsg}
-  labels="OK, "
-  on:fn1={ () => { erMsg = statusMsg = '' }}
-/>
+<Modal m0={m0} on:m1={m1} />
 
 <style lang='stylus'>
   img

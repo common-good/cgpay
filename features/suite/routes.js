@@ -1,6 +1,6 @@
-import adapt from '@adaptably/adapt'
 import queryString from 'query-string'
 import { spy } from 'tinyspy'
+import adapt from '@adaptably/adapt'
 
 // --------------------------------------------
 
@@ -40,7 +40,7 @@ function createMockableRoute({ baseUrl, page, record }) {
 function routeObj(gorp, endPt, page, record) {
   return {
     [gorp]: createMockableRoute({
-      baseUrl: adapt('membersApi.location') + '/' + endPt,
+      baseUrl: adapt('apis.dev') + '/' + endPt,
       page,
       record
     })
@@ -54,7 +54,6 @@ export default function createRoutes({ page }) {
 
   return {
     record,
-
     accounts: routeObj('get', 'accounts', page, record),
     identity: routeObj('get', 'identity', page, record),
     idPhoto: routeObj('get', 'idPhoto', page, record),

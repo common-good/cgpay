@@ -2,28 +2,28 @@
   import { navigateTo } from 'svelte-router-spa'
   import { onMount } from 'svelte'
   import store from '#store.js'
-  import Modal from '../Modal.svelte'
+  import { dlg } from '#utils.js'
+  import Modal from '../Modal.svelte'; let m0, m1, m2
 
   export let currentRoute // else Svelte complains (I don't know why yet)
   export let params // else Svelte complains (I don't know why yet)
 
-  let myName, erMsg
-
-  function handleOkay() {
-    erMsg = null
+  let myName
+  
+  function er(msg) { 
+    ({ m0, m1 } = dlg('Alert', msg, 'OK', () => m0 = false)); m0=m0; m1=m1
     store.erMsg.set(null)
   }
 
   onMount(async () => {
-    erMsg = store.erMsg.get()
+    store.qr.set(null) // no going back to previous customer
+    const erMsg = await store.erMsg.get()
+    if (erMsg) er(erMsg)
     myName = $store.myAccount.name
   })
 </script>
 
-<Modal show={erMsg}
-  title="Alert" text={erMsg} labels="OK, "
-  on:fn1={ handleOkay }
-/>
+<Modal m0={m0} on:m1={m1} on:m2={m2} />
 
 <svelte:head>
   <title>CG Pay</title>
@@ -36,11 +36,7 @@
 </section>
 
 <style lang='stylus'>
-  button, a
+  a
     cgButton()
     margin $s2 0 0
-
-  .content
-    cgCard()
-    background-color $c-green
 </style>

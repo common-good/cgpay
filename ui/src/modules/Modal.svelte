@@ -1,15 +1,12 @@
 <script>
   import { createEventDispatcher, onDestroy } from 'svelte'
 
-  export let show
-  export let title
-  export let text
-  export let labels
-//  export let lab2
+  export let m0
   let modal
-  let lab1, lab2
+  let show, title, text, labels, lab1, lab2, zot
 
-  $: ([lab1, lab2] = labels.split(', '))
+$:  ([show, title, text, labels] = m0 ? m0 : [false, '', '', '']); // semi-colon here is required
+$:  [lab1, lab2, zot] = (labels + ', ').split(', ')
 
   const dispatch = createEventDispatcher()
 
@@ -25,8 +22,8 @@
   <div class="modal" role="dialog" aria-modal="true" bind:this={modal}>
     <h2>{ title }</h2>
     <p>{ text }</p>
-    <button on:click={ () => dispatch('fn1') }>{ lab1 }</button>
-    <button on:click={ () => dispatch('fn2') }>{ lab2 }</button>
+    <button on:click={ () => dispatch('m1') }>{ lab1 }</button>
+    <button on:click={ () => dispatch('m2') }>{ lab2 }</button>
   </div>
 { /if }
 

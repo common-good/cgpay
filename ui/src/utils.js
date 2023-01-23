@@ -1,6 +1,22 @@
 import store from '#store.js'
 import queryString from 'query-string'
 import { navigateTo } from 'svelte-router-spa'
+import { sha256 } from 'js-sha256'
+
+function dlg(title, text, labels, m1, m2) {
+  const m0 = [true, title, text, labels]
+  return { m0, m1, m2 }
+}
+
+function yesno(question, m1, m2) {
+  return dlg('Confirm', question, 'Yes, No', m1, m2)
+}
+
+function hash(s) {
+  const hash = sha256.create()
+  hash.update(s)
+  return hash.hex()
+}
 
 function goEr(msg) {
   store.erMsg.set(msg)
@@ -35,6 +51,7 @@ async function timedFetch(url, options = {}) {
   const aborter = new AbortController();
   aborter.name = 'Timeout'
   const timeoutId = setTimeout(() => aborter.abort(), timeout)
+  console.log(store.api())
   let res = await fetch(store.api() + '/' + url, {...options, signal: aborter.signal })
   if (res.ok && type != 'none') {
     res.result = await (type == 'blob' ? res.blob() : res.json())
@@ -99,4 +116,4 @@ function disableBack() {
         body: JSON.stringify(tx)
 */
 
-export { goEr, goHome, CgError, timedFetch, isTimeout, htmlQuote, filterObjByKey, sendTxRequest }
+export { yesno, dlg, hash, goEr, goHome, CgError, timedFetch, isTimeout, htmlQuote, filterObjByKey, sendTxRequest }
