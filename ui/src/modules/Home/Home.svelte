@@ -8,8 +8,6 @@
   export let currentRoute // else Svelte complains (I don't know why yet)
   export let params // else Svelte complains (I don't know why yet)
 
-  let myName
-  
   function er(msg) { 
     ({ m0, m1 } = dlg('Alert', msg, 'OK', () => m0 = false)); m0=m0; m1=m1
     store.erMsg.set(null)
@@ -19,7 +17,6 @@
     store.qr.set(null) // no going back to previous customer
     const erMsg = await store.erMsg.get()
     if (erMsg) er(erMsg)
-    myName = $store.myAccount.name
   })
 </script>
 
@@ -30,13 +27,18 @@
 </svelte:head>
 
 <section id='home'>
-  <h2>{ myName }</h2>
   <h2>Ready to charge customers</h2>
   <a href='/scan'>Scan QR</a>
 </section>
 
 <style lang='stylus'>
+  section
+    height 100%
+    display flex
+    flex-direction column
+    align-items center
+    justify-content space-between
   a
     cgButton()
-    margin $s2 0 0
+    margin-bottom $s4
 </style>

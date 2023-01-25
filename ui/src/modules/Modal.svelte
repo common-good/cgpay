@@ -1,5 +1,6 @@
 <script>
-  import { createEventDispatcher, onDestroy } from 'svelte'
+  import { createEventDispatcher, onDestroy, onMount } from 'svelte'
+  import { focusTrap } from 'svelte-focus-trap'
 
   export let m0
   let modal
@@ -14,20 +15,32 @@ $:  [lab1, lab2, zot] = (labels + ', ').split(', ')
   if (previously_focused) {
     onDestroy(() => {previously_focused.focus()})
   }
+
 </script>
 
 { #if show }
-  <div class="modal-background"></div>
+  <div class="modal-background" on:click={() => {show = false}}></div>
 
-  <div class="modal" role="dialog" aria-modal="true" bind:this={modal}>
-    <h2>{ title }</h2>
+  <div class="modal" role="dialog" aria-modal="true" bind:this={modal} use:focusTrap>
+    <h1>{ title }</h1>
     <p>{ text }</p>
-    <button on:click={ () => dispatch('m1') }>{ lab1 }</button>
-    <button on:click={ () => dispatch('m2') }>{ lab2 }</button>
+    <div class="buttons">
+      <button on:click={ () => dispatch('m1') }>{ lab1 }</button>
+      {#if lab2}
+        <button on:click={ () => dispatch('m2') }>{ lab2 }</button>
+      {/if}
+    </div>
   </div>
 { /if }
 
 <style lang='stylus'>
+  h1
+    text(lg)
+    margin-bottom $s1
+  
+  p
+    margin-bottom: $s2
+
   .modal-background
     position fixed
     top 0
@@ -49,8 +62,12 @@ $:  [lab1, lab2, zot] = (labels + ', ').split(', ')
     border-radius 1em
     background white
 
+  .buttons
+    display flex
+    justify-content space-between
+
   button
     cgButton()
-      width 40%
+    width 46%
 
 </style>

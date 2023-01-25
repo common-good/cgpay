@@ -175,7 +175,6 @@
 
 <section id='charge'>
   { #if gotTx }
-    <h2 class='action'>{ myName }</h2>
     <div class='charge-message'>
       <h1>Success!</h1>
       <p class='transaction-action'>You charged</p>
@@ -195,7 +194,6 @@
     <a href='/home'>Done</a>
 
   { :else }
-    <h2 class='action'>{ myName }</h2>
     <div class='charge-message'>
       <p class='transaction-action'>charge</p>
     </div>

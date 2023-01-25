@@ -8,18 +8,18 @@
 
 </script>
 
-<div id='layout-intro'>
-  <div id='layout-intro-content'>
+<div class='layout-intro'>
+  <div class='content'>
     <Route { currentRoute } />
   </div>
 </div>
 
 <style lang='stylus'>
-  #layout-intro
+  .layout-intro
     background $c-green
-    fullHeight()
+    min-height 100vh
 
-    #layout-intro-content
+    .content
       contentNarrow()
-      padding $s3
+      padding $s2
 </style>

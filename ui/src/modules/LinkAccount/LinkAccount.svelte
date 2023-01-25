@@ -2,7 +2,6 @@
   import queryString from 'query-string'
   import { onMount } from 'svelte'
   import store from '#store.js'
-  import { htmlQuote } from '#utils.js'
   import SelectAccount from './SelectAccount/SelectAccount.svelte'
   import Modal from '../Modal.svelte'; let m0, m1, m2
 // FAILS  import { page } from '$app/stores'
@@ -16,7 +15,6 @@
   let size
 
   let myAccount
-  let message
   let ready = false
   let accounts
     
@@ -27,7 +25,6 @@
   function gotAccount(ev) {
     myAccount = accounts[ev.detail]
     store.myAccount.set(myAccount)
-    message = 'This device is now linked' + htmlQuote(`to ${myAccount.name}.`)
   }
 
   onMount(async () => {
@@ -55,14 +52,12 @@
 <section id='link-account'>
   { #if ready }
     { #if myAccount }
-      <section id='link-account-automatic'>
         <div class='link-account-content'>
-          <h1>{@html message }</h1>
+          <h1>This account is now linked to <span>{$store.myAccount.name}</span></h1>
           <p>You are ready to charge customers!</p>
         </div>
 
         <a class='link-account-action' href='/scan'>Scan QR Code</a>
-      </section>
 
     { :else }
       <SelectAccount { accountOptions } { size } on:complete={ gotAccount } />
@@ -77,15 +72,24 @@
 <style lang='stylus'>
   @import './LinkAccount.styl'
 
-  #link-account
+  section
     display flex
     flex-direction column
     justify-content space-between
     width 100%
+    height 100%
 
-    .link-account-action
-      linkAccountAction()
+  h1
+    display flex
+    flex-direction column
+    margin-bottom $s4
+    span  
+      font-weight 400
+      margin $s1 0
 
-    .link-account-content
-      linkAccountContent()
+  .link-account-action
+    linkAccountAction()
+
+  .link-account-content
+    linkAccountContent()
 </style>
