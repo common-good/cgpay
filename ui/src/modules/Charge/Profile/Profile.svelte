@@ -4,7 +4,7 @@
 </script>
 
 <section id='charge-profile'>
-  <img src={ otherAccount.photo } alt='{ otherAccount.photoAlt }' />
+  <img src={ photo.blob } alt='{ photo.alt }' />
   <p class="agent">{ otherAccount.agent }</p>
   <p>{ otherAccount.name }</p>
   <p>{ otherAccount.location }</p>
@@ -19,6 +19,7 @@
 
   img
     height: 200px
+    min-height: 200px
     margin-bottom $s2
 
   .agent

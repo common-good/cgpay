@@ -198,7 +198,7 @@
     </div>
 
   { :else }
-    <SubmitCharge {otherAccount} {tx} {limit} on:er={er} on:complete={handleSubmitCharge} />
+    <SubmitCharge {otherAccount} {photo} {tx} {limit} on:error={showEr} on:complete={handleSubmitCharge} />
   { /if }
 </section>
 
