@@ -27,7 +27,9 @@
 <style lang='stylus'>
   .layout-step
     contentNarrow()
-    height 100vh
+    height 100%
+    display: flex
+    flex-direction column
     padding $s2
 
   header
@@ -45,5 +47,5 @@
     clampSize(20vw, 50px)
 
   .content
-    height calc(100% - 50px)
+    height 100%
 </style>

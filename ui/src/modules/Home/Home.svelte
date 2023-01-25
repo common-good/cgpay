@@ -27,11 +27,15 @@
 </svelte:head>
 
 <section id='home'>
-  <h2>Ready to charge customers</h2>
+    <h1>Home</h1>
+    <p>Ready to charge customers.</p>
   <a href='/scan'>Scan QR</a>
 </section>
 
 <style lang='stylus'>
+  h1
+    font-weight 600
+    text lg
   section
     height 100%
     display flex
@@ -40,5 +44,5 @@
     justify-content space-between
   a
     cgButton()
-    margin-bottom $s4
+    margin-bottom $s2
 </style>
