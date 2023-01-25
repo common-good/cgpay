@@ -173,7 +173,7 @@ export const createStore = () => {
         if (acct == undefined) return null
         if (card.hash != acct.hash) return null // if new hash is valid, this will get updated
         console.log(acct.data)
-        return data
+        return acct.data
       }
     },
 

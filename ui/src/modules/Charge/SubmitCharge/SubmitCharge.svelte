@@ -8,6 +8,7 @@
   // --------------------------------------------
 
   export let otherAccount
+  export let photo
   export let tx
   export let limit
  
@@ -23,7 +24,7 @@
 
     try {
       const res = await sendTxRequest(tx)
-      if (res.ok) dispatch('complete'); else dispatch('er', res.message) // update display
+      if (res.ok) dispatch('complete'); else dispatch('error', res.message) // update display
     } catch (er) { // no matter what the error, queue it and treat it as success
         store.txs.queue(tx)
         if (!otherAccount.name) otherAccount.name = 'Unidentified Customer'
@@ -35,7 +36,7 @@
 <section id='submit-charge'>
   <form on:submit|preventDefault={ charge }>
     <div class='charge-content'>
-      <Profile { otherAccount } />
+      <Profile { otherAccount } {photo} />
 
       <fieldset>
         <input id='charge-description' type='text' placeholder='Description' bind:value={ tx.description } required />

@@ -1,9 +1,10 @@
 <script>
   export let otherAccount
+  export let photo
 </script>
 
 <section id='charge-profile'>
-  <img id='customer-photo' src={ otherAccount.photo } alt='{ otherAccount.photoAlt }' />
+  <img id='customer-photo' src={ photo.blob } alt='{ photo.alt }' />
   <p id='confirmation-customer-agent'>{ otherAccount.agent }</p>
   <p id='confirmation-customer-name'>{ otherAccount.name }</p>
   <p id='confirmation-customer-location'>{ otherAccount.location }</p>
