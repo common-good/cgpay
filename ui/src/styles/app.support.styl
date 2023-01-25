@@ -56,7 +56,6 @@ cgField()
 
 cgButton()
   contentCentered()
-
   background $c-blue
   border solid 1px $c-blue
   border-radius 50px
@@ -67,6 +66,33 @@ cgButton()
 
   &:hover
     background $c-blue-dark
+
+cgButtonSecondary()
+  contentCentered()
+  background $c-white
+  border solid 2px $c-blue
+  border-radius 50px
+  color $c-blue
+  max-height 75px
+  padding $ss $s2
+  width 100%
+
+  &:hover
+    color $c-blue-dark
+    border-color $c-blue-dark
+
+cgButtonTertiary()
+  contentCentered()
+  background $c-white
+  border-radius 50px
+  color $c-blue
+  max-height 75px
+  padding $ss $s2
+  width 100%
+  text-decoration underline
+
+  &:hover
+    color $c-blue-dark
 
 // --------------------------------------------
 // Utilities

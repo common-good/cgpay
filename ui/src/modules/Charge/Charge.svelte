@@ -43,7 +43,6 @@
   const offlineLimit = 250
   let tipable = false
 
-  let myName
   let gotTx = false
   let limit = null
   let showConfirm = false
@@ -140,7 +139,6 @@
       if (acctInfo) otherAccount = { ...otherAccount, ...acctInfo }
     
       tx.otherId = card.acct + card.code
-      myName = $store.myAccount.name
       
       if (!$store.network.online) {
         profileOffline()
@@ -173,30 +171,31 @@
 
 <section id='charge'>
   { #if gotTx }
-    <h2 class='action'>{ myName }</h2>
-    <div class='charge-message'>
+    <div class="charge-content">
       <h1>Success!</h1>
-      <p class='transaction-action'>You charged</p>
-    </div>
-    <div class='charge-content'>
-      <p id='confirmation-customer-name'>{ otherAccount.name }</p>
-    </div>
+      
+      <p>You charged</p>
+      
+        <div class="card">
+        <p class="agent">{ otherAccount.agent }</p>
+        <p>{ otherAccount.name }</p>
+        <p>{ otherAccount.location }</p>
+      </div>
 
-    <div id='charge-transaction-details'>
-      <p>{ tx.amount }</p>
-      <p>for { tx.description }</p>
-    </div>
+      <div class="details">
+        <p><span>${ tx.amount }</span> for
+        { tx.description }</p>
+      </div>
+      </div>
 
-    { #if tipable }<a href='/tip'>Add Tip</a>{ /if }
-    <!-- button>Receipt</button -->
-    <button on:click={ askUndo }>Undo</button>
-    <a href='/home'>Done</a>
+    <div class="actions">
+      { #if tipable }<a class="secondary" href='/tip'>Add Tip</a>{ /if }
+      <!-- button>Receipt</button -->
+      <button on:click={ askUndo } class="tertiary">Undo</button>
+      <a class="primary" href='/home'>Done</a>
+    </div>
 
   { :else }
-    <h2 class='action'>{ myName }</h2>
-    <div class='charge-message'>
-      <p class='transaction-action'>charge</p>
-    </div>
     <SubmitCharge {otherAccount} {tx} {limit} on:er={er} on:complete={handleSubmitCharge} />
   { /if }
 </section>
@@ -204,35 +203,58 @@
 <Modal m0={m0} on:m1={m1} on:m2={m2} />
 
 <style lang='stylus'>
-  #charge
-    h1
-      font-weight 600
-      text-align center
-      text lg
-      margin 0 0 $s2
+  h1
+    text(lg)
+    font-weight 600
+    text lg
+    margin-bottom $s2
 
-    h2
-      font-weight 600
-      text-align center
-      margin 0 0 $s2
-      
-    h2.action
-      margin 0
+  p
+    margin-bottom $ss
 
-    .charge-content
-      cgCard()
-      background-color $c-green
-      
-    .transaction-action
-      margin 0 0 $s2
-      text-align center
+  section
+    height 100%
+    display flex
+    flex-direction column
+    justify-content space-between
 
-    #charge-transaction-details
-      margin $s2 0
-      text lg
-      text-align center
+  .charge-content
+    display flex
+    flex-direction column
+    align-items center
+    width 100%
+
+  .card
+    cgCard()
+    background-color $c-green
+    width 100%
+    margin-bottom $s3
+
+    .agent
+      text(lg)
+      margin-bottom $s1
+
+    p 
+      margin-bottom unset
+
+  .details
+    text lg
+
+  .actions
+    display flex
+    flex-direction column
+    width 100%
 
     a, button
-      cgButton()
+      margin-bottom $s2
+
+  .primary
+    cgButton()
+
+  .secondary
+    cgButtonSecondary()
+
+  .tertiary
+    cgButtonTertiary()
   
 </style>

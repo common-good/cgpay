@@ -3,24 +3,25 @@
 </script>
 
 <section id='charge-profile'>
-  <img id='customer-photo' src={ otherAccount.photo } alt='{ otherAccount.photoAlt }' />
-  <p id='confirmation-customer-agent'>{ otherAccount.agent }</p>
-  <p id='confirmation-customer-name'>{ otherAccount.name }</p>
-  <p id='confirmation-customer-location'>{ otherAccount.location }</p>
+  <img src={ otherAccount.photo } alt='{ otherAccount.photoAlt }' />
+  <p class="agent">{ otherAccount.agent }</p>
+  <p>{ otherAccount.name }</p>
+  <p>{ otherAccount.location }</p>
 </section>
 
 <style lang='stylus'>
-  #charge-profile
-    img
-      profilePhoto(25vw, 150px)
-      margin $s2 auto
+  section
+    display flex
+    flex-direction column
+    align-items center
+    margin-bottom $s3
 
-    p
-      text-align center
+  img
+    height: 200px
+    margin-bottom $s2
 
-    #customer-name, #confirmation-customer-name
-      text lg
-      
-    #confirmation-customer-agent
-      text md
+  .agent
+    text(lg)
+    margin-bottom $s1
+
 </style>

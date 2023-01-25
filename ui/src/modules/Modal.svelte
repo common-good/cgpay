@@ -25,9 +25,9 @@ $:  [lab1, lab2, zot] = (labels + ', ').split(', ')
     <h1>{ title }</h1>
     <p>{ text }</p>
     <div class="buttons">
-      <button on:click={ () => dispatch('m1') }>{ lab1 }</button>
+      <button class="primary" on:click={ () => dispatch('m1') }>{ lab1 }</button>
       {#if lab2}
-        <button on:click={ () => dispatch('m2') }>{ lab2 }</button>
+        <button class="secondary" on:click={ () => dispatch('m2') }>{ lab2 }</button>
       {/if}
     </div>
   </div>
@@ -66,8 +66,12 @@ $:  [lab1, lab2, zot] = (labels + ', ').split(', ')
     display flex
     justify-content space-between
 
-  button
+  .primary
     cgButton()
+    width 46%
+
+  .secondary
+    cgButtonSecondary()
     width 46%
 
 </style>

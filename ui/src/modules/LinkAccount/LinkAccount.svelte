@@ -53,7 +53,8 @@
   { #if ready }
     { #if myAccount }
         <div class='link-account-content'>
-          <h1>This account is now linked to <span>{$store.myAccount.name}</span></h1>
+          <h1>Account linked</h1>
+          <p>This account is now linked to<br /><span class="bold">{$store.myAccount.name}</span></p>
           <p>You are ready to charge customers!</p>
         </div>
 
@@ -79,13 +80,8 @@
     width 100%
     height 100%
 
-  h1
-    display flex
-    flex-direction column
-    margin-bottom $s4
-    span  
-      font-weight 400
-      margin $s1 0
+  .bold
+    font-weight 600
 
   .link-account-action
     linkAccountAction()
