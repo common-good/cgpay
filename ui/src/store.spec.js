@@ -1,6 +1,6 @@
 import { createStore } from './store.js'
 import { sendTxRequest, isTimeout } from '#utils.js'
-import { vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 vi.mock('#utils.js', () => ({
   sendTxRequest: vi.fn(),
   isTimeout: vi.fn()
@@ -92,6 +92,60 @@ describe('store', () => {
     })
   })
 
+  describe('.accountChoices', () => {
+    let store;
+    beforeEach(() => {
+      store = createStore()
+    })
+
+    it('is initialized as null', () => {
+      expect(store.accountChoices.get()).toBeNull()
+    })
+
+    it('sets the correct account choices', () => {
+      const acctChoices = [{ acct1: 'foo' }, {acct2: 'bar'} ]
+
+      store.accountChoices.set(acctChoices)
+      expect(store.accountChoices.get()).toEqual(acctChoices)
+    })
+  })
+
+  describe('.qr', () => {
+    let store;
+    beforeEach(() => {
+      store = createStore()
+    })
+
+    it('is initialized as null', () => {
+      expect(store.qr.get()).toBeNull()
+    })
+
+    it('sets the correct qr value', () => {
+      const v = '123'
+
+      store.qr.set(v)
+      expect(store.qr.get()).toEqual(v)
+    })
+  })
+
+  describe('.erMsg', () => {
+    let store;
+    beforeEach(() => {
+      store = createStore()
+    })
+
+    it('is initialized as null', () => {
+      expect(store.erMsg.get()).toBeNull()
+    })
+
+    it('sets the correct error message', () => {
+      const msg = "error" 
+
+      store.erMsg.set(msg)
+      expect(store.erMsg.get()).toEqual(msg)
+    })
+  })
+
   describe('.network', () => {
     describe('.offline', () => {
       it('is accessible', () => {
@@ -128,6 +182,19 @@ describe('store', () => {
       })
     })
 
+  })
+
+  describe('.accts', () => {
+    it('updates data for a particular account', () => {
+      const card = {acct: '123'}
+      const store = createStore()
+
+      store.accts.put(card, { foo: 'bar' })
+      expect(store.accts.get(card)).toEqual({ foo: 'bar' })
+
+      store.accts.put(card, { fizz: 'buzz' })
+      expect(store.accts.get(card)).toEqual({ fizz: 'buzz' })
+    })
   })
 
   describe('.device', () => {

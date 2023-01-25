@@ -9,7 +9,7 @@ export const createStore = () => {
   const testingKey = 'cgpay.testing'
   const testModeKey = 'cgpay.testMode'
 //  const testing = window.localStorage.getItem(testModeKey)
-  const testing = true
+  const testing = false
   const storedState = JSON.parse(window.localStorage.getItem(testing ? testingKey : storeKey))
 
   const defaults = {
@@ -173,7 +173,7 @@ export const createStore = () => {
         if (acct == undefined) return null
         if (card.hash != acct.hash) return null // if new hash is valid, this will get updated
         console.log(acct.data)
-        return data
+        return acct.data
       }
     },
 
