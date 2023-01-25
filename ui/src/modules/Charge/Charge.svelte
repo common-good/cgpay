@@ -1,6 +1,6 @@
 <script>
   import store from '#store.js'
-  import { yesno, dlg, hash, goEr, goHome, timedFetch, CgError, filterObjByKey, isTimeout } from '#utils.js'
+  import { yesno, dlg, hash, crash, goEr, goHome, timedFetch, CgError, isTimeout } from '#utils.js'
   import { onMount } from 'svelte'
   import { navigateTo } from 'svelte-router-spa'
   import queryString from 'query-string'
@@ -22,7 +22,6 @@
   const agentLens = '012301230123012301230123012301230123'
   
   let otherAccount = {
-    photoAlt: 'Retrieving Customer Profile...',
     agent: '',
     name: '',
     location: '',
@@ -45,12 +44,12 @@
 
   let gotTx = false
   let limit = null
-  let showConfirm = false
+  let photo = { alt: 'Retrieving Customer Profile...', blob: null }
 
   // --------------------------------------------
 
   function askUndo() { ({ m0, m1, m2 } = yesno('Reverse the transaction?', Undo, () => m0 = false)); m0=m0; m1=m1; m2=m2 }
-  function er(msg0) {
+  function showEr(msg0) {
     let msg = typeof msg0 == 'object' ? msg0.detail : msg0 // receive string or dispatch from SubmitCharge
     msg = msg; // this needs to be responsive
     ({ m0, m1, m2 } = dlg('Alert', msg, 'OK', () => m0 = false)); m0=m0; m1=m1; m2=m2 
@@ -74,10 +73,13 @@
   
   function handleSubmitCharge() { gotTx = true } // state success, show undo/tip/done/receipt buttons
     
+  /**
+   * Get the customer's photo from the server
+   * @param query: query data for photoId endpoint
+   */
   async function getPhoto(query) {
     const { result } = await timedFetch(`idPhoto?${ query }`, { type: 'blob' })
-    otherAccount.photoAlt = 'Customer Photo'
-    otherAccount.photo = URL.createObjectURL(result)
+    return { alt: 'Customer Photo', blob: URL.createObjectURL(result) }
   }
   
   /**
@@ -110,11 +112,12 @@
    */
   function mainAcct(acct) { 
     const i = dig36.indexOf(acct[0])
-    return acct.substring(0, 1 + regionLens[i] + acctLens[i] + agentLens[i])
+    console.log(i, regionLens[i], 1 + +regionLens[i] + +acctLens[i] + +agentLens[i])
+    return acct.substring(0, 1 + +regionLens[i] + +acctLens[i] + +agentLens[i])
   }
 
   function profileOffline() {
-    er('OFFLINE. Trust this member or ask for ID.')
+    showEr('OFFLINE. Trust this member or ask for ID.')
     limit = Math.min(offlineLimit, limit == null ? offlineLimit : limit)
   }
   
@@ -124,7 +127,6 @@
    * then delete both transactions at once.
    */
   async function Undo() {
-    console.log('in Undo')
     tx.amount = -tx.amount
     store.txs.queue(tx)
     store.txs.undo(tx)
@@ -133,9 +135,9 @@
 
   onMount(async () => {
     try {
-      const qr = store.qr.get()
-      const card = qrParse(qr) // does not return if format is bad
-      const acctInfo = store.accts.get(card) // retrieve and/or update stored customer account info
+      const qr = await store.qr.get()
+      const card = await qrParse(qr) // does not return if format is bad
+      const acctInfo = await store.accts.get(card) // retrieve and/or update stored customer account info
       if (acctInfo) otherAccount = { ...otherAccount, ...acctInfo }
     
       tx.otherId = card.acct + card.code
@@ -145,21 +147,21 @@
       } else  {
         const q = {deviceId: $store.myAccount.deviceId, actorId: $store.myAccount.accountId, otherId: tx.otherId}
         const query = queryString.stringify(q)
-        const res = await timedFetch(`identity?${ query }`)
-        const result = res.result
+        const { result } = await timedFetch(`identity?${ query }`)
         const { items } = result
         if (items.length) tx.description = items[0]
         await store.myAccount.set({ ...$store.myAccount, items })
-        otherAccount = filterObjByKey({ ...otherAccount, ...result }, (key) => key != 'items' && !key.includes('photo'))
+        otherAccount = { ...otherAccount, ...result }
+        delete otherAccount.items
         limit = Math.min(otherAccount.limit, onlineLimit)
         await store.accts.put(card, otherAccount) // store and/or update stored customer account info
-        getPhoto(query)
+        photo = await getPhoto(query)
       }
     } catch (er) {
       if (isTimeout(er)) { // internet unavailable; recognize a repeat customer or limit CG's liability
         profileOffline()
       } else {
-        goEr(er.message)
+        goEr(crash(er))
       }
     }
   })

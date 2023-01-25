@@ -1,5 +1,6 @@
 <script>
   export let otherAccount
+  export let photo
 </script>
 
 <section id='charge-profile'>

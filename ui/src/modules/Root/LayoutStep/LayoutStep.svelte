@@ -12,10 +12,11 @@
 
 <div class='layout-step'>
   <header>
-      <img src={ cgLogo } alt='Common Good Logo' on:click={ () => navigateTo('/home') } />
+      <img class="img" src={ cgLogo } alt='Common Good Logo' on:click={ () => navigateTo('/home') } />
       {#if $store.myAccount.name}
       <h2>{ $store.myAccount.name }</h2>
       {/if}
+      <div class="img"></div>
   </header>
 
   <div class='content'>
@@ -42,7 +43,7 @@
     text md
     padding 0 $s1
 
-  img
+  .img
     clampSize(20vw, 50px)
 
   .content

@@ -18,6 +18,8 @@ function hash(s) {
   return hash.hex()
 }
 
+function crash(er) { return er.message }
+
 function goEr(msg) {
   store.erMsg.set(msg)
   navigateTo('/home')
@@ -56,6 +58,9 @@ async function timedFetch(url, options = {}) {
   if (res.ok && type != 'none') {
     res.result = await (type == 'blob' ? res.blob() : res.json())
     if (options.method == 'POST') res = res.result // a JSON string: {ok, message}
+  } else if (res.ok === false) {
+    console.log(res)
+    throw new Error(res.statusText)
   }
   clearTimeout(timeoutId);
   return res
@@ -70,6 +75,7 @@ function isTimeout(er) { return (er.name == 'AbortError') }
  * @returns the filtered object
  */
 function filterObjByKey(obj0, fn) {
+  throw new Error('NYI')
   return Object.keys(obj0)
   .filter(fn)
   .reduce((obj, key) => { obj[key] = obj0[key]; return obj }, {})
@@ -114,4 +120,4 @@ function disableBack() {
         body: JSON.stringify(tx)
 */
 
-export { yesno, dlg, hash, goEr, goHome, CgError, timedFetch, isTimeout, filterObjByKey, sendTxRequest }
+export { yesno, dlg, hash, crash, goEr, goHome, CgError, timedFetch, isTimeout, sendTxRequest }

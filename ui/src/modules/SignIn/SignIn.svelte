@@ -1,7 +1,7 @@
 <script>
   import queryString from 'query-string'
   import { navigateTo } from 'svelte-router-spa'
-  import { timedFetch, isTimeout } from '#utils.js'
+  import { dlg, timedFetch, isTimeout } from '#utils.js'
   import cgLogo from '#modules/Root/assets/cg-logo-300.png?webp'
   import store from '#store.js'
   import Modal from '../Modal.svelte'; let m0, m1
@@ -20,21 +20,22 @@
 
   // --------------------------------------------
 
-  function er(msg) { ({ m0, m1 } = dlg('Alert', msg, 'OK', () => m0 = false)); m0=m0; m1=m1 }
+  function showEr(msg) { ({ m0, m1 } = dlg('Alert', msg, 'OK', () => m0 = false)); m0=m0; m1=m1 }
 
   async function signIn() {
     statusMsg = 'Finding your account(s)...'
     try {
       const query = queryString.stringify(credentials)
       const { result } = await timedFetch(`accounts?${ query }`)
-      store.accountChoices.set(result.accounts)
+      console.log(result)
+      await store.accountChoices.set(result.accounts)
       navigateTo('/link-account')
     } catch (er) {
       store.network.reset()
       if (isTimeout(er) || !store.network.online) {
-        er('The server is unavailable. Check your internet connection and try again.')
+        showEr('The server is unavailable. Check your internet connection and try again.')
       } else {
-        er('We couldn\'t find an account with that information. Please try again.')
+        showEr('We couldn\'t find an account with that information. Please try again.')
       }
     }
   }
