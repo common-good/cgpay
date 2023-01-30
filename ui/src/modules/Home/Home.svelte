@@ -5,9 +5,6 @@
   import { dlg } from '#utils.js'
   import Modal from '../Modal.svelte'; let m0, m1, m2
 
-  export let currentRoute // else Svelte complains (I don't know why yet)
-  export let params // else Svelte complains (I don't know why yet)
-
   function er(msg) { 
     ({ m0, m1 } = dlg('Alert', msg, 'OK', () => m0 = false)); m0=m0; m1=m1
     store.erMsg.set(null)

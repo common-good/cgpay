@@ -25,5 +25,4 @@
   .agent
     text(lg)
     margin-bottom $s1
-
 </style>

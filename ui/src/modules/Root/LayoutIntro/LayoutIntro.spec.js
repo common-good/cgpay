@@ -4,6 +4,6 @@ import LayoutIntro from './LayoutIntro.svelte'
 
 describe('LayoutIntro', () => {
   it('renders', () => {
-    render(LayoutIntro)
+    render(LayoutIntro, { currentRoute: '' })
   })
 })
