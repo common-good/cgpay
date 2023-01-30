@@ -1,16 +1,19 @@
 <script>
-  import { Route } from 'svelte-router-spa'
+  import { Route, navigateTo } from 'svelte-router-spa'
+  import { onMount } from 'svelte';
   import cgLogo from '#modules/Root/assets/cg-logo-300.png?webp'
-  import { navigateTo } from 'svelte-router-spa'
   import store from '#store.js'
 
   export let params // else Svelte complains (I don't know why yet)
   export let currentRoute
 
   // --------------------------------------------
+
+  let viewHeight;
+  onMount(() => viewHeight = window?.visualViewport?.height)
 </script>
 
-<div class='layout-step'>
+<div class='layout-step' style="height: {viewHeight}px">
   <header>
       <img class="img" src={ cgLogo } alt='Common Good Logo' on:click={ () => navigateTo('/home') } />
       {#if $store.myAccount.name}
@@ -30,12 +33,12 @@
     height 100%
     display: flex
     flex-direction column
-    padding $s2
+    padding $ss
 
   header
     display flex
     align-items center
-    margin-bottom: $s2
+    margin-bottom: $ss
 
   h2
     width 100%
@@ -44,7 +47,8 @@
     padding 0 $s1
 
   .img
-    clampSize(20vw, 50px)
+    height 48px
+    width 48px
 
   .content
     height 100%

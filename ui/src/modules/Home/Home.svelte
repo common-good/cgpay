@@ -44,5 +44,4 @@
     justify-content space-between
   a
     cgButton()
-    margin-bottom $s2
 </style>

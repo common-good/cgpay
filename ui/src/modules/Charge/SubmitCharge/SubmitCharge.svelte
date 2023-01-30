@@ -56,12 +56,12 @@
     display flex
     flex-direction column
     justify-content space-between
-
+    margin-top -0.5rem
   h1
     font-weight 600
     text-align center
     text lg
-    margin-bottom $s2
+    margin-bottom $s1
 
   form
     height 100%
@@ -71,12 +71,14 @@
 
     input
       cgField()
+      &:last-of-type
+        margin-bottom 0
 
     button
       cgButton()
-      margin-bottom $s2
 
   .charge-content
     cgCard()
     background-color $c-green
+    margin-bottom $ss
 </style>

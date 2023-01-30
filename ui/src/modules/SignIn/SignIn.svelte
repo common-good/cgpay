@@ -89,6 +89,8 @@
 
   input
     cgField()
+    &:last-of-type
+      margin-bottom $ss
 
   button
     cgButton()
