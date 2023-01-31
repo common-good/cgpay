@@ -34,5 +34,6 @@ export default {
     globals: true,
     mockReset: true,
     setupFiles: './tests/support.js',
+    threads: false,
   },
 };

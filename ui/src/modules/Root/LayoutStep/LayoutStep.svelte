@@ -16,7 +16,6 @@
       {#if $store.myAccount.name}
       <h2>{ $store.myAccount.name }</h2>
       {/if}
-      <div class="img"></div>
   </header>
 
   <div class='content'>

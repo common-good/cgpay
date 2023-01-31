@@ -1,4 +1,5 @@
 import { cleanup, render } from '@testing-library/svelte'
+import { afterEach } from 'vitest'
 
 // --------------------------------------------
 // Make sure all rendered components have been
@@ -12,3 +13,5 @@ beforeEach(cleanup)
 Object.assign(global, {
   render
 })
+
+afterEach(cleanup)

@@ -16,6 +16,7 @@
 
   import LayoutIntro from './LayoutIntro/LayoutIntro.svelte'
   import LayoutStep from './LayoutStep/LayoutStep.svelte'
+  import ShowQr from '../ShowQr/ShowQr.svelte';
 
   // --------------------------------------------
   // Initialization Helpers
@@ -81,6 +82,13 @@
       layout: LayoutStep,
       onlyIf: onlyIf(store.myAccount.exists, '/sign-in')
     },
+
+    {
+      name: '/show-qr',
+      component: ShowQr,
+      layout: LayoutStep,
+      onlyIf: (store.myAccount.exists, '/home')
+    }
 
   ]
 </script>

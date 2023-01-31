@@ -28,8 +28,11 @@
 
 <section id='home'>
     <h1>Home</h1>
-    <p>Ready to charge customers.</p>
-  <a href='/scan'>Scan QR</a>
+    <p>Ready to charge or pay.</p>
+    <div class="actions">
+      <a class="secondary" href="/show-qr">Show QR</a>
+      <a href='/scan'>Scan QR</a>
+    </div>
 </section>
 
 <style lang='stylus'>
@@ -42,7 +45,13 @@
     flex-direction column
     align-items center
     justify-content space-between
+  .actions
+    width 100%
   a
     cgButton()
-    margin-bottom $s2
+    margin-bottom $ss
+    &.secondary
+      cgButtonSecondary()
+    &:last-of-type
+      margin-bottom 0
 </style>
