@@ -3,9 +3,10 @@
   "type": "module",
   "private": true,
   "scripts": {
+    "build": "mode=production vite build",
     "dev": "mode=dev vite dev",
     "dev:testing": "mode=testing vite dev",
-    "preview": "mode=preview vite build && mode=preview vite preview",
+    "preview": "mode=production vite build && mode=production vite preview",
     "test": "mode=dev vitest run",
     "tests:watch": "mode=dev vitest"
   },
