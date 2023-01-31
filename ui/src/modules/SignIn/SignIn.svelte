@@ -20,7 +20,10 @@
 
   // --------------------------------------------
 
-  function showEr(msg) { ({ m0, m1 } = dlg('Alert', msg, 'OK', () => m0 = false)); m0=m0; m1=m1 }
+  function showEr(msg) { 
+    ({ m0, m1 } = dlg('Alert', msg, 'OK', () => m0 = false)); m0=m0; m1=m1;
+    statusMsg = ''
+  }
 
   async function signIn() {
     statusMsg = 'Finding your account(s)...'
@@ -54,7 +57,7 @@
   <h2>Sign In</h2>
 
   { #if $store.network.offline }
-    <div id='sign-in-offline'>
+    <div class='sign-in-offline'>
       <p>Please connect to the internet to sign in.</p>
     </div>
   { :else }
@@ -87,16 +90,15 @@
   header
     contentCentered()
 
+  form
+    margin-bottom $s3
+
   input
     cgField()
 
   button
     cgButton()
 
-  #sign-in-error
-    margin 0 0 $s2
-    text-align center
-
-  #sign-in-offline
+  .sign-in-offline
     cgCard()
 </style>
