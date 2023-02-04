@@ -12,6 +12,10 @@ function yesno(question, m1, m2) {
   return dlg('Confirm', question, 'Yes, No', m1, m2)
 }
 
+function confirm(question) {
+  return dlg('Alert', question, 'OK', null, null)
+}
+
 function hash(s) {
   const hash = sha256.create()
   hash.update(s)
@@ -120,4 +124,4 @@ function disableBack() {
         body: JSON.stringify(tx)
 */
 
-export { yesno, dlg, hash, crash, goEr, goHome, CgError, timedFetch, isTimeout, sendTxRequest }
+export { confirm, yesno, dlg, hash, crash, goEr, goHome, CgError, timedFetch, isTimeout, sendTxRequest }

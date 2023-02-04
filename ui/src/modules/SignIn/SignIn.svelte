@@ -3,6 +3,7 @@
   import { navigateTo } from 'svelte-router-spa'
   import { dlg, timedFetch, isTimeout } from '#utils.js'
   import cgLogo from '#modules/Root/assets/cg-logo-300.png?webp'
+  import cgLogoDemo from '#modules/Root/assets/cg-logo-300-demo.png?webp'
   import store from '#store.js'
   import Modal from '../Modal.svelte'; let m0, m1
 
@@ -50,7 +51,7 @@
 
 <section id='sign-in' on:submit|preventDefault={ signIn }>
   <header>
-    <img src= { cgLogo } alt='Common Good Logo' />
+    <img src= { store.testing.get() ? cgLogoDemo : cgLogo } alt='Common Good Logo' />
     <h1>CG Pay</h1>
   </header>
 

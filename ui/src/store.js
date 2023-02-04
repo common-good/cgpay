@@ -13,6 +13,10 @@ export const createStore = () => {
   const storedState = JSON.parse(window.localStorage.getItem(testing ? testingKey : storeKey))
 
   const defaults = {
+    homeSkipped: false,
+    accounts: null,
+    accts: [],
+
     myAccount: {
       accountId: null,
       deviceId: null,
@@ -24,10 +28,6 @@ export const createStore = () => {
       type: getDeviceType(),
     },
 
-    homeScreen: {
-      skipped: false
-    },
-
     network: {
       offline: null,
       online: null,
@@ -37,13 +37,12 @@ export const createStore = () => {
     txs: {
       queued: []
     },
-
-    accts: [],
   }
 
   // --------------------------------------------
 
   let localState = storedState || defaults
+  localState.testing = testing
   const { set, subscribe, update } = writable(localState)
 
   // --------------------------------------------
@@ -58,8 +57,14 @@ export const createStore = () => {
   function setOnline() { res.network.setOnline(false) }
   function flushTxs() { res.txs.flush() }
 
-  function storeLocal(state) {
-    window.localStorage.setItem(storeKey, JSON.stringify(state))
+  function storeLocal(state, key = storeKey) {
+    window.localStorage.setItem(key, JSON.stringify(state))
+    localState = state
+    return state
+  }
+
+  function storeSession(state) {
+    window.sessionStorage.setItem(storeKey, JSON.stringify(state))
     localState = state
     return state
   }
@@ -92,8 +97,10 @@ export const createStore = () => {
     inspect() { return localState },
 
     testing: {
-      set(yesno) { window.localStorage.setItem(testModeKey, yesno) },
-      get() { return testing }
+      set(yesno) {  update(st => {
+        return storeLocal(yesno, testModeKey)
+      })},
+      get() { return localState.testing }
     },
 
     api() { return testing ? _demoApi_ : _realApi_ },
@@ -108,8 +115,11 @@ export const createStore = () => {
     },
     
     accountChoices: {
-      set(v) { return setCookie('accountChoices', v) },
-      get() { return getCookie('accountChoices') }
+      set(v) { update(st => {
+        st.accounts = v
+        return storeSession(st)
+      })},
+      get() { return localState.accounts }
     },
     
     qr: {

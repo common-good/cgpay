@@ -2,6 +2,7 @@
   import queryString from 'query-string'
   import { onMount } from 'svelte'
   import store from '#store.js'
+  import { dlg, goHome } from '#utils.js'
   import SelectAccount from './SelectAccount/SelectAccount.svelte'
   import Modal from '../Modal.svelte'; let m0, m1, m2
 // FAILS  import { page } from '$app/stores'
@@ -12,7 +13,7 @@
   // --------------------------------------------
 
   let accountOptions = []
-  let size
+  let size = 4 // number of choices to show without scrolling
 
   let myAccount
   let ready = false
@@ -25,23 +26,24 @@
   function gotAccount(ev) {
     myAccount = accounts[ev.detail]
     store.myAccount.set(myAccount)
+    console.log(myAccount.qr)
+    goHome('This device is now connected to your Common Good account.')
   }
 
   onMount(async () => {
-    accounts = store.accountChoices.get()
-    size = Math.min(4, accounts.length)
-
+    ready = true
+    accounts = await store.accountChoices.get()
     if (accounts.length === 1) {
       gotAccount({detail: 0}) // simulate event (selection of this option in a <select>)
     } else if (accounts.length > 1) {
       for (let i = 0; i < accounts.length; i++) {
         accountOptions[i] = {id: i, name: accounts[i].name}
       }
+      size = Math.min(size, accounts.length)
     } else {
-//      er('You do not have access to any company account. Ask a manager of your company account to connect your account and give you the appropriate permissions.')
+//    er('You do not have access to any company account. Ask a manager of your company account to connect your account and give you the appropriate permissions.')
       er('Your account is not yet active. Sign in at CommonGood.earth to finish opening your account.')
     }
-    ready = true
   })
 </script>
 

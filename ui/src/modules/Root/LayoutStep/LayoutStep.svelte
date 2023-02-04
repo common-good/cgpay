@@ -1,6 +1,7 @@
 <script>
   import { Route } from 'svelte-router-spa'
   import cgLogo from '#modules/Root/assets/cg-logo-300.png?webp'
+  import cgLogoDemo from '#modules/Root/assets/cg-logo-300-demo.png?webp'
   import { navigateTo } from 'svelte-router-spa'
   import store from '#store.js'
 
@@ -12,10 +13,11 @@
 
 <div class='layout-step'>
   <header>
-      <img class="img" src={ cgLogo } alt='Common Good Logo' on:click={ () => navigateTo('/home') } />
-      {#if $store.myAccount.name}
+    <img class="corner" src={ store.testing.get() ? cgLogoDemo : cgLogo } alt='Common Good Logo' on:click={ () => navigateTo('/home') } />
+    {#if $store.myAccount.name}
       <h2>{ $store.myAccount.name }</h2>
-      {/if}
+    {/if}
+    <div class="corner"><!--menu--></div>
   </header>
 
   <div class='content'>
@@ -42,7 +44,7 @@
     text md
     padding 0 $s1
 
-  .img
+  .corner
     clampSize(20vw, 50px)
 
   .content
