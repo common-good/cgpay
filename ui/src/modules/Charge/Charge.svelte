@@ -255,7 +255,9 @@
     width 100%
 
     a, button
-      margin-bottom $s2
+      margin-bottom $s1
+    a:last-of-type
+        margin-bottom 0
 
   .primary
     cgButton()

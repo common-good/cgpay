@@ -59,7 +59,4 @@
 
   a
     cgButton()
-    margin-bottom $ss
-    &.secondary
-      cgButtonSecondary()
 </style>

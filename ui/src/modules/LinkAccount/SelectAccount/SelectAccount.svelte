@@ -19,7 +19,7 @@
   }
 </script>
 
-<section id='select-account'>
+<section id='select-account' class="select-account">
   <div class='link-account-content'>
     <h1>Link Account</h1>
     <p>Select a Common Good account to link to CGPay on this device.</p>
@@ -41,7 +41,12 @@
 <style lang='stylus'>
   @import '../LinkAccount.styl'
 
-  #select-account
+  .select-account
+    height 100%
+    display flex
+    flex-direction column
+    justify-content space-between
+    
     p
       contentNarrow(300px)
       margin $s2 auto

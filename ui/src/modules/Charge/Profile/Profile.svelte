@@ -15,14 +15,13 @@
     display flex
     flex-direction column
     align-items center
-    margin-bottom $s3
+    margin-bottom $ss
 
   img
-    height: 200px
-    min-height: 200px
-    margin-bottom $s2
+    height: 120px
+    margin-bottom $s1
 
   .agent
     text(lg)
-    margin-bottom $s1
+
 </style>
