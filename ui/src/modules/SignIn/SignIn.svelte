@@ -31,13 +31,14 @@
     try {
       const query = queryString.stringify(credentials)
       const { result } = await timedFetch(`accounts?${ query }`)
-      console.log(result)
-      await store.accountChoices.set(result.accounts)
+      store.myAccount.setChoices(result.accounts)
       navigateTo('/link-account')
     } catch (er) {
       store.network.reset()
-      if (isTimeout(er) || !store.network.online) {
+      if (isTimeout(er) || !$store.network.online) {
         showEr('The server is unavailable. Check your internet connection and try again.')
+      } else if (er.message == 403) { // forbidden
+        showEr('That account is not completely set up. Sign back in at CommonGood.earth to complete it.')
       } else {
         showEr('We couldn\'t find an account with that information. Please try again.')
       }
@@ -46,13 +47,13 @@
 </script>
 
 <svelte:head>
-  <title>CG Pay - Sign In</title>
+  <title>CGPay - Sign In</title>
 </svelte:head>
 
 <section id='sign-in' on:submit|preventDefault={ signIn }>
   <header>
-    <img src= { store.testing.get() ? cgLogoDemo : cgLogo } alt='Common Good Logo' />
-    <h1>CG Pay</h1>
+    <img src= { $store.testing ? cgLogoDemo : cgLogo } alt='Common Good Logo' />
+    <h1>CGPay</h1>
   </header>
 
   <h2>Sign In</h2>

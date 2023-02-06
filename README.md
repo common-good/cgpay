@@ -1,4 +1,4 @@
-# CG Pay PWA
+# CGPay PWA
 
 A progressive web application for collecting payments with Common Good. 
 

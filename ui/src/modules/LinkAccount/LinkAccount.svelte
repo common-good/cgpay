@@ -13,11 +13,12 @@
   // --------------------------------------------
 
   let accountOptions = []
-  let size = 4 // number of choices to show without scrolling
+  let size = 4 // number of choices to show without scrolling (fails on Android)
 
   let myAccount
   let ready = false
-  let accounts
+  const accounts = $store.choices
+
     
   // --------------------------------------------
 
@@ -25,14 +26,13 @@
 
   function gotAccount(ev) {
     myAccount = accounts[ev.detail]
+    store.myAccount.setChoices(null) // don't leave this lying around
     store.myAccount.set(myAccount)
-    console.log(myAccount.qr)
     goHome('This device is now connected to your Common Good account.')
   }
 
   onMount(async () => {
     ready = true
-    accounts = await store.accountChoices.get()
     if (accounts.length === 1) {
       gotAccount({detail: 0}) // simulate event (selection of this option in a <select>)
     } else if (accounts.length > 1) {
@@ -41,14 +41,13 @@
       }
       size = Math.min(size, accounts.length)
     } else {
-//    er('You do not have access to any company account. Ask a manager of your company account to connect your account and give you the appropriate permissions.')
       er('Your account is not yet active. Sign in at CommonGood.earth to finish opening your account.')
     }
   })
 </script>
 
 <svelte:head>
-  <title>CG Pay - Link Account</title>
+  <title>CGPay - Link Account</title>
 </svelte:head>
 
 <section id='link-account'>

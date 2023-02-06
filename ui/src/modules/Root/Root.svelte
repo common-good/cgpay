@@ -27,6 +27,10 @@
     setTimeout(timeOut, 3000)
   }
 
+  function route(name, component, condition, elseGoTo, layout = LayoutStep) {
+    return { name: name, component: component, layout: layout, onlyIf: onlyIf(condition, elseGoTo) }
+  }
+
   // --------------------------------------------
   // Initialization
 
@@ -37,59 +41,17 @@
   })
 
   // --------------------------------------------
-  // Routes
+
+  const ready = store.myAccount.exists
+  const unready = store.myAccount.empty
 
   const routes = [
-  
-    {
-      name: '/',
-      component: AddToHomeScreen,
-      layout: LayoutIntro,
-      onlyIf: onlyIf(store.homeScreen.promptRequired, store.myAccount.exists() ? '/scan' : '/sign-in')
-    },
-    
-    {
-      name: '/sign-in',
-      component: SignIn,
-      layout: LayoutIntro,
-      onlyIf: onlyIf(!store.myAccount.exists, '/scan')
-    },
-
-    {
-      name: '/link-account',
-      component: LinkAccount,
-      layout: LayoutStep,
-      onlyIf: onlyIf(!store.myAccount.exists, '/scan')
-    },
-    
-    {
-      name: '/home',
-      component: Home,
-      layout: LayoutStep,
-      onlyIf: onlyIf(store.myAccount.exists, '/')
-    },
-
-    {
-      name: '/scan',
-      component: Scan,
-      layout: LayoutStep,
-      onlyIf: onlyIf(store.myAccount.exists, '/sign-in')
-    },
-
-    {
-      name: '/charge',
-      component: Charge,
-      layout: LayoutStep,
-      onlyIf: onlyIf(store.myAccount.exists, '/sign-in')
-    },
-
-    {
-      name: '/show-qr',
-      component: ShowQr,
-      layout: LayoutStep,
-      onlyIf: (store.myAccount.exists, '/home')
-    }
-
+    route('/', AddToHomeScreen, store.homeScreen.promptRequired, '/sign-in', LayoutIntro),
+    route('/sign-in', SignIn, unready, '/scan', LayoutIntro),
+    route('/link-account', LinkAccount, unready, '/scan'),
+    route('/home', Home, ready, '/'),
+    route('/scan', Scan, ready, '/sign-in'),
+    route('/charge', Charge, ready, '/sign-in'),
   ]
 </script>
 

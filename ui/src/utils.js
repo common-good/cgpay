@@ -22,15 +22,15 @@ function hash(s) {
   return hash.hex()
 }
 
-function crash(er) { return er.message }
+function crash(er) { console.log(er); return er.message }
 
 function goEr(msg) {
-  store.erMsg.set(msg)
+  store.setMsg(msg)
   navigateTo('/home')
 }
 
 function goHome(msg) {
-  store.erMsg.set(msg)
+  store.setMsg(msg)
   navigateTo('/home')
 }
 
@@ -57,14 +57,12 @@ async function timedFetch(url, options = {}) {
   const aborter = new AbortController();
   aborter.name = 'Timeout'
   const timeoutId = setTimeout(() => aborter.abort(), timeout)
-  console.log(store.api())
   let res = await fetch(store.api() + '/' + url, {...options, signal: aborter.signal })
   if (res.ok && type != 'none') {
     res.result = await (type == 'blob' ? res.blob() : res.json())
     if (options.method == 'POST') res = res.result // a JSON string: {ok, message}
   } else if (res.ok === false) {
-    console.log(res)
-    throw new Error(res.statusText)
+    throw new Error(res.status)
   }
   clearTimeout(timeoutId);
   return res
@@ -86,7 +84,6 @@ function filterObjByKey(obj0, fn) {
 }
 
 async function sendTxRequest(tx) {
-//  console.log('tx request: transactions?' + queryString.stringify(tx))
   const res = await timedFetch(`transactions`, {
     method: 'POST',
     headers: { 'Content-type': 'application/x-www-form-urlencoded' },

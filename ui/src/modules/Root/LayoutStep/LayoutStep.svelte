@@ -13,7 +13,7 @@
 
 <div class='layout-step'>
   <header>
-    <img class="corner" src={ store.testing.get() ? cgLogoDemo : cgLogo } alt='Common Good Logo' on:click={ () => navigateTo('/home') } />
+    <img class="corner" src={ $store.testing ? cgLogoDemo : cgLogo } alt='Common Good Logo' on:click={ () => navigateTo('/home') } />
     {#if $store.myAccount.name}
       <h2>{ $store.myAccount.name }</h2>
     {/if}

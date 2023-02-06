@@ -22,7 +22,7 @@
 <section id='select-account'>
   <div class='link-account-content'>
     <h1>Link Account</h1>
-    <p>Select an account to link to CG Pay on this device.</p>
+    <p>Select a Common Good account to link to CGPay on this device.</p>
 
     <form>
       <label for='link-account-select-account'>Select Account:</label>

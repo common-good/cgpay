@@ -3,52 +3,48 @@
   import { navigateTo } from 'svelte-router-spa'
   import { onMount } from 'svelte'
   import store from '#store.js'
+  import { goEr } from '#utils.js'
 
   export let currentRoute // else Svelte complains (I don't know why yet)
   export let params // else Svelte complains (I don't know why yet)
 
   onMount(async () => {
-    store.qr.set('HTTP://6VM.RC4.ME/H0G0NyCBBlUF1qWNZ2k'); navigateTo('/charge') // HTTP://6VM.RC4.ME/H0G0NyCBBlUF1qWNZ2k or H6VM0G0NyCBBlUF1qWNZ2k.
-    return
+//    store.setQr('HTTP://6VM.RC4.ME/H0G0NyCBBlUF1qWNZ2k'); navigateTo('/charge') // HTTP://6VM.RC4.ME/H0G0NyCBBlUF1qWNZ2k or H6VM0G0NyCBBlUF1qWNZ2k.
     const devices = await Html5Qrcode.getCameras()
+    .catch(er => { goEr(er.message) })
 
     if (devices?.length) {
       const cameraId = devices[0].id
-      const scanner = new Html5Qrcode('scan-reader')
+      const scanner = new Html5Qrcode('scanner')
 
       scanner.start(
         cameraId, 
+        {}, // Configuration options.
 
-        // Configuration options.
-        {},
-
-        // Handle code.
-        async (decodedText, decodedResult) => {
-          store.qr.set(decodedText)
+        async (decodedText, decodedResult) => { // Handle code
+          store.setQr(decodedText)
           await scanner.stop()
           navigateTo('/charge')
         },
+        (erMsg) => { } // ignore parse errors (keep scanning)
 
-        // Handle scan error.
-        (errorMessage) => {
-        })
-
-        // Handle library/startup error.
-        .catch((err) => {
-        })
+      ).catch((er) => { // Handle scan error
+          console.log(er.message); 
+          goEr(er.message)
+      })
     }
   })
 </script>
 
 <svelte:head>
-  <title>CG Pay - Scan QR Code</title>
+  <title>CGPay - Scan QR Code</title>
 </svelte:head>
 
 <section id='scan'>
   <h1>Scan QR Code</h1>
 
-  <div id='scan-reader-container'>
-    <div id='scan-reader' />
+  <div id='scanner-container'>
+    <div id='scanner' />
   </div>
 </section>
 

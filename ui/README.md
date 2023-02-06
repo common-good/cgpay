@@ -1,6 +1,6 @@
-# CG Pay PWA - UI
+# CGPay PWA - UI
 
-The user interface for the CG Pay progressive web application.
+The user interface for the CGPay progressive web application.
 
 - [Developing](#developing)
 - [Testing](#testing)

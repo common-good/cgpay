@@ -47,7 +47,7 @@ describe('store', () => {
   describe('when there are not existing values in local storage', () => {
     it('initializes to default values', () => {
       const store = createStore()
-      expect(store.inspect().homeScreen.skipped).toEqual(false)
+      expect(store.inspect().homeSkipped).toEqual(false)
     })
   })
 
@@ -66,6 +66,7 @@ describe('store', () => {
           })
           const store = createStore()
           expect(store.myAccount.exists()).toEqual(true)
+          expect(store.myAccount.empty()).toEqual(false)
         })
       })
 
@@ -77,6 +78,7 @@ describe('store', () => {
 
           const store = createStore()
           expect(store.myAccount.exists()).toEqual(false)
+          expect(store.myAccount.empty()).toEqual(true)
         })
       })
     })
@@ -117,14 +119,14 @@ describe('store', () => {
     })
 
     it('is initialized as null', () => {
-      expect(store.qr.get()).toBeNull()
+      expect($store.qr).toBeNull()
     })
 
     it('sets the correct qr value', () => {
       const v = '123'
 
       store.qr.set(v)
-      expect(store.qr.get()).toEqual(v)
+      expect($store.qr).toEqual(v)
     })
   })
 
@@ -135,14 +137,14 @@ describe('store', () => {
     })
 
     it('is initialized as null', () => {
-      expect(store.erMsg.get()).toBeNull()
+      expect(store.erMsg).toBeNull()
     })
 
     it('sets the correct error message', () => {
       const msg = "error" 
 
       store.erMsg.set(msg)
-      expect(store.erMsg.get()).toEqual(msg)
+      expect(store.erMsg).toEqual(msg)
     })
   })
 
@@ -311,9 +313,7 @@ describe('store', () => {
               type: 'Apple'
             },
 
-            homeScreen: {
-              skipped: false
-            }
+            homeSkipped: true,
           })
 
           const store = createStore()
@@ -328,9 +328,7 @@ describe('store', () => {
               type: 'Android'
             },
 
-            homeScreen: {
-              skipped: false
-            }
+            homeSkipped: true,
           })
 
           const store = createStore()
@@ -345,9 +343,7 @@ describe('store', () => {
               type: 'Other'
             },
 
-            homeScreen: {
-              skipped: false
-            }
+            homeSkipped: true,
           })
 
           const store = createStore()
@@ -362,9 +358,7 @@ describe('store', () => {
               type: 'Apple'
             },
 
-            homeScreen: {
-              skipped: true
-            }
+            homeSkipped: true,
           })
 
           const store = createStore()
@@ -376,7 +370,7 @@ describe('store', () => {
     describe('.skipped', () => {
       it('is accessible', () => {
         const store = createStore()
-        expect(store.inspect().homeScreen.skipped).toEqual(false)
+        expect(store.inspect().homeSkipped).toEqual(false)
       })
     })
 
@@ -388,14 +382,14 @@ describe('store', () => {
         const now = new Date()
 
         // Confirm initial values are set.
-        expect(store.inspect().homeScreen.skipped).toEqual(false)
+        expect(store.inspect().homeSkipped).toEqual(false)
 
         store.homeScreen.skip()
 
         // Confirm that all forms of store access are updated.
-        expect(storeState().homeScreen.skipped).toEqual(now.toISOString())
-        expect(store.inspect().homeScreen.skipped).toEqual(now)
-        store.subscribe(state => expect(state.homeScreen.skipped).toEqual(now))
+        expect(storeState().homeSkipped).toEqual(now.toISOString())
+        expect(store.inspect().homeSkipped).toEqual(now)
+        store.subscribe(state => expect(state.homeSkipped).toEqual(now))
       })
     })
   })

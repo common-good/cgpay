@@ -21,8 +21,8 @@ export default {
   manifest: {
     background_color: '#b3f287',
     icons,
-    name: 'CG Pay',
-    short_name: 'CG Pay',
+    name: 'CGPay',
+    short_name: 'CGPay',
     theme_color: '#b3f287'
   },
 
