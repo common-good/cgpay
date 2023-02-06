@@ -5,8 +5,7 @@ import store from '#store.js'
 
 describe('Charge', () => {
   it('renders', () => {
-//    store.auth.signIn({ account: {} })
-    store.myAccount.set({ name: 'Business' })
+    store.myAccount.set({ name: 'Business', accountId: '123' })
 
     render(Charge)
   })

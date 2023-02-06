@@ -13,13 +13,11 @@
   
   // Example with curl: curl -d "actorId=G6VM03&amount=1234.98&created=1672959981&description=test%20food&deviceId=GrfaVyHkxnTf4cxsyIEjkWyNdK0wUoDK153r2LIBoFocvw73T&offline=false&otherId=H6VM0G0NyCBBlUF1qWNZ2k&proof=d0e4eaeb4e9c1dc9d80bef9eeb3ad1342fd24997156cb57575479bd3ac19d00b" -X POST -H "Content-type: application/x-www-form-urlencoded" 'https://demo.commongood.earth/api/transactions'
 
-  export let currentRoute // else Svelte complains (I don't know why yet)
-  export let params // else Svelte complains (I don't know why yet)
-
   const dig36 = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
   const regionLens = '111111112222222233333333333344444444'
   const acctLens = '222233332222333322223333444444445555'
   const agentLens = '012301230123012301230123012301230123'
+  const mainLens = '.12.13.22.23.32.33.34.44.45' // region and acct lens without agent
   
   let otherAccount = {
     agent: '',
@@ -29,7 +27,7 @@
   
   let tx = {
     amount: 1.23, // DEBUG
-    description: $store.myAccount.items ? $store.myAccount.items[0] : null,
+    description: $store.myAccount.selling ? $store.myAccount.selling[0] : null,
     deviceId: $store.myAccount.deviceId,
     actorId: noCardCode($store.myAccount.accountId),
     otherId: null,
@@ -38,6 +36,7 @@
     offline: false,
   }
   
+  const qr = $store.qr
   const onlineLimit = 10000
   const offlineLimit = 250
   let tipable = false
@@ -52,13 +51,15 @@
   function showEr(msg0) {
     let msg = typeof msg0 == 'object' ? msg0.detail : msg0 // receive string or dispatch from SubmitCharge
     msg = msg; // this needs to be responsive
-    ({ m0, m1, m2 } = dlg('Alert', msg, 'OK', () => m0 = false)); m0=m0; m1=m1; m2=m2 
+    ;({ m0, m1, m2 } = dlg('Alert', msg, 'OK', () => m0 = false)); m0=m0; m1=m1; m2=m2 
   }
 
   function changeMode(testing) {
-    const mode = testing ? 'TEST' : 'REAL'
-    store.test.set(testing)
-    ({ m0, m1, m2 } = dlg('Mode Change', 'Changing to ${ mode } mode.', 'OK', () => m0 = false)); m0=m0; m1=m1; m2=m2
+    if (testing != $store.testing) {
+      const mode = testing ? 'TEST' : 'REAL'
+      ;({ m0, m1, m2 } = dlg('Mode Change', `Changing to ${ mode } mode.`, 'OK', () => m0 = false)); m0=m0; m1=m1; m2=m2
+    }
+    store.setMode(testing)
     navigateTo('/charge') // reloading this page to change which data and api we use
   }
 
@@ -66,6 +67,7 @@
    * Return the cardId with cardCode (and everything that follows) removed
    */
   function noCardCode(cardId) {
+    if (cardId == null) return null
     const i = dig36.indexOf(cardId[0])
     const len = regionLens[i] + acctLens[i] + agentLens[i]
     return cardId.substr(0, len)
@@ -98,22 +100,23 @@
     } else if ((new RegExp('^HTTP://[0-9A-Za-z]{1,4}\.RC[24]\.ME/[0-9A-Za-z]{11,28}$')).test(qr)) { // like HTTP://6VM.RC4.ME/KDJJ34kjdfKJ4
       acct = parts[5][0] + parts[2] + parts[5].substring(1)
       testing = qr.includes('.RC4.')
-    } else throw new CgError('That is not a valid Common Good card.')
+    } else throw new Error('That is not a valid Common Good card format.')
 
-    if (testing != store.testing.get()) changeMode(testing)
-    const main = mainAcct(acct)
-    const code = acct.replace(main, '')
-    return { acct: main, code: code, hash: hash(code) }
+    if (testing != store.testing) changeMode(testing)
+    const agentLen = +agentLens[dig36.indexOf(acct[0])]
+    const main = mainAcct(acct) // just the main account ID
+    const acct0 = acct.substring(0, main.length + agentLen) // include agent chars in original account ID
+    const code = acct.substring(acct0.length)
+    return { acct: acct0, main: main, code: code, hash: hash(code) }
   }
   
   /**
    * Return just the region and acct parts of the QR.
-   * @todo: change the format character (acct[0]) to show agentLen = 0
    */
   function mainAcct(acct) { 
     const i = dig36.indexOf(acct[0])
-    console.log(i, regionLens[i], 1 + +regionLens[i] + +acctLens[i] + +agentLens[i])
-    return acct.substring(0, 1 + +regionLens[i] + +acctLens[i] + +agentLens[i])
+    const c1 = dig36[4 * mainLens.indexOf('.' + regionLens[i] + acctLens[i]) / 3] // format character without agent
+    return c1 + acct.substring(1, 1 + +regionLens[i] + +acctLens[i])
   }
 
   function profileOffline() {
@@ -129,37 +132,41 @@
   async function Undo() {
     tx.amount = -tx.amount
     store.txs.queue(tx)
-    store.txs.undo(tx)
+    store.txs.deletePair()
     goHome('The transaction has been reversed.')
   }
 
   onMount(async () => {
     try {
-      const qr = await store.qr.get()
-      const card = await qrParse(qr) // does not return if format is bad
-      const acctInfo = await store.accts.get(card) // retrieve and/or update stored customer account info
+      const card = qrParse(qr) // does not return if format is bad
+      const main = mainAcct($store.myAccount.accountId)
+      if (card.main == main) throw new Error('That card is for the same account as yours.')
+      const acctInfo = store.accts.get(card) // retrieve and/or update stored customer account info
       if (acctInfo) otherAccount = { ...otherAccount, ...acctInfo }
     
-      tx.otherId = card.acct + card.code
+      tx.otherId = card.acct
+      tx.code = card.code
       
       if (!$store.network.online) {
         profileOffline()
       } else  {
-        const q = {deviceId: $store.myAccount.deviceId, actorId: $store.myAccount.accountId, otherId: tx.otherId}
+        const q = {deviceId: $store.myAccount.deviceId, actorId: $store.myAccount.accountId, otherId: tx.otherId + tx.code}
         const query = queryString.stringify(q)
         const { result } = await timedFetch(`identity?${ query }`)
-        const { items } = result
-        if (items.length) tx.description = items[0]
-        await store.myAccount.set({ ...$store.myAccount, items })
-        otherAccount = { ...otherAccount, ...result }
-        delete otherAccount.items
+        const { selling } = result
+        if (selling.length) tx.description = selling[0]
+        store.myAccount.set({ ...$store.myAccount, selling: selling })
+        otherAccount = { ...otherAccount, ...result, lastTx: Date.now() } // lastTx date lets us jettison old customers to save storage
+        delete otherAccount.selling
+        store.accts.put(card, otherAccount) // store and/or update stored customer account info
         limit = Math.min(otherAccount.limit, onlineLimit)
-        await store.accts.put(card, otherAccount) // store and/or update stored customer account info
         photo = await getPhoto(query)
       }
     } catch (er) {
       if (isTimeout(er)) { // internet unavailable; recognize a repeat customer or limit CG's liability
         profileOffline()
+      } else if (er.message == '401') { // not authorized
+        goEr('That is not a valid Common Good card.')
       } else {
         goEr(crash(er))
       }
@@ -168,7 +175,7 @@
 </script>
 
 <svelte:head>
-  <title>CG Pay - Charge Customer</title>
+  <title>CGPay - Charge Customer</title>
 </svelte:head>
 
 <section id='charge'>
@@ -248,7 +255,9 @@
     width 100%
 
     a, button
-      margin-bottom $s2
+      margin-bottom $s1
+    a:last-of-type
+        margin-bottom 0
 
   .primary
     cgButton()

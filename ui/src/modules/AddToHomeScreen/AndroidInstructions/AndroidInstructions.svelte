@@ -3,8 +3,8 @@
 </script>
 
 <section id='android-instructions'>
-  <p>CG Pay is easy to use when you add it to your device home screen.</p>
-  <p>Click the banner below to add CG Pay to your home screen.</p>
+  <p>CGPay is easy to use when you add it to your device home screen.</p>
+  <p>Click the banner below to add CGPay to your home screen.</p>
   <button on:click={ skip }>Skip for now</button>
 </section>
 

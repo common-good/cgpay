@@ -17,18 +17,28 @@
   // --------------------------------------------
 
   async function charge() {
-    tx.created = Math.floor(Date.now() / 1000) // Unix timestamp
-    tx.amount = (+tx.amount).toFixed(2)
-    tx.proof = hash(tx.actorId + tx.amount + tx.otherId.split(/[.!]/)[0] + tx.created)
-    tx.offline = false
+    if (!tx.proof) { // unless retrying
+      const created = Math.floor(Date.now() / 1000) // must be done just once
+      tx.created = created // Unix timestamp
+      tx.amount = (+tx.amount).toFixed(2)
+      tx.proof = hash(tx.actorId + tx.amount + tx.otherId + tx.code + tx.created)
+      console.log(tx.actorId + tx.amount + tx.otherId + tx.code + tx.created)
+      delete(tx.code)
+      tx.offline = false
+    }
 
     try {
       const res = await sendTxRequest(tx)
       if (res.ok) dispatch('complete'); else dispatch('error', res.message) // update display
-    } catch (er) { // no matter what the error, queue it and treat it as success
-        store.txs.queue(tx)
+    } catch (er) { // except for syntax errors, queue it and treat it as success
+      console.log(er)
+      if (er == 400) { // syntax error
+        throw new Error('Program issue: request syntax error')
+      } else {
+        store.txs.queue(tx)                                                                                                         
         if (!otherAccount.name) otherAccount.name = 'Unidentified Customer'
         dispatch('complete') // update display
+      }
     }
   }
 </script>
@@ -41,7 +51,7 @@
 
       <fieldset>
         <input id='charge-description' type='text' placeholder='Description' bind:value={ tx.description } required />
-        <input id='charge-amount' type='number' min="0.01" step="0.01" max="{ limit }" placeholder='Amount' bind:value={ tx.amount } required />
+        <input id='charge-amount' type='number' min="0.01" step="0.01" max={ limit } placeholder='Amount' bind:value={ tx.amount } required />
       </fieldset>
     </div>
 
@@ -56,12 +66,12 @@
     display flex
     flex-direction column
     justify-content space-between
-
+    margin-top -0.5rem
   h1
     font-weight 600
     text-align center
     text lg
-    margin-bottom $s2
+    margin-bottom $s1
 
   form
     height 100%
@@ -71,12 +81,14 @@
 
     input
       cgField()
+      &:last-of-type
+        margin-bottom 0
 
     button
       cgButton()
-      margin-bottom $s2
 
   .charge-content
     cgCard()
     background-color $c-green
+    margin-bottom $ss
 </style>

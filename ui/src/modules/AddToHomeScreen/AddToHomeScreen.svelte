@@ -7,9 +7,6 @@
   import AndroidInstructions from './AndroidInstructions/AndroidInstructions.svelte'
   import AppleInstructions from './AppleInstructions/AppleInstructions.svelte'
 
-  export let currentRoute // else Svelte complains (I don't know why yet)
-  export let params // else Svelte complains (I don't know why yet)
-
   // --------------------------------------------
 
   function skip() {
@@ -19,7 +16,7 @@
 </script>
 
 <svelte:head>
-  <title>CG Pay - Add to Home Screen</title>
+  <title>CGPay - Add to Home Screen</title>
 </svelte:head>
 
 <section id='add-to-home-screen'>

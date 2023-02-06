@@ -3,7 +3,7 @@
 
   // --------------------------------------------
 
-  export let accountOptions = []
+  export let accountOptions
   export let size
 
   // --------------------------------------------
@@ -19,15 +19,15 @@
   }
 </script>
 
-<section id='select-account'>
+<section id='select-account' class="select-account">
   <div class='link-account-content'>
     <h1>Link Account</h1>
-    <p>Select an account to link to CG Pay on this device.</p>
+    <p>Select a Common Good account to link to CGPay on this device.</p>
 
     <form>
       <label for='link-account-select-account'>Select Account:</label>
 
-      <select id='link-account-select-account' size="{ size }" bind:value={ selectedAccount }>
+      <select id='link-account-select-account' size={ size } bind:value={ selectedAccount }>
         { #each accountOptions as account }
           <option value={ account.id }>{ account.name }</option>
         { /each }
@@ -41,7 +41,12 @@
 <style lang='stylus'>
   @import '../LinkAccount.styl'
 
-  #select-account
+  .select-account
+    height 100%
+    display flex
+    flex-direction column
+    justify-content space-between
+    
     p
       contentNarrow(300px)
       margin $s2 auto

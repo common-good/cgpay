@@ -1,4 +1,4 @@
-# CG Pay PWA
+# CGPay PWA
 
 A progressive web application for collecting payments with Common Good. 
 
@@ -21,7 +21,7 @@ Windows developers do [this](https://docs.google.com/document/d/1d1pGjS5Z9sP_BgY
 | `cd <development directory>` | |
 | `mkdir cgpay` | create a directory for the repository |
 | `cd cgpay` | |
-| `git clone git@github.com:common-good/cg-pay-pwa.git .` | |
+| `git clone https://github.com/common-good/cg-pay-pwa.git .` | |
 | `git checkout develop` | choose the development branch |
 | `nvm install` | install and use the required node version for this project (16.x), as stored in .nvmrc |
 | `npm install` | install the project's dependencies |

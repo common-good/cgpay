@@ -15,6 +15,7 @@
     "@adaptably/to": "^1.0.1",
     "@sveltejs/vite-plugin-svelte": "^1.0.4",
     "@testing-library/svelte": "^3.2.1",
+    "canvas": "^2.11.0",
     "html5-qrcode": "^2.2.1",
     "jsdom": "^20.0.0",
     "query-string": "^7.1.1",
@@ -27,5 +28,8 @@
     "vite-imagetools": "^4.0.8",
     "vite-plugin-pwa": "^0.12.6",
     "vitest": "^0.23.0"
+  },
+  "dependencies": {
+    "svelte-qrcode": "^1.0.0"
   }
 }

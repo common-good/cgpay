@@ -5,27 +5,29 @@ import { sendTxRequest, isTimeout } from '#utils.js'
 // use this example for set() and get(): https://svelte.dev/repl/ccbc94cb1b4c493a9cf8f117badaeb31?version=3.16.7
 
 export const createStore = () => {
-  const storeKey = 'cgpay.store'
-  const testingKey = 'cgpay.testing'
+  const testKey = 'cgpay.testing'
+  const realKey = 'cgpay.store'
   const testModeKey = 'cgpay.testMode'
-//  const testing = window.localStorage.getItem(testModeKey)
-  const testing = true
-  const storedState = JSON.parse(window.localStorage.getItem(testing ? testingKey : storeKey))
+  const testing = window.localStorage.getItem(testModeKey)
+//  const testing = true
+  const storedState = JSON.parse(window.localStorage.getItem(testing ? testKey : realKey))
+  const lostMsg = `Tell the customer "I'm sorry, that card is marked "LOST or STOLEN".`
 
   const defaults = {
+    homeSkipped: false,
+    accounts: null,
+    accts: {},
+    queue: [],
+
     myAccount: {
       accountId: null,
       deviceId: null,
       name: null,
-      items: []
+      selling: []
     },
 
     device: {
       type: getDeviceType(),
-    },
-
-    homeScreen: {
-      skipped: false
     },
 
     network: {
@@ -34,17 +36,13 @@ export const createStore = () => {
       restored: false
     },
 
-    txs: {
-      queued: []
-    },
-
-    accts: [],
   }
 
   // --------------------------------------------
 
-  let localState = storedState || defaults
-  const { set, subscribe, update } = writable(localState)
+  let cache = storedState || defaults
+  cache.testing = testing
+  const { zot, subscribe, update } = writable(cache)
 
   // --------------------------------------------
 
@@ -55,15 +53,29 @@ export const createStore = () => {
     return 'Other'
   }
 
-  function setOnline() { res.network.setOnline(false) }
+  function setOffline() { res.network.setOnline(false) }
   function flushTxs() { res.txs.flush() }
+  function corrupt(data) { res.setCorrupt(data) }
 
-  function storeLocal(state) {
-    window.localStorage.setItem(storeKey, JSON.stringify(state))
-    localState = state
+  function storeLocal(state, key = realKey) {
+    window.localStorage.setItem(key, JSON.stringify(state))
+    cache = state
     return state
   }
-  
+
+  function set(k, v, key = realKey) { update(st => {
+    st[k] = v
+    return storeLocal(st, key)
+  })}
+
+  /* (not yet used)
+
+  function storeSession(state) {
+    window.sessionStorage.setItem(realKey, JSON.stringify(state))
+    cache = state // use same cache as for localStorage
+    return state
+  }
+
   function setCookie(name, value) {
     document.cookie = `${ name }=${ JSON.stringify(value) }`
   }
@@ -75,84 +87,55 @@ export const createStore = () => {
     return res
   }
   
-  function getCookieOnce(name) { return getCookie(name, true) }
-
   function cookieOps(name) {
     return {
       set(v) { return setCookie(name, v) },
       get() { return getCookie(name) }
     }
   }
+  */
 
   // --------------------------------------------
 
   const res = {
     subscribe,
 
-    inspect() { return localState },
+    inspect() { return cache },
 
-    testing: {
-      set(yesno) { window.localStorage.setItem(testModeKey, yesno) },
-      get() { return testing }
-    },
+    setMode(yesno) { set('testing', yesno, testModeKey) },
+    setQr(v) { set('qr', v) },
+    setMsg(v) { set('erMsg', v) },
+    setCorrupt(data) { set('corrupt', data) }, // record information for tech crew to decipher
 
-    api() { return testing ? _demoApi_ : _realApi_ },
+    api() { return testing ? _demoApi_ : _demoApi_ }, // _realApi_ },
     
     myAccount: {
-      set(acct) { update(st => {
-          st.myAccount = { ...st.myAccount, ...acct }
-          st.myAccount.deviceId = 'GrfaVyHkxnTf4cxsyIEjkWyNdK0wUoDK153r2LIBoFocvw73T'; st.myAccount.items = ['test food'] // DEBUG
-          return storeLocal(st)
-      })},
-      exists() {return localState.myAccount.name !== null},
-    },
-    
-    accountChoices: {
-      set(v) { return setCookie('accountChoices', v) },
-      get() { return getCookie('accountChoices') }
-    },
-    
-    qr: {
-      set(v) { return setCookie('qr', v) },
-      get() { return getCookie('qr') }
-    },
-    
-    erMsg: {
-      set(v) { return setCookie('erMsg', v) },
-      get() { return getCookie('erMsg') }
+      setChoices(v) { set('choices', v) },
+      set(acct) { set('myAccount', { ...cache.myAccount, ...acct }) },
+      exists() { return (cache.myAccount.name != null) },
+      empty() { return (cache.myAccount.name == null) },
     },
 
     device: {
-      isApple() { return localState.device.type === 'Apple' },
-      isAndroid() { return localState.device.type === 'Android' }
+      isApple() { return (cache.device.type == 'Apple') },
+      isAndroid() { return (cache.device.type == 'Android') }
     },
 
     homeScreen: {
       promptRequired() {
-        const onMobileDevice = [ 'Apple', 'Android' ].includes(localState.device.type)
-        const hasNotSkippedPrompt = !localState.homeScreen.skipped
-
-        return onMobileDevice && hasNotSkippedPrompt
+        const onMobileDevice = [ 'Apple', 'Android' ].includes(cache.device.type)
+        return onMobileDevice && !cache.homeSkipped
       },
-
-      skip() { update(st => {
-          st.homeScreen.skipped = new Date()
-          return storeLocal(st)
-      })}
+      skip() { set('homeSkipped', new Date()) },
     },
 
-    network: { // no need to store this information in localStore
-      reset() { update(st => {
-          this.setOnline(window.navigator.onLine)
-          return st
-      })},
-
+    network: {
+      reset() { this.setOnline(window.navigator.onLine) },
       setOnline(yesno) {
-//        console.log('online: ' + (yesno ? 'YES' : 'NO'))
         if (yesno) flushTxs()
         update(st => {
           st.network.online = yesno
-          return st
+          return st // this does not get stored in localStorage
         })
       },
     },
@@ -162,57 +145,56 @@ export const createStore = () => {
        * Store the given data about a customer account
        * @param {*} card: account identification parsed from QR
        * @param {*} acctData: information about a customer
+       * @todo: when we receive an array of bad qrs from the server, store acctData as null
        */
       put(card, acctData) { update(st => {
-          st.accts[card.acct] = { hash: card.hash, data: acctData }
-          console.log(st.accts)
-          return st
+        st.accts[card.acct] = { hash: card.hash, data: { ...acctData } } // only the hash of the security code gets stored
+        return storeLocal(st)
       })},
       get(card) {
-        const acct = localState.accts[card.acct]
+        const acct = cache.accts[card.acct]
         if (acct == undefined) return null
-        if (card.hash != acct.hash) return null // if new hash is valid, this will get updated
-        console.log(acct.data)
+        if (card.hash != acct.hash) return null // if later a new hash is validated, this entry will get updated
+        if (acct.data == null) throw new Error(lostMsg) // if we encounter a hash collision for such a short string, it will be an important engineering discovery
         return acct.data
       }
     },
 
     txs: {
       async flush() {
-        const queued = { ...localState.txs.queued }
+        if (cache.corrupt) return // don't retry hopeless tx indefinitely
+        const q = [ ...cache.queue ]
         let i
-        for (i in queued) {
+        for (i in q) {
           try {
-            await sendTxRequest(queued[i])
+            await sendTxRequest(q[i])
             this.dequeue()
           } catch (er) {
             if (isTimeout(er)) {
-              setOnline()
+              setOffline()
               return
+            } else {
+              console.log(er.message) // keep this
+              console.log(cache.queue) // keep this
+              return corrupt(cache.queue)
             }
-            console.log(er.message)
-            console.log(localState.txs.queued[0])
-            throw(er)
           }
         }
       },
 
-      undo() {
+      deletePair() {
         update(st => {
-          const st0 = st
-          const tx2 = st.txs.queued.pop()
-          const tx1 = st.txs.queued.pop()
-          console.log(tx1, tx2, st.txs.queued)
-          console.log(tx1 && tx2 && tx2.created == tx1.created && tx2.amount == -tx1.amount)
-          console.log(tx1 && tx2)
-          if (tx1 && tx2 && tx2.created == tx1.created && tx2.amount == -tx1.amount) return storeLocal(st)
-          return st = st0
+          const q = [ ...st.queue ]
+          const tx2 = q.pop()
+          const tx1 = q.pop()
+          if (tx1 && tx2 && tx2.created == tx1.created && tx2.amount == -tx1.amount) return storeLocal({ ...st, queue: q })
+          return st
         })
       },
 
       dequeue() { // called only from flush() and tests
         update(st => {
-          st.txs.queued.shift()
+          st.queue.shift()
           return storeLocal(st)
         })
       },
@@ -220,8 +202,7 @@ export const createStore = () => {
       queue(tx) {
         tx.offline = true
         update(st => {
-          st.txs.queued.push(tx)
-          console.log(st.txs.queued)
+          st.queue.push({ ...tx })
           return storeLocal(st)
         })
       }

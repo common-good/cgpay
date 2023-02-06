@@ -1,6 +1,6 @@
-# CG Pay PWA - Features
+# CGPay PWA - Features
 
-End-to-end tests for the CG Pay progressive web application.
+End-to-end tests for the CGPay progressive web application.
 
 - [Testing](#testing)
 - [Manual Features](#manual-features)
@@ -22,7 +22,7 @@ The following features are challenging to test in an automated way and should be
 2. Follow the instructions to save the app to the home screen.
 3. Confirm that the application is added to the home screen:
   - With the correct icon.
-  - With the correct name (CG Pay).
+  - With the correct name (CGPay).
 4. Open the application.
 5. Confirm that the application's main screen displays.
 
@@ -32,7 +32,7 @@ The following features are challenging to test in an automated way and should be
 2. Follow the instructions to save the app to the home screen.
 3. Confirm that the application is added to the home screen:
   - With the correct icon.
-  - With the correct name (CG Pay).
+  - With the correct name (CGPay).
 4. Open the application.
 5. Confirm that the application's main screen displays.
 

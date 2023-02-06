@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "CG Pay"
+    "name": "CGPay"
   },
   "ports": {
     "_default": 3000,
@@ -8,6 +8,6 @@
   },
   "apis": {
     "dev": "https://demo.commongood.earth/api",
-    "production": "https://new.commongood.earth"
+    "production": "https://new.commongood.earth/api"
   }
 }
