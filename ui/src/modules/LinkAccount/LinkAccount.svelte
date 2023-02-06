@@ -14,29 +14,29 @@
   let myAccount
   let ready = false
   const accounts = $store.choices
-
-    
+  
   // --------------------------------------------
 
-  function er(msg) { ({ m0, m1 } = dlg('Alert', msg, 'OK', () => m0 = false)); m0=m0; m1=m1 } 
+  function er(msg) { ({ m0, m1 } = dlg('Alert', msg, 'Close', () => m0 = false)); m0=m0; m1=m1 } 
 
   function gotAccount(ev) {
-    myAccount = accounts[ev.detail]
+    myAccount = accounts && accounts[ev.detail]
     store.myAccount.setChoices(null) // don't leave this lying around
     store.myAccount.set(myAccount)
-    goHome('This device is now connected to your Common Good account.')
+    goHome(`This device is now linked to the account: ${myAccount.name}.`)
   }
 
   onMount(async () => {
     ready = true
-    if (accounts.length === 1) {
-      gotAccount({detail: 0}) // simulate event (selection of this option in a <select>)
-    } else if (accounts.length) {
+    if (accounts && accounts.length) {
       for (let i = 0; i < accounts.length; i++) {
         accountOptions[i] = {id: i, name: accounts[i].name}
       }
       size = Math.min(size, accounts.length)
-    } else {
+    } else if ($store.myAccount.accountId) {
+      er('Please Sign In again to change your linked accounts.')
+    }
+    else {
       er('Your account is not yet active. Sign in at CommonGood.earth to finish opening your account.')
     }
   })
@@ -47,42 +47,31 @@
 </svelte:head>
 
 <section id='link-account'>
+  <h1>Link Account</h1>
   { #if ready }
-    { #if myAccount }
-        <div class='link-account-content'>
-          <h1>Account linked</h1>
-          <p>This account is now linked to<br /><span class="bold">{$store.myAccount.name}</span></p>
-          <p>You are ready to charge customers!</p>
-        </div>
-
-        <a class='link-account-action' href='/scan'>Scan QR Code</a>
-
-    { :else }
-      <SelectAccount { accountOptions } { size } on:complete={ gotAccount } />
-    { /if }
+    <SelectAccount { accountOptions } { size } on:complete={ gotAccount } />
   { :else }
-    <p>Finding your business...</p>
+    <div class="loading">
+      <p>Loading your accounts...</p>
+    </div>
   { /if }
 </section>
 
 <Modal m0={m0} on:m1={m1} on:m2={m2} />
 
 <style lang='stylus'>
-  @import './LinkAccount.styl'
-
   section
     display flex
     flex-direction column
+    align-items center
     justify-content space-between
     width 100%
     height 100%
 
-  .bold
-    font-weight 600
-
-  .link-account-action
-    linkAccountAction()
-
-  .link-account-content
-    linkAccountContent()
+  .loading
+    height 100%
+    display flex
+    align-items center
+    font-style italic
+    margin-bottom $s5
 </style>

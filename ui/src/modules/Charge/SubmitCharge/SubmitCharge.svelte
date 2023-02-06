@@ -46,49 +46,29 @@
 <section id='submit-charge'>
   <h1>Charge</h1>
   <form on:submit|preventDefault={ charge }>
-    <div class='charge-content'>
-      <Profile { otherAccount } {photo} />
-
-      <fieldset>
-        <input id='charge-description' type='text' placeholder='Description' bind:value={ tx.description } required />
-        <input id='charge-amount' type='number' min="0.01" step="0.01" max={ limit } placeholder='Amount' bind:value={ tx.amount } required />
-      </fieldset>
-    </div>
-
+    <Profile { otherAccount } {photo} />
+    <fieldset>
+      <label for='amount'>Amount</label>
+      <input id='amount' type='number' min="0.01" step="0.01" max={ limit } name='amount' placeholder='$0.00' bind:value={ tx.amount } required />
+      <label for='description'>Description</label>
+      <input id='description' type='text' name='description' placeholder='i.e. burrito, groceries, book, rent' bind:value={ tx.description } autocomplete required />
+    </fieldset>
     <button type='submit'>Charge</button>
   </form>
 </section>
 
 <style lang='stylus'>
+  h1 
+   margin-bottom $s1
+
   section
     height 100%
     width 100%
     display flex
     flex-direction column
-    justify-content space-between
-    margin-top -0.5rem
-  h1
-    font-weight 600
-    text-align center
-    text lg
-    margin-bottom $s1
-
-  form
-    height 100%
-    display flex
-    flex-direction column
+    align-items center
     justify-content space-between
 
-    input
-      cgField()
-      &:last-of-type
-        margin-bottom 0
-
-    button
-      cgButton()
-
-  .charge-content
-    cgCard()
-    background-color $c-green
-    margin-bottom $ss
+  button
+    cgButton()
 </style>

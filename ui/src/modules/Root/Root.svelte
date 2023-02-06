@@ -46,7 +46,7 @@
   const unready = store.myAccount.empty
 
   const routes = [
-    route('/', AddToHomeScreen, store.homeScreen.promptRequired, '/sign-in', LayoutIntro),
+    route('/', AddToHomeScreen, true, '/sign-in', LayoutIntro),
     route('/sign-in', SignIn, unready, '/scan', LayoutIntro),
     route('/link-account', LinkAccount, unready, '/scan'),
     route('/home', Home, ready, '/'),

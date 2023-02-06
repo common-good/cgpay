@@ -43,7 +43,7 @@
 
   let gotTx = false
   let limit = null
-  let photo = { alt: 'Retrieving Customer Profile...', blob: null }
+  let photo = { alt: 'Customer Profile', blob: null }
 
   // --------------------------------------------
 
@@ -104,16 +104,16 @@
 
     if (testing != store.testing) changeMode(testing)
     const agentLen = +agentLens[dig36.indexOf(acct[0])]
-    const main = mainAcct(acct) // just the main account ID
-    const acct0 = acct.substring(0, main.length + agentLen) // include agent chars in original account ID
+    const mainId = getId(acct)
+    const acct0 = acct.substring(0, mainId.length + agentLen) // include agent chars in original account ID
     const code = acct.substring(acct0.length)
-    return { acct: acct0, main: main, code: code, hash: hash(code) }
+    return { acct: acct0, main: mainId, code: code, hash: hash(code) }
   }
   
   /**
    * Return just the region and acct parts of the QR.
    */
-  function mainAcct(acct) { 
+  function getId(acct) { 
     const i = dig36.indexOf(acct[0])
     const c1 = dig36[4 * mainLens.indexOf('.' + regionLens[i] + acctLens[i]) / 3] // format character without agent
     return c1 + acct.substring(1, 1 + +regionLens[i] + +acctLens[i])
@@ -139,8 +139,8 @@
   onMount(async () => {
     try {
       const card = qrParse(qr) // does not return if format is bad
-      const main = mainAcct($store.myAccount.accountId)
-      if (card.main == main) throw new Error('That card is for the same account as yours.')
+      const mainId = getId($store.myAccount.accountId)
+      if (card.main == mainId) throw new Error('That card is for the same account as yours.')
       const acctInfo = store.accts.get(card) // retrieve and/or update stored customer account info
       if (acctInfo) otherAccount = { ...otherAccount, ...acctInfo }
     
@@ -172,6 +172,8 @@
       }
     }
   })
+
+  const isBusiness = otherAccount.agent
 </script>
 
 <svelte:head>
@@ -180,23 +182,36 @@
 
 <section id='charge'>
   { #if gotTx }
-    <div class="charge-content">
-      <h1>Success!</h1>
-      
-      <p>You charged</p>
-      
-        <div class="card">
-        <p class="agent">{ otherAccount.agent }</p>
-        <p>{ otherAccount.name }</p>
-        <p>{ otherAccount.location }</p>
+    <h1>Transaction Complete</h1>
+    <div class='top'>
+      <div class='charge-info'>
+        <div class='payee-info'>
+          <div>Charged to:</div>
+          <div class='payee-details'>
+          {#if isBusiness}
+            <p>{ otherAccount.agent }</p>
+            <p>{ otherAccount.name }</p>
+          {:else}
+            <p>{ otherAccount.name }</p>
+          {/if}
+          </div>
+        </div>
+        <table>
+          <caption class='visuallyhidden'>Transaction Details</caption>
+          <tbody>
+              <tr>
+                <th scope="col">Item</th>
+                <th scope="col">Amount</th>
+              </tr>
+              <tr>
+                <td>{ tx.description }</td>
+                <td>{ tx.amount }</td>
+              </tr>
+          </tbody>
+        </table>
       </div>
-
-      <div class="details">
-        <p><span>${ tx.amount }</span> for
-        { tx.description }</p>
-      </div>
-      </div>
-
+      <div class="note">Thank you for using CG Pay ~ power to the people!</div>
+    </div>
     <div class="actions">
       { #if tipable }<a class="secondary" href='/tip'>Add Tip</a>{ /if }
       <!-- button>Receipt</button -->
@@ -212,42 +227,64 @@
 <Modal m0={m0} on:m1={m1} on:m2={m2} />
 
 <style lang='stylus'>
-  h1
-    text(lg)
-    font-weight 600
-    text lg
-    margin-bottom $s2
+  h1 
+    margin-bottom $s1
 
-  p
-    margin-bottom $ss
+  table
+    width 100%
+
+  caption
+    text(sm)
+
+  th, td
+    text-align left
+    &:last-of-type
+      text-align right
+
+  th
+    text(sm)
+
+  tr:first-of-type
+    border-top dashed 1px
+    border-bottom dashed 1px
 
   section
     height 100%
-    display flex
-    flex-direction column
-    justify-content space-between
-
-  .charge-content
+    width 100%
     display flex
     flex-direction column
     align-items center
+    justify-content space-between
+
+  .charge-info
+    width 95%
+
+  .note
+    text(sm)
+    text-align center
+    border-top dashed 1px
+    padding-top $s0
+
+  .payee-info
+    display flex
+    justify-content space-between
+    align-items baseline
     width 100%
+    margin-bottom $s0
 
-  .card
-    cgCard()
-    background-color $c-green
+  .payee-details
+    text-align right
+    p:first-of-type
+      font-weight 600
+      
+  .top
+    height 100%
     width 100%
-    margin-bottom $s3
-
-    .agent
-      text(lg)
-      margin-bottom $s1
-
-    p 
-      margin-bottom unset
-
-  .details
-    text lg
+    display flex
+    flex-direction column
+    align-items center
+    justify-content space-between
+    margin-bottom $s1
 
   .actions
     display flex
