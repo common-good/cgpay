@@ -51,7 +51,7 @@
 
       <fieldset>
         <input id='charge-description' type='text' placeholder='Description' bind:value={ tx.description } required />
-        <input id='charge-amount' type='number' min="0.01" step="0.01" max="{ limit }" placeholder='Amount' bind:value={ tx.amount } required />
+        <input id='charge-amount' type='number' min="0.01" step="0.01" max={ limit } placeholder='Amount' bind:value={ tx.amount } required />
       </fieldset>
     </div>
 

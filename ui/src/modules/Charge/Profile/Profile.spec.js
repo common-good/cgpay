@@ -4,6 +4,6 @@ import Profile from './Profile.svelte'
 
 describe('Profile', () => {
   it('renders', () => {
-    render(Profile, { account: {} })
+    render(Profile, {otherAccount: {}, photo: {}})
   })
 })

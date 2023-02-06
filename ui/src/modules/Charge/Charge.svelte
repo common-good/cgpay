@@ -13,9 +13,6 @@
   
   // Example with curl: curl -d "actorId=G6VM03&amount=1234.98&created=1672959981&description=test%20food&deviceId=GrfaVyHkxnTf4cxsyIEjkWyNdK0wUoDK153r2LIBoFocvw73T&offline=false&otherId=H6VM0G0NyCBBlUF1qWNZ2k&proof=d0e4eaeb4e9c1dc9d80bef9eeb3ad1342fd24997156cb57575479bd3ac19d00b" -X POST -H "Content-type: application/x-www-form-urlencoded" 'https://demo.commongood.earth/api/transactions'
 
-  export let currentRoute // else Svelte complains (I don't know why yet)
-  export let params // else Svelte complains (I don't know why yet)
-
   const dig36 = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
   const regionLens = '111111112222222233333333333344444444'
   const acctLens = '222233332222333322223333444444445555'

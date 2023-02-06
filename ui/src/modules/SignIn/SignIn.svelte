@@ -7,9 +7,6 @@
   import store from '#store.js'
   import Modal from '../Modal.svelte'; let m0, m1
 
-  export let currentRoute // else Svelte complains (I don't know why yet)
-  export let params // else Svelte complains (I don't know why yet)
-
   // --------------------------------------------
 
   const credentials = {

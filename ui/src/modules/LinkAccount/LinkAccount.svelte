@@ -5,10 +5,6 @@
   import { dlg, goHome } from '#utils.js'
   import SelectAccount from './SelectAccount/SelectAccount.svelte'
   import Modal from '../Modal.svelte'; let m0, m1, m2
-// FAILS  import { page } from '$app/stores'
-
-  export let currentRoute // else Svelte complains (I don't know why yet)
-  export let params // else Svelte complains (I don't know why yet)
 
   // --------------------------------------------
 
@@ -35,7 +31,7 @@
     ready = true
     if (accounts.length === 1) {
       gotAccount({detail: 0}) // simulate event (selection of this option in a <select>)
-    } else if (accounts.length > 1) {
+    } else {
       for (let i = 0; i < accounts.length; i++) {
         accountOptions[i] = {id: i, name: accounts[i].name}
       }

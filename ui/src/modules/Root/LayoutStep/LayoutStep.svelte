@@ -5,10 +5,9 @@
   import { navigateTo } from 'svelte-router-spa'
   import store from '#store.js'
 
-  export let params // else Svelte complains (I don't know why yet)
-  export let currentRoute
-
   // --------------------------------------------
+
+  export let currentRoute
 </script>
 
 <div class='layout-step'>
