@@ -31,7 +31,7 @@
     ready = true
     if (accounts.length === 1) {
       gotAccount({detail: 0}) // simulate event (selection of this option in a <select>)
-    } else {
+    } else if (accounts.length) {
       for (let i = 0; i < accounts.length; i++) {
         accountOptions[i] = {id: i, name: accounts[i].name}
       }

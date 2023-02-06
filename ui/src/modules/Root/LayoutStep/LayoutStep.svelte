@@ -3,12 +3,13 @@
   import { onMount } from 'svelte';
   import cgLogo from '#modules/Root/assets/cg-logo-300.png?webp'
   import cgLogoDemo from '#modules/Root/assets/cg-logo-300-demo.png?webp'
-  import { navigateTo } from 'svelte-router-spa'
   import store from '#store.js'
 
   // --------------------------------------------
 
   export let currentRoute
+  let viewHeight
+  onMount(() => viewHeight = window?.visualViewport?.height)
 </script>
 
 <div class='layout-step' style="height: {viewHeight}px">
