@@ -19,6 +19,9 @@ export const createStore = () => {
     accts: {},
     queue: [],
 
+    isSignedIn: false,
+    isBusiness: false,
+
     myAccount: {
       accountId: null,
       deviceId: null,
@@ -108,6 +111,15 @@ export const createStore = () => {
     setCorrupt(data) { set('corrupt', data) }, // record information for tech crew to decipher
 
     api() { return testing ? _demoApi_ : _demoApi_ }, // _realApi_ },
+
+    // Authentication
+    signIn() { set('isSignedIn', true) },
+    signOut() { 
+        set('isSignedIn', false)
+        set('isBusiness', false)
+        set('myAccount', {}) 
+    },
+    setIsBusiness() { set('isBusiness', true) },
     
     myAccount: {
       setChoices(v) { set('choices', v) },

@@ -28,8 +28,11 @@
     try {
       const query = queryString.stringify(credentials)
       const { result } = await timedFetch(`accounts?${ query }`)
+
+      store.signIn()
       
       if (result.accounts.length > 1) {
+        store.setIsBusiness(true)
         store.myAccount.setChoices(result.accounts)
         navigateTo('/link-account')
       } else {
