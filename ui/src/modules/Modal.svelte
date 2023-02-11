@@ -23,23 +23,31 @@ $:  [lab1, lab2, zot] = (labels + ', ').split(', ')
 
   <div class="modal" role="dialog" aria-modal="true" bind:this={modal} use:focusTrap>
     <h1>{ title }</h1>
-    <p>{ text }</p>
-    <div class="buttons">
-      <button class="primary" on:click={ () => dispatch('m1') }>{ lab1 }</button>
-      {#if lab2}
-        <button class="secondary" on:click={ () => dispatch('m2') }>{ lab2 }</button>
-      {/if}
+    <div class="content">
+      <p>{ text }</p>
+      <div class="buttons">
+        <button class="primary" on:click={ () => dispatch('m1') }>{ lab1 }</button>
+        {#if lab2}
+          <button class="secondary" on:click={ () => dispatch('m2') }>{ lab2 }</button>
+        {/if}
+      </div>
     </div>
   </div>
 { /if }
 
 <style lang='stylus'>
   h1
-    text(lg)
-    margin-bottom $s1
-  
+    color $c-white
+    background $c-green-dark
+    letter-spacing 0.025rem
+    margin-bottom $s-2
+    padding $s-1
+
   p
-    margin-bottom: $s2
+    margin-bottom: $s1
+
+  .content
+    padding: $s-1
 
   .modal-background
     position fixed
@@ -58,7 +66,6 @@ $:  [lab1, lab2, zot] = (labels + ', ').split(', ')
     max-height calc(100vh - 4em)
     overflow auto
     transform translate(-50%,-50%)
-    padding 1em
     border-radius 1em
     background white
 
@@ -68,10 +75,12 @@ $:  [lab1, lab2, zot] = (labels + ', ').split(', ')
 
   .primary
     cgButton()
-    width 46%
+    flex-grow 1
+    order 2
 
   .secondary
     cgButtonSecondary()
-    width 46%
+    flex-grow 1
+    margin-right $s-2
 
 </style>

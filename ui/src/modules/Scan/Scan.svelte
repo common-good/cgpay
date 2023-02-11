@@ -4,11 +4,14 @@
   import { onMount } from 'svelte'
   import store from '#store.js'
   import { goEr } from '#utils.js'
+  import cgLogo from '#modules/Root/assets/cg-logo-300.png?webp'
 
   // --------------------------------------------
 
+  let isLoading = true
+
   onMount(async () => {
-//    store.setQr('HTTP://6VM.RC4.ME/H0G0NyCBBlUF1qWNZ2k'); navigateTo('/charge') // HTTP://6VM.RC4.ME/H0G0NyCBBlUF1qWNZ2k or H6VM0G0NyCBBlUF1qWNZ2k.
+  //   store.setQr('HTTP://6VM.RC4.ME/H0G0NyCBBlUF1qWNZ2k'); navigateTo('/charge') // HTTP://6VM.RC4.ME/H0G0NyCBBlUF1qWNZ2k or H6VM0G0NyCBBlUF1qWNZ2k.
     const devices = await Html5Qrcode.getCameras()
     .catch(er => { goEr(er.message) })
 
@@ -18,7 +21,7 @@
 
       scanner.start(
         cameraId, 
-        {}, // Configuration options.
+        { qrbox: { width: 250, height: 250 } }, // Configuration options.
 
         async (decodedText, decodedResult) => { // Handle code
           store.setQr(decodedText)
@@ -27,9 +30,10 @@
         },
         (erMsg) => { } // ignore parse errors (keep scanning)
 
-      ).catch((er) => { // Handle scan error
-          console.log(er.message); 
-          goEr(er.message)
+      ).then((res) => {
+        isLoading = false
+      }).catch((er) => { // Handle scan error
+        goEr(er.message)
       })
     }
   })
@@ -40,27 +44,54 @@
 </svelte:head>
 
 <section id='scan'>
-  <h1>Scan QR Code</h1>
-
-  <div id='scanner-container'>
-    <div id='scanner' />
+  <div class='top'>
+    <h1>Scan QR Code</h1>
+    {#if isLoading}
+      <div class='loading'>
+        <img class='logo' src= { cgLogo } alt="Common Good logo" />
+        <p>Loading Camera...</p>
+      </div>
+    {/if}
+      <div id='scanner'></div> 
   </div>
+  <a href="/home">Cancel</a>
 </section>
 
 <style lang='stylus'>
+  a
+    cgButtonSecondary()
+
   h1
-    font-weight 600
-    text lg
+    margin-bottom $s2
+
+  section
+    display flex
+    flex-direction column
+    justify-content space-between
+    align-items center
+    height 100%
+
+  .loading
+    font-style italic
+    height 250px
+    contentCentered(column)
+
+  .logo
+    width: 80px
+    margin-bottom $s4
+    animation spin 2s linear infinite
+
+  .top
     text-align center
-    margin 0 0 $s2
 
-  #scan-reader-container
-    cgCard()
-    background $c-green
+  @keyframes spin 
+    0% 
+      transform: rotate(0deg)
+    100% 
+      transform: rotate(360deg)
 
-  #scan-reader
-    contentCentered()
-
+  /* Needed to show QR Camera */
+  #scanner
     :global(video)
       width auto !important
 </style>

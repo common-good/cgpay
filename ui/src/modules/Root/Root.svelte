@@ -16,7 +16,6 @@
 
   import LayoutIntro from './LayoutIntro/LayoutIntro.svelte'
   import LayoutStep from './LayoutStep/LayoutStep.svelte'
-  import ShowQr from '../ShowQr/ShowQr.svelte';
 
   // --------------------------------------------
   // Initialization Helpers
@@ -46,9 +45,9 @@
   const unready = store.myAccount.empty
 
   const routes = [
-    route('/', AddToHomeScreen, store.homeScreen.promptRequired, '/sign-in', LayoutIntro),
-    route('/sign-in', SignIn, unready, '/scan', LayoutIntro),
-    route('/link-account', LinkAccount, unready, '/scan'),
+    route('/', AddToHomeScreen, true, '/sign-in', LayoutIntro),
+    route('/sign-in', SignIn, true, '/', LayoutIntro),
+    route('/link-account', LinkAccount, true, '/home'),
     route('/home', Home, ready, '/'),
     route('/scan', Scan, ready, '/sign-in'),
     route('/charge', Charge, ready, '/sign-in'),

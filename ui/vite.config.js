@@ -4,8 +4,6 @@ import { imagetools } from 'vite-imagetools'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
 import pwaConfig from './vite.pwa.config.js'
 import adapt from '@adaptably/adapt'
-//import { loadAdapt } from '@adaptably/adapt'
-//const adapt = loadAdapt({ configurationDirectory: '../' })
 
 // --------------------------------------------
 

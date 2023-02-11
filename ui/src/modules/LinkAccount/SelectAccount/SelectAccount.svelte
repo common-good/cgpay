@@ -19,56 +19,45 @@
   }
 </script>
 
-<section id='select-account' class="select-account">
-  <div class='link-account-content'>
-    <h1>Link Account</h1>
-    <p>Select a Common Good account to link to CGPay on this device.</p>
-
-    <form>
-      <label for='link-account-select-account'>Select Account:</label>
-
-      <select id='link-account-select-account' size={ size } bind:value={ selectedAccount }>
-        { #each accountOptions as account }
-          <option value={ account.id }>{ account.name }</option>
-        { /each }
-      </select>
-    </form>
+<div class="select-account">
+  <div class="top">
+  <p>Select a Common Good account to link to CG Pay on this device.</p>
+  <form>
+    <label for='select-account' id='select-account'>Select Account:</label>
+    <select name='select-account' size={size} bind:value={ selectedAccount }>
+      { #each accountOptions as account }
+        <option value={ account.id }>{ account.name }</option>
+      { /each }
+    </select>
+  </form>
   </div>
-
-  <button class='link-account-action' on:click={ gotAccount }>Link Account</button>
-</section>
+  <button type="submit" on:click={ gotAccount }>Link Account</button>
+</div>
 
 <style lang='stylus'>
-  @import '../LinkAccount.styl'
+  button
+    cgButton()
 
-  .select-account
+  form
     height 100%
+
+  p
+    margin-bottom $s2
+
+  select
+    border solid 1px
+
+  option
+    display flex
+    align-items center
+    padding $s-2
+  
+  .select-account
+    height 80%
     display flex
     flex-direction column
     justify-content space-between
-    
-    p
-      contentNarrow(300px)
-      margin $s2 auto
-      text-align left
 
-    form
-      contentNarrow(300px)
-
-      label
-        display block
-        font-weight 600
-        margin-bottom $s1
-        text sm
-        text-align left
-
-      select
-        border 1px solid $c-black
-        cgField()
-
-  .link-account-action
-    linkAccountAction()
-
-  .link-account-content
-    linkAccountContent()
+  .top
+    padding 0 $s0
 </style>

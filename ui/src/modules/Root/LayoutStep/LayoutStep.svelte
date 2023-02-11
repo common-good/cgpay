@@ -1,6 +1,8 @@
 <script>
   import { Route, navigateTo } from 'svelte-router-spa'
   import { onMount } from 'svelte';
+  import NavIcon from "svelte-material-icons/Menu.svelte"
+  import Navigation from './Navigation/Navigation.svelte'
   import cgLogo from '#modules/Root/assets/cg-logo-300.png?webp'
   import cgLogoDemo from '#modules/Root/assets/cg-logo-300-demo.png?webp'
   import store from '#store.js'
@@ -8,17 +10,25 @@
   // --------------------------------------------
 
   export let currentRoute
+
   let viewHeight
+  let isNavOpen
+
+  const toggleNav = () => {isNavOpen = !isNavOpen}
+
   onMount(() => viewHeight = window?.visualViewport?.height)
 </script>
 
 <div class='layout-step' style="height: {viewHeight}px">
+  {#if isNavOpen}
+    <Navigation on:toggleNav={toggleNav}/>
+  {/if}
   <header>
-    <img class="corner" src={ $store.testing ? cgLogoDemo : cgLogo } alt='Common Good Logo' on:click={ () => navigateTo('/home') } />
+    <button on:click={ () => navigateTo('/home') }><img src={ $store.testing ? cgLogoDemo : cgLogo } alt='Common Good Logo' /></button>
     {#if $store.myAccount.name}
-      <h2>{ $store.myAccount.name }</h2>
+      <p>{ $store.myAccount.name }</p>
     {/if}
-    <div class="corner"><!--menu--></div>
+    <button on:click={toggleNav}><NavIcon width={'100%'} height={'100%'} ariaLabel={'menu'} /></button>
   </header>
 
   <div class='content'>
@@ -27,28 +37,27 @@
 </div>
 
 <style lang='stylus'>
-  .layout-step
-    contentNarrow()
-    height 100%
-    display: flex
-    flex-direction column
-    padding $ss
+  button
+    height 48px
+    width 48px
 
   header
     display flex
     align-items center
-    margin-bottom: $ss
-
-  h2
-    width 100%
-    text-align center
-    text md
-    padding 0 $s1
-
-  .corner
-    height 48px
-    width 48px
+    justify-content space-between
+    margin-bottom $s0
+    padding $s-2
+    background $c-blue-light
+    box-shadow 0 1px 4px $c-gray
 
   .content
     height 100%
+    padding $s-1 
+
+  .layout-step
+    height 100%
+    display: flex
+    flex-direction column
+    background $c-white
+    constrainWidth($tablet)
 </style>

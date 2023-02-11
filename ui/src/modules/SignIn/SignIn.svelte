@@ -19,7 +19,7 @@
   // --------------------------------------------
 
   function showEr(msg) { 
-    ({ m0, m1 } = dlg('Alert', msg, 'OK', () => m0 = false)); m0=m0; m1=m1;
+    ({ m0, m1 } = dlg('Alert', msg, 'Close', () => m0 = false)); m0=m0; m1=m1;
     statusMsg = ''
   }
 
@@ -28,8 +28,17 @@
     try {
       const query = queryString.stringify(credentials)
       const { result } = await timedFetch(`accounts?${ query }`)
-      store.myAccount.setChoices(result.accounts)
-      navigateTo('/link-account')
+
+      store.signIn()
+      
+      if (result.accounts.length > 1) {
+        store.setIsBusiness(true)
+        store.myAccount.setChoices(result.accounts)
+        navigateTo('/link-account')
+      } else {
+        store.myAccount.set(result.accounts[0])
+        navigateTo('/home')
+      }
     } catch (er) {
       store.network.reset()
       if (isTimeout(er) || !$store.network.online) {
@@ -47,59 +56,66 @@
   <title>CGPay - Sign In</title>
 </svelte:head>
 
-<section id='sign-in' on:submit|preventDefault={ signIn }>
+<section class='card' id='sign-in'>
   <header>
     <img src= { $store.testing ? cgLogoDemo : cgLogo } alt='Common Good Logo' />
-    <h1>CGPay</h1>
+    <h1>CG Pay</h1>
   </header>
 
-  <h2>Sign In</h2>
-
-  { #if $store.network.offline }
-    <div class='sign-in-offline'>
-      <p>Please connect to the internet to sign in.</p>
-    </div>
-  { :else }
-    <form>
-      <input type='text' placeholder='Account ID or email address' bind:value={ credentials.identifier } required />
+  <div class='content'>
+    <h2>Sign In</h2>
+    <form on:submit|preventDefault={ signIn }>
+      <label class='visuallyhidden' for='account-id'>Account ID or Email Address</label>
+      <input name='account-id' type='text' placeholder='Account ID or Email Address' autocomplete='name' bind:value={ credentials.identifier } required />
+      <label class='visuallyhidden' for='password'>Password</label>
       <input type='password' placeholder='Password' bind:value={ credentials.password } required />
       <button type='submit'>Sign In</button>
     </form>
-    <p>{ statusMsg }</p>
-  { /if }
+    <p class="status">{ statusMsg }</p>
+  </div>
 </section>
 
 <Modal m0={m0} on:m1={m1} />
 
 <style lang='stylus'>
-  img
-    clampSize(15vw, 75px)
-    margin 0 $s2 0 0
-
-  h1
-    font-weight 600
-    text xl
+  button
+    cgButton()
 
   h2
-    font-weight 600
-    margin $s4 0
-    text lg
-    text-align center
+    margin-bottom $s1
 
   header
     contentCentered()
 
+  img
+    width 75px
+    margin 0 $s2 0 0
+
   form
-    margin-bottom $s3
+    margin-bottom $s2
 
-  input
-    cgField()
-    &:last-of-type
-      margin-bottom $ss
+  p 
+    height 72px
 
-  button
-    cgButton()
+  .card
+    height 100%
+    display flex
+    flex-direction column
+    align-items center
+    background $c-blue-light
+    box-shadow: 2px 2px 4px $c-gray-dark
+    border-radius: 2%
+    padding $s1
 
-  .sign-in-offline
-    cgCard()
+  .content
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column
+    justify-content: center
+    align-items: center
+
+  .status
+    font-style italic
+    letter-spacing: 0.0125rem
 </style>

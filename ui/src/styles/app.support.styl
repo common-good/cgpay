@@ -1,42 +1,77 @@
 // --------------------------------------------
 // Theme Colors
 
-$c-black = #000000
-$c-blue = #0270ED
-$c-blue-dark = #0253AE
-$c-gray-light = #F0F0F0
-$c-green = #b3f287
 $c-white = #ffffff
+$c-black = #010402
+
+$c-neutral = #e7e3d1
+$c-gray-light = #faf9f6
+$c-gray = #cfcbc3
+$c-gray-dark = #5c5b54
+
+$c-blue-light = #e5f5ff
+$c-blue = #0946a6  // #0b57d0 or #0a4ebb 
+$c-blue-dark = #07347d
+$c-blue-muted = #335366
+
+$c-green-light = #eff4e9
+$c-green = #5D9220
+$c-green-dark = #416616
+
+$c-error = #e71809
+$c-error-light = #fde8e6
+$c-warning = #fefacd
+$c-warning-dark = #e3d105
+
+// --------------------------------------------
+// Breakpoints
+
+$mobile = 300px
+$tablet = 820px
 
 // --------------------------------------------
 // Typography & Spacing
 
-$s1 = 0.50rem
-$s2 = 1.50rem
-$s3 = 2.00rem
-$s4 = 3.00rem
-$ss = 1.00rem
+$s-4 = 0.125rem
+$s-3 = 0.25rem
+$s-2 = 0.5rem
+$s-1 = 0.75rem
+$s0 = 1rem
+$s1 = 1.5rem
+$s2 = 2rem
+$s3 = 2.25rem
+$s4 = 3rem
+$s5 = 4rem
 
 text(size)
+  if size is 'xs'
+    font-size 0.75rem
+    line-height 150%
+
   if size is 'sm'
     font-size 0.875rem
-    line-height 1.25rem
+    line-height 150%
+    letter-spacing 0.02rem
 
   if size is 'md'
     font-size 1rem
-    line-height 1.5rem
+    line-height 150%
 
   if size is 'lg'
-    font-size 1.5rem
-    line-height 2.15rem
+    font-size 1.125rem
+    line-height 150%
 
   if size is 'xl'
-    font-size 1.875rem
-    line-height 2.25rem
+    font-size 1.25rem
+    line-height 150%
 
   if size is '2xl'
-    font-size 2.5rem
-    line-height 2rem
+    font-size 1.5rem
+    line-height 150%
+
+  if size is '3xl'
+    font-size 1.75rem
+    line-height 150%
 
 // --------------------------------------------
 // Theme Elements
@@ -44,7 +79,7 @@ text(size)
 cgCard()
   background $c-white
   border solid 1px $c-black
-  padding $ss
+  padding $s0
   text-align center
 
 cgField()
@@ -56,12 +91,13 @@ cgField()
 
 cgButton()
   contentCentered()
+  text(md)
   background $c-blue
   border solid 1px $c-blue
   border-radius 50px
   color $c-white
   max-height 75px
-  padding $ss $s2
+  padding $s0 $s2
   width 100%
 
   &:hover
@@ -69,12 +105,13 @@ cgButton()
 
 cgButtonSecondary()
   contentCentered()
+  text(md)
   background $c-white
   border solid 2px $c-blue
   border-radius 50px
   color $c-blue
   max-height 75px
-  padding $ss $s2
+  padding $s0 $s2
   width 100%
 
   &:hover
@@ -83,13 +120,15 @@ cgButtonSecondary()
 
 cgButtonTertiary()
   contentCentered()
+  text(md)
   background $c-white
   border-radius 50px
   color $c-blue
   max-height 75px
-  padding $ss $s2
+  padding $s0 $s2
   width 100%
   text-decoration underline
+  text-underline-offset 1px
 
   &:hover
     color $c-blue-dark
@@ -115,6 +154,6 @@ contentCentered(direction = row)
   if direction is 'column'
     flex-direction column
 
-contentNarrow(max = 500px)
+constrainWidth(max = $mobile)
   margin 0 auto
   max-width max

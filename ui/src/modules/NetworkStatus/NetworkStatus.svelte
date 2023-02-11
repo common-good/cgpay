@@ -28,9 +28,9 @@
     padding $s2
 
   #network-status-content
-    align-items center
-    contentNarrow()
     display flex
+    align-items center
+    constrainWidth($tablet)
 
   img
     padding 0 $s2 0 0

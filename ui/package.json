@@ -23,6 +23,7 @@
     "stylus": "^0.55.0",
     "svelte": "^3.50.0",
     "svelte-focus-trap": "^1.2.0",
+    "svelte-inline-svg": "^1.2.0",
     "svelte-preprocess": "^4.10.7",
     "svelte-router-spa": "^6.0.3",
     "vite": "^3.0.9",
@@ -31,6 +32,7 @@
     "vitest": "^0.23.0"
   },
   "dependencies": {
+    "svelte-material-icons": "^3.0.4",
     "svelte-qrcode": "^1.0.0"
   }
 }

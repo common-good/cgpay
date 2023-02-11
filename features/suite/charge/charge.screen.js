@@ -16,10 +16,10 @@ export default (page) => {
 
     element(name) {
       const elements = {
-        amountField: '#charge-amount',
+        amountField: '#amount',
         businessName: 'h1',
         chargeButton: 'button[type="submit"]',
-        descriptionField: '#charge-description',
+        descriptionField: '#description',
         profile: '#charge-profile',
         profilePhoto: '#charge-profile img',
         root: '#charge',
