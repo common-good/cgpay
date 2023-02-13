@@ -3,12 +3,14 @@
 </script>
 
 <div class="content" id='apple-instructions'>
-  <p>To add CGPay to your home screen:</p>
-  <ol>
-    <li>Tap the Share button (a square with an up arrow).</li>
-    <li>In the menu, scroll down and select "Add to Home Screen".</li>
-    <li>Then tap "Add".</li>
-  </ol>
+  <div class='top'>
+    <p>To add CGPay to your home screen:</p>
+    <ul>
+      <li>1. Tap the Share button (a square with an up arrow).</li>
+      <li>2. In the menu, scroll down and select "Add to Home Screen".</li>
+      <li>3. Then tap "Add".</li>
+    </ul>
+  </div>
   <button on:click={ skip }>Continue</button>
 </div>
 

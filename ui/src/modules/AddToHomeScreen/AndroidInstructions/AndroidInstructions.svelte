@@ -3,11 +3,13 @@
 </script>
 
 <section class="content" id='android-instructions'>
-  <p>To add CGPay to your home screen:</p>
-  <ol>
-    <li>Tap the menu icon (3 dots in upper right corner).</li>
-    <li>Then tap "Add to homescreen".</li>
-  </ol>
+  <div class='top'>
+    <p>To add CGPay to your home screen:</p>
+    <ul>
+      <li>1. Tap the menu icon (3 dots in upper right corner).</li>
+      <li>2. Then tap "Add to homescreen".</li>
+    </ul>
+  </div>
   <button on:click={ skip }>Continue</button>
 </section>
 
