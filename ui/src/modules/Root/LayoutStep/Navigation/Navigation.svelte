@@ -39,7 +39,7 @@
     position absolute
     right 0
     height 100%
-    width 60%
+    width 220px
     background $c-white
     text-align right
     box-shadow -1px 0 4px $c-gray
