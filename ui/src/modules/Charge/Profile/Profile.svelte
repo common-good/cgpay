@@ -3,7 +3,6 @@
   export let otherAccount
   export let photo
 
-  const isBusiness = otherAccount.agent
 </script>
 
 <section id='charge-profile'>
@@ -15,7 +14,7 @@
     {/if}
   </div>
   <div class='info'>
-    {#if isBusiness}
+    {#if otherAccount.agent}
       <h2>{ otherAccount.agent }</h2>
       <p>{ otherAccount.name }</p>
     {:else}

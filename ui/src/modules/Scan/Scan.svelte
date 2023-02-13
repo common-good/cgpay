@@ -11,31 +11,36 @@
   let isLoading = true
 
   onMount(async () => {
+    console.log('top again')
   //   store.setQr('HTTP://6VM.RC4.ME/H0G0NyCBBlUF1qWNZ2k'); navigateTo('/charge') // HTTP://6VM.RC4.ME/H0G0NyCBBlUF1qWNZ2k or H6VM0G0NyCBBlUF1qWNZ2k.
-    const devices = await Html5Qrcode.getCameras()
-    .catch(er => { goEr(er.message) })
+    Html5Qrcode.getCameras().then(devices => {
+      console.log(devices)
+      if (devices?.length) {
+        const cameraId = devices[0].id
+        const scanner = new Html5Qrcode('scanner')
 
-    if (devices?.length) {
-      const cameraId = devices[0].id
-      const scanner = new Html5Qrcode('scanner')
+        scanner.start(
+          cameraId, 
+          { qrbox: { width: 250, height: 250 } }, // Configuration options.
 
-      scanner.start(
-        cameraId, 
-        { qrbox: { width: 250, height: 250 } }, // Configuration options.
+          async (decodedText, decodedResult) => { // Handle code
+            store.setQr(decodedText)
+            await scanner.stop()
+            navigateTo('/charge')
+          },
+          (erMsg) => { } // ignore "parse" errors -- no valid QR yet (keep scanning)
 
-        async (decodedText, decodedResult) => { // Handle code
-          store.setQr(decodedText)
-          await scanner.stop()
-          navigateTo('/charge')
-        },
-        (erMsg) => { } // ignore parse errors (keep scanning)
-
-      ).then((res) => {
-        isLoading = false
-      }).catch((er) => { // Handle scan error
-        goEr(er.message)
-      })
-    }
+        ).then((res) => {
+          isLoading = false
+        }).catch((er) => { // Handle scan error
+          goEr(er.message)
+        })
+      } else {
+        goEr('No camera is available.')
+      }
+    }).catch(er => {
+       goEr(er.message) 
+    })
   })
 </script>
 

@@ -29,24 +29,21 @@
       const query = queryString.stringify(credentials)
       const { result } = await timedFetch(`accounts?${ query }`)
 
-      store.signIn()
-      
       if (result.accounts.length > 1) {
-        store.setIsBusiness(true)
-        store.myAccount.setChoices(result.accounts)
+        store.setAcctChoices(result.accounts)
         navigateTo('/link-account')
       } else {
-        store.myAccount.set(result.accounts[0])
+        store.setMyAccount(result.accounts[0])
         navigateTo('/home')
       }
     } catch (er) {
-      store.network.reset()
+      store.resetNetwork()
       if (isTimeout(er) || !$store.network.online) {
         showEr('The server is unavailable. Check your internet connection and try again.')
       } else if (er.message == 403) { // forbidden
         showEr('That account is not completely set up. Sign back in at CommonGood.earth to complete it.')
       } else {
-        showEr('We couldn\'t find an account with that information. Please try again.')
+        showEr('We could not find an account with that information. Please try again.')
       }
     }
   }
@@ -59,7 +56,7 @@
 <section class='card' id='sign-in'>
   <header>
     <img src= { $store.testing ? cgLogoDemo : cgLogo } alt='Common Good Logo' />
-    <h1>CG Pay</h1>
+    <h1>CGPay</h1>
   </header>
 
   <div class='content'>

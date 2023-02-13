@@ -21,7 +21,7 @@
 
 <div class="select-account">
   <div class="top">
-  <p>Select a Common Good account to link to CG Pay on this device.</p>
+  <p>Select a Common Good account to link to CGPay on this device.</p>
   <form>
     <label for='select-account' id='select-account'>Select Account:</label>
     <select name='select-account' size={size} bind:value={ selectedAccount }>

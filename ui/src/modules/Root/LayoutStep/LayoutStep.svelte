@@ -20,15 +20,15 @@
 </script>
 
 <div class='layout-step' style="height: {viewHeight}px">
-  {#if isNavOpen}
+  { #if isNavOpen }
     <Navigation on:toggleNav={toggleNav}/>
-  {/if}
+  { /if }
   <header>
     <button on:click={ () => navigateTo('/home') }><img src={ $store.testing ? cgLogoDemo : cgLogo } alt='Common Good Logo' /></button>
-    {#if $store.myAccount.name}
+    { #if store.isSignedIn() }
       <p>{ $store.myAccount.name }</p>
-    {/if}
-    <button on:click={toggleNav}><NavIcon width={'100%'} height={'100%'} ariaLabel={'menu'} /></button>
+    { /if }
+    <button on:click={toggleNav}> <NavIcon width={'100%'} height={'100%'} ariaLabel={'menu'} /></button>
   </header>
 
   <div class='content'>

@@ -5,7 +5,7 @@ import store from '#store.js'
 
 describe('Charge', () => {
   it('renders', () => {
-    store.myAccount.set({ name: 'Business', accountId: '123' })
+    store.setMyAccount({ name: 'Business', accountId: '123' })
 
     render(Charge)
   })

@@ -1,11 +1,11 @@
 export default (page) => {
   return {
     async loseConnection() {
-      await page._parent.setOffline(true)
+      await page._parent.setOnline(false)
     },
 
     async restoreConnection() {
-      await page._parent.setOffline(false)
+      await page._parent.setOnline(true)
     },
 
     async visit() {

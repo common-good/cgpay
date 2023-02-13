@@ -22,7 +22,6 @@
       tx.created = created // Unix timestamp
       tx.amount = (+tx.amount).toFixed(2)
       tx.proof = hash(tx.actorId + tx.amount + tx.otherId + tx.code + tx.created)
-      console.log(tx.actorId + tx.amount + tx.otherId + tx.code + tx.created)
       delete(tx.code)
       tx.offline = false
     }
@@ -35,7 +34,7 @@
       if (er == 400) { // syntax error
         throw new Error('Program issue: request syntax error')
       } else {
-        store.txs.queue(tx)                                                                                                         
+        store.enqTx(tx)                                                                                                         
         if (!otherAccount.name) otherAccount.name = 'Unidentified Customer'
         dispatch('complete') // update display
       }
@@ -51,7 +50,7 @@
       <label for='amount'>Amount</label>
       <input id='amount' type='number' min="0.01" step="0.01" max={ limit } name='amount' placeholder='$0.00' bind:value={ tx.amount } required />
       <label for='description'>Description</label>
-      <input id='description' type='text' name='description' placeholder='i.e. burrito, groceries, book, rent' bind:value={ tx.description } autocomplete required />
+      <input id='description' type='text' name='description' placeholder='e.g. lunch, rent, suppies, loan, etc.' bind:value={ tx.description } autocomplete required />
     </fieldset>
     <button type='submit'>Charge</button>
   </form>

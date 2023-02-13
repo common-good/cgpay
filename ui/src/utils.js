@@ -64,7 +64,7 @@ async function timedFetch(url, options = {}) {
   } else if (res.ok === false) {
     throw new Error(res.status)
   }
-  clearTimeout(timeoutId);
+  clearTimeout(timeoutId)
   return res
 }
 
