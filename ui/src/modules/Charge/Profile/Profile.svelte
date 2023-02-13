@@ -15,7 +15,7 @@
   </div>
   <div class='info'>
     {#if otherAccount.agent}
-      <h2>{ otherAccount.agent }</h2>
+      <h2>{otherAccount.agent}</h2>
       <p>{ otherAccount.name }</p>
     {:else}
       <h2>{ otherAccount.name }</h2>
@@ -29,13 +29,16 @@
     display flex
     flex-direction column
     align-items center
-    margin-bottom $s3
+    margin-bottom $s0
 
-  .info
-    min-height 74px
+  img
+    width 120px
 
   .photo
-    height 120px
+    height 160px
     margin-bottom $s0
     background $c-green
+
+  .info
+    text-align center
 </style>
