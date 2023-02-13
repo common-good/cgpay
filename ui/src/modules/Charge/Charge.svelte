@@ -184,30 +184,25 @@
     <h1>Transaction Complete</h1>
     <div class='top'>
       <div class='charge-info'>
-        <div class='payee-info'>
-          <div>Charged to:</div>
+        <div class='row payee-info'>
+          <p>Charged to:</p>
           <div class='payee-details'>
           {#if otherAccount.agent}
             <p>{ otherAccount.agent }</p>
-            <p>{ otherAccount.name }</p>
+            <p class='co'>{ otherAccount.name }</p>
           {:else}
             <p>{ otherAccount.name }</p>
           {/if}
           </div>
         </div>
-        <table>
-          <caption class='visuallyhidden'>Transaction Details</caption>
-          <tbody>
-              <tr>
-                <th scope="col">Item</th>
-                <th scope="col">Amount</th>
-              </tr>
-              <tr>
-                <td>{ tx.description }</td>
-                <td>{ tx.amount }</td>
-              </tr>
-          </tbody>
-        </table>
+        <div class='row'>
+          <p>Description:</p>
+          <p>{ tx.description }</p>
+        </div>
+        <div class='row'>
+          <p>Amount:</p>
+          <p>$ { tx.amount }</p>
+        </div>
       </div>
       <div class="note">Thank you for using CGPay<br>for democracy and the common good!</div>
     </div>
@@ -229,24 +224,6 @@
   h1 
     margin-bottom $s1
 
-  table
-    width 100%
-
-  caption
-    text(sm)
-
-  th, td
-    text-align left
-    &:last-of-type
-      text-align right
-
-  th
-    text(sm)
-
-  tr:first-of-type
-    border-top dashed 1px
-    border-bottom dashed 1px
-
   section
     height 100%
     width 100%
@@ -264,17 +241,23 @@
     border-top dashed 1px
     padding-top $s0
 
-  .payee-info
+  .row
     display flex
     justify-content space-between
     align-items baseline
     width 100%
-    margin-bottom $s0
+    p:first-of-type
+      font-weight 600
+
+  .payee-info
+    margin-bottom $s2
 
   .payee-details
     text-align right
     p:first-of-type
-      font-weight 600
+      font-weight 400
+    .co
+      text sm
       
   .top
     height 100%
