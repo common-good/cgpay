@@ -31,7 +31,7 @@
       <h1>Show this code to pay</h1>
       <img src="{ myQr }" alt="my QR code" />
     { :else }
-      <h1>Ready to charge customers.</h1>
+      <h1>Ready to charge people.</h1>
     { /if }
   </div>
   <div class="charge">

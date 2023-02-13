@@ -21,9 +21,9 @@
 
   function gotAccount(ev) {
     myAccount = accounts && accounts[ev.detail]
-    store.myAccount.setChoices(null) // don't leave this lying around
-    store.myAccount.set(myAccount)
-    goHome(`This device is now linked to the account: ${myAccount.name}.`)
+    store.setAcctChoices(null) // don't leave this lying around
+    store.setMyAccount(myAccount)
+    goHome(`This device is now linked to your Common Good account: ${myAccount.name}.`)
   }
 
   onMount(async () => {
@@ -33,10 +33,7 @@
         accountOptions[i] = {id: i, name: accounts[i].name}
       }
       size = Math.min(size, accounts.length)
-    } else if ($store.myAccount.accountId) {
-      er('Please Sign In again to change your linked accounts.')
-    }
-    else {
+    } else {
       er('Your account is not yet active. Sign in at CommonGood.earth to finish opening your account.')
     }
   })

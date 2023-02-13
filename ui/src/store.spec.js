@@ -8,42 +8,35 @@ vi.mock('#utils.js', () => ({
 
 // --------------------------------------------
 
-const storeKey = 'cgpay.store'
+const testKey = 'cgpay.test'
+const realKey = 'cgpay.real'
+const testModeKey = 'cgpay.testMode'
+window.localStorage.setItem(testModeKey, JSON.stringify(true)) // do the testing in test mode
 
-function storeState() {
-  return JSON.parse(window.localStorage.getItem(storeKey))
+function stored() {
+  return JSON.parse(window.localStorage.getItem(testKey))
 }
 
 function setupLocalStorage(data) {
-  return window.localStorage.setItem(storeKey, JSON.stringify(data))
+  return window.localStorage.setItem(testKey, JSON.stringify(data))
 }
 
 // --------------------------------------------
 
 /* -- Skipping these tests for Alpha testing -- */
 
-test.skip('store unit tests'), () => {
+//test.skip('store unit tests'), () => {
   describe('store', () => {
     beforeEach(() => {
-      window.localStorage.setItem(storeKey, null)
+      setupLocalStorage(null)
       sendTxRequest = vi.fn()
     })
 
     describe('when there are existing values in local storage', () => {
       it('initializes to stored values', () => {
-        setupLocalStorage({
-          foo: {
-            bar: 'baz'
-          }
-        })
-
+        setupLocalStorage({ foo: { bar: 'baz' } })
         const store = createStore()
-
-        expect(store.inspect()).toEqual({
-          foo: {
-            bar: 'baz'
-          }
-        })
+        expect(store.inspect()).toEqual({ foo: { bar: 'baz' }, testing: true })
       })
     })
 
@@ -58,60 +51,54 @@ test.skip('store unit tests'), () => {
     describe('.myAccount', () => {
       it('is accessible', () => {
         const store = createStore()
-        expect(store.inspect().myAccount.name).toEqual(null)
+        expect(store.inspect().myAccount).toEqual(null)
       })
 
-      describe('.exists()', () => {
+      describe('.setAcctChoices()', () => {
+        const store = createStore()
+        it('is initialized as null', () => {
+          expect(store.inspect().choices).toEqual(null)
+        })
+  
+        it('sets the correct account choices', () => {
+          const acctChoices = [{ acct1: 'foo' }, {acct2: 'bar'}]
+          store.setAcctChoices(acctChoices)
+          expect(store.inspect().choices).toEqual(acctChoices)
+          expect(stored().choices).toEqual(acctChoices)
+        })
+      })
+
+      describe('.isSignedIn()', () => {
         describe('when there is a linked account', () => {
           it('is true', () => {
             setupLocalStorage({
               myAccount: {name: 'bar'}
             })
             const store = createStore()
-            expect(store.myAccount.exists()).toEqual(true)
-            expect(store.myAccount.empty()).toEqual(false)
+            expect(store.isSignedIn()).toEqual(true)
           })
         })
 
         describe('when there is not a linked business', () => {
           it('is false', () => {
             setupLocalStorage({
-              myAccount: {name: null}
+              myAccount: null
             })
 
             const store = createStore()
-            expect(store.myAccount.exists()).toEqual(false)
-            expect(store.myAccount.empty()).toEqual(true)
+            expect(store.isSignedIn()).toEqual(false)
           })
         })
       })
 
-      describe('.set()', () => {
+      describe('.setMyAccount()', () => {
         it('links the given account', () => {
           const store = createStore()
-          store.myAccount.set({name: 'Biz'})
+          store.setMyAccount({name: 'Biz'})
 
-          expect(storeState().myAccount.name).toEqual('Biz')
+          expect(stored().myAccount.name).toEqual('Biz')
           expect(store.inspect().myAccount.name).toEqual('Biz')
         })
-      })
-    })
-
-    describe('.accountChoices', () => {
-      let store;
-      beforeEach(() => {
-        store = createStore()
-      })
-
-      it('is initialized as null', () => {
-        expect(store.accountChoices.get()).toBeNull()
-      })
-
-      it('sets the correct account choices', () => {
-        const acctChoices = [{ acct1: 'foo' }, {acct2: 'bar'} ]
-
-        store.accountChoices.set(acctChoices)
-        expect(store.accountChoices.get()).toEqual(acctChoices)
       })
     })
 
@@ -122,14 +109,14 @@ test.skip('store unit tests'), () => {
       })
 
       it('is initialized as null', () => {
-        expect($store.qr).toBeNull()
+        expect(store.inspect().qr).toBeNull()
       })
 
       it('sets the correct qr value', () => {
         const v = '123'
 
-        store.qr.set(v)
-        expect($store.qr).toEqual(v)
+        store.setQr(v)
+        expect(store.inspect().qr).toEqual(v)
       })
     })
 
@@ -140,24 +127,18 @@ test.skip('store unit tests'), () => {
       })
 
       it('is initialized as null', () => {
-        expect(store.erMsg).toBeNull()
+        expect(store.inspect().erMsg).toBeNull()
       })
 
       it('sets the correct error message', () => {
         const msg = "error" 
 
-        store.erMsg.set(msg)
-        expect(store.erMsg).toEqual(msg)
+        store.setMsg(msg)
+        expect(store.inspect().erMsg).toEqual(msg)
       })
     })
 
     describe('.network', () => {
-      describe('.offline', () => {
-        it('is accessible', () => {
-          const store = createStore()
-          expect(store.inspect().network.offline).toEqual(null)
-        })
-      })
 
       describe('.online', () => {
         it('is accessible', () => {
@@ -166,10 +147,10 @@ test.skip('store unit tests'), () => {
         })
       })
 
-      describe('.reset()', () => {
+      describe('.resetNetwork()', () => {
         it('resets the network to basic online status', () => {
           const store = createStore()
-          store.network.reset()
+          store.resetNetwork()
 
           expect(store.inspect().network.online).toEqual(window.navigator.onLine)
         })
@@ -179,10 +160,10 @@ test.skip('store unit tests'), () => {
         it('sets the network status to online or offline', () => {
           const store = createStore()
 
-          store.network.setOnline(true)
+          store.setOnline(true)
           expect(store.inspect().network.online).toEqual(true)
 
-          store.network.setOnline(false)
+          store.setOnline(false)
           expect(store.inspect().network.online).toEqual(false)
         })
       })
@@ -194,11 +175,11 @@ test.skip('store unit tests'), () => {
         const card = {acct: '123'}
         const store = createStore()
 
-        store.accts.put(card, { foo: 'bar' })
-        expect(store.accts.get(card)).toEqual({ foo: 'bar' })
+        store.putAcct(card, { foo: 'bar' })
+        expect(store.getAcct(card)).toEqual({ foo: 'bar' })
 
-        store.accts.put(card, { fizz: 'buzz' })
-        expect(store.accts.get(card)).toEqual({ fizz: 'buzz' })
+        store.putAcct(card, { fizz: 'buzz' })
+        expect(store.getAcct(card)).toEqual({ fizz: 'buzz' })
       })
     })
 
@@ -254,26 +235,22 @@ test.skip('store unit tests'), () => {
         describe('when the user is on an Android device', () => {
           it('is true', () => {
             setupLocalStorage({
-              device: {
-                type: 'Android',
-              }
+              device: { type: 'Android' }
             })
 
             const store = createStore()
-            expect(store.device.isAndroid()).toEqual(true)
+            expect(store.isAndroid()).toEqual(true)
           })
         })
 
         describe('when the user is not on a Android device', () => {
           it('is false', () => {
             setupLocalStorage({
-              device: {
-                type: 'Apple',
-              }
+              device: { type: 'Apple' }
             })
 
             const store = createStore()
-            expect(store.device.isAndroid()).toEqual(false)
+            expect(store.isAndroid()).toEqual(false)
           })
         })
       })
@@ -282,115 +259,93 @@ test.skip('store unit tests'), () => {
         describe('when the user is on an Apple device', () => {
           it('is true', () => {
             setupLocalStorage({
-              device: {
-                type: 'Apple',
-              }
+              device: { type: 'Apple' }
             })
 
             const store = createStore()
-            expect(store.device.isApple()).toEqual(true)
+            expect(store.isApple()).toEqual(true)
           })
         })
 
         describe('when the user is not on a Apple device', () => {
           it('is false', () => {
             setupLocalStorage({
-              device: {
-                type: 'Android',
-              }
+              device: { type: 'Android' }
             })
 
             const store = createStore()
-            expect(store.device.isApple()).toEqual(false)
+            expect(store.isApple()).toEqual(false)
           })
         })
       })
-    })
 
-    describe('.homeScreen', () => {
-      describe('.promptRequired()', () => {
-        describe('when the user is on an Apple device and has not previously skipped the prompt', () => {
+      describe('.addableToHome()', () => {
+        describe('when the user is on Safari on an Apple device and has not previously skipped the prompt', () => {
           it('is true', () => {
             setupLocalStorage({
-              device: {
-                type: 'Apple'
-              },
-
-              homeSkipped: true,
+              device: { type: 'Apple', browser: 'Safari' },
+              homeSkipped: false,
             })
 
             const store = createStore()
-            expect(store.homeScreen.promptRequired()).toEqual(true)
+            expect(store.addableToHome()).toEqual(true)
           })
         })
 
-        describe('when the user is on an Android device and has not previously skipped the prompt', () => {
+        describe('when the user is on Chrome on an Android device and has not previously skipped the prompt', () => {
           it('is true', () => {
             setupLocalStorage({
-              device: {
-                type: 'Android'
-              },
-
-              homeSkipped: true,
+              device: { type: 'Android', browser: 'Chrome' },
+              homeSkipped: false,
             })
 
             const store = createStore()
-            expect(store.homeScreen.promptRequired()).toEqual(true)
+            expect(store.addableToHome()).toEqual(true)
           })
         })
 
         describe('when the user is not on a mobile device', () => {
           it('is false', () => {
             setupLocalStorage({
-              device: {
-                type: 'Other'
-              },
-
-              homeSkipped: true,
+              device: { type: 'Other' },
+              homeSkipped: false,
             })
 
             const store = createStore()
-            expect(store.homeScreen.promptRequired()).toEqual(false)
+            expect(store.addableToHome()).toEqual(false)
           })
         })
 
         describe('when the user has previously skipped the prompt', () => {
           it('is false', () => {
             setupLocalStorage({
-              device: {
-                type: 'Apple'
-              },
-
+              device: { type: 'Apple' },
               homeSkipped: true,
             })
 
             const store = createStore()
-            expect(store.homeScreen.promptRequired()).toEqual(false)
+            expect(store.addableToHome()).toEqual(false)
           })
         })
       })
 
-      describe('.skipped', () => {
+      describe('.homeSkipped', () => {
         it('is accessible', () => {
           const store = createStore()
           expect(store.inspect().homeSkipped).toEqual(false)
         })
       })
 
-      describe('.skip()', () => {
+      describe('.skipAddToHome()', () => {
         it('logs the time that the user skipped the home screen prompt', async () => {
           const store = createStore()
 
           vi.useFakeTimers()
-          const now = new Date()
-
-          // Confirm initial values are set.
-          expect(store.inspect().homeSkipped).toEqual(false)
-
-          store.homeScreen.skip()
+          const now = Date.now()
+          expect(store.inspect().homeSkipped).toEqual(false) // Confirm initial values are set.
+          store.skipAddToHome()
 
           // Confirm that all forms of store access are updated.
-          expect(storeState().homeSkipped).toEqual(now.toISOString())
           expect(store.inspect().homeSkipped).toEqual(now)
           store.subscribe(state => expect(state.homeSkipped).toEqual(now))
         })
@@ -402,18 +357,18 @@ test.skip('store unit tests'), () => {
         it('dequeues the first transaction in the queue', () => {
           const store = createStore()
 
-          store.txs.queue({ id: 1 })
-          store.txs.queue({ id: 2 })
-          store.txs.queue({ id: 3 })
+          store.enqTx({ id: 1 })
+          store.enqTx({ id: 2 })
+          store.enqTx({ id: 3 })
 
-          store.txs.dequeue()
+          store.deqTx()
 
           // Confirm that all forms of store access are updated.
-          expect(storeState().txs.queued).toHaveLength(2)
-          expect(store.inspect().txs.queued).toHaveLength(2)
-          store.subscribe(state => expect(state.txs.queued).toHaveLength(2))
+          expect(stored().queue).toHaveLength(2)
+          expect(store.inspect().queue).toHaveLength(2)
+          store.subscribe(state => expect(state.queue).toHaveLength(2))
 
-          expect(store.inspect().txs.queued).toEqual([
+          expect(store.inspect().queue).toEqual([
             { id: 2, offline: true },
             { id: 3, offline: true }
           ])
@@ -427,11 +382,11 @@ test.skip('store unit tests'), () => {
           const store = createStore()
           let keys = []
 
-          store.txs.queue({ id: '1', amount: 1, description: '1' })
-          store.txs.queue({ id: '2', amount: 2, description: '2' })
-          store.txs.queue({ id: '3', amount: 3, description: '3' })
+          store.enqTx({ id: '1', amount: 1, description: '1' })
+          store.enqTx({ id: '2', amount: 2, description: '2' })
+          store.enqTx({ id: '3', amount: 3, description: '3' })
 
-          await store.txs.flush()
+          await store.flushTxs()
 
           expect(sendTxRequest.calls).toHaveLength(3)
           expect(sendTxRequest.calls[0][0]).toEqual({ id: '1', amount: 1, description: '1', offline: true })
@@ -444,13 +399,13 @@ test.skip('store unit tests'), () => {
             const sendTxRequest = vi.fn()
             const store = createStore()
 
-            store.txs.queue({ id: '1', amount: 1, description: '1' })
-            store.txs.queue({ id: '2', amount: 2, description: '2' })
-            store.txs.queue({ id: '3', amount: 3, description: '3' })
+            store.enqTx({ id: '1', amount: 1, description: '1' })
+            store.enqTx({ id: '2', amount: 2, description: '2' })
+            store.enqTx({ id: '3', amount: 3, description: '3' })
 
-            expect(store.inspect().txs.queued).toHaveLength(3)
-            await store.txs.flush()
-            expect(store.inspect().txs.queued).toHaveLength(0)
+            expect(store.inspect().queue).toHaveLength(3)
+            await store.flushTxs()
+            expect(store.inspect().queue).toHaveLength(0)
           })
         })
 
@@ -467,15 +422,15 @@ test.skip('store unit tests'), () => {
 
             const store = createStore()
 
-            store.txs.queue({ id: '1' })
-            store.txs.queue({ id: '2' })
-            store.txs.queue({ id: '3' })
+            store.enqTx({ id: '1' })
+            store.enqTx({ id: '2' })
+            store.enqTx({ id: '3' })
 
-            expect(store.inspect().txs.queued).toHaveLength(3)
-            await store.txs.flush()
-            expect(store.inspect().txs.queued).toHaveLength(2)
+            expect(store.inspect().queue).toHaveLength(3)
+            await store.flushTxs()
+            expect(store.inspect().queue).toHaveLength(2)
 
-            expect(store.inspect().txs.queued[0]).toEqual({ id: '2', offline: true })
+            expect(store.inspect().queue[0]).toEqual({ id: '2', offline: true })
           })
         })
       })
@@ -483,16 +438,15 @@ test.skip('store unit tests'), () => {
       describe('.queue', () => {
         it('stores the transaction', () => {
           const store = createStore()
-          store.txs.queue({ id: '1' })
+          store.enqTx({ id: '1' })
 
           // Confirm that all forms of store access are updated.
-          expect(storeState().txs.queued).toHaveLength(1)
-          expect(store.inspect().txs.queued).toHaveLength(1)
-          store.subscribe(state => expect(state.txs.queued).toHaveLength(1))
+          expect(stored().queue).toHaveLength(1)
+          expect(store.inspect().queue).toHaveLength(1)
+          store.subscribe(state => expect(state.queue).toHaveLength(1))
 
-          expect(store.inspect().txs.queued[0]).toEqual({ id: '1', offline: true })
+          expect(store.inspect().queue[0]).toEqual({ id: '1', offline: true })
         })
       })
     })
   })
-};

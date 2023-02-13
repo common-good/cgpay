@@ -22,7 +22,7 @@
 
   function onlyIf(condition, elseGoTo) { return { guard: condition, redirect: elseGoTo } }
   function timeOut() {
-    store.network.reset()
+    store.resetNetwork()
     setTimeout(timeOut, 3000)
   }
 
@@ -34,23 +34,22 @@
   // Initialization
 
   onMount(async () => {
-    window.addEventListener('offline', () => { store.network.setOnline(false) })
-    window.addEventListener('online', () => { store.network.setOnline(true) })
+    window.addEventListener('offline', () => { store.setOnline(false) })
+    window.addEventListener('online', () => { store.setOnline(true) })
     timeOut()
   })
 
   // --------------------------------------------
 
-  const ready = store.myAccount.exists
-  const unready = store.myAccount.empty
+  const notSignedIn = ( () => !store.isSignedIn() )
 
   const routes = [
-    route('/', AddToHomeScreen, true, '/sign-in', LayoutIntro),
-    route('/sign-in', SignIn, true, '/', LayoutIntro),
-    route('/link-account', LinkAccount, true, '/home'),
-    route('/home', Home, ready, '/'),
-    route('/scan', Scan, ready, '/sign-in'),
-    route('/charge', Charge, ready, '/sign-in'),
+    route('/', AddToHomeScreen, store.addableToHome, '/sign-in', LayoutIntro),
+    route('/sign-in', SignIn, notSignedIn, '/home', LayoutIntro),
+    route('/link-account', LinkAccount, notSignedIn, '/home'),
+    route('/home', Home, store.isSignedIn, '/'),
+    route('/scan', Scan, store.isSignedIn, '/sign-in'),
+    route('/charge', Charge, store.isSignedIn, '/sign-in'),
   ]
 </script>
 

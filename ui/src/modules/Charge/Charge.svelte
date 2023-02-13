@@ -104,7 +104,7 @@
 
     if (testing != store.testing) changeMode(testing)
     const agentLen = +agentLens[dig36.indexOf(acct[0])]
-    const mainId = getId(acct)
+    const mainId = getMainId(acct)
     const acct0 = acct.substring(0, mainId.length + agentLen) // include agent chars in original account ID
     const code = acct.substring(acct0.length)
     return { acct: acct0, main: mainId, code: code, hash: hash(code) }
@@ -113,7 +113,7 @@
   /**
    * Return just the region and acct parts of the QR.
    */
-  function getId(acct) { 
+  function getMainId(acct) { 
     const i = dig36.indexOf(acct[0])
     const c1 = dig36[4 * mainLens.indexOf('.' + regionLens[i] + acctLens[i]) / 3] // format character without agent
     return c1 + acct.substring(1, 1 + +regionLens[i] + +acctLens[i])
@@ -126,39 +126,39 @@
   
   /**
    * Undo the transaction.
-   * To avoid timing issues with store.txs.flush(), queue the reversed transaction,
+   * To avoid timing issues with store.flushTxs(), queue the reversed transaction,
    * then delete both transactions at once.
    */
   async function Undo() {
     tx.amount = -tx.amount
-    store.txs.queue(tx)
-    store.txs.deletePair()
+    store.enqTx(tx)
+    store.deleteTxPair()
     goHome('The transaction has been reversed.')
   }
 
   onMount(async () => {
     try {
       const card = qrParse(qr) // does not return if format is bad
-      const mainId = getId($store.myAccount.accountId)
+      const mainId = getMainId($store.myAccount.accountId)
       if (card.main == mainId) throw new Error('That card is for the same account as yours.')
-      const acctInfo = store.accts.get(card) // retrieve and/or update stored customer account info
+      const acctInfo = store.getAcct(card) // retrieve and/or update stored customer account info
       if (acctInfo) otherAccount = { ...otherAccount, ...acctInfo }
     
       tx.otherId = card.acct
-      tx.code = card.code
+      tx.code = card.code // store this temporarily, to create proof once we get the amount
       
       if (!$store.network.online) {
         profileOffline()
       } else  {
-        const q = {deviceId: $store.myAccount.deviceId, actorId: $store.myAccount.accountId, otherId: tx.otherId + tx.code}
+        const q = {deviceId: tx.deviceId, actorId: tx.actorId, otherId: tx.otherId + tx.code}
         const query = queryString.stringify(q)
         const { result } = await timedFetch(`identity?${ query }`)
         const { selling } = result
         if (selling.length) tx.description = selling[0]
-        store.myAccount.set({ ...$store.myAccount, selling: selling })
+        store.setMyAccount({ ...$store.myAccount, selling: selling })
         otherAccount = { ...otherAccount, ...result, lastTx: Date.now() } // lastTx date lets us jettison old customers to save storage
         delete otherAccount.selling
-        store.accts.put(card, otherAccount) // store and/or update stored customer account info
+        store.putAcct(card, otherAccount) // store and/or update stored customer account info
         limit = Math.min(otherAccount.limit, onlineLimit)
         photo = await getPhoto(query)
       }
@@ -173,7 +173,6 @@
     }
   })
 
-  const isBusiness = otherAccount.agent
 </script>
 
 <svelte:head>
@@ -188,7 +187,7 @@
         <div class='payee-info'>
           <div>Charged to:</div>
           <div class='payee-details'>
-          {#if isBusiness}
+          {#if otherAccount.agent}
             <p>{ otherAccount.agent }</p>
             <p>{ otherAccount.name }</p>
           {:else}
@@ -210,7 +209,7 @@
           </tbody>
         </table>
       </div>
-      <div class="note">Thank you for using CG Pay ~ power to the people!</div>
+      <div class="note">Thank you for using CGPay<br>for democracy and the common good!</div>
     </div>
     <div class="actions">
       { #if tipable }<a class="secondary" href='/tip'>Add Tip</a>{ /if }

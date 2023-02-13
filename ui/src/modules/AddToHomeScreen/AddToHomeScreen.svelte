@@ -1,18 +1,21 @@
 <script>
   import { navigateTo } from 'svelte-router-spa'
-
   import cgLogo from '#modules/Root/assets/cg-logo-300.png?webp'
   import store from '#store.js'
-
   import AndroidInstructions from './AndroidInstructions/AndroidInstructions.svelte'
   import AppleInstructions from './AppleInstructions/AppleInstructions.svelte'
+  import { onMount } from 'svelte'
 
   // --------------------------------------------
 
   function skip() {
-    store.homeScreen.skip()
+    store.skipAddToHome()
     navigateTo('/sign-in')
   }
+
+  onMount(async () => {
+    if (!store.addableToHome()) navigateTo('/sign-in')
+  })
 </script>
 
 <svelte:head>
@@ -25,11 +28,11 @@
     <h1>Add to Home Screen</h1>
   </header>
 
-    { #if store.device.isApple() }
+    { #if store.isApple() && store.isSafari() }
       <AppleInstructions { skip } />
     { /if }
 
-   { #if store.device.isAndroid() }
+    { #if store.isAndroid() && store.isChrome() }
       <AndroidInstructions { skip } />
     { /if }
 </section>

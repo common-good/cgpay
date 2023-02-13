@@ -20,10 +20,10 @@
     <button class='close' on:click={closeNav}><CloseIcon width={'48px'} height={'48px'} ariaLabel={'close'}/></button>
   </header>
   <menu>
-    {#if $store.isBusiness && store.myAccount.exists()}
-      <li><a href='/link-account'>Link Account</a></li>
-    {/if}
-    <li><button on:click={signOut}>Sign Out</button></li>
+    { #if $store.myAccount && $store.myAccount.isCo }
+      <!--li><a href='/link-account'>Link Account</a></li-->
+    { /if }
+    <li><button on:click={signOut}>Sign Out / Sign In</button></li>
   </menu> 
 </nav>
 
