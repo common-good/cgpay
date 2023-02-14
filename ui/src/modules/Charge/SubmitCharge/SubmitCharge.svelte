@@ -46,19 +46,27 @@
   <h1>Charge</h1>
   <form on:submit|preventDefault={ charge }>
     <Profile { otherAccount } {photo} />
-    <fieldset>
-      <label for='amount'>Amount</label>
-      <input id='amount' type='number' min="0.01" step="0.01" max={ limit } name='amount' placeholder='$0.00' bind:value={ tx.amount } required />
-      <label for='description'>Description</label>
-      <input id='description' type='text' name='description' placeholder='e.g. lunch, rent, suppies, loan, etc.' bind:value={ tx.description } autocomplete required />
-    </fieldset>
-    <button type='submit'>Charge</button>
+    <div class='bottom'>
+      <fieldset>
+        <label for='amount'>Amount</label>
+        <input id='amount' type='number' min="0.01" step="0.01" max={ limit } name='amount' placeholder='$0.00' bind:value={ tx.amount } required />
+        <label for='description'>Description</label>
+        <input id='description' type='text' name='description' placeholder='e.g. lunch, rent, supplies, loan, etc.' bind:value={ tx.description } autocomplete required />
+      </fieldset>
+      <button type='submit'>Charge</button>
+    </div>
   </form>
 </section>
 
 <style lang='stylus'>
   h1 
    margin-bottom $s1
+
+  form
+    height 100%
+    display flex
+    flex-direction column
+    justify-content space-between
 
   section
     height 100%

@@ -56,7 +56,8 @@
 
   .layout-step
     height 100%
-    display: flex
+    position relative
+    display flex
     flex-direction column
     background $c-white
     constrainWidth($tablet)
