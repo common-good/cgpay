@@ -2,39 +2,51 @@
   import store from '#store.js'
   import { onMount } from 'svelte'
 
-  import iconOffline from './assets/icon-offline.svg'
-  import iconOnline from './assets/icon-online.svg'
+  import WifiOff from "svelte-material-icons/WifiOff.svelte"
+  import CloseIcon from "svelte-material-icons/Close.svelte"
+
+  let showNetworkStatus = true;
 </script>
 
-{ #if !$store.network.online || $store.network.restored }
+{ #if !$store.network.online && showNetworkStatus}
   <section id='network-status'>
-    <div id='network-status-content'>
-      { #if $store.network.online }
-        <img src={ iconOnline } alt='Online Status Icon' />
-        <p>You are back online!</p>
-      { /if }
-
-      { #if $store.network.offline }
-        <img src={ iconOffline } alt='Offline Status Icon' />
-        <p>You are offline. Some data may not be saved until you reconnect to the internet.</p>
-      { /if }
+    <div>
+      <WifiOff size={"1.5rem"} />
+      <p>Network is offline.</p>
     </div>
+      <button on:click={() => showNetworkStatus = false}>
+        <CloseIcon size={"1.5rem"} />
+      </button>
   </section>
 { /if }
 
 <style lang='stylus'>
-  #network-status
-    background $c-gray-light
-    padding $s2
-
-  #network-status-content
+  button
+    height 48px
+    width 48px
+    position absolute
+    right 0
     display flex
     align-items center
-    constrainWidth($tablet)
+    justify-content center
 
-  img
-    padding 0 $s2 0 0
+  section
+    width 100%
+    display flex
+    align-items center
+    justify-content space-between
+    background $c-warning
+    border-bottom solid 2px $c-warning-dark
+    box-shadow 0 1px 2px $c-gray
+    padding $s-1
+    position absolute
+    z-index 1
+
+  div
+    display flex
+    align-items center
 
   p
+    margin-left $s-1
     text sm
 </style>
