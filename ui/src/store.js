@@ -21,6 +21,10 @@ import { sendTxRequest, isTimeout } from '#utils.js'
  *   string erMsg: an error message to display on the Home Page
  *   string corrupt: a string (possibly a JSON object stringified) of corrupt data to report to the Tech Team
  *   bool testing: true when the app is in test mode (cached, but saved only in the testMode space)
+ *   string deviceType: Android, Apple, or Other
+ *   string browser: Chrome, Safari, or Other
+ *   bool frontCamera: true to use front camera instead of rear (default false iff mobile)
+ *   bool online: true if the device is connected to the Internet
  * 
  * ARRAYS
  *    choices: a list of Common Good accounts the signed-in user may choose to connect (one of) to the device
@@ -56,9 +60,6 @@ import { sendTxRequest, isTimeout } from '#utils.js'
  * 
  *    myAccount: information about the account associated with the device
  *      accountId, deviceId, name, qr, isCo, and selling as in the choices array described above
- * 
- *    network: information about the wireless network
- *      online: true if the device is connected to the Internet
  */
 
 export const createStore = () => {
@@ -82,10 +83,9 @@ export const createStore = () => {
     queue: [],
     myAccount: null,
 
-    device: {
-      type: getDeviceType(),
-      browser: getBrowser(),
-    },
+    deviceType: getDeviceType(),
+    browser: getBrowser(),
+    frontCamera: (getDeviceType() == 'Other'),
 
     network: {
       online: null,
@@ -139,6 +139,7 @@ export const createStore = () => {
   // --------------------------------------------
 
   const res = {
+    ...cache,
     subscribe,
 
     inspect() { return cache },
@@ -162,18 +163,16 @@ export const createStore = () => {
 
     addableToHome() { return canAddToHome() },
     skipAddToHome() { set('homeSkipped', Date.now()) },
-    isApple() { return (cache.device.type == 'Apple') },
-    isAndroid() { return (cache.device.type == 'Android') },
-    isChrome() { return (cache.device.browser == 'Chrome') },
-    isSafari() { return (cache.device.browser == 'Safari') },
+    isApple() { return (cache.deviceType == 'Apple') },
+    isAndroid() { return (cache.deviceType == 'Android') },
+    isChrome() { return (cache.browser == 'Chrome') },
+    isSafari() { return (cache.browser == 'Safari') },
+    setFrontCamera(yesno) { set('frontCamera', yesno) },
 
     resetNetwork() { this.setOnline(window.navigator.onLine) },
     setOnline(yesno) {
       if (yesno) flushTxs()
-      update(st => {
-        st.network.online = yesno
-        return st // this does not get stored in localStorage
-      })
+      set('online', yesno) // it makes no sense to store this in localStore, but hurts nothing
     },
 
     /**
@@ -239,8 +238,6 @@ export const createStore = () => {
       })
     }
   }
-
-  for (let k in cache) res[k] = cache[k]
 
   return res
 }

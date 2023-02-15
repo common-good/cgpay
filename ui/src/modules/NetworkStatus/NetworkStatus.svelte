@@ -6,10 +6,10 @@
   import iconOnline from './assets/icon-online.svg'
 </script>
 
-{ #if !$store.network.online || $store.network.restored }
+{ #if !$store.online || $store.network.restored }
   <section id='network-status'>
     <div id='network-status-content'>
-      { #if $store.network.online }
+      { #if $store.online }
         <img src={ iconOnline } alt='Online Status Icon' />
         <p>You are back online!</p>
       { /if }

@@ -9,19 +9,21 @@
   // --------------------------------------------
 
   let isLoading = true
+  let di = 0 // default to first device
 
   onMount(async () => {
-    console.log('top again')
   //   store.setQr('HTTP://6VM.RC4.ME/H0G0NyCBBlUF1qWNZ2k'); navigateTo('/charge') // HTTP://6VM.RC4.ME/H0G0NyCBBlUF1qWNZ2k or H6VM0G0NyCBBlUF1qWNZ2k.
     Html5Qrcode.getCameras().then(devices => {
-      console.log(devices)
       if (devices?.length) {
-        const cameraId = devices[0].id
+        if (devices.length > 1) {
+          if (/rear/.test(devices[0].label) ? !$store.frontCamera : $store.frontCamera) di = 1
+        }
+        const cameraId = devices[di].id
         const scanner = new Html5Qrcode('scanner')
 
         scanner.start(
           cameraId, 
-          { qrbox: { width: 250, height: 250 } }, // Configuration options.
+          { qrbox: { height: 250 } }, // Configuration options.
 
           async (decodedText, decodedResult) => { // Handle code
             store.setQr(decodedText)
