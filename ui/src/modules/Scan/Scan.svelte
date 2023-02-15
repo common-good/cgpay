@@ -16,14 +16,14 @@
     Html5Qrcode.getCameras().then(devices => {
       if (devices?.length) {
         if (devices.length > 1) {
-          if (/rear/.test(devices[0].label) ? !$store.frontCamera : $store.frontCamera) di = 1
+          if (/rear/.test(devices[0].label) ? $store.frontCamera : !$store.frontCamera) di = 1
         }
         const cameraId = devices[di].id
         const scanner = new Html5Qrcode('scanner')
 
         scanner.start(
           cameraId, 
-          { qrbox: { height: 250 } }, // Configuration options.
+          { qrbox: { width: 250, height: 250 } }, // Configuration options.
 
           async (decodedText, decodedResult) => { // Handle code
             store.setQr(decodedText)

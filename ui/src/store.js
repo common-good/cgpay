@@ -139,7 +139,6 @@ export const createStore = () => {
   // --------------------------------------------
 
   const res = {
-    ...cache,
     subscribe,
 
     inspect() { return cache },
@@ -159,7 +158,7 @@ export const createStore = () => {
     setAcctChoices(v) { set('choices', v) },
     setMyAccount(acct) { set('myAccount', acct ? { ...acct } : null) },
     isSignedIn() { return (cache.myAccount != null) },
-    signOut() { set('myAccount', defaults.myAccount) },
+    signOut() { set('myAccount', null) },
 
     addableToHome() { return canAddToHome() },
     skipAddToHome() { set('homeSkipped', Date.now()) },
@@ -238,6 +237,8 @@ export const createStore = () => {
       })
     }
   }
+
+  for (let k in cache) res[k] = cache[k]
 
   return res
 }

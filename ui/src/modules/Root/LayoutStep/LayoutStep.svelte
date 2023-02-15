@@ -25,7 +25,7 @@
   { /if }
   <header>
     <button on:click={ () => navigateTo('/home') }><img src={ $store.testing ? cgLogoDemo : cgLogo } alt='Common Good Logo' /></button>
-    { #if store.isSignedIn() }
+    { #if $store.myAccount }
       <p>{ $store.myAccount.name }</p>
     { /if }
     <button on:click={toggleNav}> <NavIcon width={'100%'} height={'100%'} ariaLabel={'menu'} /></button>
