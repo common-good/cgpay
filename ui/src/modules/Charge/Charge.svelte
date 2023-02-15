@@ -147,7 +147,7 @@
       tx.otherId = card.acct
       tx.code = card.code // store this temporarily, to create proof once we get the amount
       
-      if (!$store.network.online) {
+      if (!$store.online) {
         profileOffline()
       } else  {
         const q = {deviceId: tx.deviceId, actorId: tx.actorId, otherId: tx.otherId + tx.code}

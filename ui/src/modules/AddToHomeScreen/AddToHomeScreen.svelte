@@ -27,12 +27,11 @@
     <img src= { cgLogo } alt="Common Good logo" />
     <h1>Add to Home Screen</h1>
   </header>
-
-    { #if store.isApple() && store.isSafari() }
+    { #if store.isApple() }
       <AppleInstructions { skip } />
     { /if }
 
-    { #if store.isAndroid() && store.isChrome() }
+    { #if store.isAndroid() }
       <AndroidInstructions { skip } />
     { /if }
 </section>

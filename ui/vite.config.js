@@ -9,6 +9,7 @@ import adapt from '@adaptably/adapt'
 
 export default {
   define: {
+    _version_: 400, // version number times 100 (started with 400) 
     _demoApi_: JSON.stringify(adapt('apis.dev')),
     _realApi_: JSON.stringify(adapt('apis.production')),
   },

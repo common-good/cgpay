@@ -143,7 +143,7 @@ function setupLocalStorage(data) {
       describe('.online', () => {
         it('is accessible', () => {
           const store = createStore()
-          expect(store.inspect().network.online).toEqual(null)
+          expect(store.inspect().online).toEqual(null)
         })
       })
 
@@ -152,7 +152,7 @@ function setupLocalStorage(data) {
           const store = createStore()
           store.resetNetwork()
 
-          expect(store.inspect().network.online).toEqual(window.navigator.onLine)
+          expect(store.inspect().online).toEqual(window.navigator.onLine)
         })
       })
 
@@ -161,10 +161,10 @@ function setupLocalStorage(data) {
           const store = createStore()
 
           store.setOnline(true)
-          expect(store.inspect().network.online).toEqual(true)
+          expect(store.inspect().online).toEqual(true)
 
           store.setOnline(false)
-          expect(store.inspect().network.online).toEqual(false)
+          expect(store.inspect().online).toEqual(false)
         })
       })
 
@@ -194,7 +194,7 @@ function setupLocalStorage(data) {
             }
 
             const store = createStore()
-            expect(store.inspect().device.type).toEqual('Android')
+            expect(store.inspect().deviceType).toEqual('Android')
 
             window.navigator = originalNavigator
           })
@@ -209,7 +209,7 @@ function setupLocalStorage(data) {
             }
 
             const store = createStore()
-            expect(store.inspect().device.type).toEqual('Apple')
+            expect(store.inspect().deviceType).toEqual('Apple')
 
             window.navigator = originalNavigator
           })
@@ -224,7 +224,7 @@ function setupLocalStorage(data) {
             }
 
             const store = createStore()
-            expect(store.inspect().device.type).toEqual('Other')
+            expect(store.inspect().deviceType).toEqual('Other')
 
             window.navigator = originalNavigator
           })

@@ -38,7 +38,7 @@
       }
     } catch (er) {
       store.resetNetwork()
-      if (isTimeout(er) || !$store.network.online) {
+      if (isTimeout(er) || !$store.online) {
         showEr('The server is unavailable. Check your internet connection and try again.')
       } else if (er.message == 403) { // forbidden
         showEr('That account is not completely set up. Sign back in at CommonGood.earth to complete it.')

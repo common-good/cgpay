@@ -4,13 +4,9 @@
 
 <section class="content" id='android-instructions'>
   <div class='top'>
-    <p>To add CGPay to your home screen:</p>
-    <ul>
-      <li>1. Tap the menu icon (3 dots in upper right corner).</li>
-      <li>2. Then tap "Add to homescreen".</li>
-    </ul>
+    <p>To add CGPay to your home screen, tap the banner below.</p>
   </div>
-  <button on:click={ skip }>Continue</button>
+  <button on:click={ skip }>Skip For Now</button>
 </section>
 
 <style lang='stylus'>

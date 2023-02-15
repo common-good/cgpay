@@ -8,7 +8,7 @@
   let showNetworkStatus = true;
 </script>
 
-{ #if !$store.network.online && showNetworkStatus}
+{ #if !$store.online && showNetworkStatus}
   <section id='network-status'>
     <div>
       <WifiOff size={"1.5rem"} />
