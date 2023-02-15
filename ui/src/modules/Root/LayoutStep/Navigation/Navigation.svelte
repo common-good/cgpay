@@ -18,6 +18,7 @@
   }
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class='background' on:click={closeNav}>
   <nav bind:this={nav} use:focusTrap>
     <header>
