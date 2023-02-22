@@ -50,7 +50,7 @@
     text-align right
     box-shadow 2px 2px 4px $c-gray-dark
     border-radius 0 1em
-    z-index 1
+    z-index 2
 
   li
     height 48px
