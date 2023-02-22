@@ -3,6 +3,8 @@
   import store from '#store.js'
   import { dlg } from '#utils.js'
   import Modal from '../Modal.svelte'; let m0, m1, m2
+  import cgLogo from '#modules/Root/assets/cg-logo-300.png?webp'
+  import cgLogoDemo from '#modules/Root/assets/cg-logo-300-demo.png?webp'
 
   export let currentRoute // else Svelte complains (I don't know why yet)
   export let params // else Svelte complains (I don't know why yet)
@@ -26,18 +28,23 @@
 </svelte:head>
 
 <section id='home'>
-  <div class='top'>
     { #if myQr }
+    <div class='top'>
       <h1>Show this code to pay</h1>
       <img src="{ myQr }" alt="my QR code" />
+    </div>
     { :else }
-      <h1>Ready to charge people.</h1>
+      <div class='top business'>
+        <h1>Ready to charge people.</h1>
+        <div class='watermark'>
+          <img class='logo' src= { $store.testing ? cgLogoDemo : cgLogo } alt='Common Good Logo' />
+          <p>v alpha</p>
+        </div>
+      </div>
     { /if }
-  </div>
-  <div class="charge">
-    <p>Scan a code to charge</p>
-    <a href='/scan'>Scan QR Code</a>
-  </div>
+    <div class="charge">
+      <a class="scan-customer" href='/scan'>Scan QR Code to Charge</a>
+    </div>
 </section>
 
 <style lang='stylus'>
@@ -60,6 +67,10 @@
     align-items center
     justify-content space-between
 
+  .business
+    h1
+      margin-bottom $s5
+
   .top
     width 100%
     display flex
@@ -72,5 +83,13 @@
     p
       text(lg)
       text-align center
+      margin-bottom $s0
+
+  .watermark
+    opacity 0.5
+    text-align center
+    font-size $s-1
+
+    img
       margin-bottom $s0
 </style>
