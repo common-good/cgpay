@@ -10,7 +10,6 @@
   import Home from '#modules/Home/Home.svelte'
   import Charge from '#modules/Charge/Charge.svelte'
   import LinkAccount from '#modules/LinkAccount/LinkAccount.svelte'
-  import NetworkStatus from '#modules/NetworkStatus/NetworkStatus.svelte'
   import Scan from '#modules/Scan/Scan.svelte'
   import SignIn from '#modules/SignIn/SignIn.svelte'
 
@@ -53,5 +52,4 @@
   ]
 </script>
 
-<NetworkStatus />
 <Router { routes } />

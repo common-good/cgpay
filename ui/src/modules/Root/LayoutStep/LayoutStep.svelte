@@ -3,6 +3,7 @@
   import { onMount } from 'svelte';
   import NavIcon from "svelte-material-icons/Menu.svelte"
   import Navigation from './Navigation/Navigation.svelte'
+  import NetworkStatus from '#modules/NetworkStatus/NetworkStatus.svelte'
   import cgLogo from '#modules/Root/assets/cg-logo-300.png?webp'
   import cgLogoDemo from '#modules/Root/assets/cg-logo-300-demo.png?webp'
   import store from '#store.js'
@@ -30,7 +31,7 @@
     { /if }
     <button on:click={toggleNav}> <NavIcon width={'100%'} height={'100%'} ariaLabel={'menu'} /></button>
   </header>
-
+  <NetworkStatus />
   <div class='content'>
     <Route { currentRoute } />
   </div>
@@ -49,6 +50,7 @@
     padding $s-2
     background $c-blue-light
     box-shadow 0 1px 4px $c-gray
+    z-index 1
 
   .content
     height 100%
