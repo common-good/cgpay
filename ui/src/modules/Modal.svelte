@@ -68,6 +68,7 @@ $:  [lab1, lab2, zot] = (labels + ', ').split(', ')
     transform translate(-50%,-50%)
     border-radius 1em
     background white
+    z-index: 1
 
   .buttons
     display flex
