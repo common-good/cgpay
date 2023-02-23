@@ -16,6 +16,8 @@
     store.signOut()
     navigateTo('/sign-in')
   }
+
+  function clearData() { store.clearData(); navigateTo('/') }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -29,6 +31,9 @@
         <!--li><a href='/link-account'>Link Account</a></li-->
       { /if }
       <li><button on:click={signOut}>Sign Out / Sign In</button></li>
+      { #if $store.testing }
+        <li><button on:click={clearData}>Delete All Data</button></li>
+      { /if }
     </menu> 
   </nav>
 </div>

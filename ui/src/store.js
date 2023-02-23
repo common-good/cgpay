@@ -15,7 +15,7 @@ import { sendTxRequest, isTimeout } from '#utils.js'
  * In the "real" and "test" spaces the following data is stored, and cached in "cache" while the app runs.
  * 
  * SCALARS
- *   int homeSkipped: Unix timestamp when user opted NOT to save the app to their home screen
+ *   int sawAdd: Unix timestamp when user saw the option to save the app to their home screen
  *   blob qr: a scanned QR url
  *   string msg: an informational message to display on the Home Page
  *   string erMsg: an error message to display on the Home Page
@@ -74,10 +74,12 @@ export const createStore = () => {
   const lostMsg = `Tell the customer "I'm sorry, that card is marked "LOST or STOLEN".`
 
   const defaults = {
+    testing: testing,
+    online: null,
     qr: null,
     msg: null,
     erMsg: null,
-    homeSkipped: false,
+    sawAdd: false,
     choices: null,
     accts: {},
     queue: [],
@@ -115,7 +117,7 @@ export const createStore = () => {
   }
 
   function canAddToHome() { 
-    if (res.homeSkipped) return false
+    if (res.sawAdd) return false
     return ((res.isApple() && res.isSafari()) || (res.isAndroid() && res.isChrome()))
   }
 
@@ -159,9 +161,14 @@ export const createStore = () => {
     setMyAccount(acct) { set('myAccount', acct ? { ...acct } : null) },
     isSignedIn() { return (cache.myAccount != null) },
     signOut() { set('myAccount', null) },
+    clearData() { if (testing) update(st => {
+      window.localStorage.setItem(testKey, null)
+      st = defaults
+      return st
+    })},
 
     addableToHome() { return canAddToHome() },
-    skipAddToHome() { set('homeSkipped', Date.now()) },
+    sawAddToHome() { set('sawAdd', Date.now()) },
     isApple() { return (cache.deviceType == 'Apple') },
     isAndroid() { return (cache.deviceType == 'Android') },
     isChrome() { return (cache.browser == 'Chrome') },

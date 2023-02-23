@@ -8,12 +8,14 @@
 
   export let currentRoute // else Svelte complains (I don't know why yet)
   export let params // else Svelte complains (I don't know why yet)
-  const myQr = $store.myAccount.qr
+  const myQr = $store.myAccount?.qr
 
   function er(msg) { 
     ({ m0, m1 } = dlg('Alert', msg, 'Close', () => m0 = false)); m0=m0; m1=m1
     store.setMsg(null)
   }
+
+  function version() { let v = _version_.toString(); return v[0] + '.' + v.substring(1) }
 
   onMount(async () => {
     store.setQr(null) // no going back to previous customer
@@ -38,7 +40,8 @@
         <h1>Ready to charge people.</h1>
         <div class='watermark'>
           <img class='logo' src= { $store.testing ? cgLogoDemo : cgLogo } alt='Common Good Logo' />
-          <p>v alpha</p>
+          <p>CGPay v{ version() }</p>
+          <div class='top'><h1>&nbsp;</h1></div>
         </div>
       </div>
     { /if }
@@ -73,6 +76,7 @@
 
   .top
     width 100%
+    height 100%
     display flex
     flex-direction column
     align-items center
@@ -88,6 +92,7 @@
   .watermark
     opacity 0.5
     text-align center
+    margin auto
     font-size $s-1
 
     img

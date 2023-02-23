@@ -13,36 +13,38 @@
 
   onMount(async () => {
   //   store.setQr('HTTP://6VM.RC4.ME/H0G0NyCBBlUF1qWNZ2k'); navigateTo('/charge') // HTTP://6VM.RC4.ME/H0G0NyCBBlUF1qWNZ2k or H6VM0G0NyCBBlUF1qWNZ2k.
-    Html5Qrcode.getCameras().then(devices => {
-      if (devices?.length) {
-        if (devices.length > 1) {
-          if (/rear/.test(devices[0].label) ? $store.frontCamera : !$store.frontCamera) di = 1
+    try {
+      Html5Qrcode.getCameras().then(devices => {
+        if (devices?.length) {
+          if (devices.length > 1) { // choose front or rear camera as appropriate (ignore camera #3+)
+            if (/rear/.test(devices[0].label) ? $store.frontCamera : !$store.frontCamera) di = 1
+          }
+          const cameraId = devices[di].id
+          const scanner = new Html5Qrcode('scanner')
+
+          scanner.start(
+            cameraId, 
+            { qrbox: { width: 250, height: 250 } }, // Configuration options.
+
+            async (decodedText, decodedResult) => { // Handle code
+              store.setQr(decodedText)
+              await scanner.stop()
+              navigateTo('/charge')
+            },
+            (erMsg) => { } // ignore "parse" errors -- no valid QR yet (keep scanning)
+
+          ).then((res) => {
+            isLoading = false
+          }).catch((er) => { // Handle scan error
+            goEr(er.message)
+          })
+        } else {
+          goEr('No camera is available.')
         }
-        const cameraId = devices[di].id
-        const scanner = new Html5Qrcode('scanner')
-
-        scanner.start(
-          cameraId, 
-          { qrbox: { width: 250, height: 250 } }, // Configuration options.
-
-          async (decodedText, decodedResult) => { // Handle code
-            store.setQr(decodedText)
-            await scanner.stop()
-            navigateTo('/charge')
-          },
-          (erMsg) => { } // ignore "parse" errors -- no valid QR yet (keep scanning)
-
-        ).then((res) => {
-          isLoading = false
-        }).catch((er) => { // Handle scan error
-          goEr(er.message)
-        })
-      } else {
-        goEr('No camera is available.')
-      }
-    }).catch(er => {
+      })
+    } catch(er) {
        goEr(er.message) 
-    })
+    }
   })
 </script>
 
