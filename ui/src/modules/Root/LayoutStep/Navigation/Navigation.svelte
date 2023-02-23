@@ -8,16 +8,12 @@
   let nav;
 
   const dispatch = createEventDispatcher();
-  const closeNav = () => {
-    dispatch('toggleNav', {})
-  }
+  function closeNav() { dispatch('toggleNav', {}) }
+  function signOut() { store.signOut(); navigateTo('/sign-in') }
+  function rearCamera() { store.setFrontCamera(false) }
+  function frontCamera() { store.setFrontCamera(true) }
+  async function clearData() { store.clearData(); navigateTo('/') }
 
-  const signOut = () => {
-    store.signOut()
-    navigateTo('/sign-in')
-  }
-
-  function clearData() { store.clearData(); navigateTo('/') }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -27,10 +23,14 @@
       <button class='close' on:click={closeNav}><CloseIcon width={'48px'} height={'48px'} ariaLabel={'close'}/></button>
     </header>
     <menu>
-      { #if $store.myAccount && $store.myAccount.isCo }
-        <!--li><a href='/link-account'>Link Account</a></li-->
-      { /if }
       <li><button on:click={signOut}>Sign Out / Sign In</button></li>
+      { #if $store.cameraCount > 1 }
+        { #if $store.frontCamera }
+          <li><button on:click={rearCamera}>Use Rear Camera</button></li>
+        { :else }
+          <li><button on:click={frontCamera}>Use Front Camera</button></li>
+        { /if }
+      { /if }
       { #if $store.testing }
         <li><button on:click={clearData}>Delete All Data</button></li>
       { /if }

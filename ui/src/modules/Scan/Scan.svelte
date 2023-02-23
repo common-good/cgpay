@@ -16,6 +16,7 @@
     try {
       Html5Qrcode.getCameras().then(devices => {
         if (devices?.length) {
+          store.setCameraCount(devices.length)
           if (devices.length > 1) { // choose front or rear camera as appropriate (ignore camera #3+)
             if (/rear/.test(devices[0].label) ? $store.frontCamera : !$store.frontCamera) di = 1
           }

@@ -23,6 +23,7 @@ import { sendTxRequest, isTimeout } from '#utils.js'
  *   bool testing: true when the app is in test mode (cached, but saved only in the testMode space)
  *   string deviceType: Android, Apple, or Other
  *   string browser: Chrome, Safari, or Other
+ *   int cameraCount: number of cameras in the device
  *   bool frontCamera: true to use front camera instead of rear (default false iff mobile)
  *   bool online: true if the device is connected to the Internet
  * 
@@ -76,6 +77,7 @@ export const createStore = () => {
   const defaults = {
     testing: testing,
     online: null,
+    cameraCount: 0, // set this when scanning for the first time
     qr: null,
     msg: null,
     erMsg: null,
@@ -88,16 +90,11 @@ export const createStore = () => {
     deviceType: getDeviceType(),
     browser: getBrowser(),
     frontCamera: (getDeviceType() == 'Other'),
-
-    network: {
-      online: null,
-    },
-
   }
 
   // --------------------------------------------
 
-  let cache = storedState || defaults
+  let cache = storedState || { ...defaults }
   cache.testing = testing // never gets stored
   const { zot, subscribe, update } = writable(cache)
 
@@ -145,7 +142,7 @@ export const createStore = () => {
 
     inspect() { return cache },
 
-    setMode(yesno) { update(st => {
+    setTesting(yesno) { update(st => {
       window.localStorage.setItem(testModeKey, JSON.stringify(yesno))
       st.testing = yesno
       return st
@@ -161,10 +158,10 @@ export const createStore = () => {
     setMyAccount(acct) { set('myAccount', acct ? { ...acct } : null) },
     isSignedIn() { return (cache.myAccount != null) },
     signOut() { set('myAccount', null) },
-    clearData() { if (testing) update(st => {
-      window.localStorage.setItem(testKey, null)
-      st = defaults
-      return st
+    clearData() { update(st => {
+        st = { ...defaults }
+        st.testing = testing
+        return storeLocal(st)
     })},
 
     addableToHome() { return canAddToHome() },
@@ -173,6 +170,7 @@ export const createStore = () => {
     isAndroid() { return (cache.deviceType == 'Android') },
     isChrome() { return (cache.browser == 'Chrome') },
     isSafari() { return (cache.browser == 'Safari') },
+    setCameraCount(n) { set('cameraCount', n) },
     setFrontCamera(yesno) { set('frontCamera', yesno) },
 
     resetNetwork() { this.setOnline(window.navigator.onLine) },

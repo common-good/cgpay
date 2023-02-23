@@ -59,7 +59,7 @@
       const mode = testing ? 'TEST' : 'REAL'
       ;({ m0, m1, m2 } = dlg('Mode Change', `Changing to ${ mode } mode.`, 'OK', () => m0 = false)); m0=m0; m1=m1; m2=m2
     }
-    store.setMode(testing)
+    store.setTesting(testing)
     navigateTo('/charge') // reloading this page to change which data and api we use
   }
 

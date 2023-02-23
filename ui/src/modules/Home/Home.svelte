@@ -15,7 +15,7 @@
     store.setMsg(null)
   }
 
-  function version() { let v = _version_.toString(); return v[0] + '.' + v.substring(1) }
+  function version() { let v = _version_ + ''; return v[0] + '.' + v.substring(1) } // won't build if we use .toString() here
 
   onMount(async () => {
     store.setQr(null) // no going back to previous customer
@@ -41,7 +41,7 @@
         <div class='watermark'>
           <img class='logo' src= { $store.testing ? cgLogoDemo : cgLogo } alt='Common Good Logo' />
           <p>CGPay v{ version() }</p>
-          <div class='top'><h1>&nbsp;</h1></div>
+          <div><h1>&nbsp;</h1></div> <!-- to center the logo vertically -->
         </div>
       </div>
     { /if }
