@@ -69,6 +69,7 @@ async function timedFetch(url, options = {}) {
 }
 
 function isTimeout(er) { return (er.name == 'AbortError') }
+function pageUri() { return window.location.href.substring(window.location.href.lastIndexOf('/') + 1) }
 
 /**
  * Filter an object by key and/or value (just like for an array)

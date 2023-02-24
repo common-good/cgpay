@@ -21,14 +21,13 @@
 
   function gotAccount(ev) {
     myAccount = accounts && accounts[ev.detail]
-    store.setAcctChoices(null) // don't leave this lying around
     store.setMyAccount(myAccount)
-    goHome(`This device is now linked to your Common Good account: ${myAccount.name}.`)
+    goHome(`This device is now linked to your Common Good account: ${myAccount?.name}.`)
   }
 
   onMount(async () => {
     ready = true
-    if (accounts && accounts.length) {
+    if (accounts?.length) {
       for (let i = 0; i < accounts.length; i++) {
         accountOptions[i] = {id: i, name: accounts[i].name}
       }

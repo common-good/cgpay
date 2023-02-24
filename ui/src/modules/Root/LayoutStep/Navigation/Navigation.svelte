@@ -4,12 +4,14 @@
   import { navigateTo } from 'svelte-router-spa'
   import { focusTrap } from 'svelte-focus-trap'
   import store from '#store.js'
+  import { pageUri } from '#utils.js'
 
-  let nav;
+  let nav
 
   const dispatch = createEventDispatcher();
   function closeNav() { dispatch('toggleNav', {}) }
-  function signOut() { store.signOut(); navigateTo('/sign-in') }
+  function signOut() { store.signOut(); store.setAcctChoices(null); navigateTo('/sign-in') }
+  function switchAccount() { store.signOut(); navigateTo('/link-account') }
   function rearCamera() { store.setFrontCamera(false) }
   function frontCamera() { store.setFrontCamera(true) }
   async function clearData() { store.clearData(); navigateTo('/') }
@@ -23,7 +25,10 @@
       <button class='close' on:click={closeNav}><CloseIcon width={'48px'} height={'48px'} ariaLabel={'close'}/></button>
     </header>
     <menu>
-      <li><button on:click={signOut}>Sign Out / Sign In</button></li>
+      <li><button on:click={signOut}>Sign Out</button></li>
+      { #if $store.choices?.length > 1 && pageUri() != 'link-account' }
+        <li><button on:click={switchAccount}>Switch Account</button></li>
+      { /if }
       { #if $store.cameraCount > 1 }
         { #if $store.frontCamera }
           <li><button on:click={rearCamera}>Use Rear Camera</button></li>
@@ -32,7 +37,7 @@
         { /if }
       { /if }
       { #if $store.testing }
-        <li><button on:click={clearData}>Delete All Data</button></li>
+        <li><button on:click={clearData}>Delete Test Data</button></li>
       { /if }
     </menu> 
   </nav>
