@@ -1,10 +1,13 @@
 import { createStore } from './store.js'
-import { sendTxRequest, isTimeout } from '#utils.js'
+import { sendRequest, isTimeout } from '#utils.js'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+
 vi.mock('#utils.js', () => ({
-  sendTxRequest: vi.fn(),
+  sendRequest: vi.fn(),
   isTimeout: vi.fn()
 }))
+
+function sendTxRequest(tx) { return sendRequest(tx, 'transactions') }
 
 // --------------------------------------------
 
@@ -29,7 +32,7 @@ function setupLocalStorage(data) {
   describe('store', () => {
     beforeEach(() => {
       setupLocalStorage(null)
-      sendTxRequest = vi.fn()
+      sendRequest = vi.fn()
     })
 
     describe('when there are existing values in local storage', () => {
@@ -353,7 +356,7 @@ function setupLocalStorage(data) {
     })
 
     describe('.txs', () => {
-      describe('.dequeue', () => {
+      describe('.deQ', () => {
         it('dequeues the first transaction in the queue', () => {
           const store = createStore()
 
@@ -361,14 +364,14 @@ function setupLocalStorage(data) {
           store.enqTx({ id: 2 })
           store.enqTx({ id: 3 })
 
-          store.deqTx()
+          store.deQ('txs')
 
           // Confirm that all forms of store access are updated.
-          expect(stored().queue).toHaveLength(2)
-          expect(store.inspect().queue).toHaveLength(2)
-          store.subscribe(state => expect(state.queue).toHaveLength(2))
+          expect(stored().txs).toHaveLength(2)
+          expect(store.inspect().txs).toHaveLength(2)
+          store.subscribe(state => expect(state.txs).toHaveLength(2))
 
-          expect(store.inspect().queue).toEqual([
+          expect(store.inspect().txs).toEqual([
             { id: 2, offline: true },
             { id: 3, offline: true }
           ])
@@ -378,7 +381,7 @@ function setupLocalStorage(data) {
       describe('.flush', () => {
         it('sends all requests', async () => {
           
-  //        const sendTxRequest = vi.fn()
+  //        const sendRequest = vi.fn()
           const store = createStore()
           let keys = []
 
@@ -396,16 +399,16 @@ function setupLocalStorage(data) {
 
         describe('when a request is successful', () => {
           it('dequeues the request', async () => {
-            const sendTxRequest = vi.fn()
+            const sendRequest = vi.fn()
             const store = createStore()
 
             store.enqTx({ id: '1', amount: 1, description: '1' })
             store.enqTx({ id: '2', amount: 2, description: '2' })
             store.enqTx({ id: '3', amount: 3, description: '3' })
 
-            expect(store.inspect().queue).toHaveLength(3)
+            expect(store.inspect().txs).toHaveLength(3)
             await store.flushTxs()
-            expect(store.inspect().queue).toHaveLength(0)
+            expect(store.inspect().txs).toHaveLength(0)
           })
         })
 
@@ -426,26 +429,26 @@ function setupLocalStorage(data) {
             store.enqTx({ id: '2' })
             store.enqTx({ id: '3' })
 
-            expect(store.inspect().queue).toHaveLength(3)
+            expect(store.inspect().txs).toHaveLength(3)
             await store.flushTxs()
-            expect(store.inspect().queue).toHaveLength(2)
+            expect(store.inspect().txs).toHaveLength(2)
 
-            expect(store.inspect().queue[0]).toEqual({ id: '2', offline: true })
+            expect(store.inspect().txs[0]).toEqual({ id: '2', offline: true })
           })
         })
       })
 
-      describe('.queue', () => {
+      describe('.enqTx', () => {
         it('stores the transaction', () => {
           const store = createStore()
           store.enqTx({ id: '1' })
 
           // Confirm that all forms of store access are updated.
-          expect(stored().queue).toHaveLength(1)
-          expect(store.inspect().queue).toHaveLength(1)
-          store.subscribe(state => expect(state.queue).toHaveLength(1))
+          expect(stored().txs).toHaveLength(1)
+          expect(store.inspect().txs).toHaveLength(1)
+          store.subscribe(state => expect(state.txs).toHaveLength(1))
 
-          expect(store.inspect().queue[0]).toEqual({ id: '1', offline: true })
+          expect(store.inspect().txs[0]).toEqual({ id: '1', offline: true })
         })
       })
     })

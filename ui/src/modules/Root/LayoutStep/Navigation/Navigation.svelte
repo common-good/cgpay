@@ -14,7 +14,8 @@
   function switchAccount() { store.signOut(); navigateTo('/link-account') }
   function rearCamera() { store.setFrontCamera(false) }
   function frontCamera() { store.setFrontCamera(true) }
-  async function clearData() { store.clearData(); navigateTo('/') }
+  function comment() { navigateTo('/comment')}
+  async function clearData() { store.clearData(); navigateTo('/'); navigateTo('/') }
 
 </script>
 
@@ -26,9 +27,11 @@
     </header>
     <menu>
       <li><button on:click={signOut}>Sign Out</button></li>
+
       { #if $store.choices?.length > 1 && pageUri() != 'link-account' }
         <li><button on:click={switchAccount}>Switch Account</button></li>
       { /if }
+
       { #if $store.cameraCount > 1 }
         { #if $store.frontCamera }
           <li><button on:click={rearCamera}>Use Rear Camera</button></li>
@@ -36,8 +39,13 @@
           <li><button on:click={frontCamera}>Use Front Camera</button></li>
         { /if }
       { /if }
+
+      { #if store.isSignedIn() }
+        <li><button on:click={comment}>Comments & Suggestions</button></li>
+      { /if }
+
       { #if $store.testing }
-        <li><button on:click={clearData}>Delete Test Data</button></li>
+        <li><button on:click={clearData}>START OVER</button></li>
       { /if }
     </menu> 
   </nav>

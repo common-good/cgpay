@@ -12,7 +12,6 @@
   let di = 0 // default to first device
 
   onMount(async () => {
-  //   store.setQr('HTTP://6VM.RC4.ME/H0G0NyCBBlUF1qWNZ2k'); navigateTo('/charge') // HTTP://6VM.RC4.ME/H0G0NyCBBlUF1qWNZ2k or H6VM0G0NyCBBlUF1qWNZ2k.
     try {
       Html5Qrcode.getCameras().then(devices => {
         if (devices?.length) {

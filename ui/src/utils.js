@@ -84,13 +84,13 @@ function filterObjByKey(obj0, fn) {
   .reduce((obj, key) => { obj[key] = obj0[key]; return obj }, {})
 }
 
-async function sendTxRequest(tx) {
-  const res = await timedFetch(`transactions`, {
+async function sendRequest(v, endpoint) {
+  const res = await timedFetch(endpoint, {
     method: 'POST',
     headers: { 'Content-type': 'application/x-www-form-urlencoded' },
     mode: 'cors',
     cache: 'default',
-    body: queryString.stringify(tx)
+    body: queryString.stringify(v)
   })
   return res
 }
@@ -122,4 +122,4 @@ function disableBack() {
         body: JSON.stringify(tx)
 */
 
-export { confirm, yesno, dlg, hash, crash, goEr, goHome, CgError, timedFetch, isTimeout, sendTxRequest }
+export { confirm, yesno, dlg, hash, crash, goEr, goHome, CgError, timedFetch, isTimeout, sendRequest, pageUri }

@@ -5,6 +5,7 @@
   import Modal from '../Modal.svelte'; let m0, m1, m2
   import cgLogo from '#modules/Root/assets/cg-logo-300.png?webp'
   import cgLogoDemo from '#modules/Root/assets/cg-logo-300-demo.png?webp'
+  import { navigateTo } from 'svelte-router-spa'
 
   export let currentRoute // else Svelte complains (I don't know why yet)
   export let params // else Svelte complains (I don't know why yet)
@@ -15,7 +16,13 @@
     store.setMsg(null)
   }
 
-  function version() { let v = _version_ + ''; return v[0] + '.' + v.substring(1) } // won't build if we use .toString() here
+  function version() { let v = _version_ + ''; return v.substring(0, v.length - 2) + '.' + v.substring(v.length - 2) } // won't build if we use .toString() here
+
+  function fake(code) {
+    store.setQr(code)
+    navigateTo('/charge')
+  }
+  //   store.setQr('HTTP://6VM.RC4.ME/H0G0NyCBBlUF1qWNZ2k'); navigateTo('/charge') // HTTP://6VM.RC4.ME/H0G0NyCBBlUF1qWNZ2k or H6VM0G0NyCBBlUF1qWNZ2k.
 
   onMount(async () => {
     store.setQr(null) // no going back to previous customer
@@ -45,6 +52,17 @@
         </div>
       </div>
     { /if }
+    { #if $store.testing }
+      <div class="fakes">
+        <button on:click={ () => fake('G6VM0RZzhWMCq0zcBowqw.') }>Susan</button>
+        <button on:click={ () => fake('HTTP://6VM.RC4.ME/G00WeHlioM5JZv1O9G') }>Maria</button>
+        <button on:click={ () => fake('HTTP://6VM.RC4.ME/H010WeHlioM5JZv1O9G') }>Store</button>
+        <button on:click={ () => fake('H6VM0G0NyCBBlUF1qWNZ2k.') }>Helga's</button>
+        <button on:click={ () => fake('HTTP://6VM.RC4.ME/H0G0NyCBBlUF1qWNZ2k') }>Helga2</button>
+        <button on:click={ () => fake('H6VM0G0NyCBBlUF.') }>Bad Online</button>
+        <button on:click={ () => fake('garbage.') }>Bad</button>
+      </div>
+    { /if }
     <div class="charge">
       <a class="scan-customer" href='/scan'>Scan QR Code to Charge</a>
     </div>
@@ -54,6 +72,17 @@
   a
     cgButton()
     width 100%
+
+  .fakes
+    display flex
+    justify-content space-between
+
+  .fakes button
+    cgButtonSecondary()
+    padding 5px
+    margin-bottom $s0
+    flex-grow 1
+    margin-right $s-2
 
   h1
     text(lg)

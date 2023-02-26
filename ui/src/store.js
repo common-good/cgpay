@@ -1,5 +1,5 @@
 import { get, writable } from 'svelte/store'
-import { sendTxRequest, isTimeout } from '#utils.js'
+import { sendRequest, isTimeout } from '#utils.js'
 
 // --------------------------------------------
 // use this example for set() and get(): https://svelte.dev/repl/ccbc94cb1b4c493a9cf8f117badaeb31?version=3.16.7
@@ -36,7 +36,7 @@ import { sendTxRequest, isTimeout } from '#utils.js'
  *      isCo: true if the account is a company account
  *      selling: a ist of items for sale
  * 
- *    queue: transaction objects waiting to be uploaded to the server, each comprising:
+ *    txs: transaction objects waiting to be uploaded to the server, each comprising:
  *      amount: dollars to transfer from actorId to otherId (signed)
  *      actorId: the account initiating the transaction
  *      otherId: the other participant in the transaction
@@ -44,7 +44,13 @@ import { sendTxRequest, isTimeout } from '#utils.js'
  *      created: Unix timestamp when the transaction was created
  *      proof: the proof of the transaction -- a SHA256 hash of actorId, amount, otherId (including cardCode), and created
  *        The amount has exactly two digits after the decimal point. For an Undo, proof contains the original amount.
- *      offline: true -- only transactions completed offline are in the queue (all Undos are handled offline)
+ *      offline: true -- only transactions completed offline are in the txs queue (all Undos are handled offline)
+ *      version: the app's integer version number
+ * 
+ *    comments: user-submitted comments to be uploaded to the server
+ *      created: Unix timestamp
+ *      actorId: the account making the comment
+ *      text: the comment
  * 
  * OBJECTS
  *    accts: an array of accounts the device has transacted with, keyed by the account ID without cardCode, each with:
@@ -68,9 +74,8 @@ export const createStore = () => {
   const testKey = 'cgpay.test'
   const realKey = 'cgpay.real'
   const testModeKey = 'cgpay.testMode'
-  let testing = JSON.parse(window.localStorage.getItem(testModeKey))
-  if (testing == null) testing = !/^https:\/\/app.commongood.earth/.test(url)
-//  const testing = true
+  let testing = !/^https:\/\/app.commongood.earth/.test(url) || JSON.parse(window.localStorage.getItem(testModeKey))
+  //testing = false // uncomment this to test the automatic switch to test mode when a test card is scanned
   const storedState = JSON.parse(window.localStorage.getItem(testing ? testKey : realKey))
   const lostMsg = `Tell the customer "I'm sorry, that card is marked "LOST or STOLEN".`
 
@@ -84,7 +89,8 @@ export const createStore = () => {
     sawAdd: false,
     choices: null,
     accts: {},
-    queue: [],
+    txs: [],
+    comments: [],
     myAccount: null,
 
     deviceType: getDeviceType(),
@@ -118,12 +124,6 @@ export const createStore = () => {
     return ((res.isApple() && res.isSafari()) || (res.isAndroid() && res.isChrome()))
   }
 
-
-  function setOffline() { res.setOnline(false) }
-  function flushTxs() { res.flushTxs() }
-  function deqTx() { res.deqTx() }
-  function corrupt(data) { res.setCorrupt(data) }
-
   function storeLocal(state) {
     window.localStorage.setItem(testing ? testKey : realKey, JSON.stringify(state))
     cache = state
@@ -134,6 +134,37 @@ export const createStore = () => {
     st[k] = v
     return storeLocal(st)
   })}
+
+  function enQ(k, v) { update(st => {
+    st[k].push(v)
+    return storeLocal(st)
+  })}
+
+  function deQ(k) { update(st => { // this is actually FIFO (shift) not LIFO (pop)
+    st[k].shift()
+    return storeLocal(st)
+  })}
+
+  async function flushQ(k, endpoint, deqFunc) {
+    if (cache.corrupt) return // don't retry hopeless tx indefinitely
+    const q = [ ...cache[k] ]
+    let i
+    for (i in q) {
+      try {
+        sendRequest(q[i], endpoint)
+        deqFunc()
+      } catch (er) {
+        if (isTimeout(er)) {
+          this.setOnline(false)
+          return
+        } else {
+          console.log(er.message) // keep this
+          console.log(cache[k]) // keep this
+          return this.setCorrupt(cache[k])
+        }
+      }
+    }
+  }
 
   // --------------------------------------------
 
@@ -160,7 +191,7 @@ export const createStore = () => {
     signOut() { set('myAccount', null) },
     clearData() { update(st => {
         st = { ...defaults }
-        st.testing = testing
+        st.testing = true // only called in test mode
         return storeLocal(st)
     })},
 
@@ -175,7 +206,7 @@ export const createStore = () => {
 
     resetNetwork() { this.setOnline(window.navigator.onLine) },
     setOnline(yesno) {
-      if (yesno) flushTxs()
+      if (yesno) { this.flushTxs(); this.flushComments() }
       set('online', yesno) // it makes no sense to store this in localStore, but hurts nothing
     },
 
@@ -196,51 +227,25 @@ export const createStore = () => {
       return acct.data
     },
 
-    async flushTxs() {
-      if (cache.corrupt) return // don't retry hopeless tx indefinitely
-      const q = [ ...cache.queue ]
-      let i
-      for (i in q) {
-        try {
-          await sendTxRequest(q[i])
-          deqTx()
-        } catch (er) {
-          if (isTimeout(er)) {
-            setOffline()
-            return
-          } else {
-            console.log(er.message) // keep this
-            console.log(cache.queue) // keep this
-            return corrupt(cache.queue)
-          }
-        }
-      }
-    },
-
     deleteTxPair() {
       update(st => {
-        const q = [ ...st.queue ]
+        const q = [ ...st.txs ]
         const tx2 = q.pop()
         const tx1 = q.pop()
-        if (tx1 && tx2 && tx2.created == tx1.created && tx2.amount == -tx1.amount) return storeLocal({ ...st, queue: q })
+        if (tx1 && tx2 && tx2.created == tx1.created && tx2.amount == -tx1.amount) return storeLocal({ ...st, txs: q })
         return st
-      })
-    },
-
-    deqTx() { // called only from flush() and tests
-      update(st => {
-        st.queue.shift()
-        return storeLocal(st)
       })
     },
 
     enqTx(tx) {
       tx.offline = true
-      update(st => {
-        st.queue.push({ ...tx })
-        return storeLocal(st)
-      })
-    }
+      enQ('txs', { ...tx })
+    },
+    async flushTxs() { flushQ('txs', 'transactions', deQ) },
+
+    comment(text) { enQ('comments', { deviceId: cache.myAccount.deviceId, actorId: cache.myAccount.accountId, created: Date.now(), text: text }) },
+    async flushComments() { flushQ('comments', 'comments', deQ) },
+
   }
 
   for (let k in cache) res[k] = cache[k]

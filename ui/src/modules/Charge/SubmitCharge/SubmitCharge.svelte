@@ -2,7 +2,7 @@
   import { createEventDispatcher } from 'svelte'
   import Profile from '#modules/Charge/Profile/Profile.svelte'
   import store from '#store.js'
-  import { sendTxRequest, hash } from '#utils.js'
+  import { sendRequest, hash } from '#utils.js'
   // https://github.com/canutin/svelte-currency-input
 
   // --------------------------------------------
@@ -27,7 +27,7 @@
     }
 
     try {
-      const res = await sendTxRequest(tx)
+      const res = await sendRequest(tx, 'transactions')
       if (res.ok) dispatch('complete'); else dispatch('error', res.message) // update display
     } catch (er) { // except for syntax errors, queue it and treat it as success
       console.log(er)
