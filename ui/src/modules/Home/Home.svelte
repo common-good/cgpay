@@ -110,9 +110,6 @@
     flex-direction column
     align-items center
 
-  .charge
-    width 100%
-
     p
       text(lg)
       text-align center

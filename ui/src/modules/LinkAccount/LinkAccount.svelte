@@ -31,7 +31,7 @@
       for (let i = 0; i < accounts.length; i++) {
         accountOptions[i] = {id: i, name: accounts[i].name}
       }
-      size = Math.min(size, accounts.length)
+      size = Math.min(size, accounts.length + 1)
     } else {
       er('Your account is not yet active. Sign in at CommonGood.earth to finish opening your account.')
     }

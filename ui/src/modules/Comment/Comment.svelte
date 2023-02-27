@@ -21,7 +21,7 @@
   <h1>Comments and Suggestions</h1>
   <div class='content'>
     <p>We love feedback! Please type your comment and/or suggestion below in as much detail as you you think we might need,
-      in order to correct the problem or create your suggested feature.</p>
+      in order to correct a problem or make your suggested improvement.</p>
     <form on:submit|preventDefault={ submit }>
       <!--label class='visuallyhidden' for='account-id'></label-->
       <textarea name='comment' placeholder='Type here...' bind:value={ text } required></textarea>

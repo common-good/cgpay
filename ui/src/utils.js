@@ -53,6 +53,7 @@ function CgError(msg, name = 'CgError') { this.message = msg; this.name = name }
  *   (AbortError is timeout, TypeError means network blocked during testing)
  */
 async function timedFetch(url, options = {}) {
+  if (options.method == 'GET') url += '&version=' + _version_
   const { timeout = 3000, type = 'json' } = options;
   const aborter = new AbortController();
   aborter.name = 'Timeout'
@@ -85,6 +86,7 @@ function filterObjByKey(obj0, fn) {
 }
 
 async function sendRequest(v, endpoint) {
+  v.version = _version_
   const res = await timedFetch(endpoint, {
     method: 'POST',
     headers: { 'Content-type': 'application/x-www-form-urlencoded' },

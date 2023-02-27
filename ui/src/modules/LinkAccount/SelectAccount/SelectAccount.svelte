@@ -23,8 +23,8 @@
   <div class="top">
   <p>Select a Common Good account to link to CGPay on this device.</p>
   <form>
-    <label for='select-account' id='select-account'>Select Account:</label>
-    <select name='select-account' size={size} bind:value={ selectedAccount }>
+    <select name='select-account' size={size} bind:value={ selectedAccount } required="required">
+      <option value='' disabled>Select an Account</option>
       { #each accountOptions as account }
         <option value={ account.id }>{ account.name }</option>
       { /each }

@@ -96,13 +96,13 @@
 
     if ((new RegExp('^[0-9A-Za-z]{12,29}[\.!]$')).test(qr)) { // like H6VM0G0NyCBBlUF1qWNZ2k.
       acct = parts[0]
-      testing = qr.substring(-1) == '.'
+      testing = qr.slice(-1) == '.'
     } else if ((new RegExp('^HTTP://[0-9A-Za-z]{1,4}\.RC[24]\.ME/[0-9A-Za-z]{11,28}$')).test(qr)) { // like HTTP://6VM.RC4.ME/KDJJ34kjdfKJ4
       acct = parts[5][0] + parts[2] + parts[5].substring(1)
       testing = qr.includes('.RC4.')
     } else throw new Error('That is not a valid Common Good card format.')
 
-    if (testing != store.testing) changeMode(testing)
+    if (testing != $store.testing) changeMode(testing)
     const agentLen = +agentLens[dig36.indexOf(acct[0])]
     const mainId = getMainId(acct)
     const acct0 = acct.substring(0, mainId.length + agentLen) // include agent chars in original account ID
@@ -132,7 +132,9 @@
   async function Undo() {
     tx.amount = -tx.amount
     store.enqTx(tx)
-    store.deleteTxPair()
+    console.log($store.txs)
+    // NO! With flaky internet, this could queue the tx after unknowingly uploading it, then canceling the undo -- store.deleteTxPair()
+    // Maybe see whether original tx was definitely taken offline, if this seems important
     goHome('The transaction has been reversed.')
   }
 
@@ -165,7 +167,7 @@
     } catch (er) {
       if (isTimeout(er)) { // internet unavailable; recognize a repeat customer or limit CG's liability
         profileOffline()
-      } else if (er.message == '401') { // not authorized
+      } else if (er.message == '404') { // account not found
         goEr('That is not a valid Common Good card.')
       } else {
         goEr(crash(er))

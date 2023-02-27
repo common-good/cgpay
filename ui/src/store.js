@@ -53,6 +53,7 @@ import { sendRequest, isTimeout } from '#utils.js'
  *      text: the comment
  * 
  * OBJECTS
+ *    corrupt: a collection of corrupt data
  *    accts: an array of accounts the device has transacted with, keyed by the account ID without cardCode, each with:
  *      hash: SHA256 hash of cardCode
  *      data: JSON object of other account data:
@@ -76,6 +77,7 @@ export const createStore = () => {
   const testModeKey = 'cgpay.testMode'
   let testing = !/^https:\/\/app.commongood.earth/.test(url) || JSON.parse(window.localStorage.getItem(testModeKey))
   //testing = false // uncomment this to test the automatic switch to test mode when a test card is scanned
+  window.localStorage.setItem(testModeKey, testing)
   const storedState = JSON.parse(window.localStorage.getItem(testing ? testKey : realKey))
   const lostMsg = `Tell the customer "I'm sorry, that card is marked "LOST or STOLEN".`
 
@@ -141,28 +143,29 @@ export const createStore = () => {
   })}
 
   function deQ(k) { update(st => { // this is actually FIFO (shift) not LIFO (pop)
+    console.log(k, st[k])
     st[k].shift()
     return storeLocal(st)
   })}
 
-  async function flushQ(k, endpoint, deqFunc) {
+  async function flushQ(k, endpoint) {
     if (cache.corrupt) return // don't retry hopeless tx indefinitely
     const q = [ ...cache[k] ]
     let i
     for (i in q) {
       try {
         sendRequest(q[i], endpoint)
-        deqFunc()
       } catch (er) {
         if (isTimeout(er)) {
-          this.setOnline(false)
+          res.setOnline(false)
           return
         } else {
           console.log(er.message) // keep this
           console.log(cache[k]) // keep this
-          return this.setCorrupt(cache[k])
+          return res.setCorrupt(cache[k])
         }
       }
+      deQ(k)
     }
   }
 
@@ -241,10 +244,11 @@ export const createStore = () => {
       tx.offline = true
       enQ('txs', { ...tx })
     },
-    async flushTxs() { flushQ('txs', 'transactions', deQ) },
+    async flushTxs() { flushQ('txs', 'transactions') },
+    deqTx() { return deQ('txs') }, // just for testing (in store.spec.js)
 
-    comment(text) { enQ('comments', { deviceId: cache.myAccount.deviceId, actorId: cache.myAccount.accountId, created: Date.now(), text: text }) },
-    async flushComments() { flushQ('comments', 'comments', deQ) },
+    comment(text) { enQ('comments', { deviceId: cache.myAccount.deviceId, actorId: cache.myAccount.accountId, created: Math.floor(Date.now() / 1000), text: text }) },
+    async flushComments() { flushQ('comments', 'comments') },
 
   }
 
