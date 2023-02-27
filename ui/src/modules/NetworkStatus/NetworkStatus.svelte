@@ -2,7 +2,6 @@
   import store from '#store.js'
 
   import WifiOff from "svelte-material-icons/WifiOff.svelte"
-  console.log("online? ", $store.online)
 </script>
 
 { #if !$store.online}

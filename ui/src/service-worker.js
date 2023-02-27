@@ -30,30 +30,27 @@ self.addEventListener('activate', (ev) => {
 });
  
 self.addEventListener('fetch', (ev) => {
-  // ignore POST requests etc
-  if (ev.request.method !== 'GET') return;
+  if (ev.request.method !== 'GET') return; // ignore POST requests etc
  
   async function respond() {
     const url = new URL(ev.request.url);
     const cache = await caches.open(CACHE);
  
-    // `build`/`files` can always be served from the cache
+    // most built assets can always be served from the cache
     if (ASSETS.includes(url.pathname)) {
       return cache.match(ev.request);
     }
  
-    // for everything else, try the network first, but
-    // fall back to the cache if we're offline
-    try {
+    try { // for everything else, try the network first
       const response = await fetch(ev.request);
  
       if (response.status === 200) {
         cache.put(ev.request, response.clone());
       }
+       return response;
  
-      return response;
     } catch {
-      return cache.match(ev.request);
+      return cache.match(ev.request); // offline, so fall back to the cache
     }
   }
  

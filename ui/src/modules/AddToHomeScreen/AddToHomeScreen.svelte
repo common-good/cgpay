@@ -9,7 +9,7 @@
   // --------------------------------------------
 
   function skip() {
-    store.skipAddToHome()
+    store.sawAddToHome()
     navigateTo('/sign-in')
   }
 

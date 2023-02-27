@@ -1,5 +1,5 @@
 import { get, writable } from 'svelte/store'
-import { sendTxRequest, isTimeout } from '#utils.js'
+import { sendRequest, isTimeout } from '#utils.js'
 
 // --------------------------------------------
 // use this example for set() and get(): https://svelte.dev/repl/ccbc94cb1b4c493a9cf8f117badaeb31?version=3.16.7
@@ -15,7 +15,7 @@ import { sendTxRequest, isTimeout } from '#utils.js'
  * In the "real" and "test" spaces the following data is stored, and cached in "cache" while the app runs.
  * 
  * SCALARS
- *   int homeSkipped: Unix timestamp when user opted NOT to save the app to their home screen
+ *   int sawAdd: Unix timestamp when user saw the option to save the app to their home screen
  *   blob qr: a scanned QR url
  *   string msg: an informational message to display on the Home Page
  *   string erMsg: an error message to display on the Home Page
@@ -23,6 +23,7 @@ import { sendTxRequest, isTimeout } from '#utils.js'
  *   bool testing: true when the app is in test mode (cached, but saved only in the testMode space)
  *   string deviceType: Android, Apple, or Other
  *   string browser: Chrome, Safari, or Other
+ *   int cameraCount: number of cameras in the device
  *   bool frontCamera: true to use front camera instead of rear (default false iff mobile)
  *   bool online: true if the device is connected to the Internet
  * 
@@ -35,7 +36,7 @@ import { sendTxRequest, isTimeout } from '#utils.js'
  *      isCo: true if the account is a company account
  *      selling: a ist of items for sale
  * 
- *    queue: transaction objects waiting to be uploaded to the server, each comprising:
+ *    txs: transaction objects waiting to be uploaded to the server, each comprising:
  *      amount: dollars to transfer from actorId to otherId (signed)
  *      actorId: the account initiating the transaction
  *      otherId: the other participant in the transaction
@@ -43,9 +44,16 @@ import { sendTxRequest, isTimeout } from '#utils.js'
  *      created: Unix timestamp when the transaction was created
  *      proof: the proof of the transaction -- a SHA256 hash of actorId, amount, otherId (including cardCode), and created
  *        The amount has exactly two digits after the decimal point. For an Undo, proof contains the original amount.
- *      offline: true -- only transactions completed offline are in the queue (all Undos are handled offline)
+ *      offline: true -- only transactions completed offline are in the txs queue (all Undos are handled offline)
+ *      version: the app's integer version number
+ * 
+ *    comments: user-submitted comments to be uploaded to the server
+ *      created: Unix timestamp
+ *      actorId: the account making the comment
+ *      text: the comment
  * 
  * OBJECTS
+ *    corrupt: a collection of corrupt data
  *    accts: an array of accounts the device has transacted with, keyed by the account ID without cardCode, each with:
  *      hash: SHA256 hash of cardCode
  *      data: JSON object of other account data:
@@ -67,35 +75,34 @@ export const createStore = () => {
   const testKey = 'cgpay.test'
   const realKey = 'cgpay.real'
   const testModeKey = 'cgpay.testMode'
-  let testing = JSON.parse(window.localStorage.getItem(testModeKey))
-  if (testing == null) testing = !/^https:\/\/app.commongood.earth/.test(url)
-//  const testing = true
+  let testing = !/^https:\/\/app.commongood.earth/.test(url) || JSON.parse(window.localStorage.getItem(testModeKey))
+  //testing = false // uncomment this to test the automatic switch to test mode when a test card is scanned
+  window.localStorage.setItem(testModeKey, testing)
   const storedState = JSON.parse(window.localStorage.getItem(testing ? testKey : realKey))
   const lostMsg = `Tell the customer "I'm sorry, that card is marked "LOST or STOLEN".`
 
   const defaults = {
+    testing: testing,
+    online: null,
+    cameraCount: 0, // set this when scanning for the first time
     qr: null,
     msg: null,
     erMsg: null,
-    homeSkipped: false,
+    sawAdd: false,
     choices: null,
     accts: {},
-    queue: [],
+    txs: [],
+    comments: [],
     myAccount: null,
 
     deviceType: getDeviceType(),
     browser: getBrowser(),
     frontCamera: (getDeviceType() == 'Other'),
-
-    network: {
-      online: null,
-    },
-
   }
 
   // --------------------------------------------
 
-  let cache = storedState || defaults
+  let cache = storedState || { ...defaults }
   cache.testing = testing // never gets stored
   const { zot, subscribe, update } = writable(cache)
 
@@ -115,15 +122,9 @@ export const createStore = () => {
   }
 
   function canAddToHome() { 
-    if (res.homeSkipped) return false
+    if (res.sawAdd) return false
     return ((res.isApple() && res.isSafari()) || (res.isAndroid() && res.isChrome()))
   }
-
-
-  function setOffline() { res.setOnline(false) }
-  function flushTxs() { res.flushTxs() }
-  function deqTx() { res.deqTx() }
-  function corrupt(data) { res.setCorrupt(data) }
 
   function storeLocal(state) {
     window.localStorage.setItem(testing ? testKey : realKey, JSON.stringify(state))
@@ -136,6 +137,38 @@ export const createStore = () => {
     return storeLocal(st)
   })}
 
+  function enQ(k, v) { update(st => {
+    st[k].push(v)
+    return storeLocal(st)
+  })}
+
+  function deQ(k) { update(st => { // this is actually FIFO (shift) not LIFO (pop)
+    console.log(k, st[k])
+    st[k].shift()
+    return storeLocal(st)
+  })}
+
+  async function flushQ(k, endpoint) {
+    if (cache.corrupt) return // don't retry hopeless tx indefinitely
+    const q = [ ...cache[k] ]
+    let i
+    for (i in q) {
+      try {
+        sendRequest(q[i], endpoint)
+      } catch (er) {
+        if (isTimeout(er)) {
+          res.setOnline(false)
+          return
+        } else {
+          console.log(er.message) // keep this
+          console.log(cache[k]) // keep this
+          return res.setCorrupt(cache[k])
+        }
+      }
+      deQ(k)
+    }
+  }
+
   // --------------------------------------------
 
   const res = {
@@ -143,7 +176,7 @@ export const createStore = () => {
 
     inspect() { return cache },
 
-    setMode(yesno) { update(st => {
+    setTesting(yesno) { update(st => {
       window.localStorage.setItem(testModeKey, JSON.stringify(yesno))
       st.testing = yesno
       return st
@@ -159,18 +192,24 @@ export const createStore = () => {
     setMyAccount(acct) { set('myAccount', acct ? { ...acct } : null) },
     isSignedIn() { return (cache.myAccount != null) },
     signOut() { set('myAccount', null) },
+    clearData() { update(st => {
+        st = { ...defaults }
+        st.testing = true // only called in test mode
+        return storeLocal(st)
+    })},
 
     addableToHome() { return canAddToHome() },
-    skipAddToHome() { set('homeSkipped', Date.now()) },
+    sawAddToHome() { set('sawAdd', Date.now()) },
     isApple() { return (cache.deviceType == 'Apple') },
     isAndroid() { return (cache.deviceType == 'Android') },
     isChrome() { return (cache.browser == 'Chrome') },
     isSafari() { return (cache.browser == 'Safari') },
+    setCameraCount(n) { set('cameraCount', n) },
     setFrontCamera(yesno) { set('frontCamera', yesno) },
 
     resetNetwork() { this.setOnline(window.navigator.onLine) },
     setOnline(yesno) {
-      if (yesno) flushTxs()
+      if (yesno) { this.flushTxs(); this.flushComments() }
       set('online', yesno) // it makes no sense to store this in localStore, but hurts nothing
     },
 
@@ -191,51 +230,26 @@ export const createStore = () => {
       return acct.data
     },
 
-    async flushTxs() {
-      if (cache.corrupt) return // don't retry hopeless tx indefinitely
-      const q = [ ...cache.queue ]
-      let i
-      for (i in q) {
-        try {
-          await sendTxRequest(q[i])
-          deqTx()
-        } catch (er) {
-          if (isTimeout(er)) {
-            setOffline()
-            return
-          } else {
-            console.log(er.message) // keep this
-            console.log(cache.queue) // keep this
-            return corrupt(cache.queue)
-          }
-        }
-      }
-    },
-
     deleteTxPair() {
       update(st => {
-        const q = [ ...st.queue ]
+        const q = [ ...st.txs ]
         const tx2 = q.pop()
         const tx1 = q.pop()
-        if (tx1 && tx2 && tx2.created == tx1.created && tx2.amount == -tx1.amount) return storeLocal({ ...st, queue: q })
+        if (tx1 && tx2 && tx2.created == tx1.created && tx2.amount == -tx1.amount) return storeLocal({ ...st, txs: q })
         return st
-      })
-    },
-
-    deqTx() { // called only from flush() and tests
-      update(st => {
-        st.queue.shift()
-        return storeLocal(st)
       })
     },
 
     enqTx(tx) {
       tx.offline = true
-      update(st => {
-        st.queue.push({ ...tx })
-        return storeLocal(st)
-      })
-    }
+      enQ('txs', { ...tx })
+    },
+    async flushTxs() { flushQ('txs', 'transactions') },
+    deqTx() { return deQ('txs') }, // just for testing (in store.spec.js)
+
+    comment(text) { enQ('comments', { deviceId: cache.myAccount.deviceId, actorId: cache.myAccount.accountId, created: Math.floor(Date.now() / 1000), text: text }) },
+    async flushComments() { flushQ('comments', 'comments') },
+
   }
 
   for (let k in cache) res[k] = cache[k]

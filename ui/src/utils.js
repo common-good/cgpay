@@ -53,6 +53,7 @@ function CgError(msg, name = 'CgError') { this.message = msg; this.name = name }
  *   (AbortError is timeout, TypeError means network blocked during testing)
  */
 async function timedFetch(url, options = {}) {
+  if (options.method == 'GET') url += '&version=' + _version_
   const { timeout = 3000, type = 'json' } = options;
   const aborter = new AbortController();
   aborter.name = 'Timeout'
@@ -69,6 +70,7 @@ async function timedFetch(url, options = {}) {
 }
 
 function isTimeout(er) { return (er.name == 'AbortError') }
+function pageUri() { return window.location.href.substring(window.location.href.lastIndexOf('/') + 1) }
 
 /**
  * Filter an object by key and/or value (just like for an array)
@@ -83,13 +85,14 @@ function filterObjByKey(obj0, fn) {
   .reduce((obj, key) => { obj[key] = obj0[key]; return obj }, {})
 }
 
-async function sendTxRequest(tx) {
-  const res = await timedFetch(`transactions`, {
+async function sendRequest(v, endpoint) {
+  v.version = _version_
+  const res = await timedFetch(endpoint, {
     method: 'POST',
     headers: { 'Content-type': 'application/x-www-form-urlencoded' },
     mode: 'cors',
     cache: 'default',
-    body: queryString.stringify(tx)
+    body: queryString.stringify(v)
   })
   return res
 }
@@ -121,4 +124,4 @@ function disableBack() {
         body: JSON.stringify(tx)
 */
 
-export { confirm, yesno, dlg, hash, crash, goEr, goHome, CgError, timedFetch, isTimeout, sendTxRequest }
+export { confirm, yesno, dlg, hash, crash, goEr, goHome, CgError, timedFetch, isTimeout, sendRequest, pageUri }

@@ -4,7 +4,7 @@
   import { onMount } from 'svelte'
 
   import store from '#store.js'
-  import { sendTxRequest } from '#utils.js'
+  import { sendRequest } from '#utils.js'
 
   import AddToHomeScreen from '#modules/AddToHomeScreen/AddToHomeScreen.svelte'
   import Home from '#modules/Home/Home.svelte'
@@ -12,6 +12,7 @@
   import LinkAccount from '#modules/LinkAccount/LinkAccount.svelte'
   import Scan from '#modules/Scan/Scan.svelte'
   import SignIn from '#modules/SignIn/SignIn.svelte'
+  import Comment from '#modules/Comment/Comment.svelte'
 
   import LayoutIntro from './LayoutIntro/LayoutIntro.svelte'
   import LayoutStep from './LayoutStep/LayoutStep.svelte'
@@ -49,6 +50,7 @@
     route('/home', Home, store.isSignedIn, '/'),
     route('/scan', Scan, store.isSignedIn, '/sign-in'),
     route('/charge', Charge, store.isSignedIn, '/sign-in'),
+    route('/comment', Comment, store.isSignedIn, '/sign-in')
   ]
 </script>
 
