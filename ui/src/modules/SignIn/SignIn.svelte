@@ -67,6 +67,7 @@
       <label class='visuallyhidden' for='password'>Password</label>
       <input type='password' placeholder='Password' bind:value={ credentials.password } required />
       <button type='submit'>Sign In</button>
+      <a href="https://new.commongood.earth/settings/password/" target="_blank">Reset password</a>
     </form>
     <p class="status">{ statusMsg }</p>
   </div>
@@ -75,8 +76,12 @@
 <Modal m0={m0} on:m1={m1} />
 
 <style lang='stylus'>
+  a
+    cgButtonTertiary()
+
   button
     cgButton()
+    margin-bottom: $s-2
 
   h2
     margin-bottom $s1
