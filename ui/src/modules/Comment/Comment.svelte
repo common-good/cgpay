@@ -18,53 +18,48 @@
 </svelte:head>
 
 <section id='comments'>
-  <h1>Comments and Suggestions</h1>
-  <div class='content'>
-    <p>We love feedback! Please type your comment and/or suggestion below in as much detail as you you think we might need,
-      in order to correct a problem or make your suggested improvement.</p>
-    <form on:submit|preventDefault={ submit }>
-      <!--label class='visuallyhidden' for='account-id'></label-->
-      <textarea name='comment' placeholder='Type here...' bind:value={ text } required></textarea>
-       <button type='submit'>Submit</button>
-    </form>
+  <div class="top">
+    <h1>Comments and Suggestions</h1>
+      <p>We love feedback! Please type your comment and/or suggestion below in as much detail as you you think we might need, in order to correct a problem or make your suggested improvement.</p>
+      <form id="feedback" on:submit|preventDefault={ submit }>
+        <!--label class='visuallyhidden' for='account-id'></label-->
+        <textarea name='comment' placeholder='Type here...' bind:value={ text } required></textarea> 
+      </form>
   </div>
+  <button type='submit' form="feedback">Submit</button>
 </section>
 
 <style lang='stylus'>
-  textarea
-    border 1px solid darkgray
-    width 100%
-    height 300px
-    margin-top $s2
-    margin-bottom $s2
+  button
+    cgButton()
+
+  h1
+    margin-bottom $s0
+    text-align center
+
+  form
+   height 100%
+   width 100%
+
+  p 
+    margin-bottom $s0
 
   section
     height 100%
     display flex
     flex-direction column
     align-items center
+    justify-content: space-between
 
-  p
-    text(lg)
-    text-align left
-    height 72px
-    margin-bottom $s3
-
-  button
-    cgButton()
-
-  h1
-    margin-bottom $s1
-
-  form
+  textarea
+    border 1px solid darkgray
     height 100%
-    margin-bottom $s2
-
-  .content
     width 100%
+    padding $s-2
+
+  .top
     height 100%
     display flex
     flex-direction column
-    align-items center
-
+    margin-bottom $s0
 </style>
