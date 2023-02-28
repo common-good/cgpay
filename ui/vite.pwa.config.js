@@ -1,13 +1,13 @@
 // --------------------------------------------
 
-const iconSizes = [ 128, 144, 152, 192, 256, 512 ]
+const iconSizes = [128, 144, 152, 192, 256, 512];
 
-const icons = iconSizes.map(size => ({
-  src: `/icons/icon-${ size }x${ size }.png`,
-  sizes: `${ size }x${ size }`,
+const icons = iconSizes.map((size) => ({
+  src: `/icons/icon-${size}x${size}.png`,
+  sizes: `${size}x${size}`,
   type: 'image/png',
   purpose: 'any maskable'
-}))
+}));
 
 // --------------------------------------------
 
@@ -19,11 +19,11 @@ export default {
   registerType: 'autoUpdate',
 
   manifest: {
-    background_color: '#b3f287',
+    background_color: '#5D9220',
     icons,
     name: 'CGPay',
     short_name: 'CGPay',
-    theme_color: '#b3f287'
+    theme_color: '#5D9220'
   },
 
   workbox: {
@@ -31,8 +31,6 @@ export default {
     // offline access.
     //
     // https://vite-plugin-pwa.netlify.app/guide/static-assets.html#globpatterns
-    globPatterns: [
-      '**/*.{css,html,jpg,js,png,svg,webp}'
-    ]
-  },
-}
+    globPatterns: ['**/*.{css,html,jpg,js,png,svg,webp}']
+  }
+};
