@@ -17,12 +17,16 @@ export default {
   //
   // https://vite-plugin-pwa.netlify.app/guide/auto-update.html
   registerType: 'autoUpdate',
+  devOptions: {
+    enabled: true
+  },
 
   manifest: {
     background_color: '#5D9220',
     icons,
     name: 'CGPay',
     short_name: 'CGPay',
+    display: 'standalone',
     theme_color: '#5D9220'
   },
 
@@ -33,6 +37,9 @@ export default {
     // https://vite-plugin-pwa.netlify.app/guide/static-assets.html#globpatterns
     globPatterns: [
       '**/*.{css,html,jpg,js,png,svg,webp}'
-    ]
+    ],
+    clientsClaim: true,
+    skipWaiting: true,
+    cleanupOutdatedCaches: true,
   },
 }

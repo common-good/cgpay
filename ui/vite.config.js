@@ -7,7 +7,7 @@ import adapt from '@adaptably/adapt'
 
 // --------------------------------------------
 
-export default {
+export default defineConfig({
   define: {
     _version_: 400, // version number times 100 (started with 400) -- treated like a number even if we add quotes
     _demoApi_: JSON.stringify(adapt('apis.dev')),
@@ -35,4 +35,4 @@ export default {
     setupFiles: './tests/support.js',
     threads: false,
   },
-};
+})

@@ -52,7 +52,7 @@
   <title>CGPay - Scan QR Code</title>
 </svelte:head>
 
-<section id='scan'>
+<section id='scan' >
   <div class='top'>
     <h1>Scan QR Code</h1>
     {#if isLoading}

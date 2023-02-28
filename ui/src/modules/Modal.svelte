@@ -1,6 +1,7 @@
 <script>
   import { createEventDispatcher, onDestroy, onMount } from 'svelte'
   import { focusTrap } from 'svelte-focus-trap'
+  import { fade } from 'svelte/transition';
 
   export let m0
   let modal
@@ -21,7 +22,7 @@ $:  [lab1, lab2, zot] = (labels + ', ').split(', ')
 { #if show }
   <div class="modal-background" on:click={() => {show = false}}></div>
 
-  <div class="modal" role="dialog" aria-modal="true" bind:this={modal} use:focusTrap>
+  <div class="modal" role="dialog" aria-modal="true" bind:this={modal} use:focusTrap in:fade out:fade>
     <h1>{ title }</h1>
     <div class="content">
       <p>{ text }</p>

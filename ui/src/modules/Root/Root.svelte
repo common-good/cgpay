@@ -13,6 +13,7 @@
   import Scan from '#modules/Scan/Scan.svelte'
   import SignIn from '#modules/SignIn/SignIn.svelte'
   import Comment from '#modules/Comment/Comment.svelte'
+  import LoadSW from '#modules/LoadSW.svelte'
 
   import LayoutIntro from './LayoutIntro/LayoutIntro.svelte'
   import LayoutStep from './LayoutStep/LayoutStep.svelte'
@@ -54,4 +55,5 @@
   ]
 </script>
 
+<LoadSW />
 <Router { routes } />
