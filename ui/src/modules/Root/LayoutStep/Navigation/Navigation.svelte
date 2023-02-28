@@ -26,8 +26,6 @@
       <button class='close' on:click={closeNav}><CloseIcon width={'48px'} height={'48px'} ariaLabel={'close'}/></button>
     </header>
     <menu>
-      <li><button on:click={signOut}>Sign Out</button></li>
-
       { #if $store.choices?.length > 1 && pageUri() != 'link-account' }
         <li><button on:click={switchAccount}>Switch Account</button></li>
       { /if }
@@ -43,6 +41,8 @@
       { #if store.isSignedIn() }
         <li><button on:click={comment}>Comments & Suggestions</button></li>
       { /if }
+
+      <li><button on:click={signOut}>Sign Out</button></li>
 
       { #if $store.testing }
         <li><button on:click={clearData}>START OVER</button></li>
