@@ -1,13 +1,30 @@
 // --------------------------------------------
 
-const iconSizes = [ 128, 144, 152, 192, 256, 512 ]
+const androidIconSizes = [
+  ['hdpi', '72'], 
+  ['mdpi', '48'],
+  ['xhdpi', '96'], 
+  ['xxhdpi', '144'], 
+  ['xxxhdpi', '192']
+]
 
-const icons = iconSizes.map((size) => ({
-  src: `/icons/icon-${ size }x${ size }.png`,
+const appleIconSizes = [ 16, 20, 29, 32, 40, 48, 50, 55, 57, 58, 60, 64, 66, 72, 76, 80, 87, 88, 92, 100, 102, 114, 120, 128, 144, 152, 167, 172, 180, 196, 216, 256, 512, 1024 ]
+
+const androidIcons = androidIconSizes.map(([name, size]) => ({
+  src: `/icons/android/mipmap-${name}/ic_launcher.png`,
   sizes: `${ size }x${ size }`,
   type: 'image/png',
   purpose: 'any maskable'
 }))
+
+const appleIcons = appleIconSizes.map(size => ({
+  src: `/icons/Assets.xcassets/AppIcon.appiconset/${ size }.png`,
+  sizes: `${ size }x${ size }`,
+  type: 'image/png',
+  purpose: 'any maskable'
+}))
+
+const icons = androidIcons.concat(appleIcons);
 
 // --------------------------------------------
 
