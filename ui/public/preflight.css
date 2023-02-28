@@ -345,6 +345,10 @@ object {
   vertical-align: middle; /* 2 */
 }
 
+.inline-icon svg {
+  display: inline;
+}
+
 /*
 Constrain images and videos to the parent width and preserve their intrinsic aspect ratio. (https://github.com/mozdevs/cssremedy/issues/14)
 */

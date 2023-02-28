@@ -2,7 +2,7 @@
 
 const iconSizes = [ 128, 144, 152, 192, 256, 512 ]
 
-const icons = iconSizes.map(size => ({
+const icons = iconSizes.map((size) => ({
   src: `/icons/icon-${ size }x${ size }.png`,
   sizes: `${ size }x${ size }`,
   type: 'image/png',
@@ -19,11 +19,11 @@ export default {
   registerType: 'autoUpdate',
 
   manifest: {
-    background_color: '#b3f287',
+    background_color: '#5D9220',
     icons,
     name: 'CGPay',
     short_name: 'CGPay',
-    theme_color: '#b3f287'
+    theme_color: '#5D9220'
   },
 
   workbox: {
