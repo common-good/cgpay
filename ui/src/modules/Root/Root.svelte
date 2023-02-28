@@ -13,6 +13,7 @@
   import Scan from '#modules/Scan/Scan.svelte'
   import SignIn from '#modules/SignIn/SignIn.svelte'
   import Comment from '#modules/Comment/Comment.svelte'
+  import Pay from "#modules/Pay/Pay.svelte"
 
   import LayoutIntro from './LayoutIntro/LayoutIntro.svelte'
   import LayoutStep from './LayoutStep/LayoutStep.svelte'
@@ -50,7 +51,8 @@
     route('/home', Home, store.isSignedIn, '/'),
     route('/scan', Scan, store.isSignedIn, '/sign-in'),
     route('/charge', Charge, store.isSignedIn, '/sign-in'),
-    route('/comment', Comment, store.isSignedIn, '/sign-in')
+    route('/comment', Comment, store.isSignedIn, '/sign-in'),
+    route('/pay', Pay, store.isSignedIn, '/sign-in')
   ]
 </script>
 

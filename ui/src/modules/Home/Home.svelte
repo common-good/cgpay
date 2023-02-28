@@ -63,8 +63,9 @@
         <button on:click={ () => fake('garbage.') }>Bad</button>
       </div>
     { /if }
-    <div class="charge">
-      <a class="scan-customer" href='/scan'>Scan QR Code to Charge</a>
+    <div class="actions">
+      <a class="pay" href='/pay'>Pay</a>
+      <a class="scan-customer" href='/scan'>Charge</a>
     </div>
 </section>
 
@@ -102,6 +103,13 @@
   .business
     h1
       margin-bottom $s5
+
+  .actions
+    width 100%
+
+  .pay
+    cgButtonSecondary()
+    margin-bottom $s-1
 
   .top
     width 100%
