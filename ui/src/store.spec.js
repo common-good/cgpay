@@ -1,9 +1,9 @@
 import { createStore } from './store.js'
-import { sendRequest, isTimeout } from '#utils.js'
+import { postRequest, isTimeout } from '#utils.js'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('#utils.js', () => ({
-  sendRequest: vi.fn(),
+  postRequest: vi.fn(),
   isTimeout: vi.fn()
 }))
 
@@ -31,7 +31,7 @@ function setupLocalStorage(data) {
   describe('store', () => {
     beforeEach(() => {
       setupLocalStorage(null)
-      sendRequest = vi.fn()
+      postRequest = vi.fn()
     })
 
     describe('when there are existing values in local storage', () => {
@@ -380,7 +380,7 @@ function setupLocalStorage(data) {
       describe('.flush', () => {
         it('sends all requests', async () => {
           
-  //        const sendRequest = vi.fn()
+  //        const postRequest = vi.fn()
           const store = createStore()
           let keys = []
 
@@ -390,10 +390,10 @@ function setupLocalStorage(data) {
 
           await store.flushTxs()
 
-          expect(sendRequest.calls).toHaveLength(3)
-          expect(sendRequest.calls[0][0]).toEqual({ id: '1', amount: 1, description: '1', offline: true })
-          expect(sendRequest.calls[1][0]).toEqual({ id: '2', amount: 2, description: '2', offline: true })
-          expect(sendRequest.calls[2][0]).toEqual({ id: '3', amount: 3, description: '3', offline: true })
+          expect(postRequest.calls).toHaveLength(3)
+          expect(postRequest.calls[0][0]).toEqual({ id: '1', amount: 1, description: '1', offline: true })
+          expect(postRequest.calls[1][0]).toEqual({ id: '2', amount: 2, description: '2', offline: true })
+          expect(postRequest.calls[2][0]).toEqual({ id: '3', amount: 3, description: '3', offline: true })
         })
 
         describe('when a request is successful', () => {
@@ -409,12 +409,12 @@ function setupLocalStorage(data) {
             expect(store.inspect().txs).toHaveLength(0)
           })
         })
-/* mocking of sendRequest seems not to be working
+/* mocking of postRequest seems not to be working
         describe('when a request fails', () => {
           it('keeps the request in the queue', async () => {
             let callCount = 0
 
-            sendRequest = async function (tx, endpoint) {
+            postRequest = async function (tx, endpoint) {
               callCount++
               if (callCount > 1) throw new Error()
             }

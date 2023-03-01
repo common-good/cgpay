@@ -4,12 +4,13 @@ import { imagetools } from 'vite-imagetools'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
 import pwaConfig from './vite.pwa.config.js'
 import adapt from '@adaptably/adapt'
+import { defineConfig } from 'vite'
 
 // --------------------------------------------
 
 export default defineConfig({
   define: {
-    _version_: 400, // version number times 100 (started with 400) -- treated like a number even if we add quotes
+    _version_: JSON.stringify(adapt('app.version')),
     _demoApi_: JSON.stringify(adapt('apis.dev')),
     _realApi_: JSON.stringify(adapt('apis.production')),
   },

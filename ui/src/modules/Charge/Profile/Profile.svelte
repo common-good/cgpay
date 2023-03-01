@@ -1,5 +1,6 @@
 <script>
   import ProfileSvg from './ProfileSvg.svelte'
+
   export let otherAccount
   export let photo
 
@@ -7,7 +8,7 @@
 
 <section id='charge-profile'>
   <div class='photo'>
-    {#if photo.blob }
+    {#if photo.blob}
       <img src={ photo.blob } alt='{ photo.alt }' />
     {:else}
       <ProfileSvg />

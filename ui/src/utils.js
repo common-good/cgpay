@@ -85,7 +85,8 @@ function filterObjByKey(obj0, fn) {
   .reduce((obj, key) => { obj[key] = obj0[key]; return obj }, {})
 }
 
-async function sendRequest(v, endpoint) {
+async function postRequest(v, endpoint) {
+  if (!store.inspect().online) throw new Error('offline')
   v.version = _version_
   const res = await timedFetch(endpoint, {
     method: 'POST',
@@ -124,4 +125,4 @@ function disableBack() {
         body: JSON.stringify(tx)
 */
 
-export { confirm, yesno, dlg, hash, crash, goEr, goHome, CgError, timedFetch, isTimeout, sendRequest, pageUri }
+export { confirm, yesno, dlg, hash, crash, goEr, goHome, CgError, timedFetch, isTimeout, postRequest, pageUri }

@@ -1,5 +1,5 @@
 import { get, writable } from 'svelte/store'
-import { sendRequest, isTimeout } from '#utils.js'
+import { postRequest, isTimeout } from '#utils.js'
 
 // --------------------------------------------
 // use this example for set() and get(): https://svelte.dev/repl/ccbc94cb1b4c493a9cf8f117badaeb31?version=3.16.7
@@ -15,17 +15,18 @@ import { sendRequest, isTimeout } from '#utils.js'
  * In the "real" and "test" spaces the following data is stored, and cached in "cache" while the app runs.
  * 
  * SCALARS
+ *   bool testing: true when the app is in test mode (cached, but saved only in the testMode space)
  *   int sawAdd: Unix timestamp when user saw the option to save the app to their home screen
  *   blob qr: a scanned QR url
  *   string msg: an informational message to display on the Home Page
  *   string erMsg: an error message to display on the Home Page
- *   string corrupt: a string (possibly a JSON object stringified) of corrupt data to report to the Tech Team
- *   bool testing: true when the app is in test mode (cached, but saved only in the testMode space)
  *   string deviceType: Android, Apple, or Other
  *   string browser: Chrome, Safari, or Other
  *   int cameraCount: number of cameras in the device
  *   bool frontCamera: true to use front camera instead of rear (default false iff mobile)
  *   bool online: true if the device is connected to the Internet
+ *   bool useWifi: true to use wifi whenever possible (otherwise disable wifi)
+ *   bool selfServe: true for selfServer mode
  * 
  * ARRAYS
  *    choices: a list of Common Good accounts the signed-in user may choose to connect (one of) to the device
@@ -53,13 +54,14 @@ import { sendRequest, isTimeout } from '#utils.js'
  *      text: the comment
  * 
  * OBJECTS
- *    corrupt: a collection of corrupt data
+ *    corrupt: corrupt data to report to the Tech Team
  *    accts: an array of accounts the device has transacted with, keyed by the account ID without cardCode, each with:
  *      hash: SHA256 hash of cardCode
  *      data: JSON object of other account data:
  *        name: name of the account
  *        agent: agent for the account, if any
- *        location: location of the account (city, ST
+ *        location: location of the account (city, ST)
+ *        avatar: small version of the photo associated with the account
  *        limit: maximum amount this account can be charged at this time (leaving room for Stepups)
  *        creditLine: the account's credit line
  *        avgBalance: the account’s average balance over the past 6 months
@@ -68,6 +70,7 @@ import { sendRequest, isTimeout } from '#utils.js'
  * 
  *    myAccount: information about the account associated with the device
  *      accountId, deviceId, name, qr, isCo, and selling as in the choices array described above
+ *      lastTx: the last transaction known to this device
  */
 
 export const createStore = () => {
@@ -83,21 +86,24 @@ export const createStore = () => {
 
   const defaults = {
     testing: testing,
-    online: null,
-    cameraCount: 0, // set this when scanning for the first time
+    sawAdd: false,
     qr: null,
     msg: null,
     erMsg: null,
-    sawAdd: false,
+    deviceType: getDeviceType(),
+    browser: getBrowser(),
+    cameraCount: 0, // set this when scanning for the first time
+    frontCamera: (getDeviceType() == 'Other'),
+    online: null,
+    useWifi: true,
+    selfServe: false,
+
     choices: null,
     accts: {},
     txs: [],
     comments: [],
     myAccount: null,
 
-    deviceType: getDeviceType(),
-    browser: getBrowser(),
-    frontCamera: (getDeviceType() == 'Other'),
   }
 
   // --------------------------------------------
@@ -143,7 +149,6 @@ export const createStore = () => {
   })}
 
   function deQ(k) { update(st => { // this is actually FIFO (shift) not LIFO (pop)
-    console.log(k, st[k])
     st[k].shift()
     return storeLocal(st)
   })}
@@ -153,8 +158,9 @@ export const createStore = () => {
     const q = [ ...cache[k] ]
     let i
     for (i in q) {
+      if (!res.useWifi) return; // allow immediate interruptions
       try {
-        sendRequest(q[i], endpoint)
+        postRequest(q[i], endpoint)
       } catch (er) {
         if (isTimeout(er)) {
           res.setOnline(false)
@@ -185,6 +191,8 @@ export const createStore = () => {
     setQr(v) { set('qr', v) },
     setMsg(v) { set('erMsg', v) },
     setCorrupt(data) { set('corrupt', data) }, // record information for tech crew to decipher
+    setWifi(yesno) { set('useWifi', yesno); this.setOnline(false) },
+    setSelfServe(yesno) { set('selfServe', yesno) },
 
     api() { return testing ? _demoApi_ : _demoApi_ }, // _realApi_ },
 
@@ -207,10 +215,10 @@ export const createStore = () => {
     setCameraCount(n) { set('cameraCount', n) },
     setFrontCamera(yesno) { set('frontCamera', yesno) },
 
-    resetNetwork() { this.setOnline(window.navigator.onLine) },
+    resetNetwork() { if (cache.useWifi) this.setOnline(window.navigator.onLine) },
     setOnline(yesno) {
-      if (yesno) { this.flushTxs(); this.flushComments() }
-      set('online', yesno) // it makes no sense to store this in localStore, but hurts nothing
+      set('online', cache.useWifi ? yesno : false) // it makes no sense to store this in localStore, but hurts nothing
+      if (cache.useWifi && yesno) { this.flushTxs(); this.flushComments() }
     },
 
     /**

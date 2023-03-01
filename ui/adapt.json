@@ -1,6 +1,7 @@
 {
   "app": {
-    "name": "CGPay"
+    "name": "CGPay",
+    "version": "4.0.0"
   },
   "ports": {
     "_default": 3000,

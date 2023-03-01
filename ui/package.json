@@ -28,7 +28,6 @@
     "svelte-router-spa": "^6.0.3",
     "vite": "^3.0.9",
     "vite-imagetools": "^4.0.8",
-    "vite-plugin-pwa": "^0.12.6",
     "vitest": "^0.23.0"
   },
   "dependencies": {

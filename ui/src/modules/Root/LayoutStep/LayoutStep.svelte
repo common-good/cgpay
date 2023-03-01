@@ -1,6 +1,6 @@
 <script>
   import { Route, navigateTo } from 'svelte-router-spa'
-  import { onMount } from 'svelte';
+  import { onMount } from 'svelte'
   import NavIcon from "svelte-material-icons/Menu.svelte"
   import Navigation from './Navigation/Navigation.svelte'
   import NetworkStatus from '#modules/NetworkStatus/NetworkStatus.svelte'
@@ -18,7 +18,6 @@
   const toggleNav = () => {isNavOpen = !isNavOpen}
 
   onMount(() => {
-    console.log("Setting: ", viewHeight)
     viewHeight = window?.visualViewport?.height
   })
 </script>
@@ -34,9 +33,9 @@
     { /if }
     <button on:click={toggleNav}> <NavIcon width={'100%'} height={'100%'} ariaLabel={'menu'} /></button>
   </header>
-  <NetworkStatus />
+  { #key currentRoute }<NetworkStatus/>{ /key }
   <div class='content'>
-    <Route { currentRoute } />
+    <Route { currentRoute }/>
   </div>
 </div>
 
