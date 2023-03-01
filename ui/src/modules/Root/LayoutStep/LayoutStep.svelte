@@ -17,10 +17,7 @@
 
   const toggleNav = () => {isNavOpen = !isNavOpen}
 
-  onMount(() => {
-    console.log("Setting: ", viewHeight)
-    viewHeight = window?.visualViewport?.height
-  })
+  onMount(() => viewHeight = window?.visualViewport?.height)
 </script>
 
 <div class='layout-step' style="height: {viewHeight}px">
