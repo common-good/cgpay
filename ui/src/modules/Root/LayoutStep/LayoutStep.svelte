@@ -49,7 +49,7 @@
     display flex
     align-items center
     justify-content space-between
-    margin-bottom $s0
+    margin-bottom $s-4
     padding $s-2
     background $c-blue-light
     box-shadow 0 1px 4px $c-gray

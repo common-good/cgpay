@@ -6,6 +6,7 @@
   import cgLogo from '#modules/Root/assets/cg-logo-300.png?webp'
   import cgLogoDemo from '#modules/Root/assets/cg-logo-300-demo.png?webp'
   import { navigateTo } from 'svelte-router-spa'
+  import Balance from '../Balance/Balance.svelte';
 
   export let currentRoute // else Svelte complains (I don't know why yet)
   export let params // else Svelte complains (I don't know why yet)
@@ -37,9 +38,10 @@
 </svelte:head>
 
 <section id='home'>
+    <Balance />
     { #if myQr }
     <div class='top'>
-      <h1>Show this code to pay</h1>
+      <h2>Show this code to pay</h2>
       <img src="{ myQr }" alt="my QR code" />
     </div>
     { :else }
@@ -63,7 +65,7 @@
         <button on:click={ () => fake('garbage.') }>Bad</button>
       </div>
     { /if }
-    <div class="charge">
+    <div class="actions">
       <a class="scan-customer" href='/scan'>Scan QR Code to Charge</a>
     </div>
 </section>
@@ -71,6 +73,9 @@
 <style lang='stylus'>
   a
     cgButton()
+    width 100%
+
+  .actions
     width 100%
 
   .fakes
@@ -84,10 +89,9 @@
     flex-grow 1
     margin-right $s-2
 
-  h1
-    text(lg)
+  h2
     font-weight 400
-    margin-bottom $s2
+    margin-bottom $s-1
 
   img 
     width 250px
@@ -109,6 +113,7 @@
     display flex
     flex-direction column
     align-items center
+    justify-content center
 
     p
       text(lg)
