@@ -11,9 +11,6 @@ vi.mock('#utils.js', () => ({
 // --------------------------------------------
 
 const testKey = 'cgpay.test'
-const realKey = 'cgpay.real'
-const testModeKey = 'cgpay.testMode'
-window.localStorage.setItem(testModeKey, JSON.stringify(true)) // do the testing in test mode
 
 function stored() {
   return JSON.parse(window.localStorage.getItem(testKey))
@@ -38,7 +35,7 @@ function setupLocalStorage(data) {
       it('initializes to stored values', () => {
         setupLocalStorage({ foo: { bar: 'baz' } })
         const store = createStore()
-        expect(store.inspect()).toEqual({ foo: { bar: 'baz' }, testing: true })
+        expect(store.inspect()).toEqual({ foo: { bar: 'baz' } })
       })
     })
 
@@ -380,15 +377,14 @@ function setupLocalStorage(data) {
       describe('.flush', () => {
         it('sends all requests', async () => {
           
-  //        const postRequest = vi.fn()
           const store = createStore()
-          let keys = []
 
           store.enqTx({ id: '1', amount: 1, description: '1' })
           store.enqTx({ id: '2', amount: 2, description: '2' })
           store.enqTx({ id: '3', amount: 3, description: '3' })
-
+console.log(store.inspect().txs)
           await store.flushTxs()
+console.log(store.inspect().txs)
 
           expect(postRequest.calls).toHaveLength(3)
           expect(postRequest.calls[0][0]).toEqual({ id: '1', amount: 1, description: '1', offline: true })

@@ -3,16 +3,23 @@ import { VitePWA } from 'vite-plugin-pwa'
 import { imagetools } from 'vite-imagetools'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
 import pwaConfig from './vite.pwa.config.js'
-import adapt from '@adaptably/adapt'
 import { defineConfig } from 'vite'
 
 // --------------------------------------------
 
+function js(s) { return JSON.stringify(s) }
+
 export default defineConfig({
   define: {
-    _version_: JSON.stringify(adapt('app.version')),
-    _demoApi_: JSON.stringify(adapt('apis.dev')),
-    _realApi_: JSON.stringify(adapt('apis.production')),
+    _version_: js('4.0.0'),
+    _origins_: js({
+      test: 'https://app1.commongood.earth', 
+      real: 'https://app.commongood.earth'
+    }),
+    _apis_: js({
+      test: 'https://demo.commongood.earth/api',
+      real: 'https://new.commongood.earth/api'
+    }),
   },
 
   plugins: [imagetools(), svelte(), VitePWA(pwaConfig)],
@@ -26,7 +33,7 @@ export default defineConfig({
   },
 
   server: {
-    port: adapt('port'),
+    port: 3000,
   },
 
   test: {

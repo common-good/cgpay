@@ -3,16 +3,13 @@
   import { navigateTo } from 'svelte-router-spa'
   import { dlg, timedFetch, isTimeout } from '#utils.js'
   import cgLogo from '#modules/Root/assets/cg-logo-300.png?webp'
-  import cgLogoDemo from '#modules/Root/assets/cg-logo-300-demo.png?webp'
   import store from '#store.js'
   import Modal from '../Modal.svelte'; let m0, m1
 
   // --------------------------------------------
 
-  const credentials = {
-    identifier: 'newaad', // set these for now, to make debugging much faster
-    password: 'Newaad1!'
-  }
+//  const credentials = { identifier: 'newaad', password: 'Newaad1!' } // set these to make debugging much faster
+  const credentials = {}
 
   let statusMsg = ''
 
@@ -55,8 +52,8 @@
 
 <section class='card' id='sign-in'>
   <header>
-    <img src= { $store.testing ? cgLogoDemo : cgLogo } alt='Common Good Logo' />
-    <h1>CGPay</h1>
+    <img src= { cgLogo } alt='Common Good Logo' />
+    <h1>CGPay{ $store.testMode ? ' DEMO' : '' }</h1>
   </header>
 
   <div class='content'>

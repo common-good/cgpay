@@ -1,9 +1,9 @@
 {
   "app": {
-    "name": "CGPay"
+    "0name": "DELETE THIS FILE?"
   },
   "apis": {
-    "dev": "https://demo.commongood.earth/api",
-    "production": "https://new.commongood.earth/api"
+    "0dev": "https://demo.commongood.earth/api",
+    "0production": "https://new.commongood.earth/api"
   }
 }

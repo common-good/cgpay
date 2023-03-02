@@ -5,7 +5,6 @@
   import Navigation from './Navigation/Navigation.svelte'
   import NetworkStatus from '#modules/NetworkStatus/NetworkStatus.svelte'
   import cgLogo from '#modules/Root/assets/cg-logo-300.png?webp'
-  import cgLogoDemo from '#modules/Root/assets/cg-logo-300-demo.png?webp'
   import store from '#store.js'
 
   // --------------------------------------------
@@ -27,10 +26,8 @@
     <Navigation on:toggleNav={toggleNav}/>
   { /if }
   <header>
-    <button on:click={ () => navigateTo('/home') }><img src={ $store.testing ? cgLogoDemo : cgLogo } alt='Common Good Logo' /></button>
-    { #if $store.myAccount }
-      <p>{ $store.myAccount.name }</p>
-    { /if }
+    <button on:click={ () => navigateTo('/home') }><img src={ cgLogo } alt='Common Good Logo' /></button>
+    <p>{ ($store.myAccount ? $store.myAccount.name : '') + ($store.testMode ? ' (DEMO)' : '')}</p>
     <button on:click={toggleNav}> <NavIcon width={'100%'} height={'100%'} ariaLabel={'menu'} /></button>
   </header>
   { #key currentRoute }<NetworkStatus/>{ /key }

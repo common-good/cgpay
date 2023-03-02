@@ -1,6 +1,5 @@
 import queryString from 'query-string'
 import { spy } from 'tinyspy'
-import adapt from '@adaptably/adapt'
 
 // --------------------------------------------
 
@@ -40,7 +39,7 @@ function createMockableRoute({ baseUrl, page, record }) {
 function routeObj(gorp, endPt, page, record) {
   return {
     [gorp]: createMockableRoute({
-      baseUrl: adapt('apis.dev') + '/' + endPt,
+      baseUrl: JSON.parse(_apis_).test + '/' + endPt,
       page,
       record
     })
