@@ -4,7 +4,6 @@
   import { dlg, timedFetch } from '#utils.js'
   import Modal from '../Modal.svelte'; let m0, m1, m2
   import cgLogo from '#modules/Root/assets/cg-logo-300.png?webp'
-  import cgLogoDemo from '#modules/Root/assets/cg-logo-300-demo.png?webp'
   import { navigateTo } from 'svelte-router-spa'
   import queryString from 'query-string'
 
@@ -13,7 +12,7 @@
 
   const myQr = $store.myAccount?.qr
   const vv = _version_.split('.')
-  const numVersion = vv[0] * 10000 + vv[1] * 100 + vv[2]
+  const numVersion = vv[0] * 10000 + vv[1] * 100 + vv[2] * 1
   let version = numVersion
 
   function er(msg) { 
@@ -29,7 +28,7 @@
   onMount(async () => {
     store.setQr(null) // no going back to previous customer
     if ($store.erMsg) er($store.erMsg)
-    try {
+    if ($store.myAccount) try {
       const q = {deviceId: $store.myAccount.deviceId, actorId: $store.myAccount.accountId, lastTx: $store.myAccount.lastTx || -1 }
       const query = queryString.stringify(q)
       const { result } = await timedFetch(`latest?${ query }`)
@@ -56,14 +55,14 @@
     <div class='top business'>
       <h1>Ready to charge people.</h1>
       <div class='watermark'>
-        <img class='logo' src= { $store.testing ? cgLogoDemo : cgLogo } alt='Common Good Logo' />
+        <img class='logo' src= { cgLogo } alt='Common Good Logo' />
         <p>CGPay v{ _version_ }</p>
         <div><h1>&nbsp;</h1></div> <!-- to center the logo vertically -->
       </div>
     </div>
   { /if }
 
-  { #if $store.testing }
+  { #if $store.testMode }
     <div class="fakes">
       <button on:click={ () => fake('G6VM0RZzhWMCq0zcBowqw.') }>Susan</button>
       <button on:click={ () => fake('HTTP://6VM.RC4.ME/G00WeHlioM5JZv1O9G') }>Maria</button>
@@ -75,22 +74,9 @@
     </div>
   { /if }
 
-  { #if $store.online && version > numVersion }
-    <div class="update">
-      <p>To update CGPay, tap the button below.<br>
-      { #if store.isChrome() }
-        Then tap "Open CGPay" on the system menu.
-      { :else }
-        Install the app (again), then uninstall the old version.
-      { /if }
-      </p>
-      <a class="update" href='https://app1.commongood.earth'>Update Now</a>
-    </div>
-  { :else }
-    <div class="charge">
-      <a class="scan-customer" href='/scan'>Scan QR Code to Charge</a>
-    </div>
-  { /if }
+  <div class="charge">
+    <a class="scan-customer" href='/scan'>Scan QR Code to Charge</a>
+  </div>
 </section>
 
 <style lang='stylus'>

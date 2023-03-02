@@ -8,14 +8,18 @@ import { postRequest, isTimeout } from '#utils.js'
  * Data structure
  *
  * SPACES
- *   testMode: contains just a boolean value - true if the app is in test mode
+ *   testMode: contains just a boolean value - 
  *   real: contains a JSON object of all the app's stored data for production mode
  *   test: contains a JSON object of all the app's stored data for test mode
  * 
  * In the "real" and "test" spaces the following data is stored, and cached in "cache" while the app runs.
  * 
+ * CONSTANTS
+ *   bool testMode: true if the app is in test mode
+ *   string origin: URL to run and install the app
+ *   string api: application programming interface URL
+ * 
  * SCALARS
- *   bool testing: true when the app is in test mode (cached, but saved only in the testMode space)
  *   int sawAdd: Unix timestamp when user saw the option to save the app to their home screen
  *   blob qr: a scanned QR url
  *   string msg: an informational message to display on the Home Page
@@ -74,18 +78,15 @@ import { postRequest, isTimeout } from '#utils.js'
  */
 
 export const createStore = () => {
-  const url = window.location.href
-  const testKey = 'cgpay.test'
-  const realKey = 'cgpay.real'
-  const testModeKey = 'cgpay.testMode'
-  let testing = !/^https:\/\/app.commongood.earth/.test(url) || JSON.parse(window.localStorage.getItem(testModeKey))
-  //testing = false // uncomment this to test the automatic switch to test mode when a test card is scanned
-  window.localStorage.setItem(testModeKey, testing)
-  const storedState = JSON.parse(window.localStorage.getItem(testing ? testKey : realKey))
+  const mode = window.location.href.startsWith(_origins_.real) ? 'real' : 'test'
+  const storeKey = 'cgpay.' + mode
+  const storedState = JSON.parse(window.localStorage.getItem(storeKey))
   const lostMsg = `Tell the customer "I'm sorry, that card is marked "LOST or STOLEN".`
 
   const defaults = {
-    testing: testing,
+    testMode: (mode == 'test'),
+    origin: _origins_[mode],
+    api: _apis_[mode],
     sawAdd: false,
     qr: null,
     msg: null,
@@ -99,9 +100,11 @@ export const createStore = () => {
     selfServe: false,
 
     choices: null,
-    accts: {},
     txs: [],
     comments: [],
+
+    corrupt: {},
+    accts: {},
     myAccount: null,
 
   }
@@ -109,7 +112,6 @@ export const createStore = () => {
   // --------------------------------------------
 
   let cache = storedState || { ...defaults }
-  cache.testing = testing // never gets stored
   const { zot, subscribe, update } = writable(cache)
 
   // --------------------------------------------
@@ -133,7 +135,7 @@ export const createStore = () => {
   }
 
   function storeLocal(state) {
-    window.localStorage.setItem(testing ? testKey : realKey, JSON.stringify(state))
+    window.localStorage.setItem(storeKey, JSON.stringify(state))
     cache = state
     return state
   }
@@ -156,6 +158,7 @@ export const createStore = () => {
   async function flushQ(k, endpoint) {
     if (cache.corrupt) return // don't retry hopeless tx indefinitely
     const q = [ ...cache[k] ]
+    console.log(q)
     let i
     for (i in q) {
       if (!res.useWifi) return; // allow immediate interruptions
@@ -182,27 +185,18 @@ export const createStore = () => {
 
     inspect() { return cache },
 
-    setTesting(yesno) { update(st => {
-      window.localStorage.setItem(testModeKey, JSON.stringify(yesno))
-      st.testing = yesno
-      return st
-    })},
-
     setQr(v) { set('qr', v) },
     setMsg(v) { set('erMsg', v) },
     setCorrupt(data) { set('corrupt', data) }, // record information for tech crew to decipher
     setWifi(yesno) { set('useWifi', yesno); this.setOnline(false) },
     setSelfServe(yesno) { set('selfServe', yesno) },
 
-    api() { return testing ? _demoApi_ : _demoApi_ }, // _realApi_ },
-
     setAcctChoices(v) { set('choices', v) },
     setMyAccount(acct) { set('myAccount', acct ? { ...acct } : null) },
     isSignedIn() { return (cache.myAccount != null) },
     signOut() { set('myAccount', null) },
-    clearData() { update(st => {
+    clearData() { if ($store.testMode) update(st => {
         st = { ...defaults }
-        st.testing = true // only called in test mode
         return storeLocal(st)
     })},
 
