@@ -14,6 +14,11 @@ import { postRequest, isTimeout } from '#utils.js'
  *   string origin: URL to run and install the app
  *   string api: application programming interface URL
  * 
+ * CONSTANTS
+ *   bool testMode: true if the app is in test mode
+ *   string origin: URL to run and install the app
+ *   string api: application programming interface URL
+ * 
  * SCALARS
  *   int sawAdd: Unix timestamp when user saw the option to save the app to their home screen
  *   blob qr: a scanned QR url
