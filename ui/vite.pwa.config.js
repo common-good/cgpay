@@ -36,11 +36,11 @@ export default {
   registerType: 'autoUpdate',
 
   manifest: {
-    background_color: '#5D9220',
+    background_color: '#ffffff',
     icons,
     name: 'CGPay',
     short_name: 'CGPay',
-    theme_color: '#5D9220'
+    theme_color: '#ffffff'
   },
 
   workbox: {
