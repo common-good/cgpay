@@ -34,7 +34,8 @@
     cgButton()
 
   button:disabled
-    background-color: darkgray
+    background-color: silver
+    border-color: $c-gray-dark
 
   form
     height 100%
@@ -46,9 +47,17 @@
     border solid 1px
     margin-bottom $s2
 
+  option:checked
+    background-color $c-blue-light
+
   input[type="checkbox"]
     display inline-block
-    width 30px
+    width 18px
+    height 18px
+    margin-right 5px
+
+  label
+    text(md)
 
   option
     display flex

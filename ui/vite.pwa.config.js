@@ -53,8 +53,7 @@ export default {
     //
     // https://vite-plugin-pwa.netlify.app/guide/static-assets.html#globpatterns
     globPatterns: [
-      '**/*.{css,jpg,js,png,svg,webp}',
-      '**/*.{html}'
+      '**/*.{html,css,jpg,js,png,svg,webp}' // html causes a warning, but is required for the app to work
     ],
     clientsClaim: true,
     skipWaiting: true,
