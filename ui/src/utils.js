@@ -59,13 +59,15 @@ async function timedFetch(url, options = {}) {
   const aborter = new AbortController();
   aborter.name = 'Timeout'
   const timeoutId = setTimeout(() => aborter.abort(), timeout)
-  let res = await fetch(store.inspect().api + '/' + url, {...options, signal: aborter.signal })
+
+  const res = await fetch(store.inspect().api + '/' + url, {...options, signal: aborter.signal })
+  if (res.ok === false) throw new Error(res.status)
+  
   if (res.ok && type != 'none') {
     res.result = await (type == 'blob' ? res.blob() : res.json())
     if (options.method == 'POST') res = res.result // a JSON string: {ok, message}
-  } else if (res.ok === false) {
-    throw new Error(res.status)
   }
+
   clearTimeout(timeoutId)
   return res
 }
@@ -88,13 +90,15 @@ function filterObjByKey(obj0, fn) {
 
 async function postRequest(v, endpoint) {
   v.version = _version_
-  const res = await timedFetch(endpoint, {
-    method: 'POST',
-    headers: { 'Content-type': 'application/x-www-form-urlencoded' },
-    mode: 'cors',
-    cache: 'default',
-    body: queryString.stringify(v)
-  })
+  try {
+    const res = await timedFetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-type': 'application/x-www-form-urlencoded' },
+      mode: 'cors',
+      cache: 'default',
+      body: queryString.stringify(v)
+    })
+  } catch (er) { throw er }
   return res
 }
 

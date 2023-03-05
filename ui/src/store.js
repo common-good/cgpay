@@ -103,7 +103,7 @@ export const createStore = () => {
     txs: [],
     comments: [],
 
-    corrupt: {},
+    corrupt: null,
     accts: {},
     myAccount: null,
 
@@ -157,13 +157,10 @@ export const createStore = () => {
 
   async function flushQ(k, endpoint) {
     if (cache.corrupt) return // don't retry hopeless tx indefinitely
-    const q = [ ...cache[k] ]
-    console.log(q)
-    let i
-    for (i in q) {
+    while (cache[k].length > 0) {
       if (!res.useWifi) return; // allow immediate interruptions
       try {
-        postRequest(q[i], endpoint)
+        await postRequest(cache[k][0], endpoint)
       } catch (er) {
         if (isTimeout(er)) {
           res.setOnline(false)
@@ -246,7 +243,7 @@ export const createStore = () => {
       tx.offline = true
       enQ('txs', { ...tx })
     },
-    async flushTxs() { flushQ('txs', 'transactions') },
+    async flushTxs() { await flushQ('txs', 'transactions') },
     deqTx() { return deQ('txs') }, // just for testing (in store.spec.js)
 
     comment(text) { enQ('comments', { deviceId: cache.myAccount.deviceId, actorId: cache.myAccount.accountId, created: Math.floor(Date.now() / 1000), text: text }) },
