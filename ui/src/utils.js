@@ -90,15 +90,13 @@ function filterObjByKey(obj0, fn) {
 
 async function postRequest(v, endpoint) {
   v.version = _version_
-  try {
-    const res = await timedFetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-type': 'application/x-www-form-urlencoded' },
-      mode: 'cors',
-      cache: 'default',
-      body: queryString.stringify(v)
-    })
-  } catch (er) { throw er }
+  const res = await timedFetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-type': 'application/x-www-form-urlencoded' },
+    mode: 'cors',
+    cache: 'default',
+    body: queryString.stringify(v)
+  })
   return res
 }
 
