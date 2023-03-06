@@ -60,7 +60,7 @@ async function timedFetch(url, options = {}) {
   aborter.name = 'Timeout'
   const timeoutId = setTimeout(() => aborter.abort(), timeout)
 
-  const res = await fetch(store.inspect().api + '/' + url, {...options, signal: aborter.signal })
+  let res = await fetch(store.inspect().api + '/' + url, {...options, signal: aborter.signal })
   if (res.ok === false) throw new Error(res.status)
   
   if (res.ok && type != 'none') {
