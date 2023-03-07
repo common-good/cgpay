@@ -33,10 +33,6 @@
   button
     cgButton()
 
-  button:disabled
-    background-color: silver
-    border-color: $c-gray-dark
-
   form
     height 100%
 
