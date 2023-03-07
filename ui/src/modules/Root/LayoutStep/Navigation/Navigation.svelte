@@ -24,12 +24,12 @@
   let menuItems = []
   function item(text, callback, criteria) { menuItems.push({text, callback, criteria}) }
 
-  item('Comments & Suggestions', comment, () => store.isSignedIn() && !$store.selfServe)
   item('Use Rear Camera', rearCamera, () => $store.cameraCount > 1 && $store.frontCamera)
   item('Use Front Camera', frontCamera, () => $store.cameraCount > 1 && !$store.frontCamera)
-  item('Self Serve Off', selfServeOff, () => pageUri() == 'home' && $store.selfServe)
-  item('Self Serve On', selfServeOn, () => pageUri() == 'home' && !$store.selfServe)
+  item('Sign Out and Exit Self Serve', selfServeOff, () => pageUri() == 'home' && $store.selfServe)
+  item('Enter Self Serve Mode', selfServeOn, () => pageUri() == 'home' && $store.myAccount.isCo && !$store.selfServe)
   item('Switch Account', switchAccount, () => $store.choices?.length > 1 && pageUri() != 'link-account' && !$store.selfServe)
+  item('Comments & Suggestions', comment, () => store.isSignedIn() && !$store.selfServe)
   item('Sign Out', signOut, () => store.isSignedIn() && !$store.selfServe)
 
 if ($store.testMode) {
@@ -61,12 +61,11 @@ if ($store.testMode) {
     background $c-green-light
 
   menu
-    padding $s-2 0
+    padding $s-2 $s-1
 
   nav
     position absolute
     right 0
-    width 220px
     background $c-white
     text-align right
     box-shadow 2px 2px 4px $c-gray-dark
@@ -83,7 +82,6 @@ if ($store.testMode) {
       width 100%
       height 100%
       text-align right
-      padding-right $s0
 
   .background
     position absolute
