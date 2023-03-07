@@ -41,9 +41,17 @@ form
     border-radius 2px
     &:last-of-type
       margin-bottom $s0
+    &[type="checkbox"]
+      display inline-block
+      width $s0
+      height $s0
+      margin 0 $s-2 0 0
 
   select
     width 100%
+
+option:checked
+  background-color $c-blue-light
 
 p
   text(md)

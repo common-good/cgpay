@@ -96,6 +96,9 @@
     flex-grow 1
     margin-right $s-2
 
+  .charge
+    width 100%
+
   .update p
     text-align center
     margin-bottom $s1
@@ -125,11 +128,6 @@
     display flex
     flex-direction column
     align-items center
-
-    p
-      text(lg)
-      text-align center
-      margin-bottom $s0
 
   .watermark
     opacity 0.5

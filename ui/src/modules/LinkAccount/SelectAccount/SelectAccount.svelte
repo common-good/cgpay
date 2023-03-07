@@ -40,20 +40,14 @@
     margin-bottom $s2
 
   select
-    border solid 1px
+    border solid 1px $c-black
     margin-bottom $s2
-
-  option:checked
-    background-color $c-blue-light
-
-  input[type="checkbox"]
-    display inline-block
-    width 18px
-    height 18px
-    margin-right 5px
 
   label
     text(md)
+    display flex
+    align-items center
+    letter-spacing 0.005rem
 
   option
     display flex
