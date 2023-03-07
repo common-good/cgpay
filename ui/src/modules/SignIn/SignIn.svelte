@@ -62,7 +62,7 @@
       <label class='visuallyhidden' for='account-id'>Account ID or Email Address</label>
       <input name='account-id' type='text' placeholder='Account ID or Email Address' autocomplete='name' bind:value={ credentials.identifier } required />
       <label class='visuallyhidden' for='password'>Password</label>
-      <input type='password' placeholder='Password' bind:value={ credentials.password } required />
+      <input type='password' placeholder='Password' autocomplete="current-password" bind:value={ credentials.password } required />
       <button type='submit'>Sign In</button>
     </form>
     <p class="status">{ statusMsg }</p>
