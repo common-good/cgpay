@@ -111,7 +111,7 @@ export const createStore = () => {
 
   // --------------------------------------------
 
-  let cache = storedState || { ...defaults }
+  let cache = {...storedState, ...defaults} || { ...defaults }
   const { zot, subscribe, update } = writable(cache)
 
   // --------------------------------------------
