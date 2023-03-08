@@ -1,37 +1,32 @@
 <script>
   import { createEventDispatcher } from 'svelte'
 
-  // --------------------------------------------
-
   export let accountOptions
   export let size
 
-  // --------------------------------------------
-
   const dispatch = createEventDispatcher()
-
   let selectedAccount
+  let lock = true
+  let selected
 
-  // --------------------------------------------
+  function gotAccount() { dispatch('complete', { acct: selectedAccount, lock: lock } ) }
 
-  function gotAccount() {
-    dispatch('complete', selectedAccount)
-  }
 </script>
 
 <div class="select-account">
   <div class="top">
   <p>Select a Common Good account to link to CGPay on this device.</p>
   <form>
-    <select name='select-account' size={size} bind:value={ selectedAccount } required="required">
+    <select name='select-account' size={size} on:click={ () => selected = true } bind:value={ selectedAccount } required="required">
       <option value='' disabled>Select an Account</option>
       { #each accountOptions as account }
         <option value={ account.id }>{ account.name }</option>
       { /each }
     </select>
+    <label><input type="checkbox" name="lock-account" bind:checked={ lock } /> Require sign-in to change account</label>
   </form>
   </div>
-  <button type="submit" on:click={ gotAccount }>Link Account</button>
+  <button type="submit" on:click={ gotAccount } disabled={!selected}>Link Account</button>
 </div>
 
 <style lang='stylus'>
@@ -45,7 +40,14 @@
     margin-bottom $s2
 
   select
-    border solid 1px
+    border solid 1px $c-black
+    margin-bottom $s2
+
+  label
+    text(md)
+    display flex
+    align-items center
+    letter-spacing 0.005rem
 
   option
     display flex

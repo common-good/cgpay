@@ -53,18 +53,21 @@ function CgError(msg, name = 'CgError') { this.message = msg; this.name = name }
  *   (AbortError is timeout, TypeError means network blocked during testing)
  */
 async function timedFetch(url, options = {}) {
+  if (!store.inspect().online) throw new Error('offline') // this works for setWifiOff also
   if (options.method == 'GET') url += '&version=' + _version_
   const { timeout = 3000, type = 'json' } = options;
   const aborter = new AbortController();
   aborter.name = 'Timeout'
   const timeoutId = setTimeout(() => aborter.abort(), timeout)
-  let res = await fetch(store.api() + '/' + url, {...options, signal: aborter.signal })
+
+  let res = await fetch(store.inspect().api + '/' + url, {...options, signal: aborter.signal })
+  if (res.ok === false) throw new Error(res.status)
+  
   if (res.ok && type != 'none') {
     res.result = await (type == 'blob' ? res.blob() : res.json())
     if (options.method == 'POST') res = res.result // a JSON string: {ok, message}
-  } else if (res.ok === false) {
-    throw new Error(res.status)
   }
+
   clearTimeout(timeoutId)
   return res
 }
@@ -85,7 +88,7 @@ function filterObjByKey(obj0, fn) {
   .reduce((obj, key) => { obj[key] = obj0[key]; return obj }, {})
 }
 
-async function sendRequest(v, endpoint) {
+async function postRequest(v, endpoint) {
   v.version = _version_
   const res = await timedFetch(endpoint, {
     method: 'POST',
@@ -124,4 +127,4 @@ function disableBack() {
         body: JSON.stringify(tx)
 */
 
-export { confirm, yesno, dlg, hash, crash, goEr, goHome, CgError, timedFetch, isTimeout, sendRequest, pageUri }
+export { confirm, yesno, dlg, hash, crash, goEr, goHome, CgError, timedFetch, isTimeout, postRequest, pageUri }

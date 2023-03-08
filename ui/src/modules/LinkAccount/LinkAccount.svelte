@@ -20,8 +20,10 @@
   function er(msg) { ({ m0, m1 } = dlg('Alert', msg, 'Close', () => m0 = false)); m0=m0; m1=m1 } 
 
   function gotAccount(ev) {
-    myAccount = accounts && accounts[ev.detail]
+    console.log(ev)
+    myAccount = accounts && accounts[ev.detail.acct]
     store.setMyAccount(myAccount)
+    if (ev.detail.lock) store.setAcctChoices(null)
     goHome(`This device is now linked to your Common Good account: ${myAccount?.name}.`)
   }
 

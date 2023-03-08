@@ -26,7 +26,7 @@
   }
   
   let tx = {
-    amount: 1.23, // DEBUG
+    amount: null,
     description: $store.myAccount.selling ? $store.myAccount.selling[0] : null,
     deviceId: $store.myAccount.deviceId,
     actorId: noCardCode($store.myAccount.accountId),
@@ -44,6 +44,7 @@
   let gotTx = false
   let limit = null
   let photo = { alt: 'Customer Profile', blob: null }
+  const pastAction = $store.selfServe ? 'Paid' : 'Charged'
 
   // --------------------------------------------
 
@@ -54,16 +55,7 @@
     ;({ m0, m1, m2 } = dlg('Alert', msg, 'OK', () => m0 = false)); m0=m0; m1=m1; m2=m2 
   }
 
-  function changeMode(testing) {
-    if (testing != $store.testing) {
-      const mode = testing ? 'TEST' : 'REAL'
-      ;({ m0, m1, m2 } = dlg('Mode Change', `Changing to ${ mode } mode.`, 'OK', () => m0 = false)); m0=m0; m1=m1; m2=m2
-    }
-    store.setTesting(testing)
-    navigateTo('/charge') // reloading this page to change which data and api we use
-  }
-
-    /**
+  /**
    * Return the cardId with cardCode (and everything that follows) removed
    */
   function noCardCode(cardId) {
@@ -102,7 +94,10 @@
       testing = qr.includes('.RC4.')
     } else throw new Error('That is not a valid Common Good card format.')
 
-    if (testing != $store.testing) changeMode(testing)
+    if (testing && !$store.testMode) throw new Error('That is a real Common Good card and cannot be used in test mode.')
+    if (!testing && $store.testMode) throw new Error('That is a CGPay test card and cannot be used in production mode.')
+// NO. This risks our data integrity    if (testing != $store.testMode) changeMode(testing)
+
     const agentLen = +agentLens[dig36.indexOf(acct[0])]
     const mainId = getMainId(acct)
     const acct0 = acct.substring(0, mainId.length + agentLen) // include agent chars in original account ID
@@ -132,7 +127,6 @@
   async function Undo() {
     tx.amount = -tx.amount
     store.enqTx(tx)
-    console.log($store.txs)
     // NO! With flaky internet, this could queue the tx after unknowingly uploading it, then canceling the undo -- store.deleteTxPair()
     // Maybe see whether original tx was definitely taken offline, if this seems important
     goHome('The transaction has been reversed.')
@@ -140,6 +134,7 @@
 
   onMount(async () => {
     try {
+      if (qr == null) return navigateTo('/home') // pressed back button from Home page
       const card = qrParse(qr) // does not return if format is bad
       const mainId = getMainId($store.myAccount.accountId)
       if (card.main == mainId) throw new Error('That card is for the same account as yours.')
@@ -161,8 +156,9 @@
         otherAccount = { ...otherAccount, ...result, lastTx: Date.now() } // lastTx date lets us jettison old customers to save storage
         delete otherAccount.selling
         store.putAcct(card, otherAccount) // store and/or update stored customer account info
+        store.setMyAccount({ ...$store.myAccount, lastTx: otherAccount.lastTx })
         limit = Math.min(otherAccount.limit, onlineLimit)
-        photo = await getPhoto(query)
+        if (!$store.selfServe) photo = await getPhoto(query)
       }
     } catch (er) {
       if (isTimeout(er)) { // internet unavailable; recognize a repeat customer or limit CG's liability
@@ -187,13 +183,17 @@
     <div class='top'>
       <div class='charge-info'>
         <div class='row payee-info'>
-          <p>Charged to:</p>
+          <p>{pastAction} to:</p>
           <div class='payee-details'>
-          {#if otherAccount.agent}
-            <p>{ otherAccount.agent }</p>
-            <p class='co'>{ otherAccount.name }</p>
-          {:else}
-            <p>{ otherAccount.name }</p>
+          { #if $store.selfServe }
+            <p>{ $store.myAccount.name }</p>
+          { :else }
+            {#if otherAccount.agent}
+              <p>{ otherAccount.agent }</p>
+              <p class='co'>{ otherAccount.name }</p>
+            {:else}
+              <p>{ otherAccount.name }</p>
+            {/if}
           {/if}
           </div>
         </div>

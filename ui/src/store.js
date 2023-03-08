@@ -1,5 +1,5 @@
 import { get, writable } from 'svelte/store'
-import { sendRequest, isTimeout } from '#utils.js'
+import { postRequest, isTimeout } from '#utils.js'
 
 // --------------------------------------------
 // use this example for set() and get(): https://svelte.dev/repl/ccbc94cb1b4c493a9cf8f117badaeb31?version=3.16.7
@@ -7,25 +7,30 @@ import { sendRequest, isTimeout } from '#utils.js'
 /**
  * Data structure
  *
- * SPACES
- *   testMode: contains just a boolean value - true if the app is in test mode
- *   real: contains a JSON object of all the app's stored data for production mode
- *   test: contains a JSON object of all the app's stored data for test mode
+ * The following data is stored, and cached in "cache" while the app runs.
  * 
- * In the "real" and "test" spaces the following data is stored, and cached in "cache" while the app runs.
+ * CONSTANTS
+ *   bool testMode: true if the app is in test mode
+ *   string origin: URL to run and install the app
+ *   string api: application programming interface URL
+ * 
+ * CONSTANTS
+ *   bool testMode: true if the app is in test mode
+ *   string origin: URL to run and install the app
+ *   string api: application programming interface URL
  * 
  * SCALARS
  *   int sawAdd: Unix timestamp when user saw the option to save the app to their home screen
  *   blob qr: a scanned QR url
  *   string msg: an informational message to display on the Home Page
  *   string erMsg: an error message to display on the Home Page
- *   string corrupt: a string (possibly a JSON object stringified) of corrupt data to report to the Tech Team
- *   bool testing: true when the app is in test mode (cached, but saved only in the testMode space)
  *   string deviceType: Android, Apple, or Other
  *   string browser: Chrome, Safari, or Other
  *   int cameraCount: number of cameras in the device
  *   bool frontCamera: true to use front camera instead of rear (default false iff mobile)
  *   bool online: true if the device is connected to the Internet
+ *   bool useWifi: true to use wifi whenever possible (otherwise disable wifi)
+ *   bool selfServe: true for selfServer mode
  * 
  * ARRAYS
  *    choices: a list of Common Good accounts the signed-in user may choose to connect (one of) to the device
@@ -53,13 +58,14 @@ import { sendRequest, isTimeout } from '#utils.js'
  *      text: the comment
  * 
  * OBJECTS
- *    corrupt: a collection of corrupt data
+ *    corrupt: version number when a transaction or comment upload fails inexplicably
  *    accts: an array of accounts the device has transacted with, keyed by the account ID without cardCode, each with:
  *      hash: SHA256 hash of cardCode
  *      data: JSON object of other account data:
  *        name: name of the account
  *        agent: agent for the account, if any
- *        location: location of the account (city, ST
+ *        location: location of the account (city, ST)
+ *        avatar: small version of the photo associated with the account
  *        limit: maximum amount this account can be charged at this time (leaving room for Stepups)
  *        creditLine: the account's credit line
  *        avgBalance: the account’s average balance over the past 6 months
@@ -68,42 +74,46 @@ import { sendRequest, isTimeout } from '#utils.js'
  * 
  *    myAccount: information about the account associated with the device
  *      accountId, deviceId, name, qr, isCo, and selling as in the choices array described above
+ *      lastTx: the last transaction known to this device
  */
 
 export const createStore = () => {
-  const url = window.location.href
-  const testKey = 'cgpay.test'
-  const realKey = 'cgpay.real'
-  const testModeKey = 'cgpay.testMode'
-  let testing = !/^https:\/\/app.commongood.earth/.test(url) || JSON.parse(window.localStorage.getItem(testModeKey))
-  //testing = false // uncomment this to test the automatic switch to test mode when a test card is scanned
-  window.localStorage.setItem(testModeKey, testing)
-  const storedState = JSON.parse(window.localStorage.getItem(testing ? testKey : realKey))
+  const mode = window.location.href.startsWith(_origins_.real) ? 'real' : 'test'
+  const storeKey = 'cgpay.' + mode
+  const storedState = JSON.parse(window.localStorage.getItem(storeKey))
   const lostMsg = `Tell the customer "I'm sorry, that card is marked "LOST or STOLEN".`
 
   const defaults = {
-    testing: testing,
-    online: null,
-    cameraCount: 0, // set this when scanning for the first time
+    testMode: (mode == 'test'),
+    origin: _origins_[mode],
+    api: _apis_[mode],
+    sawAdd: false,
     qr: null,
     msg: null,
     erMsg: null,
-    sawAdd: false,
-    choices: null,
-    accts: {},
-    txs: [],
-    comments: [],
-    myAccount: null,
-
     deviceType: getDeviceType(),
     browser: getBrowser(),
+    cameraCount: 0, // set this when scanning for the first time
     frontCamera: (getDeviceType() == 'Other'),
+    online: null,
+    useWifi: true,
+    selfServe: false,
+
+    choices: null,
+    txs: [],
+    comments: [],
+
+    corrupt: null,
+    accts: {},
+    myAccount: null,
+
   }
 
   // --------------------------------------------
 
-  let cache = storedState || { ...defaults }
-  cache.testing = testing // never gets stored
+  let cache = { ...defaults, ...storedState }
+  for (let k in cache) if (!(k in defaults)) delete cache[k]
+  
   const { zot, subscribe, update } = writable(cache)
 
   // --------------------------------------------
@@ -127,7 +137,7 @@ export const createStore = () => {
   }
 
   function storeLocal(state) {
-    window.localStorage.setItem(testing ? testKey : realKey, JSON.stringify(state))
+    window.localStorage.setItem(storeKey, JSON.stringify(state))
     cache = state
     return state
   }
@@ -143,27 +153,26 @@ export const createStore = () => {
   })}
 
   function deQ(k) { update(st => { // this is actually FIFO (shift) not LIFO (pop)
-    console.log(k, st[k])
     st[k].shift()
     return storeLocal(st)
   })}
 
   async function flushQ(k, endpoint) {
-    if (cache.corrupt) return // don't retry hopeless tx indefinitely
-    const q = [ ...cache[k] ]
-    let i
-    for (i in q) {
+    if (cache.corrupt == _version_) return; else res.setCorrupt(null) // don't retry hopeless tx indefinitely
+    
+    while (cache[k].length > 0) {
+      if (!res.useWifi) return; // allow immediate interruptions
       try {
-        sendRequest(q[i], endpoint)
+        await postRequest(cache[k][0], endpoint)
       } catch (er) {
         if (isTimeout(er)) {
           res.setOnline(false)
-          return
         } else {
           console.log(er.message) // keep this
           console.log(cache[k]) // keep this
-          return res.setCorrupt(cache[k])
+          res.setCorrupt(_version_)
         }
+        return // don't deQ when there's an error
       }
       deQ(k)
     }
@@ -176,25 +185,18 @@ export const createStore = () => {
 
     inspect() { return cache },
 
-    setTesting(yesno) { update(st => {
-      window.localStorage.setItem(testModeKey, JSON.stringify(yesno))
-      st.testing = yesno
-      return st
-    })},
-
     setQr(v) { set('qr', v) },
     setMsg(v) { set('erMsg', v) },
-    setCorrupt(data) { set('corrupt', data) }, // record information for tech crew to decipher
-
-    api() { return testing ? _demoApi_ : _demoApi_ }, // _realApi_ },
+    setCorrupt(version) { set('corrupt', version) }, // pause uploading until a new version is released
+    setWifi(yesno) { set('useWifi', yesno); this.setOnline(false) },
+    setSelfServe(yesno) { set('selfServe', yesno) },
 
     setAcctChoices(v) { set('choices', v) },
     setMyAccount(acct) { set('myAccount', acct ? { ...acct } : null) },
     isSignedIn() { return (cache.myAccount != null) },
     signOut() { set('myAccount', null) },
-    clearData() { update(st => {
+    clearData() { if (cache.testMode) update(st => {
         st = { ...defaults }
-        st.testing = true // only called in test mode
         return storeLocal(st)
     })},
 
@@ -207,10 +209,10 @@ export const createStore = () => {
     setCameraCount(n) { set('cameraCount', n) },
     setFrontCamera(yesno) { set('frontCamera', yesno) },
 
-    resetNetwork() { this.setOnline(window.navigator.onLine) },
+    resetNetwork() { if (cache.useWifi) this.setOnline(window.navigator.onLine) },
     setOnline(yesno) {
-      if (yesno) { this.flushTxs(); this.flushComments() }
-      set('online', yesno) // it makes no sense to store this in localStore, but hurts nothing
+      set('online', cache.useWifi ? yesno : false) // it makes no sense to store this in localStore, but hurts nothing
+      if (cache.useWifi && yesno) { this.flushTxs(); this.flushComments() }
     },
 
     /**
@@ -244,7 +246,7 @@ export const createStore = () => {
       tx.offline = true
       enQ('txs', { ...tx })
     },
-    async flushTxs() { flushQ('txs', 'transactions') },
+    async flushTxs() { await flushQ('txs', 'transactions') },
     deqTx() { return deQ('txs') }, // just for testing (in store.spec.js)
 
     comment(text) { enQ('comments', { deviceId: cache.myAccount.deviceId, actorId: cache.myAccount.accountId, created: Math.floor(Date.now() / 1000), text: text }) },

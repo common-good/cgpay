@@ -1,14 +1,15 @@
 <script>
   import { onMount } from 'svelte'
   import store from '#store.js'
-  import { dlg } from '#utils.js'
+  import { dlg, timedFetch } from '#utils.js'
   import Modal from '../Modal.svelte'; let m0, m1, m2
   import cgLogo from '#modules/Root/assets/cg-logo-300.png?webp'
-  import cgLogoDemo from '#modules/Root/assets/cg-logo-300-demo.png?webp'
   import { navigateTo } from 'svelte-router-spa'
+  import queryString from 'query-string'
 
   export let currentRoute // else Svelte complains (I don't know why yet)
   export let params // else Svelte complains (I don't know why yet)
+
   const myQr = $store.myAccount?.qr
 
   function er(msg) { 
@@ -16,17 +17,21 @@
     store.setMsg(null)
   }
 
-  function version() { let v = _version_ + ''; return v.substring(0, v.length - 2) + '.' + v.substring(v.length - 2) } // won't build if we use .toString() here
-
   function fake(code) {
     store.setQr(code)
     navigateTo('/charge')
   }
-  //   store.setQr('HTTP://6VM.RC4.ME/H0G0NyCBBlUF1qWNZ2k'); navigateTo('/charge') // HTTP://6VM.RC4.ME/H0G0NyCBBlUF1qWNZ2k or H6VM0G0NyCBBlUF1qWNZ2k.
 
   onMount(async () => {
     store.setQr(null) // no going back to previous customer
     if ($store.erMsg) er($store.erMsg)
+    if ($store.myAccount) try {
+      const q = {deviceId: $store.myAccount.deviceId, actorId: $store.myAccount.accountId, lastTx: $store.myAccount.lastTx || -1 }
+      const query = queryString.stringify(q)
+      const { result } = await timedFetch(`latest?${ query }`)
+    } catch (er) {
+      console.log(er)
+    }
   })
 </script>
 
@@ -37,35 +42,38 @@
 </svelte:head>
 
 <section id='home'>
-    { #if myQr }
+  { #if myQr }
     <div class='top'>
       <h1>Show this code to pay</h1>
       <img src="{ myQr }" alt="my QR code" />
+      <p>CGPay v{ _version_ }</p>
     </div>
-    { :else }
-      <div class='top business'>
-        <h1>Ready to charge people.</h1>
-        <div class='watermark'>
-          <img class='logo' src= { $store.testing ? cgLogoDemo : cgLogo } alt='Common Good Logo' />
-          <p>CGPay v{ version() }</p>
-          <div><h1>&nbsp;</h1></div> <!-- to center the logo vertically -->
-        </div>
+  { :else }
+    <div class='top business'>
+      <h1>Ready to charge people.</h1>
+      <div class='watermark'>
+        <img class='logo' src= { cgLogo } alt='Common Good Logo' />
+        <p>CGPay v{ _version_ }</p>
+        <div><h1>&nbsp;</h1></div> <!-- to center the logo vertically -->
       </div>
-    { /if }
-    { #if $store.testing }
-      <div class="fakes">
-        <button on:click={ () => fake('G6VM0RZzhWMCq0zcBowqw.') }>Susan</button>
-        <button on:click={ () => fake('HTTP://6VM.RC4.ME/G00WeHlioM5JZv1O9G') }>Maria</button>
-        <button on:click={ () => fake('HTTP://6VM.RC4.ME/H010WeHlioM5JZv1O9G') }>Store</button>
-        <button on:click={ () => fake('H6VM0G0NyCBBlUF1qWNZ2k.') }>Helga's</button>
-        <button on:click={ () => fake('HTTP://6VM.RC4.ME/H0G0NyCBBlUF1qWNZ2k') }>Helga2</button>
-        <button on:click={ () => fake('H6VM0G0NyCBBlUF.') }>Bad Online</button>
-        <button on:click={ () => fake('garbage.') }>Bad</button>
-      </div>
-    { /if }
-    <div class="charge">
-      <a class="scan-customer" href='/scan'>Scan QR Code to Charge</a>
     </div>
+  { /if }
+
+  { #if $store.testMode }
+    <div class="fakes">
+      <button on:click={ () => fake('G6VM0RZzhWMCq0zcBowqw.') }>Susan</button>
+      <button on:click={ () => fake('HTTP://6VM.RC4.ME/G00WeHlioM5JZv1O9G') }>Maria</button>
+      <button on:click={ () => fake('HTTP://6VM.RC4.ME/H010WeHlioM5JZv1O9G') }>Store</button>
+      <button on:click={ () => fake('H6VM0G0NyCBBlUF1qWNZ2k.') }>Helga's</button>
+      <button on:click={ () => fake('HTTP://6VM.RC4.ME/H0G0NyCBBlUF1qWNZ2k') }>Helga2</button>
+      <button on:click={ () => fake('H6VM0G0NyCBBlUF.') }>Bad Online</button>
+      <button on:click={ () => fake('garbage.') }>Bad</button>
+    </div>
+  { /if }
+
+  <div class="charge">
+    <a class="scan-customer" href='/scan'>Scan QR Code to Charge</a>
+  </div>
 </section>
 
 <style lang='stylus'>
@@ -83,6 +91,13 @@
     margin-bottom $s0
     flex-grow 1
     margin-right $s-2
+
+  .charge
+    width 100%
+
+  .update p
+    text-align center
+    margin-bottom $s1
 
   h1
     text(lg)
@@ -109,11 +124,6 @@
     display flex
     flex-direction column
     align-items center
-
-    p
-      text(lg)
-      text-align center
-      margin-bottom $s0
 
   .watermark
     opacity 0.5

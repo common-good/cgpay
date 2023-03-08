@@ -1,10 +1,8 @@
 <script>
-  import queryString from 'query-string'
   import { Router } from 'svelte-router-spa'
   import { onMount } from 'svelte'
 
   import store from '#store.js'
-  import { sendRequest } from '#utils.js'
 
   import AddToHomeScreen from '#modules/AddToHomeScreen/AddToHomeScreen.svelte'
   import Home from '#modules/Home/Home.svelte'
@@ -13,6 +11,7 @@
   import Scan from '#modules/Scan/Scan.svelte'
   import SignIn from '#modules/SignIn/SignIn.svelte'
   import Comment from '#modules/Comment/Comment.svelte'
+//  import LoadSW from '#modules/LoadSW.svelte'
 
   import LayoutIntro from './LayoutIntro/LayoutIntro.svelte'
   import LayoutStep from './LayoutStep/LayoutStep.svelte'
@@ -54,4 +53,5 @@
   ]
 </script>
 
+<!--LoadSW /-->
 <Router { routes } />

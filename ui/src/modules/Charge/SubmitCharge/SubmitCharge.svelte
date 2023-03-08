@@ -2,7 +2,7 @@
   import { createEventDispatcher } from 'svelte'
   import Profile from '#modules/Charge/Profile/Profile.svelte'
   import store from '#store.js'
-  import { sendRequest, hash } from '#utils.js'
+  import { postRequest, hash } from '#utils.js'
   // https://github.com/canutin/svelte-currency-input
 
   // --------------------------------------------
@@ -11,7 +11,8 @@
   export let photo
   export let tx
   export let limit
- 
+
+  const action = $store.selfServe ? 'Pay' : 'Charge'
   const dispatch = createEventDispatcher()
 
   // --------------------------------------------
@@ -27,13 +28,14 @@
     }
 
     try {
-      const res = await sendRequest(tx, 'transactions')
+      const res = await postRequest(tx, 'transactions')
       if (res.ok) dispatch('complete'); else dispatch('error', res.message) // update display
     } catch (er) { // except for syntax errors, queue it and treat it as success
       console.log(er)
       if (er == 400) { // syntax error
         throw new Error('Program issue: request syntax error')
       } else {
+        console.log(tx)
         store.enqTx(tx)                                                                                                         
         if (!otherAccount.name) otherAccount.name = 'Unidentified Customer'
         dispatch('complete') // update display
@@ -43,9 +45,9 @@
 </script>
 
 <section id='submit-charge'>
-  <h1>Charge</h1>
+  <h1>{action}</h1>
   <form on:submit|preventDefault={ charge }>
-    <Profile { otherAccount } {photo} />
+    { #if !$store.selfServe }<Profile { otherAccount } {photo} />{ /if }
     <div class='bottom'>
       <fieldset>
         <label for='amount'>Amount</label>
@@ -53,7 +55,7 @@
         <label for='description'>Description</label>
         <input id='description' type='text' name='description' placeholder='e.g. lunch, rent, supplies, loan, etc.' bind:value={ tx.description } autocomplete required />
       </fieldset>
-      <button type='submit'>Charge</button>
+      <button type='submit'>{action}</button>
     </div>
   </form>
 </section>
