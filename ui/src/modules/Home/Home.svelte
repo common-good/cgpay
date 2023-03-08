@@ -58,24 +58,22 @@
       <div class='watermark'>
         <img class='logo' src= { cgLogo } alt='Common Good Logo' />
         <p>CGPay v{ _version_ }</p>
-        <div><h1>&nbsp;</h1></div> <!-- to center the logo vertically -->
       </div>
     </div>
   { /if }
 
-  { #if $store.testMode }
-    <div class="fakes">
-      <button on:click={ () => fake('G6VM0RZzhWMCq0zcBowqw.') }>Susan</button>
-      <button on:click={ () => fake('HTTP://6VM.RC4.ME/G00WeHlioM5JZv1O9G') }>Maria</button>
-      <button on:click={ () => fake('HTTP://6VM.RC4.ME/H010WeHlioM5JZv1O9G') }>Store</button>
-      <button on:click={ () => fake('H6VM0G0NyCBBlUF1qWNZ2k.') }>Helga's</button>
-      <button on:click={ () => fake('HTTP://6VM.RC4.ME/H0G0NyCBBlUF1qWNZ2k') }>Helga2</button>
-      <button on:click={ () => fake('H6VM0G0NyCBBlUF.') }>Bad Online</button>
-      <button on:click={ () => fake('garbage.') }>Bad</button>
-    </div>
-  { /if }
-
   <div class="charge">
+    { #if $store.testMode }
+      <div class="fakes">
+        <button on:click={ () => fake('G6VM0RZzhWMCq0zcBowqw.') }>Susan</button>
+        <button on:click={ () => fake('HTTP://6VM.RC4.ME/G00WeHlioM5JZv1O9G') }>Maria</button>
+        <button on:click={ () => fake('HTTP://6VM.RC4.ME/H010WeHlioM5JZv1O9G') }>Store</button>
+        <button on:click={ () => fake('H6VM0G0NyCBBlUF1qWNZ2k.') }>Helga's</button>
+        <button on:click={ () => fake('HTTP://6VM.RC4.ME/H0G0NyCBBlUF1qWNZ2k') }>Helga2</button>
+        <button on:click={ () => fake('H6VM0G0NyCBBlUF.') }>Bad Online</button>
+        <button on:click={ () => fake('garbage.') }>Bad</button>
+      </div>
+    { /if }
     <a class="scan-customer" href='/scan'>Scan QR Code to Charge</a>
   </div>
 </section>
@@ -88,6 +86,7 @@
   .fakes
     display flex
     justify-content space-between
+    overflow-x scroll
 
   .fakes button
     cgButtonSecondary()
@@ -109,7 +108,7 @@
     margin-bottom $s2
 
   img 
-    width 250px
+    max-width 250px
 
   section
     height 100%
@@ -117,10 +116,6 @@
     flex-direction column
     align-items center
     justify-content space-between
-
-  .business
-    h1
-      margin-bottom $s5
 
   .top
     width 100%
