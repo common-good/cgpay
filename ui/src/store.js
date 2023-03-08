@@ -111,7 +111,8 @@ export const createStore = () => {
 
   // --------------------------------------------
 
-  let cache = {...storedState, ...defaults} || { ...defaults }
+  let cache = { ...defaults, ...storedState }
+  for (let k in cache) if (!(k in defaults)) delete cache[k]
   const { zot, subscribe, update } = writable(cache)
 
   // --------------------------------------------
