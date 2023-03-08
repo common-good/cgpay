@@ -39,7 +39,7 @@ function createMockableRoute({ baseUrl, page, record }) {
 function routeObj(gorp, endPt, page, record) {
   return {
     [gorp]: createMockableRoute({
-      baseUrl: JSON.parse(_apis_).test + '/' + endPt,
+      baseUrl: 'https://demo.commongood.earth/api/' + endPt,
       page,
       record
     })
