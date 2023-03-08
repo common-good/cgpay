@@ -58,7 +58,7 @@ import { postRequest, isTimeout } from '#utils.js'
  *      text: the comment
  * 
  * OBJECTS
- *    corrupt: corrupt data to report to the Tech Team
+ *    corrupt: version number when a transaction or comment upload fails inexplicably
  *    accts: an array of accounts the device has transacted with, keyed by the account ID without cardCode, each with:
  *      hash: SHA256 hash of cardCode
  *      data: JSON object of other account data:
@@ -113,6 +113,7 @@ export const createStore = () => {
 
   let cache = { ...defaults, ...storedState }
   for (let k in cache) if (!(k in defaults)) delete cache[k]
+  
   const { zot, subscribe, update } = writable(cache)
 
   // --------------------------------------------
@@ -157,7 +158,8 @@ export const createStore = () => {
   })}
 
   async function flushQ(k, endpoint) {
-    if (cache.corrupt) return // don't retry hopeless tx indefinitely
+    if (cache.corrupt == _version_) return; else res.setCorrupt(null) // don't retry hopeless tx indefinitely
+    
     while (cache[k].length > 0) {
       if (!res.useWifi) return; // allow immediate interruptions
       try {
@@ -165,12 +167,12 @@ export const createStore = () => {
       } catch (er) {
         if (isTimeout(er)) {
           res.setOnline(false)
-          return
         } else {
           console.log(er.message) // keep this
           console.log(cache[k]) // keep this
-          return res.setCorrupt(cache[k])
+          res.setCorrupt(_version_)
         }
+        return // don't deQ when there's an error
       }
       deQ(k)
     }
@@ -185,7 +187,7 @@ export const createStore = () => {
 
     setQr(v) { set('qr', v) },
     setMsg(v) { set('erMsg', v) },
-    setCorrupt(data) { set('corrupt', data) }, // record information for tech crew to decipher
+    setCorrupt(version) { set('corrupt', version) }, // pause uploading until a new version is released
     setWifi(yesno) { set('useWifi', yesno); this.setOnline(false) },
     setSelfServe(yesno) { set('selfServe', yesno) },
 

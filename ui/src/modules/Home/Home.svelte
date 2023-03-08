@@ -11,9 +11,6 @@
   export let params // else Svelte complains (I don't know why yet)
 
   const myQr = $store.myAccount?.qr
-  const vv = _version_.split('.')
-  const numVersion = vv[0] * 10000 + vv[1] * 100 + vv[2] * 1
-  let version = numVersion
 
   function er(msg) { 
     ({ m0, m1 } = dlg('Alert', msg, 'Close', () => m0 = false)); m0=m0; m1=m1
@@ -32,7 +29,6 @@
       const q = {deviceId: $store.myAccount.deviceId, actorId: $store.myAccount.accountId, lastTx: $store.myAccount.lastTx || -1 }
       const query = queryString.stringify(q)
       const { result } = await timedFetch(`latest?${ query }`)
-      version = result.version
     } catch (er) {
       console.log(er)
     }
