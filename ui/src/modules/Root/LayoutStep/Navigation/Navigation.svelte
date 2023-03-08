@@ -30,7 +30,7 @@
   item('Enter Self Serve Mode', selfServeOn, () => pageUri() == 'home' && $store.myAccount.isCo && !$store.selfServe)
   item('Switch Account', switchAccount, () => $store.choices?.length > 1 && pageUri() != 'link-account' && !$store.selfServe)
   item('Comments & Suggestions', comment, () => store.isSignedIn() && !$store.selfServe)
-  item('Sign Out', signOut, () => store.isSignedIn() && !$store.selfServe)
+  item('Sign Out', signOut, () => (store.isSignedIn() || pageUri() == 'link-account') && !$store.selfServe)
 
 if ($store.testMode) {
     item('🌈 Turn Wifi Off', wifiOff, () => $store.useWifi)
