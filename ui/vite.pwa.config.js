@@ -52,9 +52,9 @@ export default {
     // offline access.
     //
     // https://vite-plugin-pwa.netlify.app/guide/static-assets.html#globpatterns
-    // globPatterns: [
-    //   '**/*.{html,css,jpg,js,png,svg,webp}' // html causes a warning, but is required for the app to work
-    // ],
+    globPatterns: [
+      '**/*.{html,css,jpg,js,png,svg,webp}' // html causes a warning, but is required for the app to work
+    ],
     clientsClaim: true,
     skipWaiting: true,
     cleanupOutdatedCaches: true,
