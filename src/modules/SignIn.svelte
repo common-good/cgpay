@@ -1,12 +1,9 @@
 <script>
-  import queryString from 'query-string'
   import { navigateTo } from 'svelte-router-spa'
-  import { dlg, timedFetch, isTimeout } from '#utils.js'
-  import cgLogo from '#modules/assets/cg-logo-300.png?webp'
   import store from '#store.js'
+  import { dlg, postRequest, isTimeout } from '#utils.js'
+  import cgLogo from '#modules/assets/cg-logo-300.png?webp'
   import Modal from '#modules/Modal.svelte'; let m0, m1
-
-  // --------------------------------------------
 
 //  const credentials = { identifier: 'newaad', password: 'Newaad1!' } // set these to make debugging much faster
   const credentials = {}
@@ -23,8 +20,7 @@
   async function signIn() {
     statusMsg = 'Finding your account(s)...'
     try {
-      const query = queryString.stringify(credentials)
-      const { result } = await timedFetch(`accounts?${ query }`)
+      const result = await postRequest(credentials, 'accounts')
 
       if (result.accounts.length > 1) {
         store.setAcctChoices(result.accounts)
