@@ -1,9 +1,0 @@
-{
-  "app": {
-    "0name": "DELETE THIS FILE?"
-  },
-  "apis": {
-    "0dev": "https://demo.commongood.earth/api",
-    "0production": "https://new.commongood.earth/api"
-  }
-}
