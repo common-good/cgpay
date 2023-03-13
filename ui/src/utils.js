@@ -44,10 +44,10 @@ function CgError(msg, name = 'CgError') { this.message = msg; this.name = name }
  *   type: 'json' (default) or 'blob'
  *   method: 'POST' or 'GET'
  *   etc.
- * @returns: the result of the fetch plus a "result" property whose value is either:
+ * @returns res: the result of the fetch plus a "result" property whose value is either:
  *   On SUCCESS: an object or a blob (a large string)
- *   On FAILURE: (GET status not 200 OR POST status not 201) an error message
- *   if POST error, res.ok is true, so caller must check res.status != 201 (can't set res.ok)
+ *   On FAILURE: (GET status not 200 OR POST status not 201) throw the status
+ *   POST /transaction may return {ok, message} whether there is an error or not
  * @throws an AbortError if the fetch times out
  *   in the catch block use: if (er.name == 'AbortError' || er.name == 'TypeError') {}
  *   (AbortError is timeout, TypeError means network blocked during testing)
