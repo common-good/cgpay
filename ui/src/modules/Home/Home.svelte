@@ -50,7 +50,11 @@
     </div>
   { :else }
     <div class='top business'>
-      <h1>Ready to charge people.</h1>
+      { #if $store.selfServe }
+        <h1>Self-Serve Mode</h1>
+      { :else }
+        <h1>Ready to charge people.</h1>
+      { /if }
       <div class='watermark'>
         <img class='logo' src= { cgLogo } alt='Common Good Logo' />
         <p>CGPay v{ _version_ }</p>
