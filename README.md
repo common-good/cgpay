@@ -3,9 +3,10 @@
 A progressive web application for collecting payments with Common Good. 
 
 - [Setting Up](#setting-up)
-- [Feature Testing](#feature-testing)
 - [Developing](#development)
 - [Development Workflow](#development-workflow)
+- [Feature Testing](tree/main/features#readme)
+- [Unit Testing](#unit-testing)
 - [Deploying](#deploying)
 
 ## Set Up
@@ -29,16 +30,18 @@ Windows developers do [this](https://docs.google.com/document/d/1d1pGjS5Z9sP_BgY
 | `npx playwright install` | install test framework and headless browsers |
 | `npx playwright install-deps` | install test framework dependencies |
 
-## Developing (Quickstart)
+## Developing
 
 For more information, see the [Features documentation](/features) and [UI documentation](/ui).
 
-| Directory | Command | Notes |
-| :-- | :-- | :-- |
-| `/ui` | `npm run dev` | then ctrl-Click http://localhost:3000/ to open in default browser |
-| `/ui` | `npm run tests:watch` | |
-| `/features` | `npm test` | |
-| `/features` | `npm test <test name>` | |
+| Command | Notes |
+| :-- | :-- |
+| `npm run dev` | then ctrl-Click http://localhost:3000/ to open in default browser |
+| `npm run tests:watch` | |
+| `npm test` | |
+| `npm test <test name>` | |
+
+**Note:** Use a private browsing window in order to avoid unpredictable caching behavior from the service worker.
 
 ## Development Workflow
 
@@ -53,6 +56,29 @@ For more information, see the [Features documentation](/features) and [UI docume
 3. Submit a pull request from your feature branch to `develop`, and have it reviewed.
 4. When the pull request is approved and merged into `develop`, test the application on the [test site](#deploying).
 5. When a new release is ready for deployment, merge the `develop` branch into `master`.
+
+## Unit Testing
+
+| Command | Description |
+| :-- | :-- |
+| `npm utest` | Run unit tests once. |
+| `npm run watch` | Watch unit tests for changes. |
+
+### Testing Libraries
+
+We use the following libraries for unit tests:
+
+- [`vitest`](https://vitest.dev/api/)
+- [`@testing-library/svelte`](https://testing-library.com/docs/svelte-testing-library/api)
+- [`@testing-library/jest-dom`](https://github.com/testing-library/jest-dom#table-of-contents)
+
+### Previewing
+
+[Service workers only work in production builds](https://kit.svelte.dev/docs/service-workers), so to test PWA functionality locally the application must be compiled.
+
+| Command | Description |
+| :-- | :-- |
+| `npm run preview` | Serve the UI compiled for production (in `preview` mode). |
 
 ## Deploying
 

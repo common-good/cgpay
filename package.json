@@ -1,17 +1,49 @@
 {
-  "name": "@common-good/cg-pay-pwa",
+  "name": "CGPay",
+  "version": "4.0.0",
+  "description": "Payment app for the Common Good democratic economic system",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/common-good/cg-pay-pwa"
+  },
+  "private": true,
   "type": "module",
   "scripts": {
-    "postinstall": "lerna bootstrap"
+    "build": "mode=production vite build",
+    "dev": "mode=dev vite dev",
+    "dev:testing": "mode=testing vite dev",
+    "preview": "mode=production vite build && mode=production vite preview",
+    "watch": "mode=dev vitest",
+    "utest": "mode=dev vitest run",
+    "test": "cucumber-js -p default -c ./tests/cucumber.js"
   },
   "devDependencies": {
-    "lerna": "^5.5.0"
+    "@adaptably/to": "^1.0.1",
+    "@cucumber/cucumber": "^9.0.0",
+    "@playwright/test": "^1.31.2",
+    "@sveltejs/vite-plugin-svelte": "^2.0.2",
+    "@testing-library/svelte": "^3.2.1",
+    "canvas": "^2.11.0",
+    "html5-qrcode": "^2.2.1",
+    "jsdom": "^20.0.0",
+    "playwright": "^1.31.2",
+    "query-string": "^7.1.1",
+    "stylus": "^0.55.0",
+    "svelte": "^3.55.1",
+    "svelte-focus-trap": "^1.2.0",
+    "svelte-inline-svg": "^1.2.0",
+    "svelte-preprocess": "^4.10.7",
+    "svelte-router-spa": "^6.0.3",
+    "vite": "^4.1.0",
+    "vite-imagetools": "^4.0.8",
+    "vite-plugin-pwa": "^0.14.4",
+    "vitest": "^0.23.0"
   },
   "dependencies": {
     "b64-to-blob": "^1.2.19",
     "buffer": "^6.0.3",
-    "mongodb": "^4.13.0",
-    "openpgp": "^5.5.0",
+    "js-sha256": "^0.9.0",
+    "svelte-material-icons": "^3.0.4",
     "svelte-select": "^4.3.1"
   }
 }
