@@ -5,7 +5,7 @@
   export let skip
 </script>
 
-<div class="content" id='apple-instructions'>
+<div class="content" data-testid='apple'>
   <div class='top'>
     <!--p>To add CGPay to your home screen, tap the banner below.</p-->
     <p>To add CGPay to your home screen:</p>
@@ -19,7 +19,7 @@
       <p>Open Safari and browse to cg4.us/app </p>
     { /if }
   </div>
-  <button on:click={ skip }>Continue</button>
+  <button data-testid="continue-button" on:click={ skip }>Continue</button>
 </div>
 
 <style lang='stylus'>

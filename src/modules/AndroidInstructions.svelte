@@ -14,7 +14,7 @@
       <p>To add CGPay to your home screen, open Chrome and browse to cg4.us/app</p>
     { /if }
   </div>
-  <button on:click={ skip }>Continue</button>
+  <button data-testid="continue-button" on:click={ skip }>Continue</button>
 </section>
 
 <style lang='stylus'>
