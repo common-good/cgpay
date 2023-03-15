@@ -1,8 +1,6 @@
 const { Given, When, Then } = require("@cucumber/cucumber")
 const { expect } = require('@playwright/test')
 
-const site = 'app.commongood.earth'
-
 When('context', async function () {
   const pw = await this.pw()
   this.browser = pw.browser
