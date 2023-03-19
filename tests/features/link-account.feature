@@ -1,4 +1,19 @@
 Feature: Link Account
+  As a vendor or individual with more than one account
+  I can select the account I wish to link to on my device
+  So that I can use multiple CGPay accounts on a single device.
+
+  As a vendor or individual with more than one account
+  I can switch my linked account
+  So that I can use multiple accounts with CGPay on a single device.
+
+  As a vendor or individual with more than one account
+  I can choose to require sign in to switch between linked accounts
+  So that my account will not be switched by an unauthorized user.
+
+  As an individual with one account
+  My account will be automatically linked to my device upon sign in
+  So that I can use CGPay without distracting steps.
 
 Background:
  * context

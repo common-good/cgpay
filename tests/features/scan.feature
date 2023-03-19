@@ -1,4 +1,7 @@
 Feature: Scan QR Code
+  As a vendor or individual
+  I can scan another user's QR Code from their app or card
+  So that I can validate their account and charge them for goods or services.
 
 Background:
  * context

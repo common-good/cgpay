@@ -1,4 +1,7 @@
 Feature: Pay
+  As an individual
+  I can pay another CGPay user for a specified amount 
+  So that funds are deducted from my account and added to theirs.
 
 Background:
  * context
