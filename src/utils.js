@@ -54,7 +54,7 @@ function CgError(msg, name = 'CgError') { this.message = msg; this.name = name }
  */
 async function timedFetch(url, options = {}) {
   if (!store.inspect().online) throw new Error('offline') // this works for setWifiOff also
-  if (options.method == 'GET') url += '&version=' + _version_
+  if (options.method != 'POST') url += '&version=' + _version_
   const { timeout = 3000, type = 'json' } = options;
   const aborter = new AbortController();
   aborter.name = 'Timeout'
