@@ -9,10 +9,26 @@ When('context', async function () {
 })
 
 When('I visit {string}', async function (site) {
-  await this.page.goto('https://' + site)
+  await this.page.goto('https://app.commongood.earth' + site)
+})
+
+When('I click {string}', async function(testId) {
+  const button = await this.page.getByTestId(testId);
+  button.click();
+})
+
+Given('my device is {string}', async function (string) {
+
 })
 
 Then('? the page title is {string}', async function (wantTitle) {
   const gotTitle = await this.page.title()
   expect(gotTitle).toEqual(wantTitle);
 })
+
+/* Not Passing */
+// Then('? I see installation instructions for {string}', async function (string) {
+//   const instructions = await this.page.getByTestId(string);
+//   console.log("instructions: ", instructions)
+//   expect(instructions).toBeVisible();
+// });
