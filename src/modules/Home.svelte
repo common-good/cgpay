@@ -5,7 +5,7 @@
   import Modal from '#modules/Modal.svelte'; let m0, m1, m2
   import cgLogo from '#modules/assets/cg-logo-300.png?webp'
   import { navigateTo } from 'svelte-router-spa'
-  import Balance from '../Balance/Balance.svelte';
+  import Balance from './Balance.svelte';
   import queryString from 'query-string'
 
   export let currentRoute // else Svelte complains (I don't know why yet)
