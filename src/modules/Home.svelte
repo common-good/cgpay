@@ -64,7 +64,7 @@
     </div>
   { /if }
 
-  <div class="charge">
+  <div class="actions">
     { #if $store.testMode }
       <div class="fakes">
         <button on:click={ () => fake('G6VM0RZzhWMCq0zcBowqw.') }>Susan</button>
@@ -76,9 +76,7 @@
         <button on:click={ () => fake('garbage.') }>Bad</button>
       </div>
     { /if }
-    <div class="actions">
       <a class="scan-customer" href='/scan'>Scan QR Code to Charge</a>
-    </div>
 </section>
 
 <style lang='stylus'>
