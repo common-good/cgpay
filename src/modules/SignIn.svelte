@@ -59,9 +59,12 @@
       <input name='account-id' type='text' placeholder='Account ID or Email Address' autocomplete='name' autocapitalize='off' bind:value={ credentials.identifier } required />
       <label class='visuallyhidden' for='password'>Password</label>
       <input type='password' placeholder='Password' autocomplete='current-password' autocapitalize='off' bind:value={ credentials.password } required />
+      <a class="link" href="https://new.commongood.earth/settings/password/" target="_blank">Reset password</a>
       <button type='submit'>Sign In</button>
+      <p class="status">{ statusMsg }</p>
     </form>
-    <p class="status">{ statusMsg }</p>
+    <p class="sign-up">Not a member?</p>
+    <a class="link-button" href="https://new.commongood.earth/signup" target="_blank">Sign Up</a>
   </div>
 </section>
 
@@ -69,10 +72,11 @@
 
 <style lang='stylus'>
   button
-    cgButton()
+    cgButtonSecondary()
+    margin-bottom $s-2
 
   h2
-    margin-bottom $s1
+    margin-bottom $s0
 
   header
     contentCentered()
@@ -82,10 +86,10 @@
     margin 0 $s2 0 0
 
   form
-    margin-bottom $s2
+    margin-bottom $s0
 
-  p 
-    height 72px
+    input:last-of-type
+      margin-bottom $s-2
 
   .card
     height 100%
@@ -98,14 +102,31 @@
     padding $s1
 
   .content
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column
-    justify-content: center
-    align-items: center
+    width 100%
+    height 100%
+    display flex
+    flex-direction column
+    justify-content center
+    align-items center
+
+  .link
+    text(sm)
+    display block
+    color $c-blue
+    margin-bottom $s0
+    text-decoration underline
+    text-underline-offset 1px
+
+  .link-button
+    cgButton()
+
+  .sign-up
+    align-self flex-start
+    margin-bottom $s-2
 
   .status
+    height 24px
     font-style italic
-    letter-spacing: 0.0125rem
+    letter-spacing 0.0125rem
+    text-align center
 </style>
