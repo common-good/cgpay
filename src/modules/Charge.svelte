@@ -94,8 +94,8 @@
       testing = qr.includes('.RC4.')
     } else throw new Error('That is not a valid Common Good card format.')
 
-    if (testing && !$store.testMode) throw new Error('That is a real Common Good card and cannot be used in test mode.')
-    if (!testing && $store.testMode) throw new Error('That is a CGPay test card and cannot be used in production mode.')
+    if (!testing && $store.testMode) throw new Error('That is a real Common Good card and cannot be used in test mode.')
+    if (testing && !$store.testMode) throw new Error('That is a CGPay test card and cannot be used in production mode.')
 // NO. This risks our data integrity    if (testing != $store.testMode) changeMode(testing)
 
     const agentLen = +agentLens[dig36.indexOf(acct[0])]
