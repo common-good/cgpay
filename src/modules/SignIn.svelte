@@ -46,7 +46,7 @@
   <title>CGPay - Sign In</title>
 </svelte:head>
 
-<section class='card' id='sign-in'>
+<section class='card' id='signin'>
   <header>
     <img src= { cgLogo } alt='Common Good Logo' />
     <h1>CGPay{ $store.testMode ? ' DEMO' : '' }</h1>

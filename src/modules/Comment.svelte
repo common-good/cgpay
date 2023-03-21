@@ -17,7 +17,7 @@
   <title>CGPay - Comments and Suggestions</title>
 </svelte:head>
 
-<section id='comments'>
+<section id='comment'>
   <div class="top">
     <h1>Comments and Suggestions</h1>
       <p>We love feedback! Please type your comment and/or suggestion below in as much detail as you you think we might need, in order to correct a problem or make your suggested improvement.</p>
