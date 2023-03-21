@@ -119,15 +119,16 @@ export const createStore = () => {
   // --------------------------------------------
 
   function getDeviceType() {
-    const { userAgent } = window.navigator
-    if (/Android/i.test(userAgent)) { return 'Android' }
-    if (/iPhone|iPod|iPad/i.test(userAgent)) { return 'Apple' }
+    const ua = window.navigator.userAgent
+    if (/Android/i.test(ua)) { return 'Android' }
+    if (/iPhone|iPod|iPad/i.test(ua)) { return 'Apple' }
     return 'Other'
   }
 
   function getBrowser() {
-    if (/chrome/i.test(navigator.userAgent)) return 'Chrome'
-    if (/safari/i.test(navigator.userAgent)) return 'Safari'
+    const ua = window.navigator.userAgent
+    if (getDeviceType() == 'Apple' && /WebKit/i.test(ua) && !/CriOS/i.test(ua) && !/OPiOS/i.test(ua)) return 'Safari' // only ioS Safari is relevant
+    if (/Chrome/i.test(ua) && !/Chromium/i.test(ua)) return 'Chrome'
     return 'Other'
   }
 
