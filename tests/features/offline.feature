@@ -1,3 +1,4 @@
+@offline
 Feature: Offline
   As a vendor or individual
   I will see a banner when my network goes offline
