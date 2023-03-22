@@ -2,6 +2,7 @@
   import { Router } from 'svelte-router-spa'
   import { onMount } from 'svelte'
   import store from '#store.js'
+  import { addableToHome } from '#utils.js'
 
   import BeforeTests from '#modules/_BeforeTests.svelte' // for testing
   import AddToHomeScreen from '#modules/AddToHomeScreen.svelte'
@@ -42,7 +43,7 @@
 
   const routes = [
     route('/before-tests', BeforeTests, true, null, LayoutIntro), // for testing
-    route('/', AddToHomeScreen, store.addableToHome, '/sign-in', LayoutIntro),
+    route('/', AddToHomeScreen, addableToHome, '/sign-in', LayoutIntro),
     route('/sign-in', SignIn, notSignedIn, '/home', LayoutIntro),
     route('/link-account', LinkAccount, notSignedIn, '/home'),
     route('/home', Home, store.isSignedIn, '/'),

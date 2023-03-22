@@ -25,7 +25,7 @@ Rule: When not on a mobile device, the instruction page is automatically skipped
 Scenario: On a desktop computer I see no such instructions.
   Given I use "Chrome" on an "other" device
   When I run the app
-  Then ? I am on page "signin"
+  Then ? I am on page "sign-in"
 
 Rule: If the user continues past the instructions, we show the Sign In screen.
 
@@ -33,7 +33,7 @@ Scenario: I click continue and am directed to the Sign In screen.
   Given I use "Chrome" on an "Android" device
   When I run the app
   And I click "continue-button"
-  Then ? I am on page "signin"
+  Then ? I am on page "sign-in"
 
 Rule: If the user continues past the instructions, we don't show them again.
 
@@ -42,4 +42,4 @@ Scenario: I click continue and am not shown the instructions again.
   When I run the app
   And I click "continue-button"
   And I run the app
-  Then ? I am on page "signin"
+  Then ? I am on page "sign-in"

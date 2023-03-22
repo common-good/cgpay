@@ -1,5 +1,5 @@
 import { writable } from 'svelte/store'
-import { postRequest, isTimeout } from '#utils.js'
+import { postRequest, isTimeout, isApple, isAndroid } from '#utils.js'
 
 // --------------------------------------------
 // use this example for set() and get(): https://svelte.dev/repl/ccbc94cb1b4c493a9cf8f117badaeb31?version=3.16.7
@@ -18,8 +18,6 @@ import { postRequest, isTimeout } from '#utils.js'
  *   blob qr: a scanned QR url
  *   string msg: an informational message to display on the Home Page
  *   string erMsg: an error message to display on the Home Page
- *   string deviceType: Android, Apple, or Other
- *   string browser: Chrome, Safari, or Other
  *   int cameraCount: number of cameras in the device
  *   bool frontCamera: true to use front camera instead of rear (default false iff mobile)
  *   bool online: true if the device is connected to the Internet
@@ -72,8 +70,8 @@ import { postRequest, isTimeout } from '#utils.js'
  */
 
 export const createStore = () => {
-  const mode = (window == undefined || window.location.href.includes('localhost')) ? 'dev'
-  : (window.location.href.startsWith(_productionUrl_) ? 'real' : 'test')
+//  const mode = (window == undefined || window.location.href.includes('localhost')) ? 'dev'
+  const mode = window.location.href.startsWith(_productionUrl_) ? 'real' : 'test'
   const storeKey = 'cgpay'
   const storedState = JSON.parse(window.localStorage.getItem(storeKey))
   const lostMsg = `Tell the customer "I'm sorry, that card is marked "LOST or STOLEN".`
@@ -85,10 +83,8 @@ export const createStore = () => {
     qr: null,
     msg: null,
     erMsg: null,
-    deviceType: getDeviceType(),
-    browser: getBrowser(),
     cameraCount: 0, // set this when scanning for the first time
-    frontCamera: (getDeviceType() == 'Other'),
+    frontCamera: (!isApple() && !isAndroid()),
     online: null,
     useWifi: true,
     selfServe: false,
@@ -100,36 +96,12 @@ export const createStore = () => {
     corrupt: null,
     accts: {},
     myAccount: null,
-
   }
-
-  // --------------------------------------------
 
   let cache = { ...defaults, ...storedState }
   for (let k in cache) if (!(k in defaults)) delete cache[k]
   
   const { subscribe, update } = writable(cache)
-
-  // --------------------------------------------
-
-  function getDeviceType() {
-    const ua = window.navigator.userAgent
-    if (/Android/i.test(ua)) { return 'Android' }
-    if (/iPhone|iPod|iPad/i.test(ua)) { return 'Apple' }
-    return 'Other'
-  }
-
-  function getBrowser() {
-    const ua = window.navigator.userAgent
-    if (getDeviceType() == 'Apple' && /WebKit/i.test(ua) && !/CriOS/i.test(ua) && !/OPiOS/i.test(ua)) return 'Safari' // only ioS Safari is relevant
-    if (/Chrome/i.test(ua) && !/Chromium/i.test(ua)) return 'Chrome'
-    return 'Other'
-  }
-
-  function canAddToHome() { 
-    if (res.sawAdd) return false
-    return ((res.isApple() && res.isSafari()) || (res.isAndroid() && res.isChrome()))
-  }
 
   function storeLocal(state) {
     window.localStorage.setItem(storeKey, JSON.stringify(state))
@@ -195,12 +167,7 @@ export const createStore = () => {
         return storeLocal(st)
     })},
 
-    addableToHome() { return canAddToHome() },
-    sawAddToHome() { set('sawAdd', Date.now()) },
-    isApple() { return (cache.deviceType == 'Apple') },
-    isAndroid() { return (cache.deviceType == 'Android') },
-    isChrome() { return (cache.browser == 'Chrome') },
-    isSafari() { return (cache.browser == 'Safari') },
+    setSawAdd() { set('sawAdd', Date.now()) },
     setCameraCount(n) { set('cameraCount', n) },
     setFrontCamera(yesno) { set('frontCamera', yesno) },
 

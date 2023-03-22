@@ -100,6 +100,22 @@ async function postRequest(v, endpoint) {
   return res
 }
 
+function isApple() { return /iPhone|iPod|iPad/i.test(window.navigator.userAgent) }
+function isAndroid() { return !isApple() && /Android/i.test(window.navigator.userAgent) }
+function isSafari() {
+  const ua = window.navigator.userAgent
+  return isApple() && /WebKit/i.test(ua) && !/CriOS/i.test(ua) && !/OPiOS/i.test(ua)
+}
+function isChrome() {
+  const ua = window.navigator.userAgent
+  return /Chrome/i.test(ua) && !/Chromium/i.test(ua)
+}
+function addableToHome() { 
+//  console.log('addable to home: ', store.sawAdd, isApple(), isSafari(), isAndroid(), isChrome())
+  if (store.inspect().sawAdd) return false
+  return (isApple() && isSafari()) || (isAndroid() && isChrome())
+}
+
 /*
 async function cgEncrypt(text) {
 console.log('before readKey');
@@ -127,4 +143,4 @@ function disableBack() {
         body: JSON.stringify(tx)
 */
 
-export { confirm, yesno, dlg, hash, crash, goEr, goHome, CgError, timedFetch, isTimeout, postRequest, pageUri }
+export { confirm, yesno, dlg, hash, crash, goEr, goHome, CgError, timedFetch, isTimeout, postRequest, pageUri, isApple, isAndroid, isSafari, isChrome, addableToHome }

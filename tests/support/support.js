@@ -43,8 +43,10 @@ async function onPage(w, id) {
 }
 
 async function element(w, testId) { 
-  const el = await w.page.$(`[data-testid|="${testId}"]`)
+  const el = await w.page.$(sel(testId))
   return el
 }
 
-export { visit, onPage, element, getStore, putStore, getv, putv }
+function sel(testId) { return `[data-testid|="${testId}"]` }
+
+export { sel, visit, onPage, element, getStore, putStore, getv, putv }
