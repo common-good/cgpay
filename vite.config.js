@@ -12,9 +12,9 @@ function js(s) { return JSON.stringify(s) }
 export default defineConfig({
   define: {
     _version_: js(version),
-    __productionUrl_: js('https://app.commongood.earth'),
+    _productionUrl_: js('https://app.commongood.earth'),
     _apis_: js({
-      dev:  'http://localhost/cgmembers-frame/cgmembers/api',
+//      dev:  'http://localhost/cgmembers-frame/cgmembers/api',
       test: 'https://demo.commongood.earth/api',
       real: 'https://new.commongood.earth/api'
     }),

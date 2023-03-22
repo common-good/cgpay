@@ -1,4 +1,7 @@
 Feature: Feedback
+  As a vendor or individual
+  I can submit feedback and comments about CGPay from the app
+  So that I know my user experience is valued.
 
 Background:
  * context

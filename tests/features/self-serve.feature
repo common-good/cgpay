@@ -1,4 +1,7 @@
 Feature: Self Serve Mode
+ As a vendor
+ I can set the CGPay app to Self Serve mode
+ So that customers can use it to charge themselves without having administrative privileges.
 
 Background:
  * context
