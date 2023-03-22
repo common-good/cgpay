@@ -1,4 +1,4 @@
-import { get, writable } from 'svelte/store'
+import { writable } from 'svelte/store'
 import { postRequest, isTimeout } from '#utils.js'
 
 // --------------------------------------------
@@ -11,12 +11,6 @@ import { postRequest, isTimeout } from '#utils.js'
  * 
  * CONSTANTS
  *   bool testMode: true if the app is in test mode
- *   string origin: URL to run and install the app
- *   string api: application programming interface URL
- * 
- * CONSTANTS
- *   bool testMode: true if the app is in test mode
- *   string origin: URL to run and install the app
  *   string api: application programming interface URL
  * 
  * SCALARS
@@ -78,14 +72,14 @@ import { postRequest, isTimeout } from '#utils.js'
  */
 
 export const createStore = () => {
-  const mode = window.location.href.startsWith(_origins_.real) ? 'real' : 'test'
-  const storeKey = 'cgpay.' + mode
+  const mode = (window == undefined || window.location.href.includes('localhost')) ? 'dev'
+  : (window.location.href.startsWith(_productionUrl_) ? 'real' : 'test')
+  const storeKey = 'cgpay'
   const storedState = JSON.parse(window.localStorage.getItem(storeKey))
   const lostMsg = `Tell the customer "I'm sorry, that card is marked "LOST or STOLEN".`
 
   const defaults = {
-    testMode: (mode == 'test'),
-    origin: _origins_[mode],
+    testMode: (mode != 'real'),
     api: _apis_[mode],
     sawAdd: false,
     qr: null,
@@ -114,7 +108,7 @@ export const createStore = () => {
   let cache = { ...defaults, ...storedState }
   for (let k in cache) if (!(k in defaults)) delete cache[k]
   
-  const { zot, subscribe, update } = writable(cache)
+  const { subscribe, update } = writable(cache)
 
   // --------------------------------------------
 
