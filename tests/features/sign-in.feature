@@ -8,6 +8,12 @@ Background:
 
 Rule: Users sign in to use the app
 
-Scenario: I sign in to CGPay
+Scenario: I sign in to CGPay for the first time
   When I sign in
-  Then ? I am directed to the homepage
+  And I have not set a linked account
+  Then ? I am on link account page
+
+Scenario: I sign in to CGPay after having a linked account
+  When I sign in
+  And I have a linked account
+  Then ? I am on page homepage

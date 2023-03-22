@@ -52,3 +52,8 @@ Then('? the page title is {string}', async function (wantTitle) {
   expect(gotTitle).toEqual(wantTitle)
 })
 */
+
+When('I sign in', async function() {
+  putStore()
+
+})
