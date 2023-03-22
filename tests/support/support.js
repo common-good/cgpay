@@ -21,12 +21,12 @@ async function putStore(w, st) {
 }
 
 async function getv(w, k) {
-  const st = await getStore(w.page)
+  const st = await getStore(w)
   return st[k]
 }
 
 async function putv(w, k, v) {
-  const st = await getStore(w.page)
+  const st = await getStore(w)
   st[k] = v
   await putStore(w.page, st)
 }
