@@ -1,7 +1,8 @@
 import { assert, expect } from 'chai'
+import constants from './constants.js'
+import scope from './scope.js'
 
-const baseUrl = 'http://localhost:3000/'
-const storeKey = 'cgpay.test'
+const { baseUrl, storeKey } = constants
 
 /**
  * Get all stored values (the storage state)
@@ -9,30 +10,30 @@ const storeKey = 'cgpay.test'
  *               -- passed to most support functions, so definition not repeated
  * @returns {*} st: an object containing all the app's stored values
  */
-async function getStore(w) {
-  const st = await w.page.evaluate((key) => window.localStorage.getItem(key), storeKey)
-  return st
+async function getStore() {
+  const st = await scope.page.evaluate((k) =>  localStorage.getItem(k), storeKey)
+  return JSON.parse(st)
 }
 
-async function putStore(w, st) {
-  await w.page.evaluate((key, value) => {
-    window.localStorage.setItem(key, JSON.stringify(value))
+async function putStore(st) {
+  await scope.page.evaluate((k, v) => {
+    localStorage.setItem(k, JSON.stringify(v))
   }, storeKey, st)
 }
 
 async function getv(w, k) {
-  const st = await getStore(w.page)
+  const st = await getStore(w)
   return st[k]
 }
 
-async function putv(w, k, v) {
-  const st = await getStore(w.page)
+async function putv(k, v) {
+  const st = await getStore()
   st[k] = v
-  await putStore(w.page, st)
+  await putStore(st)
 }
 
-async function visit(w, target) {
-  const visit = await w.page.goto(baseUrl + target, { waitUntil:['networkidle0'] })
+async function visit(path) {
+  const visit = await scope.page.goto(baseUrl + path, { waitUntil:['networkidle0'] })
   return visit
 }
 

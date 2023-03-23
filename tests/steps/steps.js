@@ -1,26 +1,23 @@
 import { Given, When, Then } from '@cucumber/cucumber'
-import { sel, visit, onPage, element, getStore, putStore } from '../support/support.js'
+import scope from '../support/scope.js'
+import constants from '../support/constants.js'
+import { sel, visit, onPage, element, getStore, putStore, putv } from '../support/support.js'
 import { assert, expect } from 'chai'
 
-const seeLog = false // show what the app logs to console
+const { seeLog } = constants
 
 Given('context', async function () {
-  let headless = true // Defines whether puppeteer runs Chrome in headless mode.
-  let slowMo = 5
-  if (process.env.CIRCLECI) { headless = true; slowMo = 0 } // set Chrome to run headlessly and with no slowdown in CircleCI
+  await visit('') // required before putStore
+  await putStore({}) // initialize empty store on localStorage
 
-  if (!this.browser)	{
-    this.browser = await this.driver.launch({ headless, slowMo })
-    this.page = await this.browser.newPage()
-  //  this.page.setViewport({ width: 1280, height: 1024 })
+  if (seeLog) {
+    scope.page.on('console', async e => { // log whatever the page logs
+      const args = await Promise.all(e.args().map(a => a.jsonValue()))
+      if (args.length > 1 || typeof args[0] != 'string' || !args[0].includes('was created with unknown prop')) {
+        console.log(...args)
+      }
+    })
   }
-  await visit(this, 'before-tests') // required before putStore
-  await putStore(this, null) // have nothing in localStorage until we set it explicitly or visit a page
-
-  if (seeLog) this.page.on('console', async e => { // log whatever the page logs
-    const args = await Promise.all(e.args().map(a => a.jsonValue()))
-    if (args.length > 1 || typeof args[0] != 'string' || !args[0].includes('was created with unknown prop')) console.log(...args)
-  })
 })
 
 Given('I use {string} on an {string} device', async function (browser, sys) {
@@ -32,7 +29,7 @@ Given('I use {string} on an {string} device', async function (browser, sys) {
 
 When('I run the app', async function () { await visit(this, '') })
 
-When('I visit {string}', async function (site) { await visit(this, site) })
+When('I visit {string}', async function (path) { await visit(path) })
 
 When('I click {string}', async function(testId) {
   await this.page.click(sel(testId))
