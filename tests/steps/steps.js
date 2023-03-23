@@ -4,6 +4,10 @@ import { assert, expect } from 'chai'
 
 const seeLog = false // show what the app logs to console
 
+/**
+ * Include this function first in the Background for each Feature
+ * See features/background.txt for temporary implicit background in Release "A"
+ */
 Given('context', async function () {
   let headless = true // Defines whether puppeteer runs Chrome in headless mode.
   let slowMo = 5

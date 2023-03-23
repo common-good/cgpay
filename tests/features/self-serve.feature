@@ -1,3 +1,4 @@
+@self
 Feature: Self Serve Mode
  As a vendor
  I can set the CGPay app to Self Serve mode
