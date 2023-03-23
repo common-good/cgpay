@@ -38,6 +38,7 @@ Scenario: I click continue and am directed to the Sign In screen.
 
 Rule: If the user continues past the instructions, we don't show them again.
 
+# This test is failing
 Scenario: I click continue and am not shown the instructions again.
   Given I use "Chrome" on an "Android" device
   When I run the app
