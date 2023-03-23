@@ -21,7 +21,7 @@ async function putStore(st) {
   }, storeKey, st)
 }
 
-async function getv(w, k) {
+async function getv(k) {
   const st = await getStore(w)
   return st[k]
 }
@@ -37,17 +37,17 @@ async function visit(path) {
   return visit
 }
 
-async function onPage(w, id) {
-  const el = await w.page.$('#' + id)
-  if (el == null) await w.page.screenshot({ path: 'found.png' })
+async function onPage(id) {
+  const el = await scope.page.$('#' + id)
+  if (el == null) await scope.page.screenshot({ path: 'found.png' })
   assert.isNotNull(el, `page "${id}" not found (see page found in found.png)`)
 }
 
-async function element(w, testId) { 
-  const el = await w.page.$(sel(testId))
+async function element(testId) { 
+  const el = await scope.page.$(sel(testId))
   return el
 }
 
-function sel(testId) { return `[data-testid|="${testId}"]` }
+function sel(testId) { return `[data-testid="${testId}"]` }
 
 export { sel, visit, onPage, element, getStore, putStore, getv, putv }
