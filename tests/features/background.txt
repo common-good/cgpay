@@ -1,0 +1,23 @@
+Normally, all accounts, transactions, and other data on the server must be set up explicitly as "Background".
+For Release "A" though, Background includes the following implicit assumptions. 
+
+  . means NEWZZ
+  @ means @example.com
+  flags actually also include: member, confirmed, carded, ided, debt
+  each account has a creditLine of 9,999 and a balance of 9,999
+  each individual account has done all steps needed to get a card
+
+* server has these "accounts":
+| id | fullName         | email | flags |
+| .A | Maria Manager    | a@    | ok    |
+| .C | Corner Store     | c@    | ok,co |
+| .D | Diana Dearing    | d@    | ok    |
+| .H | Helga's Hardware | h@    | ok,co |
+| .K | Kurt Customer    | k@    | ok    |
+| .S | Susan Shopper    | s@    | ok    |
+
+* server has these "relations":
+| main | other | permission |
+| .C   | .A    | manage     |
+| .C   | .D    | scan       |
+| .H   | .K    | manage     |

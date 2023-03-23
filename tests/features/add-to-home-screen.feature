@@ -1,3 +1,4 @@
+@shortcut
 Feature: Add to Home Screen
   As a vendor or individual
   I can add the CGPay app to my mobile home screen

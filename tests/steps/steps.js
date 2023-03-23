@@ -6,6 +6,10 @@ import { assert, expect } from 'chai'
 
 const { seeLog } = constants
 
+/**
+ * Include this function first in the Background for each Feature
+ * See features/background.txt for temporary implicit background in Release "A"
+ */
 Given('context', async function () {
   await visit('') // required before putStore
   await putStore({}) // initialize empty store on localStorage
