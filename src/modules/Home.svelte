@@ -10,6 +10,7 @@
   export let currentRoute // else Svelte complains (I don't know why yet)
   export let params // else Svelte complains (I don't know why yet)
 
+  const devMode = window.location.href.includes('localhost')
   const myQr = $store.myAccount?.qr
 
   function er(msg) { 
@@ -29,9 +30,7 @@
       const q = {deviceId: $store.myAccount.deviceId, actorId: $store.myAccount.accountId, lastTx: $store.myAccount.lastTx || -1 }
       const query = queryString.stringify(q)
       const { result } = await timedFetch(`latest?${ query }`)
-    } catch (er) {
-      console.log(er)
-    }
+    } catch (er) { console.log(er) }
   })
 </script>
 
@@ -63,15 +62,15 @@
   { /if }
 
   <div class="charge">
-    { #if $store.testMode }
+    { #if devMode }
       <div class="fakes">
-        <button on:click={ () => fake('G6VM0RZzhWMCq0zcBowqw.') }>Susan</button>
-        <button on:click={ () => fake('HTTP://6VM.RC4.ME/G00WeHlioM5JZv1O9G') }>Maria</button>
-        <button on:click={ () => fake('HTTP://6VM.RC4.ME/H010WeHlioM5JZv1O9G') }>Store</button>
-        <button on:click={ () => fake('H6VM0G0NyCBBlUF1qWNZ2k.') }>Helga's</button>
-        <button on:click={ () => fake('HTTP://6VM.RC4.ME/H0G0NyCBBlUF1qWNZ2k') }>Helga2</button>
-        <button on:click={ () => fake('H6VM0G0NyCBBlUF.') }>Bad Online</button>
-        <button on:click={ () => fake('garbage.') }>Bad</button>
+        <button on:click={ () => fake('HTTP://6VM.RC4.ME/KDJI12345a') }>A</button>
+        <button on:click={ () => fake('HTTP://6VM.RC4.ME/KDJJ12345b') }>B</button>
+        <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDJK098765a') }>C:A</button>
+        <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDJK198765b') }>C:B</button>
+        <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDJO098765f') }>G:F</button>
+        <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDJO398765f') }>Bad</button>
+        <button on:click={ () => fake('garbage') }>Worse</button>
       </div>
     { /if }
     <a class="scan-customer" href='/scan'>Scan QR Code to Charge</a>

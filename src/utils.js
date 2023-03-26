@@ -3,6 +3,8 @@ import queryString from 'query-string'
 import { navigateTo } from 'svelte-router-spa'
 import { sha256 } from 'js-sha256'
 
+const api = _apis_[window.location.href.startsWith(_productionUrl_) ? 'real' : 'demo']
+
 function dlg(title, text, labels, m1, m2) {
   const m0 = [true, title, text, labels]
   return { m0, m1, m2 }
@@ -53,6 +55,7 @@ function CgError(msg, name = 'CgError') { this.message = msg; this.name = name }
  *   (AbortError is timeout, TypeError means network blocked during testing)
  */
 async function timedFetch(url, options = {}) {
+//  options = { mode:'no-cors', ...options }
   if (!store.inspect().online) throw new Error('offline') // this works for setWifiOff also
   if (options.method != 'POST') url += '&version=' + _version_
   const { timeout = 3000, type = 'json' } = options;
@@ -60,7 +63,7 @@ async function timedFetch(url, options = {}) {
   aborter.name = 'Timeout'
   const timeoutId = setTimeout(() => aborter.abort(), timeout)
 
-  let res = await fetch(store.inspect().api + '/' + url, {...options, signal: aborter.signal })
+  let res = await fetch(api + url, {...options, signal:aborter.signal })
   if (res.ok === false) throw new Error(res.status)
   
   if (res.ok && type != 'none') {
@@ -70,6 +73,17 @@ async function timedFetch(url, options = {}) {
 
   clearTimeout(timeoutId)
   return res
+}
+
+async function postRequest(endpoint, v) {
+  v.version = _version_
+  return await timedFetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-type':'application/x-www-form-urlencoded' },
+    mode: 'cors',
+    cache: 'default',
+    body: queryString.stringify(v)
+  })
 }
 
 function isTimeout(er) { return (er.name == 'AbortError') }
@@ -86,18 +100,6 @@ function filterObjByKey(obj0, fn) {
   return Object.keys(obj0)
   .filter(fn)
   .reduce((obj, key) => { obj[key] = obj0[key]; return obj }, {})
-}
-
-async function postRequest(v, endpoint) {
-  v.version = _version_
-  const res = await timedFetch(endpoint, {
-    method: 'POST',
-    headers: { 'Content-type': 'application/x-www-form-urlencoded' },
-    mode: 'cors',
-    cache: 'default',
-    body: queryString.stringify(v)
-  })
-  return res
 }
 
 function isApple() { return /iPhone|iPod|iPad/i.test(window.navigator.userAgent) }
@@ -143,4 +145,4 @@ function disableBack() {
         body: JSON.stringify(tx)
 */
 
-export { confirm, yesno, dlg, hash, crash, goEr, goHome, CgError, timedFetch, isTimeout, postRequest, pageUri, isApple, isAndroid, isSafari, isChrome, addableToHome }
+export { confirm, yesno, dlg, hash, crash, goEr, goHome, CgError, timedFetch, postRequest, isTimeout, pageUri, isApple, isAndroid, isSafari, isChrome, addableToHome }

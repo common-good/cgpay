@@ -1,22 +1,22 @@
-import to from '@adaptably/to'
 import { VitePWA } from 'vite-plugin-pwa'
 import { imagetools } from 'vite-imagetools'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
 import pwaConfig from './vite.pwa.config.js'
 import { defineConfig } from 'vite'
 
-const version = require('./package.json').version
-
+const root = process.cwd()
 function js(s) { return JSON.stringify(s) }
 
 export default defineConfig({
   define: {
-    _version_: js(version),
+    _version_: js('4.0.0'),
+    _storeKey_: js('cgpay'),
     _productionUrl_: js('https://cgpay.commongood.earth'),
     _apis_: js({
-//      dev:  'http://localhost/cgmembers-frame/cgmembers/api',
-      test: 'https://demo.commongood.earth/api',
-      real: 'https://new.commongood.earth/api'
+//      local:  'http://localhost/cgmembers-frame/cgmembers/api/',
+      test: 'https://demo.commongood.earth/api/',
+      demo: 'https://demo.commongood.earth/api/',
+      real: 'https://new.commongood.earth/api/',
     }),
   },
 
@@ -24,16 +24,14 @@ export default defineConfig({
 
   resolve: {
     alias: {
-      '#store.js': to('./src/store.js', { from: import.meta.url }),
-      '#utils.js': to('./src/utils.js', { from: import.meta.url }),
-      '#modules': to('./src/modules', { from: import.meta.url }),
-// (this doesn't work for style imports)  '#styles': to('./src/styles', { from: import.meta.url }),
+      '#store.js': root + '/src/store.js',
+      '#utils.js': root + '/src/utils.js',
+      '#modules': root + '/src/modules',
+// (this doesn't work for style imports)  '#styles': root + '/src/styles',
     },
   },
 
-  server: {
-    port: 3000,
-  },
+  server: { port:3000 },
 
   test: {
     environment: "jsdom",

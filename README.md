@@ -42,7 +42,7 @@ For more information:
 | `npm run dev` | then ctrl-Click http://localhost:3000/ to open in default browser |
 | `npm run tests:watch` | |
 | `npm test` | run Cucumber/Gherkin end-to-end tests (you currently have to do "npm run dev" first, in a separate window) |
-| `npm test <test name>` | this doesn't work yet |
+| `npm test @<tag>` | run a subset of tests (or @all) |
 
 **Note:** Use a private browsing window in order to avoid unpredictable caching behavior from the service worker.
 

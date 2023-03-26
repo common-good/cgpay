@@ -1,4 +1,4 @@
-@feedback
+@all @feedback
 Feature: Feedback
   As a vendor or individual
   I can submit feedback and comments about CGPay from the app

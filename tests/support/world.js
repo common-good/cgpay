@@ -1,5 +1,4 @@
 import { setDefaultTimeout, After, Before, BeforeAll, AfterAll, setWorldConstructor } from '@cucumber/cucumber'
-import { putStore } from './support.js'
 import puppeteer from 'puppeteer'
 import fkill from 'fkill'
 import { exec } from 'node:child_process'

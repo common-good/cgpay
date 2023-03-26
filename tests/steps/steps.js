@@ -1,30 +1,19 @@
 import { Given, When, Then } from '@cucumber/cucumber'
-import { sel, visit, onPage, element, getStore, putStore } from '../support/support.js'
+import t from '../support/support.js'
 import { assert, expect } from 'chai'
-
-const seeLog = false // show what the app logs to console
 
 /**
  * Include this function first in the Background for each Feature
  * See features/background.txt for temporary implicit background in Release "A"
  */
 Given('context', async function () {
-  let headless = true // Defines whether puppeteer runs Chrome in headless mode.
-  let slowMo = 5
-  if (process.env.CIRCLECI) { headless = true; slowMo = 0 } // set Chrome to run headlessly and with no slowdown in CircleCI
+  await t.setupPage(this)
+  await t.visit(this, 'before-tests') // required before putStore
+  await t.putStore(this, null) // have nothing in localStorage until we set it explicitly or visit a page
 
-  if (!this.browser)	{
-    this.browser = await this.driver.launch({ headless, slowMo })
-    this.page = await this.browser.newPage()
-  //  this.page.setViewport({ width: 1280, height: 1024 })
-  }
-  await visit(this, 'before-tests') // required before putStore
-  await putStore(this, null) // have nothing in localStorage until we set it explicitly or visit a page
-
-  if (seeLog) this.page.on('console', async e => { // log whatever the page logs
-    const args = await Promise.all(e.args().map(a => a.jsonValue()))
-    if (args.length > 1 || typeof args[0] != 'string' || !args[0].includes('was created with unknown prop')) console.log(...args)
-  })
+  try { // initialize API for tests
+    await t.post(this, 'initialize')
+  } catch (er) { console.log(er); assert(false, 'failed to initialize test data')  }  
 })
 
 Given('I use {string} on an {string} device', async function (browser, sys) {
@@ -34,19 +23,19 @@ Given('I use {string} on an {string} device', async function (browser, sys) {
   await this.page.setUserAgent(agent)
 })
 
-When('I run the app', async function () { await visit(this, '') })
+When('I run the app', async function () { await t.visit(this, '') })
 
-When('I visit {string}', async function (site) { await visit(this, site) })
+When('I visit {string}', async function (site) { await t.visit(this, site) })
 
 When('I click {string}', async function(testId) {
-  await this.page.click(sel(testId))
+  await this.page.click(t.sel(testId))
   await this.page.title() // wait for page to load
 })
 
-Then('? I am on page {string}', async function (page) { await onPage(this, page) })
+Then('? I am on page {string}', async function (page) { await t.onPage(this, page) })
 
 Then('? I see installation instructions for {string}', async function (testId) {
-  const el = await element(this, testId + '-instructions')
+  const el = await t.element(this, testId + '-instructions')
   assert.isNotNull(el)
 })
 
