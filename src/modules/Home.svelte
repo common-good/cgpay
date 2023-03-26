@@ -10,7 +10,7 @@
   export let currentRoute // else Svelte complains (I don't know why yet)
   export let params // else Svelte complains (I don't know why yet)
 
-  const devMode = window.location.href.includes('localhost')
+  const devMode = location.href.includes('localhost')
   const myQr = $store.myAccount?.qr
 
   function er(msg) { 

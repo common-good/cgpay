@@ -17,7 +17,6 @@ Feature: Link Account
   So that I can use CGPay without distracting steps.
 
 Background:
- * context
 
 Rule: Users must link their device to a CGPay account to use the app
 

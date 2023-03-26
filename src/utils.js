@@ -3,7 +3,7 @@ import queryString from 'query-string'
 import { navigateTo } from 'svelte-router-spa'
 import { sha256 } from 'js-sha256'
 
-const api = _apis_[window.location.href.startsWith(_productionUrl_) ? 'real' : 'demo']
+const api = _apis_[location.href.startsWith(_productionUrl_) ? 'real' : 'demo']
 
 function dlg(title, text, labels, m1, m2) {
   const m0 = [true, title, text, labels]
@@ -58,7 +58,7 @@ async function timedFetch(url, options = {}) {
 //  options = { mode:'no-cors', ...options }
   if (!store.inspect().online) throw new Error('offline') // this works for setWifiOff also
   if (options.method != 'POST') url += '&version=' + _version_
-  const { timeout = 3000, type = 'json' } = options;
+  const { timeout = _fetchTimeoutMs_, type = 'json' } = options;
   const aborter = new AbortController();
   aborter.name = 'Timeout'
   const timeoutId = setTimeout(() => aborter.abort(), timeout)
@@ -87,7 +87,7 @@ async function postRequest(endpoint, v) {
 }
 
 function isTimeout(er) { return (er.name == 'AbortError') }
-function pageUri() { return window.location.href.substring(window.location.href.lastIndexOf('/') + 1) }
+function pageUri() { return location.href.substring(location.href.lastIndexOf('/') + 1) }
 
 /**
  * Filter an object by key and/or value (just like for an array)
@@ -102,14 +102,14 @@ function filterObjByKey(obj0, fn) {
   .reduce((obj, key) => { obj[key] = obj0[key]; return obj }, {})
 }
 
-function isApple() { return /iPhone|iPod|iPad/i.test(window.navigator.userAgent) }
-function isAndroid() { return !isApple() && /Android/i.test(window.navigator.userAgent) }
+function isApple() { return /iPhone|iPod|iPad/i.test(navigator.userAgent) }
+function isAndroid() { return !isApple() && /Android/i.test(navigator.userAgent) }
 function isSafari() {
-  const ua = window.navigator.userAgent
+  const ua = navigator.userAgent
   return isApple() && /WebKit/i.test(ua) && !/CriOS/i.test(ua) && !/OPiOS/i.test(ua)
 }
 function isChrome() {
-  const ua = window.navigator.userAgent
+  const ua = navigator.userAgent
   return /Chrome/i.test(ua) && !/Chromium/i.test(ua)
 }
 function addableToHome() { 
@@ -132,8 +132,8 @@ console.log('before readKey');
 }
 
 function disableBack() {
-  window.history.pushState(null, null, window.location.href)
-  window.onpopstate = function () {window.history.go(1)}
+  history.pushState(null, null, location.href)
+  onpopstate = function () {history.go(1)}
 }
 
 */

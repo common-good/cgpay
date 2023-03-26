@@ -32,8 +32,8 @@
   // Initialization
 
   onMount(async () => {
-    window.addEventListener('offline', () => { store.setOnline(false) })
-    window.addEventListener('online', () => { store.setOnline(true) })
+    addEventListener('offline', () => { store.setOnline(false) })
+    addEventListener('online', () => { store.setOnline(true) })
     timeOut()
   })
 

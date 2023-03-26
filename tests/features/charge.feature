@@ -5,7 +5,6 @@ Feature: Charge
   So that funds are deducted from their account and added to mine.
 
 Background:
- * context
 
 Rule: Charges must include an amount and a description
 

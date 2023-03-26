@@ -7,7 +7,6 @@ Feature: Scan QR Code
 Implicit Background: see features/background.txt
 
 Background:
- * context
  * this "myAccount":
  | accountId | deviceId | name | qr | isCo | selling | lastTx |
 

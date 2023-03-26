@@ -5,7 +5,6 @@ Feature: Add to Home Screen
   So it functions as an app and is easy to access.
 
 Background:
-  * context
  
 Rule: When a user visits the app site on mobile for the first time, we show instructions.
 

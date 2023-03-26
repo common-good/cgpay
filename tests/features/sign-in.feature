@@ -5,7 +5,6 @@ Feature: Sign In
   So that I can use it to pay and charge other users.
 
 Background:
- * context
 
 Rule: Users sign in to use the app
 

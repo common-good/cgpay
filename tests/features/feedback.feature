@@ -5,7 +5,6 @@ Feature: Feedback
   So that I know my user experience is valued.
 
 Background:
- * context
 
 Scenario: I am signed in and not in Self Serve mode
   When I am signed in 

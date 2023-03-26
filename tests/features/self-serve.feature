@@ -5,7 +5,6 @@ Feature: Self Serve Mode
  So that customers can use it to charge themselves without having administrative privileges.
 
 Background:
- * context
 
 Rule: Business accounts have the option to enter self serve mode
 

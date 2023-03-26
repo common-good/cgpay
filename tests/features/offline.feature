@@ -9,7 +9,6 @@ Feature: Offline
   So that my business is not interrupted.
 
 Background:
- * context
 
 Rule: The app will cache transactions that occur offline and complete them once the app is reconnected to the internet
 

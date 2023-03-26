@@ -69,11 +69,11 @@ import { postRequest, isTimeout, isApple, isAndroid } from '#utils.js'
  */
 
 export const createStore = () => {
-  const storedState = JSON.parse(window.localStorage.getItem(_storeKey_))
+  const storedState = JSON.parse(localStorage.getItem(_storeKey_))
   const lostMsg = `Tell the customer "I'm sorry, that card is marked "LOST or STOLEN".`
 
   const defaults = {
-    testMode: !window.location.href.startsWith(_productionUrl_),
+    testMode: !location.href.startsWith(_productionUrl_),
     sawAdd: false,
     qr: null,
     msg: null,
@@ -99,7 +99,7 @@ export const createStore = () => {
   const { subscribe, update } = writable(cache)
 
   function storeLocal(state) {
-    window.localStorage.setItem(_storeKey_, JSON.stringify(state))
+    localStorage.setItem(_storeKey_, JSON.stringify(state))
     cache = state
     return state
   }
@@ -166,7 +166,7 @@ export const createStore = () => {
     setCameraCount(n) { set('cameraCount', n) },
     setFrontCamera(yesno) { set('frontCamera', yesno) },
 
-    resetNetwork() { if (cache.useWifi) this.setOnline(window.navigator.onLine) },
+    resetNetwork() { if (cache.useWifi) this.setOnline(navigator.onLine) },
     setOnline(yesno) {
       set('online', cache.useWifi ? yesno : false) // it makes no sense to store this in localStore, but hurts nothing
       if (cache.useWifi && yesno) { this.flushTxs(); this.flushComments() }

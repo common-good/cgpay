@@ -3,35 +3,32 @@ import { imagetools } from 'vite-imagetools'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
 import pwaConfig from './vite.pwa.config.js'
 import { defineConfig } from 'vite'
+import c from './constants.js'
 
 const root = process.cwd()
 function js(s) { return JSON.stringify(s) }
 
 export default defineConfig({
-  define: {
-    _version_: js('4.0.0'),
-    _storeKey_: js('cgpay'),
-    _productionUrl_: js('https://cgpay.commongood.earth'),
-    _apis_: js({
-//      local:  'http://localhost/cgmembers-frame/cgmembers/api/',
-      test: 'https://demo.commongood.earth/api/',
-      demo: 'https://demo.commongood.earth/api/',
-      real: 'https://new.commongood.earth/api/',
-    }),
+  define: { // define these at compile time for efficiency
+    _version_:        js(c.version),
+    _storeKey_:       js(c.storeKey),
+    _productionUrl_:  js(c.productionUrl),
+    _apis_:           js(c.apis),
+    _fetchTimeoutMs_: c.fetchTimeoutMs,
   },
 
   plugins: [imagetools(), svelte(), VitePWA(pwaConfig)],
 
-  resolve: {
+  resolve: { // note: aliases are not available in tests or style imports
     alias: {
-      '#store.js': root + '/src/store.js',
-      '#utils.js': root + '/src/utils.js',
-      '#modules': root + '/src/modules',
-// (this doesn't work for style imports)  '#styles': root + '/src/styles',
+      '#store.js':     root + '/src/store.js',
+      '#utils.js':     root + '/src/utils.js',
+      '#constants.js': root + '/src/constants.js',
+      '#modules':      root + '/src/modules',
     },
   },
 
-  server: { port:3000 },
+  server: { port:c.port },
 
   test: {
     environment: "jsdom",

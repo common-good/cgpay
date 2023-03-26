@@ -167,7 +167,7 @@
       } else if (er.message == '404') { // account not found
         goEr('That is not a valid Common Good card.')
       } else {
-        goEr(crash(er))
+        goEr(crash(`Un unexpected error occurred. Please alert Common Good's support team.`))
       }
     }
   })
