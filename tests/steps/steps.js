@@ -3,32 +3,17 @@ import t from '../support/support.js'
 import w from '../support/world.js'
 import { assert, expect } from 'chai'
 
-Given('I use {string} on an {string} device', async function (browser, sys) {
-  let agent = ''
-  if (sys == 'Apple' && browser == 'Safari') agent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) FxiOS/36.0  Mobile/15E148 Safari/605.1.15'
-  if (sys == 'Android' && browser == 'Chrome') agent = 'Mozilla/5.0 (Linux; Android 11; SM-T227U Build/RP1A.200720.012; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/87.0.4280.141 Safari/537.36'
-  await w.page.setUserAgent(agent)
-})
+Given('I use {string} on an {string} device', async function (browser, sys) { await t.setUA(browser, sys) })
+Given('this {string}:', async function (k, rows) { await t.setThese(k, rows, true) })
+Given('these {string}:', async function (k, rows) { await t.setThese(k, rows) })
 
 When('I run the app', async function () { await t.visit('') })
-
 When('I visit {string}', async function (site) { await t.visit(site) })
-
-When('I click {string}', async function(testId) {
-  await w.page.click(t.sel(testId))
-  await w.page.title() // wait for page to load
-})
+When('I click {string}', async function(testId) { await w.page.click(t.sel(testId)) })
+When('I scan {string}', async function (qr) { await t.putv('qr', qr); await t.visit('charge') })
 
 Then('? I am on page {string}', async function (page) { await t.onPage(page) })
-
-Then('? I see installation instructions for {string}', async function (testId) {
-  const el = await t.element(testId + '-instructions')
-  assert.isNotNull(el)
-})
-
-/*
-Then('? the page title is {string}', async function (wantTitle) {
-  const gotTitle = await w.page.title()
-  expect(gotTitle).toEqual(wantTitle)
-})
-*/
+Then('? I see installation instructions for {string}', async function (testId) { await t.see(testId + '-instructions') })
+Then('? I see {string}', async function (testId) { await t.see(testId) })
+Then('? I see {string} is {string}', async function (testId, want) { await t.seeIs(testId, want) })
+Then('? I see this error message: {string}', async function (msg) { await t.seeIs('messageText', msg, true) })

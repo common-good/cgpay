@@ -7,11 +7,8 @@ const baseUrl = 'http://localhost:' + c.port + '/'
 
 const t = {
 
-  /**
-   * 
-   * @param {*} w: the world object (persistent data for an entire run of tests, passed as "this" from step functions)
-   *               -- passed to most support functions, so definition not repeated
-   */
+  // UTILITY FUNCTIONS
+
   setupPage: async () => {
     if (w.page) return
 
@@ -33,7 +30,7 @@ const t = {
    */
   getStore: async () => {
     const st = await w.page.evaluate((key) => localStorage.getItem(key), c.storeKey)
-    return st
+    return JSON.parse(st)
   },
 
   putStore: async (st) => {
@@ -49,31 +46,40 @@ const t = {
 
   putv: async (k, v) => {
     const st = await t.getStore() || {}
-    st[k] = v
+    st[k] = typeof v == 'object' ? { ...v } : v
     await t.putStore(st)
   },
 
-  visit: async (target) => {
-    const visit = await w.page.goto(baseUrl + target, { waitUntil:['networkidle0'] })
-  //  console.log('visiting:', target)
-    return visit
-  },
+  sel: (testId) => { return `[data-testid="${testId}"]` },
 
-  onPage: async (id) => {
-    const el = await w.page.$('#' + id)
-    if (el == null) await w.page.screenshot({ path: 'found.png' })
-    if (el == null) {
-      const title = await w.page.title()
-      assert.isNotNull(el, `page "${id}" not found. You are on page "${title}" (see page found in found.png).`)
-    }
-  },
+  // MAKE / DO
 
-  element: async (testId) => { 
-    const el = await w.page.$(sel(testId))
-    return el
+  visit: async (target) => { return await w.page.goto(baseUrl + target, { waitUntil:['networkidle0'] }) },
+
+  /**
+   * 
+   * @param string k: key to value in store to store 
+   * @param {*} rows: gherkin array of arrays representing records to store
+   *                  first row is a list of field names, subsequent rows are the field values
+   * @param bool one: true to store just the first record rather than an array of records
+   */
+  setThese: async (k, { rawTable:rows }, one = false) => {
+    let v = []
+    if (one) assert.equal(rows.length, 2, `too many records storing value "${k}"`)
+    for (let rowi = 1; rowi < rows.length; rowi++) {
+      v[rowi - 1] = []
+      for (let coli in rows[0]) v[rowi - 1][rows[0][coli]] = rows[rowi][coli]
     }
-    console.log(k, v)
+    console.log(k, v[0])
     await t.putv(k, one ? v[0] : v)
+    console.log('myAccount:',await t.getStore())
+  },
+
+  setUA: async (browser, sys) => {
+    let agent = ''
+    if (sys == 'Apple' && browser == 'Safari') agent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) FxiOS/36.0  Mobile/15E148 Safari/605.1.15'
+    if (sys == 'Android' && browser == 'Chrome') agent = 'Mozilla/5.0 (Linux; Android 11; SM-T227U Build/RP1A.200720.012; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/87.0.4280.141 Safari/537.36'
+    await w.page.setUserAgent(agent)
   },
 
   post: async (op, args = null) => {
@@ -94,6 +100,31 @@ const t = {
     await w.page.goto(c.apis.test + 'test')
     await w.page.setRequestInterception(false)
   },
+
+  // TEST
+
+  onPage: async (id) => {
+    const el = await w.page.$('#' + id)
+    if (el == null) await w.page.screenshot({ path: 'found.png' })
+    if (el == null) {
+      const title = await w.page.title()
+      assert.isNotNull(el, `page "${id}" not found. You are on page "${title}" (see page found in found.png).`)
+    }
+  },
+
+  see: async (testId) => {
+    const el = await t.element(testId)
+    assert.isNotNull(el)
+    return el
+  },
+
+  seeIs: async (testId, want, partial = false) => {
+    const gotEl = await t.see(testId)
+    const got = await gotEl.evaluate(el => el.textContent)
+    assert.isTrue(partial ? got.includes(want) : (got == want))
+  },
+
+  element: async (testId) => { return await w.page.$(t.sel(testId)) },
 
 }
 
