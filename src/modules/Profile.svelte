@@ -9,19 +9,19 @@
 <section id='charge-profile'>
   <div class='photo'>
     {#if photo.blob}
-      <img src={ photo.blob } alt='{ photo.alt }' />
+      <img src={photo.blob} alt="{photo.alt}" data-testid="theirPhoto" />
     {:else}
       <ProfileSvg />
     {/if}
   </div>
   <div class='info'>
     {#if otherAccount.agent}
-      <h2>{otherAccount.agent}</h2>
-      <p>{ otherAccount.name }</p>
+      <h2 data-testid="theirAgent">{otherAccount.agent}</h2>
+      <p data-testid="theirCompany">{otherAccount.name}</p>
     {:else}
-      <h2>{ otherAccount.name }</h2>
+      <h2 data-testid="theirName">{otherAccount.name}</h2>
     {/if}
-    <p>{ otherAccount.location }</p>
+    <p data-testid="theirLocation">{otherAccount.location}</p>
   </div>
 </section>
 

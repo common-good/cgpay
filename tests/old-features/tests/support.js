@@ -1,5 +1,5 @@
 import fkill from 'fkill'
-import to from '@adaptably/to'
+//import to from '@adaptably/to'
 import { exec } from 'child_process'
 
 // ---------------------------------------------
@@ -13,7 +13,7 @@ export default function setup() {
   }
 
   const paths = {
-    ui: to('../../ui', { from: import.meta.url }),
+//    ui: to('../../ui', { from: import.meta.url }),
   }
 
   const processes = {

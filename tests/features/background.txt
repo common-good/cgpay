@@ -1,0 +1,52 @@
+Normally, all accounts, transactions, and other data on the server must be set up explicitly as "Background".
+For Release "A" though, Background includes the following implicit assumptions. 
+
+Note:
+  In steps and associated API calls:
+  - "." means "NEWZZ" (for example, .A means NEWZZA). You can also sign in with just the letter.
+  - "X:Y" means .Y acting on behalf of .X
+  - "@" means @example.com (for example, a@ means a@example.com)
+  For any accounts created by such steps:
+  - the password is "k".
+  - flags actually also include: member, confirmed, carded, ided, debt.
+  - each account has a creditLine of 9,999 and a balance of 9,999.
+  - individual accounts have done all steps needed to get a card and company accounts have done all company steps.
+
+  QR urls for the accounts are as follows, each preceded by "HTTP://6VM.RC4.ME/" and followed by cardCode:
+
+    .A   KDJI
+    .B   KDJJ
+    .C   KDJK
+    .D   KDJL
+    .E   KDJM
+    .F   KDJN
+    .G   KDJO
+    .H   KDJP
+    .I   KDJQ
+    C:A  LDJK0
+    C:B  LDJK1
+    G:F  LDJO0
+
+The first letter for each account above is the format character. Account identifiers (saved in store.myAccount.accountId)
+are composed of the format character followed by "6VM", the remainder of the account code fragment listed above, and
+sometimes finally the cardCode.
+
+Implicit Background:
+
+* server has these "accounts":
+| id | fullName | email | flags | cardCode | city |
+| .A | Abe One  | a@    | ok    | 12345a   | Aton |
+| .B | Bea Two  | b@    | ok    | 12345b   | Bton |
+| .C | Citre    | c@    | ok,co | 12345c   | Cton |
+| .D | Dee Four | d@    | ok    | 12345d   | Dton |
+| .E | Eli Five | e@    | ok    | 12345e   | Eton |
+| .F | Flo Six  | f@    | ok    | 12345f   | Fton |
+| .G | Gisette  | g@    | ok,co | 12345g   | Gton |
+| .H | Hal Ate  | h@    | ok    | 12345h   | Hton |
+| .I | Ida Nine | i@    | ok    | 12345i   | Iton |
+
+* server has these "relations":
+| main | other | permission | cardCode |
+| .C   | .A    | manage     | 98765a   |
+| .C   | .B    | scan       | 98765b   |
+| .G   | .F    | manage     | 98765f   |

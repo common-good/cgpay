@@ -32,14 +32,17 @@ Windows developers do [this](https://docs.google.com/document/d/1d1pGjS5Z9sP_BgY
 
 ## Developing
 
-For more information, see the [Features documentation](/features) and [UI documentation](/ui).
+For more information:
+* [Features documentation](/features).
+* [Puppeteer API](/https://pptr.dev/api)
+* [Chai API](https://www.chaijs.com/api/)
 
 | Command | Notes |
 | :-- | :-- |
 | `npm run dev` | then ctrl-Click http://localhost:3000/ to open in default browser |
 | `npm run tests:watch` | |
-| `npm test` | |
-| `npm test <test name>` | |
+| `npm test` | run Cucumber/Gherkin end-to-end tests (you currently have to do "npm run dev" first, in a separate window) |
+| `npm test @<tag>` | run a subset of tests (or @all) |
 
 **Note:** Use a private browsing window in order to avoid unpredictable caching behavior from the service worker.
 

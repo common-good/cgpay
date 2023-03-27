@@ -1,41 +1,34 @@
-import to from '@adaptably/to'
 import { VitePWA } from 'vite-plugin-pwa'
 import { imagetools } from 'vite-imagetools'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
 import pwaConfig from './vite.pwa.config.js'
 import { defineConfig } from 'vite'
+import c from './constants.js'
 
-const version = require('./package.json').version
-
+const root = process.cwd()
 function js(s) { return JSON.stringify(s) }
 
 export default defineConfig({
-  define: {
-    _version_: js(version),
-    _origins_: js({
-      test: 'https://app1.commongood.earth', 
-      real: 'https://app.commongood.earth'
-    }),
-    _apis_: js({
-      test: 'https://demo.commongood.earth/api',
-      real: 'https://new.commongood.earth/api'
-    }),
+  define: { // define these at compile time for efficiency
+    _version_:        js(c.version),
+    _storeKey_:       js(c.storeKey),
+    _productionUrl_:  js(c.productionUrl),
+    _apis_:           js(c.apis),
+    _fetchTimeoutMs_: c.fetchTimeoutMs,
   },
 
   plugins: [imagetools(), svelte(), VitePWA(pwaConfig)],
 
-  resolve: {
+  resolve: { // note: aliases are not available in tests or style imports
     alias: {
-      '#store.js': to('./src/store.js', { from: import.meta.url }),
-      '#utils.js': to('./src/utils.js', { from: import.meta.url }),
-      '#modules': to('./src/modules', { from: import.meta.url }),
-// (this doesn't work for style imports)  '#styles': to('./src/styles', { from: import.meta.url }),
+      '#store.js':     root + '/src/store.js',
+      '#utils.js':     root + '/src/utils.js',
+      '#constants.js': root + '/src/constants.js',
+      '#modules':      root + '/src/modules',
     },
   },
 
-  server: {
-    port: 3000,
-  },
+  server: { port:c.port },
 
   test: {
     environment: "jsdom",

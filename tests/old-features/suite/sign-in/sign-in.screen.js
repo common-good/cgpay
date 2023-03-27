@@ -15,7 +15,7 @@ export default (page) => {
         errorMessage: '#sign-in-error',
         identifierField: 'input[type="text"]',
         passwordField: 'input[type="password"]',
-        root: '#sign-in',
+        root: '#signin',
         signInButton: 'button'
       }
 

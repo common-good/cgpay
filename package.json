@@ -1,6 +1,5 @@
 {
   "name": "CGPay",
-  "version": "4.0.0",
   "description": "Payment app for the Common Good democratic economic system",
   "repository": {
     "type": "git",
@@ -15,18 +14,18 @@
     "preview": "mode=production vite build && mode=production vite preview",
     "watch": "mode=dev vitest",
     "utest": "mode=dev vitest run",
-    "test": "cucumber-js -p default -c ./tests/cucumber.js"
+    "test": "cucumber-js -p default -c ./tests/cucumber.js --tags "
   },
   "devDependencies": {
-    "@adaptably/to": "^1.0.1",
     "@cucumber/cucumber": "^9.0.0",
-    "@playwright/test": "^1.31.2",
     "@sveltejs/vite-plugin-svelte": "^2.0.2",
     "@testing-library/svelte": "^3.2.1",
     "canvas": "^2.11.0",
+    "chai": "^4.3.7",
+    "fkill": "^8.1.0",
     "html5-qrcode": "^2.2.1",
     "jsdom": "^20.0.0",
-    "playwright": "^1.31.2",
+    "puppeteer": "^19.7.5",
     "query-string": "^7.1.1",
     "stylus": "^0.55.0",
     "svelte": "^3.55.1",

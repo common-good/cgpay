@@ -20,7 +20,7 @@
   async function signIn() {
     statusMsg = 'Finding your account(s)...'
     try {
-      const result = await postRequest(credentials, 'accounts')
+      const result = await postRequest('accounts', credentials)
 
       if (result.accounts.length > 1) {
         store.setAcctChoices(result.accounts)

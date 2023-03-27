@@ -1,5 +1,5 @@
-import { get, writable } from 'svelte/store'
-import { postRequest, isTimeout } from '#utils.js'
+import { writable } from 'svelte/store'
+import { postRequest, isTimeout, isApple, isAndroid } from '#utils.js'
 
 // --------------------------------------------
 // use this example for set() and get(): https://svelte.dev/repl/ccbc94cb1b4c493a9cf8f117badaeb31?version=3.16.7
@@ -11,21 +11,12 @@ import { postRequest, isTimeout } from '#utils.js'
  * 
  * CONSTANTS
  *   bool testMode: true if the app is in test mode
- *   string origin: URL to run and install the app
- *   string api: application programming interface URL
- * 
- * CONSTANTS
- *   bool testMode: true if the app is in test mode
- *   string origin: URL to run and install the app
- *   string api: application programming interface URL
  * 
  * SCALARS
  *   int sawAdd: Unix timestamp when user saw the option to save the app to their home screen
  *   blob qr: a scanned QR url
  *   string msg: an informational message to display on the Home Page
  *   string erMsg: an error message to display on the Home Page
- *   string deviceType: Android, Apple, or Other
- *   string browser: Chrome, Safari, or Other
  *   int cameraCount: number of cameras in the device
  *   bool frontCamera: true to use front camera instead of rear (default false iff mobile)
  *   bool online: true if the device is connected to the Internet
@@ -33,13 +24,13 @@ import { postRequest, isTimeout } from '#utils.js'
  *   bool selfServe: true for selfServer mode
  * 
  * ARRAYS
- *    choices: a list of Common Good accounts the signed-in user may choose to connect (one of) to the device
+ *    choices: a list (array) of Common Good accounts the signed-in user may choose to connect (one of) to the device
  *      accountId: the account ID including cardCode
  *      deviceId: a unique ID for the device associated with the account
  *      name: the name on the account
  *      qr: an image of the account’s QR code and ID photo (if any)
  *      isCo: true if the account is a company account
- *      selling: a ist of items for sale
+ *      selling: a list (array) of items for sale
  * 
  *    txs: transaction objects waiting to be uploaded to the server, each comprising:
  *      amount: dollars to transfer from actorId to otherId (signed)
@@ -74,27 +65,20 @@ import { postRequest, isTimeout } from '#utils.js'
  * 
  *    myAccount: information about the account associated with the device
  *      accountId, deviceId, name, qr, isCo, and selling as in the choices array described above
- *      lastTx: the last transaction known to this device
+ *      lastTx: Unixtime (in ms) of the last transaction known to this device (null if none)
  */
 
 export const createStore = () => {
-  const mode = window.location.href.startsWith(_origins_.real) ? 'real' : 'test'
-  const storeKey = 'cgpay.' + mode
-  const storedState = JSON.parse(window.localStorage.getItem(storeKey))
   const lostMsg = `Tell the customer "I'm sorry, that card is marked "LOST or STOLEN".`
 
   const defaults = {
-    testMode: (mode == 'test'),
-    origin: _origins_[mode],
-    api: _apis_[mode],
+    testMode: !location.href.startsWith(_productionUrl_),
     sawAdd: false,
     qr: null,
     msg: null,
     erMsg: null,
-    deviceType: getDeviceType(),
-    browser: getBrowser(),
     cameraCount: 0, // set this when scanning for the first time
-    frontCamera: (getDeviceType() == 'Other'),
+    frontCamera: (!isApple() && !isAndroid()),
     online: null,
     useWifi: true,
     selfServe: false,
@@ -106,38 +90,18 @@ export const createStore = () => {
     corrupt: null,
     accts: {},
     myAccount: null,
-
   }
 
-  // --------------------------------------------
-
-  let cache = { ...defaults, ...storedState }
+  let cache = { ...defaults, ...storedState() }
   for (let k in cache) if (!(k in defaults)) delete cache[k]
+  storeLocal(cache) // update store with any changes in defaults (crucial for tests)
   
-  const { zot, subscribe, update } = writable(cache)
+  const { subscribe, update } = writable(cache)
 
-  // --------------------------------------------
-
-  function getDeviceType() {
-    const { userAgent } = window.navigator
-    if (/Android/i.test(userAgent)) { return 'Android' }
-    if (/iPhone|iPod|iPad/i.test(userAgent)) { return 'Apple' }
-    return 'Other'
-  }
-
-  function getBrowser() {
-    if (/chrome/i.test(navigator.userAgent)) return 'Chrome'
-    if (/safari/i.test(navigator.userAgent)) return 'Safari'
-    return 'Other'
-  }
-
-  function canAddToHome() { 
-    if (res.sawAdd) return false
-    return ((res.isApple() && res.isSafari()) || (res.isAndroid() && res.isChrome()))
-  }
+  function storedState() { return JSON.parse(localStorage.getItem(_storeKey_)) }
 
   function storeLocal(state) {
-    window.localStorage.setItem(storeKey, JSON.stringify(state))
+    localStorage.setItem(_storeKey_, JSON.stringify(state))
     cache = state
     return state
   }
@@ -163,7 +127,7 @@ export const createStore = () => {
     while (cache[k].length > 0) {
       if (!res.useWifi) return; // allow immediate interruptions
       try {
-        await postRequest(cache[k][0], endpoint)
+        await postRequest(endpoint, cache[k][0])
       } catch (er) {
         if (isTimeout(er)) {
           res.setOnline(false)
@@ -183,6 +147,7 @@ export const createStore = () => {
   const res = {
     subscribe,
 
+    reload() { cache = storedState() }, // called only from tests
     inspect() { return cache },
 
     setQr(v) { set('qr', v) },
@@ -200,16 +165,11 @@ export const createStore = () => {
         return storeLocal(st)
     })},
 
-    addableToHome() { return canAddToHome() },
-    sawAddToHome() { set('sawAdd', Date.now()) },
-    isApple() { return (cache.deviceType == 'Apple') },
-    isAndroid() { return (cache.deviceType == 'Android') },
-    isChrome() { return (cache.browser == 'Chrome') },
-    isSafari() { return (cache.browser == 'Safari') },
+    setSawAdd() { set('sawAdd', Date.now()) },
     setCameraCount(n) { set('cameraCount', n) },
     setFrontCamera(yesno) { set('frontCamera', yesno) },
 
-    resetNetwork() { if (cache.useWifi) this.setOnline(window.navigator.onLine) },
+    resetNetwork() { if (cache.useWifi) this.setOnline(navigator.onLine) },
     setOnline(yesno) {
       set('online', cache.useWifi ? yesno : false) // it makes no sense to store this in localStore, but hurts nothing
       if (cache.useWifi && yesno) { this.flushTxs(); this.flushComments() }

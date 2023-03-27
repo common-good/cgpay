@@ -7,17 +7,14 @@ vi.mock('#utils.js', () => ({
   isTimeout: vi.fn()
 }))
 
-
-// --------------------------------------------
-
-const testKey = 'cgpay.test'
+const storeKey = 'cgpay'
 
 function stored() {
-  return JSON.parse(window.localStorage.getItem(testKey))
+  return JSON.parse(localStorage.getItem(storeKey))
 }
 
 function setupLocalStorage(data) {
-  return window.localStorage.setItem(testKey, JSON.stringify(data))
+  return localStorage.setItem(storeKey, JSON.stringify(data))
 }
 
 // --------------------------------------------
@@ -148,7 +145,7 @@ describe('store', () => {
         const store = createStore()
         store.resetNetwork()
 
-        expect(store.inspect().online).toEqual(window.navigator.onLine)
+        expect(store.inspect().online).toEqual(navigator.onLine)
       })
     })
 
@@ -179,172 +176,25 @@ describe('store', () => {
     })
   })
 
-  describe('.deviceType', () => {
-    describe('when the user is on an Android mobile device', () => {
-      it('is Android', () => {
-        const originalNavigator = window.navigator
-
-        window.navigator = {
-          userAgent: 'Mozilla/5.0 (Linux; Android 12; SM-S906N Build/QP1A.190711.020; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/80.0.3987.119 Mobile Safari/537.36'
-        }
-
-        const store = createStore()
-        expect(store.inspect().deviceType).toEqual('Android')
-
-        window.navigator = originalNavigator
-      })
+  describe('.sawAdd', () => {
+    it('is accessible', () => {
+      const store = createStore()
+      expect(store.inspect().sawAdd).toEqual(false)
     })
+  })
 
-    describe('when the user is on an Apple mobile device', () => {
-      it('is Apple', () => {
-        const originalNavigator = window.navigator
+  describe('.setSawAdd()', () => {
+    it('logs the time that the user saw the home screen prompt', async () => {
+      const store = createStore()
 
-        window.navigator = {
-          userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 12_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.0 Mobile/15E148 Safari/604.1'
-        }
+      vi.useFakeTimers()
+      const now = Date.now()
+      expect(store.inspect().sawAdd).toEqual(false) // Confirm initial values are set.
+      store.setSawAdd()
 
-        const store = createStore()
-        expect(store.inspect().deviceType).toEqual('Apple')
-
-        window.navigator = originalNavigator
-      })
-    })
-
-    describe('when the user is on not on a mobile device', () => {
-      it('is Other', () => {
-        const originalNavigator = window.navigator
-
-        window.navigator = {
-          userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.81 Safari/537.36'
-        }
-
-        const store = createStore()
-        expect(store.inspect().deviceType).toEqual('Other')
-
-        window.navigator = originalNavigator
-      })
-    })
-
-    describe('.isAndroid()', () => {
-      describe('when the user is on an Android device', () => {
-        it('is true', () => {
-          setupLocalStorage({
-            deviceType: 'Android'
-          })
-
-          const store = createStore()
-          expect(store.isAndroid()).toEqual(true)
-        })
-      })
-
-      describe('when the user is not on a Android device', () => {
-        it('is false', () => {
-          setupLocalStorage({
-            deviceType: 'Apple'
-          })
-
-          const store = createStore()
-          expect(store.isAndroid()).toEqual(false)
-        })
-      })
-    })
-
-    describe('.isApple()', () => {
-      describe('when the user is on an Apple device', () => {
-        it('is true', () => {
-          setupLocalStorage({
-            deviceType: 'Apple'
-          })
-
-          const store = createStore()
-          expect(store.isApple()).toEqual(true)
-        })
-      })
-
-      describe('when the user is not on a Apple device', () => {
-        it('is false', () => {
-          setupLocalStorage({
-            deviceType: 'Android'
-          })
-
-          const store = createStore()
-          expect(store.isApple()).toEqual(false)
-        })
-      })
-    })
-
-    describe('.addableToHome()', () => {
-      describe('when the user is on Safari on an Apple device and has not previously seen the prompt', () => {
-        it('is true', () => {
-          setupLocalStorage({
-            deviceType: 'Apple',
-            browser: 'Safari',
-            sawAdd: false,
-          })
-
-          const store = createStore()
-          expect(store.addableToHome()).toEqual(true)
-        })
-      })
-
-      describe('when the user is on Chrome on an Android device and has not previously seen the prompt', () => {
-        it('is true', () => {
-          setupLocalStorage({
-            deviceType: 'Android',
-            browser: 'Chrome',
-            sawAdd: false,
-          })
-
-          const store = createStore()
-          expect(store.addableToHome()).toEqual(true)
-        })
-      })
-
-      describe('when the user is not on a mobile device', () => {
-        it('is false', () => {
-          setupLocalStorage({
-            device: { type: 'Other' },
-            sawAdd: false,
-          })
-
-          const store = createStore()
-          expect(store.addableToHome()).toEqual(false)
-        })
-      })
-
-      describe('when the user has previously seen the prompt', () => {
-        it('is false', () => {
-          setupLocalStorage({
-            device: { type: 'Apple' },
-            sawAdd: true,
-          })
-
-          const store = createStore()
-          expect(store.addableToHome()).toEqual(false)
-        })
-      })
-    })
-
-    describe('.sawAdd', () => {
-      it('is accessible', () => {
-        const store = createStore()
-        expect(store.inspect().sawAdd).toEqual(false)
-      })
-    })
-
-    describe('.sawAddToHome()', () => {
-      it('logs the time that the user saw the home screen prompt', async () => {
-        const store = createStore()
-
-        vi.useFakeTimers()
-        const now = Date.now()
-        expect(store.inspect().sawAdd).toEqual(false) // Confirm initial values are set.
-        store.sawAddToHome()
-
-        // Confirm that all forms of store access are updated.
-        expect(store.inspect().sawAdd).toEqual(now)
-        store.subscribe(state => expect(state.sawAdd).toEqual(now))
-      })
+      // Confirm that all forms of store access are updated.
+      expect(store.inspect().sawAdd).toEqual(now)
+      store.subscribe(state => expect(state.sawAdd).toEqual(now))
     })
   })
 
