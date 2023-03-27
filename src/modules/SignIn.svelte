@@ -59,12 +59,12 @@
       <input name='account-id' type='text' placeholder='Account ID or Email Address' autocomplete='name' autocapitalize='off' bind:value={ credentials.identifier } required />
       <label class='visuallyhidden' for='password'>Password</label>
       <input type='password' placeholder='Password' autocomplete='current-password' autocapitalize='off' bind:value={ credentials.password } required />
-      <a class="link" href="https://new.commongood.earth/settings/password/" target="_blank">Reset password</a>
-      <button type='submit'>Sign In</button>
+      <a class="link" data-testid="reset-pw" href="https://new.commongood.earth/settings/password/" target="_blank">Reset password</a>
+      <button data-testid="signin-btn" type='submit'>Sign In</button>
       <p class="status">{ statusMsg }</p>
     </form>
     <p class="sign-up">Not a member?</p>
-    <a class="link-button" href="https://new.commongood.earth/signup" target="_blank">Sign Up</a>
+    <a class="link-button" data-testid="signup-btn" href="https://new.commongood.earth/signup" target="_blank">Sign Up</a>
   </div>
 </section>
 
