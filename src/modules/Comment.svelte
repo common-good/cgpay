@@ -22,11 +22,11 @@
     <h1>Comments and Suggestions</h1>
       <p>We love feedback! Please type your comment and/or suggestion below in as much detail as you you think we might need, in order to correct a problem or make your suggested improvement.</p>
       <form id="feedback" on:submit|preventDefault={ submit }>
-        <!--label class='visuallyhidden' for='account-id'></label-->
-        <textarea name='comment' placeholder='Type here...' bind:value={ text } required></textarea> 
+        <label class='visuallyhidden' for='comment-input'>Type here</label>
+        <textarea data-testid='comment-input' id='comment-input' name='comment' placeholder='Type here...' bind:value={ text } required></textarea> 
       </form>
   </div>
-  <button type='submit' form="feedback">Submit</button>
+  <button data-testid='comment-submit' type='submit' form='feedback'>Submit</button>
 </section>
 
 <style lang='stylus'>

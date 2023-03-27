@@ -108,6 +108,10 @@ const t = {
     await w.page.setRequestInterception(false)
   },
 
+  input: async (id) => {
+    await w.page.$eval(t.sel(id), el => el.value = 'not empty string');
+  },
+
   // TEST
 
   onPage: async (id) => {
