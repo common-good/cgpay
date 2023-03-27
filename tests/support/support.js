@@ -5,91 +5,96 @@ import w from './world.js'
 
 const baseUrl = 'http://localhost:' + c.port + '/'
 
-/**
- * 
- * @param {*} w: the world object (persistent data for an entire run of tests, passed as "this" from step functions)
- *               -- passed to most support functions, so definition not repeated
- */
-async function setupPage() {
-  if (w.page) return
+const t = {
 
-  const [headless, slowMo] = process.env.CIRCLECI ? [true, 0] : [true, 0]
-  w.browser = await w.driver.launch({ headless, slowMo })
-  w.page = await w.browser.newPage()
-  //  w.page.setViewport({ width: 1280, height: 1024 })
-  
-  if (c.seeLog) w.page.on('console', async e => { // log whatever the page logs
-    const args = await Promise.all(e.args().map(a => a.jsonValue()))
-    if (args.length > 1 || typeof args[0] != 'string' 
-      || (!args[0].includes('was created with unknown prop') && !args[0].includes('[vite] connect'))) console.log(...args)
-  })
-}
+  /**
+   * 
+   * @param {*} w: the world object (persistent data for an entire run of tests, passed as "this" from step functions)
+   *               -- passed to most support functions, so definition not repeated
+   */
+  setupPage: async () => {
+    if (w.page) return
 
-/**
- * Get all stored values (the storage state)
- * @returns {*} st: an object containing all the app's stored values
- */
-async function getStore() {
-  const st = await w.page.evaluate((key) => localStorage.getItem(key), c.storeKey)
-  return st
-}
+    const [headless, slowMo] = process.env.CIRCLECI ? [true, 0] : [true, 0]
+    w.browser = await w.driver.launch({ headless, slowMo })
+    w.page = await w.browser.newPage()
+    //  w.page.setViewport({ width: 1280, height: 1024 })
+    
+    if (c.seeLog) w.page.on('console', async e => { // log whatever the page logs
+      const args = await Promise.all(e.args().map(a => a.jsonValue()))
+      if (args.length > 1 || typeof args[0] != 'string' 
+        || (!args[0].includes('was created with unknown prop') && !args[0].includes('[vite] connect'))) console.log(...args)
+    })
+  },
 
-async function putStore(st) {
-  await w.page.evaluate((k, v) => {
-    localStorage.setItem(k, JSON.stringify(v))
-  }, c.storeKey, st)
-}
+  /**
+   * Get all stored values (the storage state)
+   * @returns {*} st: an object containing all the app's stored values
+   */
+  getStore: async () => {
+    const st = await w.page.evaluate((key) => localStorage.getItem(key), c.storeKey)
+    return st
+  },
 
-async function getv(k) {
-  const st = await getStore()
-  return st[k]
-}
+  putStore: async (st) => {
+    await w.page.evaluate((k, v) => {
+      localStorage.setItem(k, JSON.stringify(v))
+    }, c.storeKey, st)
+  },
 
-async function putv(k, v) {
-  const st = await getStore()
-  st[k] = v
-  await putStore(st)
-}
+  getv: async (k) => {
+    const st = await t.getStore() || {}
+    return st[k]
+  },
 
-async function visit(target) {
-  const visit = await w.page.goto(baseUrl + target, { waitUntil:['networkidle0'] })
-//  console.log('visiting:', target)
-  return visit
-}
+  putv: async (k, v) => {
+    const st = await t.getStore() || {}
+    st[k] = v
+    await t.putStore(st)
+  },
 
-async function onPage(id) {
-  const el = await w.page.$('#' + id)
-  if (el == null) await w.page.screenshot({ path: 'found.png' })
-  if (el == null) {
-    const title = await w.page.title()
-    assert.isNotNull(el, `page "${id}" not found. You are on page "${title}" (see page found in found.png).`)
-  }
-}
+  visit: async (target) => {
+    const visit = await w.page.goto(baseUrl + target, { waitUntil:['networkidle0'] })
+  //  console.log('visiting:', target)
+    return visit
+  },
 
-async function element(testId) { 
-  const el = await w.page.$(sel(testId))
-  return el
-}
-
-function sel(testId) { return `[data-testid="${testId}"]` }
-
-async function post(op, args = null) {
-  await w.page.setRequestInterception(true)
-  await w.page.once('request', async (interceptedRequest ) => {
-    try {
-      const data = {
-        'method': 'POST',
-        'postData': queryString.stringify({ version:c.version, op:op, args:args }),
-        'headers': { 'Content-type':'application/x-www-form-urlencoded' },
-        'mode': 'no-cors'
-      }
-      interceptedRequest.continue(data)
-    } catch (er) {
-      console.log('Error while request interception', er)
+  onPage: async (id) => {
+    const el = await w.page.$('#' + id)
+    if (el == null) await w.page.screenshot({ path: 'found.png' })
+    if (el == null) {
+      const title = await w.page.title()
+      assert.isNotNull(el, `page "${id}" not found. You are on page "${title}" (see page found in found.png).`)
     }
-  })
-  await w.page.goto(c.apis.test + 'test')
-  await w.page.setRequestInterception(false)
+  },
+
+  element: async (testId) => { 
+    const el = await w.page.$(sel(testId))
+    return el
+    }
+    console.log(k, v)
+    await t.putv(k, one ? v[0] : v)
+  },
+
+  post: async (op, args = null) => {
+    await w.page.setRequestInterception(true)
+    await w.page.once('request', async (interceptedRequest ) => {
+      try {
+        const data = {
+          'method': 'POST',
+          'postData': queryString.stringify({ version:c.version, op:op, args:args }),
+          'headers': { 'Content-type':'application/x-www-form-urlencoded' },
+          'mode': 'no-cors'
+        }
+        interceptedRequest.continue(data)
+      } catch (er) {
+        console.log('Error while request interception', er)
+      }
+    })
+    await w.page.goto(c.apis.test + 'test')
+    await w.page.setRequestInterception(false)
+  },
+
 }
 
-export default { setupPage, post, sel, visit, onPage, element, getStore, putStore, getv, putv }
+export default t
