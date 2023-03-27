@@ -23,13 +23,13 @@ $:  [lab1, lab2, zot] = (labels + ', ').split(', ')
   <div class="modal-background" on:click={() => {show = false}}></div>
 
   <div class="modal" role="dialog" aria-modal="true" bind:this={modal} use:focusTrap in:fade out:fade>
-    <h1>{ title }</h1>
+    <h1 data-testid="messageTitle">{ title }</h1>
     <div class="content">
-      <p>{ text }</p>
+      <p data-testid="messageText">{ text }</p>
       <div class="buttons">
-        <button class="primary" on:click={ () => dispatch('m1') }>{ lab1 }</button>
+        <button class="primary" data-testid="btn1" on:click={ () => dispatch('m1') }>{ lab1 }</button>
         {#if lab2}
-          <button class="secondary" on:click={ () => dispatch('m2') }>{ lab2 }</button>
+          <button class="secondary" data-testid="btn2" on:click={ () => dispatch('m2') }>{ lab2 }</button>
         {/if}
       </div>
     </div>

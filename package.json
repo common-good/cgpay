@@ -1,6 +1,5 @@
 {
   "name": "CGPay",
-  "version": "4.0.0",
   "description": "Payment app for the Common Good democratic economic system",
   "repository": {
     "type": "git",
@@ -18,7 +17,6 @@
     "test": "cucumber-js -p default -c ./tests/cucumber.js --tags "
   },
   "devDependencies": {
-    "@adaptably/to": "^1.0.1",
     "@cucumber/cucumber": "^9.0.0",
     "@sveltejs/vite-plugin-svelte": "^2.0.2",
     "@testing-library/svelte": "^3.2.1",

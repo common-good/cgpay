@@ -10,11 +10,11 @@ vi.mock('#utils.js', () => ({
 const storeKey = 'cgpay'
 
 function stored() {
-  return JSON.parse(window.localStorage.getItem(storeKey))
+  return JSON.parse(localStorage.getItem(storeKey))
 }
 
 function setupLocalStorage(data) {
-  return window.localStorage.setItem(storeKey, JSON.stringify(data))
+  return localStorage.setItem(storeKey, JSON.stringify(data))
 }
 
 // --------------------------------------------
@@ -145,7 +145,7 @@ describe('store', () => {
         const store = createStore()
         store.resetNetwork()
 
-        expect(store.inspect().online).toEqual(window.navigator.onLine)
+        expect(store.inspect().online).toEqual(navigator.onLine)
       })
     })
 

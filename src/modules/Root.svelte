@@ -4,7 +4,7 @@
   import store from '#store.js'
   import { addableToHome } from '#utils.js'
 
-  import BeforeTests from '#modules/_BeforeTests.svelte' // for testing
+  import UpdateState from '#modules/_UpdateState.svelte' // for testing
   import AddToHomeScreen from '#modules/AddToHomeScreen.svelte'
   import Home from '#modules/Home.svelte'
   import Charge from '#modules/Charge.svelte'
@@ -32,8 +32,8 @@
   // Initialization
 
   onMount(async () => {
-    window.addEventListener('offline', () => { store.setOnline(false) })
-    window.addEventListener('online', () => { store.setOnline(true) })
+    addEventListener('offline', () => { store.setOnline(false) })
+    addEventListener('online', () => { store.setOnline(true) })
     timeOut()
   })
 
@@ -42,7 +42,7 @@
   const notSignedIn = ( () => !store.isSignedIn() )
 
   const routes = [
-    route('/before-tests', BeforeTests, true, null, LayoutIntro), // for testing
+    route('/update-state', UpdateState, true, null, LayoutIntro), // for testing
     route('/', AddToHomeScreen, addableToHome, '/sign-in', LayoutIntro),
     route('/sign-in', SignIn, notSignedIn, '/home', LayoutIntro),
     route('/link-account', LinkAccount, notSignedIn, '/home'),

@@ -28,7 +28,7 @@
     }
 
     try {
-      const res = await postRequest(tx, 'transactions')
+      const res = await postRequest('transactions', tx)
       if (res.ok) dispatch('complete'); else dispatch('error', res.message) // update display
     } catch (er) { // except for syntax errors, queue it and treat it as success
       console.log(er)

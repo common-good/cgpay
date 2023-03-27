@@ -1,4 +1,4 @@
-@link
+@all @link
 Feature: Link Account
   As a vendor or individual with more than one account
   I can select the account I wish to link to on my device
@@ -17,7 +17,6 @@ Feature: Link Account
   So that I can use CGPay without distracting steps.
 
 Background:
- * context
 
 Rule: Users must link their device to a CGPay account to use the app
 

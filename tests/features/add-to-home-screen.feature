@@ -1,11 +1,10 @@
-@shortcut
+@all @shortcut
 Feature: Add to Home Screen
   As a vendor or individual
   I can add the CGPay app to my mobile home screen
   So it functions as an app and is easy to access.
 
 Background:
-  * context
  
 Rule: When a user visits the app site on mobile for the first time, we show instructions.
 

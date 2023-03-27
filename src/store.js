@@ -11,7 +11,6 @@ import { postRequest, isTimeout, isApple, isAndroid } from '#utils.js'
  * 
  * CONSTANTS
  *   bool testMode: true if the app is in test mode
- *   string api: application programming interface URL
  * 
  * SCALARS
  *   int sawAdd: Unix timestamp when user saw the option to save the app to their home screen
@@ -25,13 +24,13 @@ import { postRequest, isTimeout, isApple, isAndroid } from '#utils.js'
  *   bool selfServe: true for selfServer mode
  * 
  * ARRAYS
- *    choices: a list of Common Good accounts the signed-in user may choose to connect (one of) to the device
+ *    choices: a list (array) of Common Good accounts the signed-in user may choose to connect (one of) to the device
  *      accountId: the account ID including cardCode
  *      deviceId: a unique ID for the device associated with the account
  *      name: the name on the account
  *      qr: an image of the account’s QR code and ID photo (if any)
  *      isCo: true if the account is a company account
- *      selling: a ist of items for sale
+ *      selling: a list (array) of items for sale
  * 
  *    txs: transaction objects waiting to be uploaded to the server, each comprising:
  *      amount: dollars to transfer from actorId to otherId (signed)
@@ -66,19 +65,14 @@ import { postRequest, isTimeout, isApple, isAndroid } from '#utils.js'
  * 
  *    myAccount: information about the account associated with the device
  *      accountId, deviceId, name, qr, isCo, and selling as in the choices array described above
- *      lastTx: the last transaction known to this device
+ *      lastTx: Unixtime (in ms) of the last transaction known to this device (null if none)
  */
 
 export const createStore = () => {
-//  const mode = (window == undefined || window.location.href.includes('localhost')) ? 'dev'
-  const mode = window.location.href.startsWith(_productionUrl_) ? 'real' : 'test'
-  const storeKey = 'cgpay'
-  const storedState = JSON.parse(window.localStorage.getItem(storeKey))
   const lostMsg = `Tell the customer "I'm sorry, that card is marked "LOST or STOLEN".`
 
   const defaults = {
-    testMode: (mode != 'real'),
-    api: _apis_[mode],
+    testMode: !location.href.startsWith(_productionUrl_),
     sawAdd: false,
     qr: null,
     msg: null,
@@ -98,13 +92,16 @@ export const createStore = () => {
     myAccount: null,
   }
 
-  let cache = { ...defaults, ...storedState }
+  let cache = { ...defaults, ...storedState() }
   for (let k in cache) if (!(k in defaults)) delete cache[k]
+  storeLocal(cache) // update store with any changes in defaults (crucial for tests)
   
   const { subscribe, update } = writable(cache)
 
+  function storedState() { return JSON.parse(localStorage.getItem(_storeKey_)) }
+
   function storeLocal(state) {
-    window.localStorage.setItem(storeKey, JSON.stringify(state))
+    localStorage.setItem(_storeKey_, JSON.stringify(state))
     cache = state
     return state
   }
@@ -130,7 +127,7 @@ export const createStore = () => {
     while (cache[k].length > 0) {
       if (!res.useWifi) return; // allow immediate interruptions
       try {
-        await postRequest(cache[k][0], endpoint)
+        await postRequest(endpoint, cache[k][0])
       } catch (er) {
         if (isTimeout(er)) {
           res.setOnline(false)
@@ -150,6 +147,7 @@ export const createStore = () => {
   const res = {
     subscribe,
 
+    reload() { cache = storedState() }, // called only from tests
     inspect() { return cache },
 
     setQr(v) { set('qr', v) },
@@ -171,7 +169,7 @@ export const createStore = () => {
     setCameraCount(n) { set('cameraCount', n) },
     setFrontCamera(yesno) { set('frontCamera', yesno) },
 
-    resetNetwork() { if (cache.useWifi) this.setOnline(window.navigator.onLine) },
+    resetNetwork() { if (cache.useWifi) this.setOnline(navigator.onLine) },
     setOnline(yesno) {
       set('online', cache.useWifi ? yesno : false) // it makes no sense to store this in localStore, but hurts nothing
       if (cache.useWifi && yesno) { this.flushTxs(); this.flushComments() }

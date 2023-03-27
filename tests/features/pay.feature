@@ -1,11 +1,10 @@
-@pay
+@all @pay
 Feature: Pay
   As an individual
   I can pay another CGPay user for a specified amount 
   So that funds are deducted from my account and added to theirs.
 
 Background:
- * context
 
 Rule: Personal account members have the ability to show a QR code to pay other members
 

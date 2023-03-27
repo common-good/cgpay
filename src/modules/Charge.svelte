@@ -86,10 +86,11 @@
     let acct, testing
     const parts = qr.split(/[\/.]/)
 
-    if ((new RegExp('^[0-9A-Za-z]{12,29}[\.!]$')).test(qr)) { // like H6VM0G0NyCBBlUF1qWNZ2k.
+/*    if ((new RegExp('^[0-9A-Za-z]{12,29}[\.!]$')).test(qr)) { // like H6VM0G0NyCBBlUF1qWNZ2k.
       acct = parts[0]
       testing = qr.slice(-1) == '.'
-    } else if ((new RegExp('^HTTP://[0-9A-Za-z]{1,4}\.RC[24]\.ME/[0-9A-Za-z]{11,28}$')).test(qr)) { // like HTTP://6VM.RC4.ME/KDJJ34kjdfKJ4
+    } else */
+    if ((new RegExp('^HTTP://[0-9A-Za-z]{1,4}\.RC[24]\.ME/[0-9A-Za-z]{6,28}$')).test(qr)) { // like HTTP://6VM.RC4.ME/KDJJ34kjdfKJ4
       acct = parts[5][0] + parts[2] + parts[5].substring(1)
       testing = qr.includes('.RC4.')
     } else throw new Error('That is not a valid Common Good card format.')
@@ -166,7 +167,7 @@
       } else if (er.message == '404') { // account not found
         goEr('That is not a valid Common Good card.')
       } else {
-        goEr(crash(er))
+        goEr(crash(`Un unexpected error occurred. Please alert Common Good's support team.`))
       }
     }
   })
