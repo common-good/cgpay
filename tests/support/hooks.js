@@ -31,12 +31,13 @@ BeforeAll(async () => {
 
 Before(async () => {
   await t.setupPage()
-  await t.visit('before-tests') // required before putStore
-  await t.putStore(null) // have nothing in localStorage until we set it explicitly or visit a page
-
-  try { // initialize API for tests
+  try { // initialize API for tests (must happen before initializing store)
     await t.post('initialize')
   } catch (er) { console.log(er); assert(false, 'failed to initialize test data')  }  
+
+  await t.visit('update-state') // required before putStore
+  await t.putStore(null) // have nothing in localStorage until we set it explicitly or visit a page
+  await t.visit('update-state') // reload store with defaults
 })
 
 After(async () => {

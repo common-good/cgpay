@@ -24,6 +24,11 @@ const t = {
     })
   },
 
+  whatpage: async () => { 
+    const el = await w.page.$('.content')
+    return el ? await w.page.$eval( '.content', el => getAttribute('id') ) : null
+  },
+
   /**
    * Get all stored values (the storage state)
    * @returns {*} st: an object containing all the app's stored values
@@ -34,18 +39,22 @@ const t = {
   },
 
   putStore: async (st) => {
+    const here = await t.whatpage()
     await w.page.evaluate((k, v) => {
       localStorage.setItem(k, JSON.stringify(v))
     }, c.storeKey, st)
+    await t.visit('update-state')
+    if (here) await t.visit(here)
   },
 
   getv: async (k) => {
-    const st = await t.getStore() || {}
-    return st[k]
+    const st = await t.getStore()
+    return st ? null : st[k]
   },
 
   putv: async (k, v) => {
-    const st = await t.getStore() || {}
+    let st = await t.getStore()
+    if (st == null) st = {}
     st[k] = typeof v == 'object' ? { ...v } : v
     await t.putStore(st)
   },
@@ -54,7 +63,7 @@ const t = {
 
   // MAKE / DO
 
-  visit: async (target) => { return await w.page.goto(baseUrl + target, { waitUntil:['networkidle0'] }) },
+  visit: async (target) => { return await w.page.goto(baseUrl + target) }, // , { waitUntil:['networkidle0'] }
 
   /**
    * 
@@ -70,9 +79,7 @@ const t = {
       v[rowi - 1] = []
       for (let coli in rows[0]) v[rowi - 1][rows[0][coli]] = rows[rowi][coli]
     }
-    console.log(k, v[0])
     await t.putv(k, one ? v[0] : v)
-    console.log('myAccount:',await t.getStore())
   },
 
   setUA: async (browser, sys) => {

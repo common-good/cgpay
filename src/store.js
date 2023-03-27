@@ -69,7 +69,6 @@ import { postRequest, isTimeout, isApple, isAndroid } from '#utils.js'
  */
 
 export const createStore = () => {
-  const storedState = JSON.parse(localStorage.getItem(_storeKey_))
   const lostMsg = `Tell the customer "I'm sorry, that card is marked "LOST or STOLEN".`
 
   const defaults = {
@@ -93,10 +92,13 @@ export const createStore = () => {
     myAccount: null,
   }
 
-  let cache = { ...defaults, ...storedState }
+  let cache = { ...defaults, ...storedState() }
   for (let k in cache) if (!(k in defaults)) delete cache[k]
+  storeLocal(cache) // update store with any changes in defaults (crucial for tests)
   
   const { subscribe, update } = writable(cache)
+
+  function storedState() { return JSON.parse(localStorage.getItem(_storeKey_)) }
 
   function storeLocal(state) {
     localStorage.setItem(_storeKey_, JSON.stringify(state))
@@ -145,6 +147,7 @@ export const createStore = () => {
   const res = {
     subscribe,
 
+    reload() { cache = storedState() }, // called only from tests
     inspect() { return cache },
 
     setQr(v) { set('qr', v) },
