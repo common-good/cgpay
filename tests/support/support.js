@@ -59,11 +59,16 @@ const t = {
     await t.putStore(st)
   },
 
+  element: async (testId) => { return await w.page.$(t.sel(testId)) },
   sel: (testId) => { return `[data-testid="${testId}"]` },
+  eq: (want, got) => { return `wanted: ${want}, got: ${got}` },
 
   // MAKE / DO
 
-  visit: async (target) => { return await w.page.goto(baseUrl + target) }, // , { waitUntil:['networkidle0'] }
+  visit: async (target, wait = 'networkidle0') => { 
+    const options = wait ? { waitUntil:wait } : {} // load, domcontentloaded, networkidle0, or networkidle2
+    return await w.page.goto(baseUrl + target, options)
+  },
 
   /**
    * 
@@ -125,17 +130,20 @@ const t = {
 
   see: async (testId) => {
     const el = await t.element(testId)
-    assert.isNotNull(el)
+    if (el == null) await w.page.screenshot({ path: 'found.png' })
+    assert.isNotNull(el, "see page image in found.png")
     return el
   },
 
   seeIs: async (testId, want, partial = false) => {
     const gotEl = await t.see(testId)
     const got = await gotEl.evaluate(el => el.textContent)
-    assert.isTrue(partial ? got.includes(want) : (got == want))
+    if (partial) {
+      assert.include(got, want, t.eq(want, got))
+    } else assert.equal(got, want, t.eq(want, got))
   },
 
-  element: async (testId) => { return await w.page.$(t.sel(testId)) },
+  msgIs: async (want) => { return await t.seeIs('messageText', want, true) },
 
 }
 

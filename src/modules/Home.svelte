@@ -14,8 +14,7 @@
   const myQr = $store.myAccount?.qr
 
   function er(msg) { 
-    ({ m0, m1 } = dlg('Alert', msg, 'Close', () => m0 = false)); m0=m0; m1=m1
-    store.setMsg(null)
+    ({ m0, m1 } = dlg('Alert', msg, 'Close', () => {m0 = false; store.setMsg(null)})); m0=m0; m1=m1
   }
 
   function fake(code) {
