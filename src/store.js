@@ -75,7 +75,7 @@ export const createStore = () => {
     testMode: !location.href.startsWith(_productionUrl_),
     sawAdd: false,
     qr: null,
-    msg: null,
+    msg: null, // not yet used
     erMsg: null,
     cameraCount: 0, // set this when scanning for the first time
     frontCamera: (!isApple() && !isAndroid()),

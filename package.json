@@ -14,7 +14,7 @@
     "preview": "mode=production vite build && mode=production vite preview",
     "watch": "mode=dev vitest",
     "utest": "mode=dev vitest run",
-    "test": "cucumber-js -p default -c ./tests/cucumber.js --tags "
+    "test": "cucumber-js -p default -c ./tests/cucumber.js --exit --tags "
   },
   "devDependencies": {
     "@cucumber/cucumber": "^9.0.0",

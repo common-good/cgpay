@@ -1,6 +1,6 @@
 <script>
   import store from '#store.js'
-  import { yesno, dlg, hash, crash, goEr, goHome, timedFetch, CgError, isTimeout } from '#utils.js'
+  import { yesno, dlg, hash, crash, goEr, goHome, timedFetch, isTimeout } from '#utils.js'
   import { onMount } from 'svelte'
   import { navigateTo } from 'svelte-router-spa'
   import queryString from 'query-string'
@@ -164,10 +164,12 @@
     } catch (er) {
       if (isTimeout(er)) { // internet unavailable; recognize a repeat customer or limit CG's liability
         profileOffline()
+      } else if (isNaN(er.message)) {
+        return goEr(er.message)
       } else if (er.message == '404') { // account not found
-        goEr('That is not a valid Common Good card.')
+        return goEr('That is not a valid Common Good card.')
       } else {
-        goEr(crash(`Un unexpected error occurred. Please alert Common Good's support team.`))
+        return goEr(crash(`An unexpected error occurred. Please alert Common Good's support team.`))
       }
     }
   })

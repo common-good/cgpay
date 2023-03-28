@@ -10,7 +10,7 @@ Given('these {string}:', async function (k, rows) { await t.setThese(k, rows) })
 When('I run the app', async function () { await t.visit('') })
 When('I visit {string}', async function (site) { await t.visit(site) })
 When('I click {string}', async function(testId) { await w.page.click(t.sel(testId)) })
-When('I scan {string}', async function (qr) { await t.putv('qr', qr); await t.visit('charge') })
+When('I scan {string}', async function (qr) { await t.putv('qr', qr); await t.visit('charge'); await t.visit('charge') })
 
 Then('? I am on page {string}', async function (page) { await t.onPage(page) })
 Then('? I see installation instructions for {string}', async function (testId) { await t.see(testId + '-instructions') })

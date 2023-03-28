@@ -36,8 +36,6 @@ function goHome(msg) {
   navigateTo('/home')
 }
 
-function CgError(msg, name = 'CgError') { this.message = msg; this.name = name }
-
 /**
  * Fetch from the server API and return and object (or a blob if specified in the options).
  * @param {*} url: the enpoint to fetch from (without the API path)
@@ -50,9 +48,7 @@ function CgError(msg, name = 'CgError') { this.message = msg; this.name = name }
  *   On SUCCESS: an object or a blob (a large string)
  *   On FAILURE: (GET status not 200 OR POST status not 201) throw the status
  *   POST /transaction may return {ok, message} whether there is an error or not
- * @throws an AbortError if the fetch times out
- *   in the catch block use: if (er.name == 'AbortError' || er.name == 'TypeError') {}
- *   (AbortError is timeout, TypeError means network blocked during testing)
+ * @throws an AbortError if the fetch times out (identify with isTimeout())
  */
 async function timedFetch(url, options = {}) {
 //  options = { mode:'no-cors', ...options }
@@ -86,7 +82,7 @@ async function postRequest(endpoint, v) {
   })
 }
 
-function isTimeout(er) { return (er.name == 'AbortError') }
+function isTimeout(er) { return (typeof er === 'object' && er.name == 'AbortError') }
 function pageUri() { return location.href.substring(location.href.lastIndexOf('/') + 1) }
 
 /**
@@ -145,4 +141,4 @@ function disableBack() {
         body: JSON.stringify(tx)
 */
 
-export { confirm, yesno, dlg, hash, crash, goEr, goHome, CgError, timedFetch, postRequest, isTimeout, pageUri, isApple, isAndroid, isSafari, isChrome, addableToHome }
+export { confirm, yesno, dlg, hash, crash, goEr, goHome, timedFetch, postRequest, isTimeout, pageUri, isApple, isAndroid, isSafari, isChrome, addableToHome }
