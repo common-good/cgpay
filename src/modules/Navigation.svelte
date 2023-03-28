@@ -22,14 +22,14 @@
   async function clearData() { store.clearData(); navigateTo('/'); navigateTo('/') }
 
   let menuItems = []
-  function item(text, callback, criteria) { menuItems.push({text, callback, criteria}) }
+  function item(text, callback, criteria, id) { menuItems.push({text, callback, criteria, id}) }
 
   item('Use Rear Camera', rearCamera, () => $store.cameraCount > 1 && $store.frontCamera)
   item('Use Front Camera', frontCamera, () => $store.cameraCount > 1 && !$store.frontCamera)
   item('Sign Out and Exit Self Serve', selfServeOff, () => pageUri() == 'home' && $store.selfServe)
   item('Enter Self Serve Mode', selfServeOn, () => pageUri() == 'home' && $store.myAccount.isCo && !$store.selfServe)
   item('Switch Account', switchAccount, () => $store.choices?.length > 1 && pageUri() != 'link-account' && !$store.selfServe)
-  item('Comments & Suggestions', comment, () => store.isSignedIn() && !$store.selfServe)
+  item('Comments & Suggestions', comment, () => store.isSignedIn() && !$store.selfServe, 'feedback')
   item('Sign Out', signOut, () => (store.isSignedIn() || pageUri() == 'link-account') && !$store.selfServe)
 
 if ($store.testMode) {
@@ -48,7 +48,7 @@ if ($store.testMode) {
     </header>
     <menu>
       { #each menuItems as item } { #if item.criteria() }
-        <li><button on:click={item.callback}>{item.text}</button></li>
+        <li data-testid={item.id}><button on:click={item.callback}>{item.text}</button></li>
       { /if } { /each }
     </menu> 
   </nav>
