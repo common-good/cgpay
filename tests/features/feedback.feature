@@ -5,15 +5,17 @@ Feature: Feedback
   So that I know my user experience is valued.
 
 Background:
+ * this "myAccount":
+ | accountId | deviceId | name    | qr | isCo  | selling | lastTx |
+ | K6VMDJJ   | devB     | Bea Two | ?  | false | null    | null   |
 
-Scenario: I am signed in and not in Self Serve mode
-  When I am signed in 
-  Then ? The app displays a menu item to submit feedback
+Scenario: I can access a Comments & Suggestions link from the navigation
+  When I visit "home"
+  When I click "nav-btn"
+  Then ? I see "feedback"
 
-Scenario: I submit feedback
-  When I submit feedback
-  Then ? The app sends the feedback to the system admin
-
-Scenario: I submit feedback
-  When I submit feedback
-  Then ? The app displays a thank you message to confirm the feedback was received
+Scenario: I can submit feedback and receive a confirmation message that it was received
+  When I visit "comment"
+  When the input 'comment-input' is not empty
+  When I click "comment-submit"
+  Then ? I see this confirmation message: 'Thank you'

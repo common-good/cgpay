@@ -43,7 +43,7 @@
   { #if myQr }
     <div class='top'>
       <h1>Show this code to pay</h1>
-      <img src="{ myQr }" alt="my QR code" />
+      <img src="{ myQr }" data-testid='qr' alt="my QR code" />
       <p>CGPay v{ _version_ }</p>
     </div>
   { :else }

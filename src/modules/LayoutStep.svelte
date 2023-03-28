@@ -28,7 +28,7 @@
   <header>
     <button on:click={ () => navigateTo('/home') }><img src={ cgLogo } alt='Common Good Logo' /></button>
     <p>{ ($store.myAccount ? $store.myAccount.name : '') + ($store.testMode ? ' (DEMO)' : '')}</p>
-    <button on:click={toggleNav}> <NavIcon width={'100%'} height={'100%'} ariaLabel={'menu'} /></button>
+    <button data-testid="nav-btn" on:click={toggleNav}> <NavIcon width={'100%'} height={'100%'} ariaLabel={'menu'} /></button>
   </header>
   { #key currentRoute }<NetworkStatus/>{ /key }
   <div class='content'>
