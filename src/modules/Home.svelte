@@ -72,7 +72,9 @@
         <button on:click={ () => fake('garbage') }>Worse</button>
       </div>
     { /if }
-    <a class="scan-customer" href='/scan'>Scan QR Code to Charge</a>
+    <!-- Scan feature disabled for A Release -->
+    <!-- <a class="scan-customer" href='/scan'>Scan QR Code to Charge</a> -->
+    <a class="survey" href="https://forms.gle/M8Hv1W2oSgw2yQzS7" target="_blank">Take Our User Experience Survey</a>
   </div>
 </section>
 
@@ -114,6 +116,9 @@
     flex-direction column
     align-items center
     justify-content space-between
+
+  .survey
+    cgButtonSecondary()
 
   .top
     width 100%
