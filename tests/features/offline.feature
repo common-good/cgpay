@@ -13,7 +13,7 @@ Background:
 Rule: The app will cache transactions that occur offline and complete them once the app is reconnected to the internet
 
 Scenario: The network goes offline and status is visible
-  When The network is offline
+  When we are offline
   Then ? the offline status is visible
 
 Scenario: I charge another user while offline

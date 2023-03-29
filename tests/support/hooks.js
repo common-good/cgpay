@@ -9,7 +9,7 @@ import t from './support.js' // test support utilities
 setDefaultTimeout(c.testTimeoutMs)
 
 BeforeAll(async () => {
-  exec('npm run dev')
+//  await exec('npm run dev')
 
   const ci = process.env.CIRCLECI // headless and fast when doing continuous integration
   const launchOptions = {
@@ -40,9 +40,7 @@ Before(async () => {
   await t.visit('update-state') // reload store with defaults
 })
 
-After(async () => {
-
-})
+// After(async () => {})
 
 AfterAll(async () => {
   if (w.browser) await w.browser.close()

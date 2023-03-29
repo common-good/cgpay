@@ -23,7 +23,7 @@
   <title>CGPay - Add to Home Screen</title>
 </svelte:head>
 
-<section class="card" id='add-to-home-screen'>
+<section class="page card" id="add-to-home-screen">
   <header>
     <img src= { cgLogo } alt="Common Good logo" />
     <h1>Add to Home Screen</h1>

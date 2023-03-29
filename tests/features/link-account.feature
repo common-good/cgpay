@@ -17,21 +17,39 @@ Feature: Link Account
   So that I can use CGPay without distracting steps.
 
 Background:
+# Abe, Bea, and Flo have two accounts
+# Dee, Hal, and Ida have just one
 
 Rule: Users must link their device to a CGPay account to use the app
 
-Scenario: I have multiple accounts
-  When I have multiple accounts
-  Then ? The app shows a list of my accounts to link
+Scenario: The user chooses from among multiple accounts
+  Given these "choices":
+  | accountId | deviceId | name    | qr | isCo  | selling | lastTx |
+  | K6VMDJJ   | devB     | Bea Two | ?  | false | null    | null   |
+  | K6VMDJK   | devC     | Citre   | ?  | false | food    | null   |
+  Then ? these "choices":
+  | accountId | deviceId | name    | qr | isCo  | selling | lastTx |
+  | K6VMDJJ   | devB     | Bea Two | ?  | false | null    | null   |
+  | K6VMDJK   | devC     | Citre   | ?  | false | food    | null   |
+  When I visit "link-account"
+  Then ? I am on page "link-account"
+  And ? I see "select-account"
+  And ? I see "option-0" is "Bea Two"
+  When I click "option-0"
+  And I click "btn-link"
+  Then ? I am on page "home"
+  And ? I see "Bea Two" in "account-name"
+  And ? this "myAccount":
+  | accountId | deviceId | name    | qr | isCo  | selling | lastTx |
+  | K6VMDJJ   | devB     | Bea Two | ?  | false | null    | null   |
+  And ? this "choices": "%null" 
 
-Scenario: I have multiple accounts
-  When I link an account to my device
-  Then ? I can choose to require sign-in to change my linked account
+# Scenario: I have multiple accounts
+#   When I link an account to my device
+#   Then ? I can choose to require sign-in to change my linked account
 
-Scenario: I have multiple accounts
-  When I choose to require sign-in to change my linked account
-  Then ? The navigation will not show a Switch Account menu option
+# Scenario: I have multiple accounts
+#   When I choose to require sign-in to change my linked account
+#   Then ? The navigation will not show a Switch Account menu option
 
-Scenario: I have only one account
-  When I have only one account
-  Then ? The app automatically links my account to the device I am using
+# Scenario: I have only one account (see the signin feature)

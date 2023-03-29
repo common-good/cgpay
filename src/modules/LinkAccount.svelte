@@ -43,7 +43,7 @@
   <title>CGPay - Link Account</title>
 </svelte:head>
 
-<section id='link-account'>
+<section class="page" id="link-account">
   <h1>Link Account</h1>
   { #if ready }
     <SelectAccount { accountOptions } { size } on:complete={ gotAccount } />

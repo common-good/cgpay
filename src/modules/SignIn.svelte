@@ -46,7 +46,7 @@
   <title>CGPay - Sign In</title>
 </svelte:head>
 
-<section class='card' id='sign-in'>
+<section class="page card" id="sign-in">
   <header>
     <img src= { cgLogo } alt='Common Good Logo' />
     <h1>CGPay{ $store.testMode ? ' DEMO' : '' }</h1>
@@ -56,15 +56,15 @@
     <h2>Sign In</h2>
     <form on:submit|preventDefault={ signIn }>
       <label class='visuallyhidden' for='account-id'>Account ID or Email Address</label>
-      <input name='account-id' type='text' placeholder='Account ID or Email Address' autocomplete='name' autocapitalize='off' bind:value={ credentials.identifier } required />
+      <input data-testid="input-identifier" name='account-id' type='text' placeholder='Account ID or Email Address' autocomplete='name' autocapitalize='off' bind:value={ credentials.identifier } required />
       <label class='visuallyhidden' for='password'>Password</label>
-      <input type='password' placeholder='Password' autocomplete='current-password' autocapitalize='off' bind:value={ credentials.password } required />
+      <input data-testid="input-password" type='password' placeholder='Password' autocomplete='current-password' autocapitalize='off' bind:value={ credentials.password } required />
       <a class="link" data-testid="reset-pw" href="https://new.commongood.earth/settings/password/" target="_blank">Reset password</a>
-      <button data-testid="signin-btn" type='submit'>Sign In</button>
+      <button data-testid="btn-signin" type='submit'>Sign In</button>
       <p class="status">{ statusMsg }</p>
     </form>
     <p class="sign-up">Not a member?</p>
-    <a class="link-button" data-testid="signup-btn" href="https://new.commongood.earth/signup" target="_blank">Sign Up</a>
+    <a class="link-button" data-testid="btn-signup" href="https://new.commongood.earth/signup" target="_blank">Sign Up</a>
   </div>
 </section>
 

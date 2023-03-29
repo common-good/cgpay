@@ -39,7 +39,7 @@
   <title>CGPay - Home</title>
 </svelte:head>
 
-<section id='home'>
+<section class="page" id="home">
   { #if myQr }
     <div class='top'>
       <h1>Show this code to pay</h1>

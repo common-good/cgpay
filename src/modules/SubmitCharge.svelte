@@ -35,7 +35,7 @@
       if (er == 400) { // syntax error
         throw new Error('Program issue: request syntax error')
       } else {
-        console.log(tx)
+        console.log('saving tx for upload later:',tx)
         store.enqTx(tx)                                                                                                         
         if (!otherAccount.name) otherAccount.name = 'Unidentified Customer'
         dispatch('complete') // update display
