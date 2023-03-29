@@ -54,35 +54,38 @@ const t = {
 
   getv: async (k) => {
     const st = await t.getStore()
-    return st ? null : st[k]
+    return st ? st[k] : null
   },
 
   putv: async (k, v) => {
     let st = await t.getStore()
+//    console.log('st before putv:', st, 'v:', v)
     if (st == null) st = {}
     st[k] = t.clone(v)
+//    console.log('st after putv:', st, 'v:', v)
     await t.putStore(st)
   },
 
   these: ({ rawTable:rows }, one ) => {
 //    console.log('rows:', rows)
-    let v = []
     if (one) t.test(rows.length, 2)
+    let v = []
     for (let rowi = 1; rowi < rows.length; rowi++) {
-      v[rowi - 1] = []
+      v[rowi - 1] = {}
       for (let coli in rows[0]) v[rowi - 1][rows[0][coli]] = t.adjust(rows[rowi], coli)
     }
-//    console.log('these:', one ? v[0] : v)
     return t.clone(one ? v[0] : v)
   },
 
   /**
    * Return value or value[k] with adjustments for special parameters, including:
    * %now: current millisecond
+   * %null: null
    */
   adjust: (value, k) => {
     let v = typeof value === 'object' ? value[k] : value
     if (v == '%now') v = t.now()
+    if (v == '%null') v = null
     return v
   },
 
@@ -107,6 +110,7 @@ const t = {
     }
 
     const msg = `got: ${got} wanted: ${want}`
+    want = t.adjust(want)
     if (mode == 'exact' || mode == null) {
       assert.equal(got, want, msg)
      } else if (mode == 'part') {
@@ -139,6 +143,7 @@ const t = {
   setThese: async (k, multi, one = false) => {
     const v = t.these(multi, one)
     await t.putv(k, v)
+//    console.log('after setThese k:', k, 'store:', await t.getStore())
   },
 
   setUA: async (browser, sys) => {
@@ -180,8 +185,13 @@ const t = {
    * @param bool one: true to test just the first record rather than an array of records
    */
   testThese: async (k, multi, one = false) => {
-//    console.log('in testThese k:', k, 'multi:', multi, 'one:', one, 'store(k):', await t.getv('comments'))
+//    console.log('in testThese k:', k, 'multi:', multi, 'one:', one, 'store(k):', await t.getv(k))
     t.test(await t.getv(k), t.these(multi, one))
+  },
+
+  testThis: async (k, v) => {
+    if (typeof v === 'object') return t.testThese(k, v, true)
+    t.test(await t.getv(k), v)
   },
 
   onPage: async (id) => {

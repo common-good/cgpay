@@ -14,7 +14,7 @@ const constants = {
   // just for testing
   headlessMode: true,
   slowMo: 0,
-  testTimeoutMs: 8000,
+  testTimeoutMs: 12000,
   chromiumPath: '', // can be used to test different versions of chromium
   seeLog: true, // show what the automated browser logs to console
 }

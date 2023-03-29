@@ -10,13 +10,14 @@ Background:
 Rule: Users have options to sign in, sign up, or reset password -- all on one page
 
 Scenario: A user visits the Sign-in page
-  Then ? I see "signin-btn"
-  And ? I see "signup-btn"
-  And ? I see a "reset-pw"
+  Then ? I see "btn-signin"
+  And ? I see "btn-signup"
+  And ? I see "reset-pw"
 
 Scenario: A user with one account signs in
   When I input "d" as "identifier"
   And I input "k" as "password"
+  And I click "btn-signin"
   Then ? I am on page "home"
   And ? this "myAccount":
   | accountId | deviceId | name     | qr | isCo  | selling | lastTx |

@@ -22,7 +22,7 @@ Background:
 
 Rule: Users must link their device to a CGPay account to use the app
 
-Scenario: I have multiple accounts
+Scenario: The user chooses from among multiple accounts
   Given these "choices":
   | accountId | deviceId | name    | qr | isCo  | selling | lastTx |
   | K6VMDJJ   | devB     | Bea Two | ?  | false | null    | null   |
@@ -38,10 +38,11 @@ Scenario: I have multiple accounts
   When I click "option-0"
   And I click "btn-link"
   Then ? I am on page "home"
-  And ? I see "account-name" is "Dee Four"
+  And ? I see "Bea Two" in "account-name"
   And ? this "myAccount":
   | accountId | deviceId | name    | qr | isCo  | selling | lastTx |
   | K6VMDJJ   | devB     | Bea Two | ?  | false | null    | null   |
+  And ? this "choices": "%null" 
 
 # Scenario: I have multiple accounts
 #   When I link an account to my device
