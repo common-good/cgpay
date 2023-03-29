@@ -17,6 +17,10 @@ Feature: Link Account
   So that I can use CGPay without distracting steps.
 
 Background:
+# Abe, Bea, and Flo have two accounts
+# Dee, Hal, and Ida have just one
+* I run the app
+* ? I am on page "sign-in"
 
 Rule: Users must link their device to a CGPay account to use the app
 
@@ -33,9 +37,9 @@ Rule: Users must link their device to a CGPay account to use the app
 #   Then ? The navigation will not show a Switch Account menu option
 
 Scenario: I have only one account, so the app automatically links my account to my device upon sign in
-  * this "myAccount":
+  
+  Given these "choices":
   | accountId | deviceId | name    | qr | isCo  | selling | lastTx |
   | K6VMDJJ   | devB     | Bea Two | ?  | false | null    | null   |
-  When I visit "sign-in"
   And I click "signin-btn"
   Then ? I am on page "home"

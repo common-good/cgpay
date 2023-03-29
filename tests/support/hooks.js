@@ -9,7 +9,7 @@ import t from './support.js' // test support utilities
 setDefaultTimeout(c.testTimeoutMs)
 
 BeforeAll(async () => {
-  exec('npm run dev')
+//  await exec('npm run dev')
 
   const ci = process.env.CIRCLECI // headless and fast when doing continuous integration
   const launchOptions = {

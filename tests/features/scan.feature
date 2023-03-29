@@ -12,7 +12,7 @@ Background:
  | K6VMDJJ   | devB     | Bea Two | ?  | false | null    | null   |
 
 Rule: Personal accounts can scan an individual or company card
-@this
+
 Scenario: I scan an individual's QR
   When I scan "HTTP://6VM.RC4.ME/KDJI12345a"
   Then ? I am on page "charge"
@@ -48,14 +48,14 @@ Rule: Scanning an invalid card produces an error message
 Scenario: I scan my own card
   When I scan "HTTP://6VM.RC4.ME/KDJJ12345b"
   Then ? I am on page "home" 
-  And ? I see this error message: "same account as yours"
+  And ? I see this message: "same account as yours"
 
 Scenario: I scan an invalid or stolen card
   When I scan "HTTP://6VM.RC4.ME/KDJI12345x"
   Then ? I am on page "home" 
-  Then ? I see this error message: "not a valid Common Good card"
+  Then ? I see this message: "not a valid Common Good card"
 
 Scenario: I scan a QR for something else
   When I scan "whatever"
   Then ? I am on page "home" 
-  Then ? I see this error message: "not a valid Common Good card format"
+  Then ? I see this message: "not a valid Common Good card format"
