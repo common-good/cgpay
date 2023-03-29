@@ -84,7 +84,7 @@ const t = {
    */
   adjust: (value, k) => {
     let v = typeof value === 'object' ? value[k] : value
-    if (v == '%now') v = t.now()
+    if (v == '%now') v = t.now() / 1000
     if (v == '%null') v = null
     return v
   },
@@ -103,19 +103,20 @@ const t = {
       t.test(got.length, want.length)
       let modei
       for (let i in want) {
-        modei = mode == null ? (t.isTimeField(i) ? '<2000' : null) : mode
+        modei = mode == null ? (t.isTimeField(i) ? '<2' : null) : mode
         t.test(got[i], want[i], modei)
       }
       return
     }
 
+    if (want == '?') return // anything is acceptable
     const msg = `got: ${got} wanted: ${want}`
     want = t.adjust(want)
     if (mode == 'exact' || mode == null) {
       assert.equal(got, want, msg)
      } else if (mode == 'part') {
       assert.include(got, want, msg)
-    } else if (mode.substring(0) == '<') {
+    } else if (mode.substring(0, 1) == '<') {
       assert.isBelow(Math.abs(got - want), +mode.substring(1), msg)
     } else assert.fail('bad mode:' + mode)
   },
@@ -173,7 +174,7 @@ const t = {
     return res
   },
 
-  input: async (id, text) => { await w.page.$eval(t.sel(`input-${id}`), (el, txt) => el.value = txt, text) },
+  input: async (id, text) => { await w.page.type(t.sel('input-' + id), text) },
 
   // TEST
 
