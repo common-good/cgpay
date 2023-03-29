@@ -109,7 +109,6 @@ function isChrome() {
   return /Chrome/i.test(ua) && !/Chromium/i.test(ua)
 }
 function addableToHome() { 
-//  console.log('addable to home: ', store.sawAdd, isApple(), isSafari(), isAndroid(), isChrome())
   if (store.inspect().sawAdd) return false
   return (isApple() && isSafari()) || (isAndroid() && isChrome())
 }

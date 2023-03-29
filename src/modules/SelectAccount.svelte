@@ -17,16 +17,16 @@
   <div class="top">
   <p>Select a Common Good account to link to CGPay on this device.</p>
   <form>
-    <select name='select-account' size={size} on:click={ () => selected = true } bind:value={ selectedAccount } required="required">
+    <select name='select-account' data-testid="select-account" size={size} on:click={ () => selected = true } bind:value={ selectedAccount } required="required">
       <option value='' disabled>Select an Account</option>
       { #each accountOptions as account }
-        <option value={ account.id }>{ account.name }</option>
+        <option value={ account.id } data-testid={ 'option-' + account.id }>{ account.name }</option>
       { /each }
     </select>
     <label><input type="checkbox" name="lock-account" bind:checked={ lock } /> Require sign-in to change account</label>
   </form>
   </div>
-  <button type="submit" on:click={ gotAccount } disabled={!selected}>Link Account</button>
+  <button type="submit" data-testid="btn-link" on:click={ gotAccount } disabled={!selected}>Link Account</button>
 </div>
 
 <style lang='stylus'>

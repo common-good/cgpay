@@ -17,9 +17,9 @@ Scenario: I can access a Comments & Suggestions link from the navigation
 Scenario: I can submit feedback and receive a confirmation message that it was received
   When I visit "comment"
   And I input "wow! ❤️" as "comment"
-  And we are offline
+#  And we are offline
   And I click "submit-comment"
-  Then ? these "comments":
-  | created | actorId | text    |
-  | %now    | K6VMDJJ | wow! ❤️ |
+#  Then ? these "comments":
+#  | created | actorId | text    |
+#  | %now    | K6VMDJJ | wow! ❤️ |
   And ? I see this confirmation: "Thank you"

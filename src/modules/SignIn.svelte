@@ -43,10 +43,10 @@
 </script>
 
 <svelte:head>
-  <title data-testid="sign-in">CGPay - Sign In</title>
+  <title>CGPay - Sign In</title>
 </svelte:head>
 
-<section class='card' id='sign-in'>
+<section class="page card" id="sign-in">
   <header>
     <img src= { cgLogo } alt='Common Good Logo' />
     <h1>CGPay{ $store.testMode ? ' DEMO' : '' }</h1>

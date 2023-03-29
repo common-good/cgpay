@@ -36,10 +36,10 @@
 <Modal m0={m0} on:m1={m1} on:m2={m2} />
 
 <svelte:head>
-  <title data-testid="home">CGPay - Home</title>
+  <title>CGPay - Home</title>
 </svelte:head>
 
-<section id='home'>
+<section class="page" id="home">
   { #if myQr }
     <div class='top'>
       <h1>Show this code to pay</h1>

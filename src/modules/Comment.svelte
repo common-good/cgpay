@@ -14,10 +14,11 @@
 </script>
 
 <svelte:head>
-  <title data-testid="page-comment">CGPay - Comments and Suggestions</title>
+  <title>CGPay - Comments and Suggestions</title>
+  <div></div>
 </svelte:head>
 
-<section id='comment'>
+<section class="page" id="comment">
   <div class="top">
     <h1>Comments and Suggestions</h1>
       <p>We love feedback! Please type your comment and/or suggestion below in as much detail as you you think we might need, in order to correct a problem or make your suggested improvement.</p>

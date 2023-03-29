@@ -157,7 +157,7 @@ export const createStore = () => {
     setSelfServe(yesno) { set('selfServe', yesno) },
 
     setAcctChoices(v) { set('choices', v) },
-    setMyAccount(acct) { set('myAccount', acct ? { ...acct } : null) },
+    setMyAccount(acct) { console.log('setting acct in store:', acct); set('myAccount', acct ? { ...acct } : null) },
     isSignedIn() { return (cache.myAccount != null) },
     signOut() { set('myAccount', null) },
     clearData() { if (cache.testMode) update(st => {

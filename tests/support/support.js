@@ -25,8 +25,13 @@ const t = {
   },
 
   whatPage: async () => { 
-    const el = await w.page.$('title')
-    return el ? await w.page.$eval( 'title', el => getAttribute('data-testid') ) : null
+    const el = await w.page.$('.page')
+    try {
+      return el ? await w.page.$eval( '.page', el => getAttribute('data-testid') ) : null
+    } catch (er) {
+      console.log('Page has no .page element')
+      return 'UNKNOWN PAGE'
+    }
   },
 
   /**
@@ -55,18 +60,20 @@ const t = {
   putv: async (k, v) => {
     let st = await t.getStore()
     if (st == null) st = {}
-    st[k] = typeof v == 'object' ? { ...v } : v
+    st[k] = t.clone(v)
     await t.putStore(st)
   },
 
   these: ({ rawTable:rows }, one ) => {
+//    console.log('rows:', rows)
     let v = []
     if (one) t.test(rows.length, 2)
     for (let rowi = 1; rowi < rows.length; rowi++) {
       v[rowi - 1] = []
       for (let coli in rows[0]) v[rowi - 1][rows[0][coli]] = t.adjust(rows[rowi], coli)
     }
-    return one ? v[0] : v
+//    console.log('these:', one ? v[0] : v)
+    return t.clone(one ? v[0] : v)
   },
 
   /**
@@ -88,9 +95,10 @@ const t = {
    */
   test: (got, want, mode = null) => {
     if (typeof want === 'object') {
-      let modei
+      assert.isNotNull(got, 'should not be null')
       t.test(typeof got, 'object')
       t.test(got.length, want.length)
+      let modei
       for (let i in want) {
         modei = mode == null ? (t.isTimeField(i) ? '<2000' : null) : mode
         t.test(got[i], want[i], modei)
@@ -112,6 +120,7 @@ const t = {
   sel: (testId) => { return `[data-testid="${testId}"]` },
   isTimeField: (k) => { return 'created'.split(' ').includes(k) },
   now: () => { return Date.now() },
+  clone: (v) => { return JSON.parse(JSON.stringify(v)) }, // deep clone (assumes object contains just objects, numbers, and strings)
 
   // MAKE / DO
 
@@ -171,16 +180,16 @@ const t = {
    * @param bool one: true to test just the first record rather than an array of records
    */
   testThese: async (k, multi, one = false) => {
-    console.log('in testThese k:', k, 'multi:', multi, 'one:', one, 'store(k):', await t.getv('comments'))
+//    console.log('in testThese k:', k, 'multi:', multi, 'one:', one, 'store(k):', await t.getv('comments'))
     t.test(await t.getv(k), t.these(multi, one))
   },
 
   onPage: async (id) => {
-    const el = await t.element(`page-${id}`)
+    const el = await w.page.$(`#${id}`)
     if (el == null) {
       await w.page.screenshot({ path: 'found.png' })
-      const title = await w.page.title()
-      assert.isNotNull(el, `page "${id}" not found. You are on page "${title}" (see page found in found.png).`)
+      const here = await t.whatPage()
+      assert.isNotNull(el, `page "${id}" not found. You are on page "${here}" (see page found in found.png).`)
     }
   },
 

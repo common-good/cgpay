@@ -40,9 +40,7 @@ Before(async () => {
   await t.visit('update-state') // reload store with defaults
 })
 
-After(async () => {
-
-})
+// After(async () => {})
 
 AfterAll(async () => {
   if (w.browser) await w.browser.close()

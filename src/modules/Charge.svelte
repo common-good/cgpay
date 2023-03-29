@@ -177,10 +177,10 @@
 </script>
 
 <svelte:head>
-  <title data-testid="charge">CGPay - Charge Customer</title>
+  <title>CGPay - Charge Customer</title>
 </svelte:head>
 
-<section id='charge'>
+<section class="page" id="charge">
   { #if gotTx }
     <h1>Transaction Complete</h1>
     <div class='top'>

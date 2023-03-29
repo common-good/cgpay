@@ -7,13 +7,17 @@ Feature: Sign In
 Background:
   When I visit "sign-in"
 
-Rule: Users sign in to use the app
+Rule: Users have options to sign in, sign up, or reset password -- all on one page
 
-Scenario: I can sign in to CGPay
+Scenario: A user visits the Sign-in page
   Then ? I see "signin-btn"
+  And ? I see "signup-btn"
+  And ? I see a "reset-pw"
 
-Scenario: I can access a sign-up link from the sign-in page
-  Then ? I see "signup-btn"
-
-Rule: I can reset my password from the sign-in page
-  Then ? I see a "reset-pw"
+Scenario: A user with one account signs in
+  When I input "d" as "identifier"
+  And I input "k" as "password"
+  Then ? I am on page "home"
+  And ? this "myAccount":
+  | accountId | deviceId | name     | qr | isCo  | selling | lastTx |
+  | K6VMDJL   | devD     | Dee Four | ?  | false | null    | null   |
