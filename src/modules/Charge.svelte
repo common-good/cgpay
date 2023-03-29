@@ -177,7 +177,7 @@
 </script>
 
 <svelte:head>
-  <title>CGPay - Charge Customer</title>
+  <title data-testid="charge">CGPay - Charge Customer</title>
 </svelte:head>
 
 <section id='charge'>

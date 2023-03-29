@@ -2,7 +2,7 @@
 Feature: Feedback
   As a vendor or individual
   I can submit feedback and comments about CGPay from the app
-  So that I know my user experience is valued.
+  So I know my user experience is valued and I can help improve it.
 
 Background:
  * this "myAccount":
@@ -16,9 +16,10 @@ Scenario: I can access a Comments & Suggestions link from the navigation
 @this
 Scenario: I can submit feedback and receive a confirmation message that it was received
   When I visit "comment"
-  And I type "wow! ❤️" in the "comment-input" field
-  And I click "comment-submit"
-  Then ? I see this confirmation: "Thank you"
-  And ? these "comments":
+  And I input "wow! ❤️" as "comment"
+  And we are offline
+  And I click "submit-comment"
+  Then ? these "comments":
   | created | actorId | text    |
-  | %now    | K6VMDJJ | wow! ❤️ | 
+  | %now    | K6VMDJJ | wow! ❤️ |
+  And ? I see this confirmation: "Thank you"

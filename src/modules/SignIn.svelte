@@ -43,7 +43,7 @@
 </script>
 
 <svelte:head>
-  <title>CGPay - Sign In</title>
+  <title data-testid="sign-in">CGPay - Sign In</title>
 </svelte:head>
 
 <section class='card' id='sign-in'>

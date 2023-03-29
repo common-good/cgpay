@@ -20,7 +20,7 @@
 </script>
 
 <svelte:head>
-  <title>CGPay - Add to Home Screen</title>
+  <title data-testid="page-add-to-home-screen">CGPay - Add to Home Screen</title>
 </svelte:head>
 
 <section class="card" id='add-to-home-screen'>

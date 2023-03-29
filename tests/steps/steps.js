@@ -6,12 +6,13 @@ import { assert, expect } from 'chai'
 Given('I use {string} on an {string} device', async function (browser, sys) { await t.setUA(browser, sys) })
 Given('this {string}:', async function (k, rows) { await t.setThese(k, rows, 1) })
 Given('these {string}:', async function (k, rows) { await t.setThese(k, rows) })
+Given('we are offline', async function () { await t.putv('useWifi', false) })
 
 When('I run the app', async function () { await t.visit('') })
 When('I visit {string}', async function (site) { await t.visit(site) })
 When('I click {string}', async function(testId) { await w.page.click(t.sel(testId)) })
 When('I scan {string}', async function (qr) { await t.putv('qr', qr); await t.visit('charge'); await t.visit('charge') })
-When('I type {string} in the {string} field', async function (text, inputId) { await t.input(inputId, text)})
+When('I input {string} as {string}', async function (text, inputId) { await t.input(inputId, text) })
 
 Then('? this {string}:', async function (k, rows) { await t.testThese(k, rows, 1) })
 Then('? these {string}:', async function (k, rows) { await t.testThese(k, rows) })

@@ -24,9 +24,9 @@ const t = {
     })
   },
 
-  whatpage: async () => { 
-    const el = await w.page.$('.content')
-    return el ? await w.page.$eval( '.content', el => getAttribute('id') ) : null
+  whatPage: async () => { 
+    const el = await w.page.$('title')
+    return el ? await w.page.$eval( 'title', el => getAttribute('data-testid') ) : null
   },
 
   /**
@@ -39,7 +39,7 @@ const t = {
   },
 
   putStore: async (st) => {
-    const here = await t.whatpage()
+    const here = await t.whatPage()
     await w.page.evaluate((k, v) => {
       localStorage.setItem(k, JSON.stringify(v))
     }, c.storeKey, st)
@@ -61,41 +61,57 @@ const t = {
 
   these: ({ rawTable:rows }, one ) => {
     let v = []
-    if (one) assert.equal(rows.length, 2, `too many records testing value "${k}"`)
+    if (one) t.test(rows.length, 2)
     for (let rowi = 1; rowi < rows.length; rowi++) {
       v[rowi - 1] = []
-      for (let coli in rows[0]) v[rowi - 1][rows[0][coli]] = fix(rows, rowi, coli)
+      for (let coli in rows[0]) v[rowi - 1][rows[0][coli]] = t.adjust(rows[rowi], coli)
     }
     return one ? v[0] : v
   },
 
   /**
-   * Return row[coli] with adjustments for special parameters, including:
+   * Return value or value[k] with adjustments for special parameters, including:
    * %now: current millisecond
    */
-  fix: (row, coli) {
-    let v = row[coli]
-    if (v == '%now') v = now()
+  adjust: (value, k) => {
+    let v = typeof value === 'object' ? value[k] : value
+    if (v == '%now') v = t.now()
     return v
   },
 
-  test: (got, want, mode = 'exact') => {
+  /**
+   * Test whether what we got equals (or sort of equals) what we wanted.
+   * If mode is not specified, time fields are compared loosely (within a couple seconds)
+   * @param {*} got 
+   * @param {*} want: what is wanted (recurses if want is an object)
+   * @param {*} mode: exact (default), part, or <n (meaning got and want are less than n apart) 
+   */
+  test: (got, want, mode = null) => {
     if (typeof want === 'object') {
-      for (let i in want) t.test(got[i], fix(want, i))
+      let modei
+      t.test(typeof got, 'object')
+      t.test(got.length, want.length)
+      for (let i in want) {
+        modei = mode == null ? (t.isTimeField(i) ? '<2000' : null) : mode
+        t.test(got[i], want[i], modei)
+      }
       return
     }
+
     const msg = `got: ${got} wanted: ${want}`
-    if (mode == 'exact') {
+    if (mode == 'exact' || mode == null) {
       assert.equal(got, want, msg)
      } else if (mode == 'part') {
       assert.include(got, want, msg)
-    } else if (typeof mode === 'number') {
-      assert.isBelow(Math.abs(got - want), mode, msg)
+    } else if (mode.substring(0) == '<') {
+      assert.isBelow(Math.abs(got - want), +mode.substring(1), msg)
     } else assert.fail('bad mode:' + mode)
   },
 
   element: async (testId) => { return await w.page.$(t.sel(testId)) },
   sel: (testId) => { return `[data-testid="${testId}"]` },
+  isTimeField: (k) => { return 'created'.split(' ').includes(k) },
+  now: () => { return Date.now() },
 
   // MAKE / DO
 
@@ -112,7 +128,7 @@ const t = {
    * @param bool one: true to store just the first record rather than an array of records
    */
   setThese: async (k, multi, one = false) => {
-    const v = these(multi, one)
+    const v = t.these(multi, one)
     await t.putv(k, v)
   },
 
@@ -143,30 +159,26 @@ const t = {
     return res
   },
 
-  input: async (id, text) => { await w.page.$eval(t.sel(id), (el, txt) => el.value = txt, text) },
+  input: async (id, text) => { await w.page.$eval(t.sel(`input-${id}`), (el, txt) => el.value = txt, text) },
 
   // TEST
 
   /**
-   * 
+   * Compare a set of stored records we have with what was expected.
    * @param string k: key to value in store to test
    * @param {*} multi: gherkin array of arrays representing records to store
    *                   first row is a list of field names, subsequent rows are the field values
    * @param bool one: true to test just the first record rather than an array of records
    */
   testThese: async (k, multi, one = false) => {
-    const got = await t.getv(k)
-    let v = these(multi, one)
-    if (one) return test(got, v)
-    test(typeof got, 'object')
-    test(got.length, v.length)
-    for (let i in v) test(got[i], v[i])
+    console.log('in testThese k:', k, 'multi:', multi, 'one:', one, 'store(k):', await t.getv('comments'))
+    t.test(await t.getv(k), t.these(multi, one))
   },
 
   onPage: async (id) => {
-    const el = await w.page.$('#' + id)
-    if (el == null) await w.page.screenshot({ path: 'found.png' })
+    const el = await t.element(`page-${id}`)
     if (el == null) {
+      await w.page.screenshot({ path: 'found.png' })
       const title = await w.page.title()
       assert.isNotNull(el, `page "${id}" not found. You are on page "${title}" (see page found in found.png).`)
     }
@@ -182,7 +194,7 @@ const t = {
   seeIs: async (testId, want, mode = 'exact') => {
     const gotEl = await t.see(testId)
     const got = await gotEl.evaluate(el => el.textContent)
-    test(got, want, mode)
+    t.test(got, want, mode)
   },
 
 }

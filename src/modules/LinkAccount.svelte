@@ -40,7 +40,7 @@
 </script>
 
 <svelte:head>
-  <title>CGPay - Link Account</title>
+  <title data-testid="link-account">CGPay - Link Account</title>
 </svelte:head>
 
 <section id='link-account'>

@@ -49,7 +49,7 @@
 </script>
 
 <svelte:head>
-  <title>CGPay - Scan QR Code</title>
+  <title data-testid="scan">CGPay - Scan QR Code</title>
 </svelte:head>
 
 <section id='scan'>
