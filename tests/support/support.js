@@ -8,21 +8,6 @@ const t = {
 
   // UTILITY FUNCTIONS
 
-  setupPage: async () => {
-    if (w.page) return
-
-    const [headless, slowMo] = process.env.CIRCLECI ? [true, 0] : [true, 0]
-    w.browser = await w.driver.launch({ headless, slowMo })
-    w.page = await w.browser.newPage()
-    //  w.page.setViewport({ width: 1280, height: 1024 })
-    
-    if (c.seeLog) w.page.on('console', async e => { // log whatever the page logs
-      const args = await Promise.all(e.args().map(a => a.jsonValue()))
-      if (args.length > 1 || typeof args[0] != 'string' 
-        || (!args[0].includes('was created with unknown prop') && !args[0].includes('[vite] connect'))) console.log(...args)
-    })
-  },
-
   whatPage: async () => { 
     const el = await w.page.$('.page')
     try {
@@ -193,7 +178,7 @@ const t = {
     const el = await t.element(testId)
     if (el == null) await w.page.screenshot({ path: 'found.png' })
     assert.isNotNull(el, "see page image in found.png")
-    return el
+    return el // this is required (I don't know why)
   },
 
   seeIs: async (testId, want, mode = 'exact') => {
