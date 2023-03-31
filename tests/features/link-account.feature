@@ -18,19 +18,15 @@ Feature: Link Account
 
 Background:
 # Abe, Bea, and Flo have two accounts
-# Dee, Hal, and Ida have just one
-
-Rule: Users must link their device to a CGPay account to use the app
-
-Scenario: The user chooses from among multiple accounts
+# Dee, Hal, and Ida have just one (see the sigin-in feature, because linking is automatic)
   Given these "choices":
   | accountId | deviceId | name    | qr | isCo  | selling | lastTx |
   | K6VMDJJ   | devB     | Bea Two | ?  | false | null    | null   |
   | K6VMDJK   | devC     | Citre   | ?  | false | food    | null   |
-  Then ? these "choices":
-  | accountId | deviceId | name    | qr | isCo  | selling | lastTx |
-  | K6VMDJJ   | devB     | Bea Two | ?  | false | null    | null   |
-  | K6VMDJK   | devC     | Citre   | ?  | false | food    | null   |
+
+Rule: Users must link their device to a CGPay account to use the app
+
+Scenario: The user chooses from among multiple accounts with default account lock
   When I visit "link-account"
   Then ? I am on page "link-account"
   And ? I see "select-account"
@@ -39,17 +35,23 @@ Scenario: The user chooses from among multiple accounts
   And I click "btn-link"
   Then ? I am on page "home"
   And ? I see "Bea Two" in "account-name"
+  And ? I see this confirmation: "now linked to your Common Good account: Bea Two"
   And ? this "myAccount":
   | accountId | deviceId | name    | qr | isCo  | selling | lastTx |
   | K6VMDJJ   | devB     | Bea Two | ?  | false | null    | null   |
   And ? this "choices": "null" 
-
-# Scenario: I have multiple accounts
-#   When I link an account to my device
-#   Then ? I can choose to require sign-in to change my linked account
-
-# Scenario: I have multiple accounts
-#   When I choose to require sign-in to change my linked account
-#   Then ? The navigation will not show a Switch Account menu option
-
-# Scenario: I have only one account (see the signin feature)
+  When I click "btn-nav"
+  Then ? I do not see "menu-switch"
+@this
+Scenario: The user chooses a different account without account lock
+  When I visit "link-account"
+  And I click "option-1"
+  And I click "lock-account"
+  And I click "btn-link"
+  Then ? I see "Citre" in "account-name"
+  And ? these "choices":
+  | accountId | deviceId | name    | qr | isCo  | selling | lastTx |
+  | K6VMDJJ   | devB     | Bea Two | ?  | false | null    | null   |
+  | K6VMDJK   | devC     | Citre   | ?  | false | food    | null   |
+  When I click "btn-nav"
+  And ? I see "menu-switch"

@@ -11,7 +11,7 @@ Background:
 
 Scenario: I can access a Comments & Suggestions link from the navigation
   When I visit "home"
-  And I click "nav-btn"
+  And I click "btn-nav"
   Then ? I see "menu-comment"
 
 Scenario: I can submit feedback and receive a confirmation message that it was received
@@ -26,7 +26,7 @@ Scenario: I can submit feedback and receive a confirmation message that it was r
 Scenario: I can submit feedback offline
   Given we are offline
   When I visit "home"
-  And I click "nav-btn"
+  And I click "btn-nav"
   Then ? I see "menu-comment"
   When I click "menu-comment"
   Then ? I am on page "comment"

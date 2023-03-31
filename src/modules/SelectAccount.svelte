@@ -23,7 +23,7 @@
         <option value={ account.id } data-testid={ 'option-' + account.id }>{ account.name }</option>
       { /each }
     </select>
-    <label><input type="checkbox" name="lock-account" bind:checked={ lock } /> Require sign-in to change account</label>
+    <label><input type="checkbox" data-testid="lock-account" name="lock-account" bind:checked={ lock } /> Require sign-in to change account</label>
   </form>
   </div>
   <button type="submit" data-testid="btn-link" on:click={ gotAccount } disabled={!selected}>Link Account</button>
