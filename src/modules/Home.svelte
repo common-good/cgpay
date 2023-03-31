@@ -63,12 +63,12 @@
   <div class="charge">
     { #if devMode }
       <div class="fakes">
-        <button on:click={ () => fake('HTTP://6VM.RC4.ME/KDJI12345a') }>A</button>
-        <button on:click={ () => fake('HTTP://6VM.RC4.ME/KDJJ12345b') }>B</button>
-        <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDJK098765a') }>C:A</button>
-        <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDJK198765b') }>C:B</button>
-        <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDJO098765f') }>G:F</button>
-        <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDJO398765f') }>Bad</button>
+        <button on:click={ () => fake('HTTP://6VM.RC4.ME/KDCA12345a') }>A</button>
+        <button on:click={ () => fake('HTTP://6VM.RC4.ME/KDCB12345b') }>B</button>
+        <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDCC098765a') }>C:A</button>
+        <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDCC198765b') }>C:B</button>
+        <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDCG098765f') }>G:F</button>
+        <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDCG398765f') }>Bad</button>
         <button on:click={ () => fake('garbage') }>Worse</button>
       </div>
     { /if }
