@@ -32,7 +32,7 @@ const t = {
       localStorage.setItem(k, JSON.stringify(v))
     }, c.storeKey, st)
     w.reloadStore = true
-    w.page.waitForTimeout(c.networkTimeoutMs + 1) // give the network timeout function time to reload the store
+    await w.page.waitForTimeout(c.networkTimeoutMs + 1) // give the network timeout function time to reload the store
   },
 
   getv: async (k) => {

@@ -153,7 +153,7 @@ export const createStore = () => {
     setQr(v) { set('qr', v) },
     setMsg(v) { set('erMsg', v) },
     setCorrupt(version) { set('corrupt', version) }, // pause uploading until a new version is released
-    setWifi(yesno) { set('useWifi', yesno); this.setOnline(false) },
+    setWifi(yesno) { set('useWifi', yesno); set('online', false); this.resetNetwork() },
     setSelfServe(yesno) { set('selfServe', yesno) },
 
     setAcctChoices(v) { set('choices', v) },

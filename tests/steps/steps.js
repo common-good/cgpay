@@ -6,7 +6,8 @@ import { assert, expect } from 'chai'
 Given('I use {string} on an {string} device', async function (browser, sys) { await t.setUA(browser, sys) })
 Given('this {string}:', async function (k, rows) { await t.setThese(k, rows, 1) })
 Given('these {string}:', async function (k, rows) { await t.setThese(k, rows) })
-Given('we are offline', async function () { await t.putv('useWifi', false) })
+Given('we are offline', async function () { await w.page.setOfflineMode(true) })
+Given('we are online', async function () { await w.page.setOfflineMode(false) })
 
 When('I run the app', async function () { await t.visit('') })
 When('I visit {string}', async function (site) { await t.visit(site) })
