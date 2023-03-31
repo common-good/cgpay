@@ -3,6 +3,7 @@ const constants = {
   storeKey: 'cgpay',
   port: 3000,
   fetchTimeoutMs: 3200,
+  networkTimeoutMs: 500,
   productionUrl: 'https://cgpay.commongood.earth',
   apis: {
     //  test:  'http://localhost/cgmembers-frame/cgmembers/api/',
@@ -12,7 +13,7 @@ const constants = {
   },
 
   // just for testing
-  headlessMode: true,
+  headlessMode: false,
   slowMo: 0,
   testTimeoutMs: 12000,
   chromiumPath: '', // can be used to test different versions of chromium

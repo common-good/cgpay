@@ -13,6 +13,7 @@ When('I visit {string}', async function (site) { await t.visit(site) })
 When('I click {string}', async function(testId) { await w.page.click(t.sel(testId)) })
 When('I scan {string}', async function (qr) { await t.putv('qr', qr); await t.visit('charge'); await t.visit('charge') })
 When('I input {string} as {string}', async function (text, inputId) { await t.input(inputId, text) })
+When('I wait {int} seconds', async function (seconds) { await w.page.waitForTimeout(seconds * 1000) })
 
 Then('? this {string}:', async function (k, rows) { await t.testThis(k, rows) }) // object
 Then('? this {string}: {string}', async function (k, v) { await t.testThis(k, v) }) // string or number

@@ -147,7 +147,7 @@ export const createStore = () => {
   const res = {
     subscribe,
 
-    reload() { cache = storedState() }, // called only from tests
+    reload() { cache = storedState() }, // called only from tests (see Route.svelte and hooks.js)
     inspect() { return cache },
 
     setQr(v) { set('qr', v) },

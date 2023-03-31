@@ -5,15 +5,12 @@
   import cgLogo from '#modules/assets/cg-logo-300.png?webp'
   import Modal from '#modules/Modal.svelte'; let m0, m1
 
-//  const credentials = { identifier: 'newaad', password: 'Newaad1!' } // set these to make debugging much faster
   const credentials = {}
-
   let statusMsg = ''
 
-  // --------------------------------------------
-
   function showEr(msg) { 
-    ({ m0, m1 } = dlg('Alert', msg, 'Close', () => m0 = false)); m0=m0; m1=m1;
+    ;({ m0, m1 } = dlg('Alert', msg, 'Close', () => m0 = false)); m0=m0; m1=m1
+//    console.log('showEr: ', msg)
     statusMsg = ''
   }
 
@@ -55,12 +52,12 @@
   <div class='content'>
     <h2>Sign In</h2>
     <form on:submit|preventDefault={ signIn }>
-      <label class='visuallyhidden' for='account-id'>Account ID or Email Address</label>
-      <input data-testid="input-identifier" name='account-id' type='text' placeholder='Account ID or Email Address' autocomplete='name' autocapitalize='off' bind:value={ credentials.identifier } required />
-      <label class='visuallyhidden' for='password'>Password</label>
-      <input data-testid="input-password" type='password' placeholder='Password' autocomplete='current-password' autocapitalize='off' bind:value={ credentials.password } required />
+      <label class="visuallyhidden" for="account-id">Account ID or Email Address</label>
+      <input data-testid="input-identifier" name="account-id" type="text" placeholder="Account ID or Email Address" autocomplete="name" autocapitalize="off" bind:value={ credentials.identifier } required />
+      <label class="visuallyhidden" for="password">Password</label>
+      <input data-testid="input-password" name="password" type="password" placeholder="Password" autocomplete="current-password" autocapitalize="off" bind:value={ credentials.password } required />
       <a class="link" data-testid="reset-pw" href="https://new.commongood.earth/settings/password/" target="_blank">Reset password</a>
-      <button data-testid="btn-signin" type='submit'>Sign In</button>
+      <button data-testid="btn-signin" type="submit">Sign In</button>
       <p class="status">{ statusMsg }</p>
     </form>
     <p class="sign-up">Not a member?</p>

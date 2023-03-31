@@ -20,7 +20,7 @@ Scenario: I can submit feedback and receive a confirmation message that it was r
   And I click "submit-comment"
   Then ? these "comments":
   | created | actorId | text    |
-  | %now    | K6VMDJJ | wow! ❤️ |
+  | now     | K6VMDJJ | wow! ❤️ |
   And ? I see this confirmation: "Thank you"
 
 Scenario: I can submit feedback offline
@@ -34,5 +34,5 @@ Scenario: I can submit feedback offline
   And I click "submit-comment"
   Then ? these "comments":
   | created | actorId | text    |
-  | %now    | K6VMDJJ | wow! ❤️ |
+  | now     | K6VMDJJ | wow! ❤️ |
   And ? I see this confirmation: "Thank you"
