@@ -51,7 +51,6 @@ function goHome(msg) {
  * @throws an AbortError if the fetch times out (identify with isTimeout())
  */
 async function timedFetch(url, options = {}) {
-//  options = { mode:'no-cors', ...options }
   if (!store.inspect().online) throw new Error('offline') // this works for setWifiOff also
   if (options.method != 'POST') url += '&version=' + _version_
   const { timeout = _fetchTimeoutMs_, type = 'json' } = options;
@@ -59,7 +58,8 @@ async function timedFetch(url, options = {}) {
   aborter.name = 'Timeout'
   const timeoutId = setTimeout(() => aborter.abort(), timeout)
 
-  let res = await fetch(api + url, {...options, signal:aborter.signal })
+  const func = typeof window.mockFetch === 'function' ? mockFetch : fetch // mock fetch if testing (keep this line)
+  let res = await func(api + url, {...options, signal:aborter.signal })
   if (res.ok === false) throw new Error(res.status)
   
   if (res.ok && type != 'none') {

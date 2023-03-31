@@ -42,7 +42,7 @@ Scenario: The user chooses from among multiple accounts
   And ? this "myAccount":
   | accountId | deviceId | name    | qr | isCo  | selling | lastTx |
   | K6VMDJJ   | devB     | Bea Two | ?  | false | null    | null   |
-  And ? this "choices": "%null" 
+  And ? this "choices": "null" 
 
 # Scenario: I have multiple accounts
 #   When I link an account to my device

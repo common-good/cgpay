@@ -1,5 +1,4 @@
 import { assert, expect } from 'chai'
-import queryString from 'query-string'
 import c from '../../constants.js'
 import w from './world.js'
 
@@ -44,12 +43,11 @@ const t = {
   },
 
   putStore: async (st) => {
-    const here = await t.whatPage()
     await w.page.evaluate((k, v) => {
       localStorage.setItem(k, JSON.stringify(v))
     }, c.storeKey, st)
-    await t.visit('update-state')
-    if (here) await t.visit(here)
+    w.reloadStore = true
+    w.page.waitForTimeout(c.networkTimeoutMs + 1) // give the network timeout function time to reload the store
   },
 
   getv: async (k) => {
@@ -79,13 +77,16 @@ const t = {
 
   /**
    * Return value or value[k] with adjustments for special parameters, including:
-   * %now: current millisecond
-   * %null: null
+   * now: current millisecond
+   * null, true, false: convert from string
    */
   adjust: (value, k) => {
+    if (value == null) return null
     let v = typeof value === 'object' ? value[k] : value
-    if (v == '%now') v = t.now() / 1000
-    if (v == '%null') v = null
+    if (v == 'now') v = t.now() / 1000
+    if (v == 'null') v = null
+    if (v == 'true') v = true
+    if (v == 'false') v = false
     return v
   },
 
@@ -97,7 +98,7 @@ const t = {
    * @param {*} mode: exact (default), part, or <n (meaning got and want are less than n apart) 
    */
   test: (got, want, mode = null) => {
-    if (typeof want === 'object') {
+    if (typeof want === 'object' && want !== null) {
       assert.isNotNull(got, 'should not be null')
       t.test(typeof got, 'object')
       t.test(got.length, want.length)
@@ -154,27 +155,11 @@ const t = {
     await w.page.setUserAgent(agent)
   },
 
-  post: async (op, args = null) => {
-    await w.page.setRequestInterception(true)
-    await w.page.once('request', async (interceptedRequest ) => {
-      try {
-        const data = {
-          'method': 'POST',
-          'postData': queryString.stringify({ version:c.version, op:op, args:args }),
-          'headers': { 'Content-type':'application/x-www-form-urlencoded' },
-          'mode': 'no-cors'
-        }
-        interceptedRequest.continue(data)
-      } catch (er) {
-        console.log('Error while request interception', er)
-      }
-    })
-    const res = await w.page.goto(c.apis.test + 'test')
-    await w.page.setRequestInterception(false)
-    return res
+  input: async (id, text) => { 
+    await w.page.type(t.sel('input-' + id), text)
+    const newValue = await w.page.$eval(t.sel('input-' + id), el => el.value)
+    t.test(newValue, text)
   },
-
-  input: async (id, text) => { await w.page.type(t.sel('input-' + id), text) },
 
   // TEST
 

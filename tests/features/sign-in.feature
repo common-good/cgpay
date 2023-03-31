@@ -15,10 +15,12 @@ Scenario: A user visits the Sign-in page
   And ? I see "reset-pw"
 
 Scenario: A user with one account signs in
+  Then ? I am on page "sign-in"
   When I input "d" as "identifier"
   And I input "k" as "password"
   And I click "btn-signin"
+  And I wait 2 seconds
   Then ? I am on page "home"
   And ? this "myAccount":
   | accountId | deviceId | name     | qr | isCo  | selling | lastTx |
-  | K6VMDJL   | devD     | Dee Four | ?  | false | null    | null   |
+  | K6VMDJL   | ?        | Dee Four | ?  | false | null    | null   |

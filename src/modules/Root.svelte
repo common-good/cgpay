@@ -3,8 +3,9 @@
   import { onMount } from 'svelte'
   import store from '#store.js'
   import { addableToHome } from '#utils.js'
+  import c from '../../constants.js'
 
-  import UpdateState from '#modules/_UpdateState.svelte' // for testing
+  import Empty from '#modules/_Empty.svelte' // for testing
   import AddToHomeScreen from '#modules/AddToHomeScreen.svelte'
   import Home from '#modules/Home.svelte'
   import Charge from '#modules/Charge.svelte'
@@ -15,34 +16,24 @@
   import LayoutIntro from '#modules/LayoutIntro.svelte'
   import LayoutStep from '#modules/LayoutStep.svelte'
 
-  // --------------------------------------------
   // Initialization Helpers
 
-  function onlyIf(condition, elseGoTo) { return { guard: condition, redirect: elseGoTo } }
   function timeOut() {
+    if (typeof window.reloadStore === 'function' && window.reloadStore()) store.reload()
     store.resetNetwork()
-    setTimeout(timeOut, 3000)
+    setTimeout(timeOut, c.networkTimeoutMs)
   }
+
+  function onlyIf(condition, elseGoTo) { return { guard: condition, redirect: elseGoTo } }
 
   function route(name, component, condition, elseGoTo, layout = LayoutStep) {
     return { name: name, component: component, layout: layout, onlyIf: onlyIf(condition, elseGoTo) }
   }
 
-  // --------------------------------------------
-  // Initialization
-
-  onMount(async () => {
-    addEventListener('offline', () => { store.setOnline(false) })
-    addEventListener('online', () => { store.setOnline(true) })
-    timeOut()
-  })
-
-  // --------------------------------------------
-
   const notSignedIn = ( () => !store.isSignedIn() )
 
   const routes = [
-    route('/update-state', UpdateState, true, null, LayoutIntro), // for testing
+    route('/empty', Empty, true, null, LayoutIntro), // for testing
     route('/', AddToHomeScreen, addableToHome, '/sign-in', LayoutIntro),
     route('/sign-in', SignIn, notSignedIn, '/home', LayoutIntro),
     route('/link-account', LinkAccount, notSignedIn, '/home'),
@@ -51,6 +42,13 @@
     route('/charge', Charge, store.isSignedIn, '/sign-in'),
     route('/comment', Comment, store.isSignedIn, '/sign-in')
   ]
+
+  onMount(async () => {
+    addEventListener('offline', () => { store.setOnline(false) })
+    addEventListener('online', () => { store.setOnline(true) })
+    timeOut()
+  })
+
 </script>
 
 <Router { routes } />
