@@ -1,7 +1,7 @@
 <script>
   import { navigateTo } from 'svelte-router-spa'
   import store from '#store.js'
-  import { dlg, postRequest, isTimeout } from '#utils.js'
+  import u from '#utils.js'
   import cgLogo from '#modules/assets/cg-logo-300.png?webp'
   import Modal from '#modules/Modal.svelte'; let m0, m1
 
@@ -9,7 +9,7 @@
   let statusMsg = ''
 
   function showEr(msg) { 
-    ;({ m0, m1 } = dlg('Alert', msg, 'Close', () => m0 = false)); m0=m0; m1=m1
+    ;({ m0, m1 } = u.dlg('Alert', msg, 'Close', () => m0 = false)); m0=m0; m1=m1
 //    console.log('showEr: ', msg)
     statusMsg = ''
   }
@@ -17,7 +17,7 @@
   async function signIn() {
     statusMsg = 'Finding your account(s)...'
     try {
-      const result = await postRequest('accounts', credentials)
+      const result = await u.postRequest('accounts', credentials)
 
       if (result.accounts.length > 1) {
         store.setAcctChoices(result.accounts)
@@ -28,7 +28,7 @@
       }
     } catch (er) {
       store.resetNetwork()
-      if (isTimeout(er) || !$store.online) {
+      if (u.isTimeout(er) || !$store.online) {
         showEr('The server is unavailable. Check your internet connection and try again.')
       } else if (er.message == 403) { // forbidden
         showEr('That account is not completely set up. Sign back in at CommonGood.earth to complete it.')

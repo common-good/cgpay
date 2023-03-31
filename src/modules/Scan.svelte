@@ -3,7 +3,7 @@
   import { navigateTo } from 'svelte-router-spa'
   import { onMount } from 'svelte'
   import store from '#store.js'
-  import { goEr } from '#utils.js'
+  import u from '#utils.js'
   import cgLogo from '#modules/assets/cg-logo-300.png?webp'
 
   // --------------------------------------------
@@ -36,14 +36,14 @@
           ).then((res) => {
             isLoading = false
           }).catch((er) => { // Handle scan error
-            goEr(er.message)
+            u.goEr(er.message)
           })
         } else {
-          goEr('No camera is available.')
+          u.goEr('No camera is available.')
         }
       })
     } catch(er) {
-       goEr(er.message) 
+       u.goEr(er.message) 
     }
   })
 </script>

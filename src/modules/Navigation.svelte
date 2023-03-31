@@ -4,7 +4,7 @@
   import { navigateTo } from 'svelte-router-spa'
   import { focusTrap } from 'svelte-focus-trap'
   import store from '#store.js'
-  import { pageUri } from '#utils.js'
+  import u from '#utils.js'
 
   let nav
 
@@ -26,11 +26,11 @@
 
   item('Use Rear Camera', rearCamera, () => $store.cameraCount > 1 && $store.frontCamera, 'rear')
   item('Use Front Camera', frontCamera, () => $store.cameraCount > 1 && !$store.frontCamera, 'front')
-  item('Sign Out and Exit Self Serve', selfServeOff, () => pageUri() == 'home' && $store.selfServe, 'selfOff')
-  item('Enter Self Serve Mode', selfServeOn, () => pageUri() == 'home' && $store.myAccount.isCo && !$store.selfServe, 'selfOn')
-  item('Switch Account', switchAccount, () => $store.choices?.length > 1 && pageUri() != 'link-account' && !$store.selfServe, 'switch')
+  item('Sign Out and Exit Self Serve', selfServeOff, () => u.pageUri() == 'home' && $store.selfServe, 'selfOff')
+  item('Enter Self Serve Mode', selfServeOn, () => u.pageUri() == 'home' && $store.myAccount.isCo && !$store.selfServe, 'selfOn')
+  item('Switch Account', switchAccount, () => $store.choices?.length > 1 && u.pageUri() != 'link-account' && !$store.selfServe, 'switch')
   item('Comments & Suggestions', comment, () => store.isSignedIn() && !$store.selfServe, 'comment')
-  item('Sign Out', signOut, () => (store.isSignedIn() || pageUri() == 'link-account') && !$store.selfServe, 'signout')
+  item('Sign Out', signOut, () => (store.isSignedIn() || u.pageUri() == 'link-account') && !$store.selfServe, 'signout')
 
 if ($store.testMode) {
     item('🌈 Turn Wifi Off', wifiOff, () => $store.useWifi)

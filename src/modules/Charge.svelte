@@ -1,6 +1,6 @@
 <script>
   import store from '#store.js'
-  import { yesno, dlg, hash, crash, goEr, goHome, timedFetch, isTimeout } from '#utils.js'
+  import u from '#utils.js'
   import { onMount } from 'svelte'
   import { navigateTo } from 'svelte-router-spa'
   import queryString from 'query-string'
@@ -48,11 +48,11 @@
 
   // --------------------------------------------
 
-  function askUndo() { ({ m0, m1, m2 } = yesno('Reverse the transaction?', Undo, () => m0 = false)); m0=m0; m1=m1; m2=m2 }
+  function askUndo() { ({ m0, m1, m2 } = u.yesno('Reverse the transaction?', Undo, () => m0 = false)); m0=m0; m1=m1; m2=m2 }
   function showEr(msg0) {
     let msg = typeof msg0 == 'object' ? msg0.detail : msg0 // receive string or dispatch from SubmitCharge
     msg = msg; // this needs to be responsive
-    ;({ m0, m1, m2 } = dlg('Alert', msg, 'OK', () => m0 = false)); m0=m0; m1=m1; m2=m2 
+    ;({ m0, m1, m2 } = u.dlg('Alert', msg, 'OK', () => m0 = false)); m0=m0; m1=m1; m2=m2 
   }
 
   /**
@@ -72,7 +72,7 @@
    * @param query: query data for photoId endpoint
    */
   async function getPhoto(query) {
-    const { result } = await timedFetch(`idPhoto?${ query }`, { type: 'blob' })
+    const { result } = await u.timedFetch(`idPhoto?${ query }`, { type: 'blob' })
     return { alt: 'Customer Photo', blob: URL.createObjectURL(result) }
   }
   
@@ -103,7 +103,7 @@
     const mainId = getMainId(acct)
     const acct0 = acct.substring(0, mainId.length + agentLen) // include agent chars in original account ID
     const code = acct.substring(acct0.length)
-    return { acct: acct0, main: mainId, code: code, hash: hash(code) }
+    return { acct: acct0, main: mainId, code: code, hash: u.hash(code) }
   }
   
   /**
@@ -130,7 +130,7 @@
     store.enqTx(tx)
     // NO! With flaky internet, this could queue the tx after unknowingly uploading it, then canceling the undo -- store.deleteTxPair()
     // Maybe see whether original tx was definitely taken offline, if this seems important
-    goHome('The transaction has been reversed.')
+    u.goHome('The transaction has been reversed.')
   }
 
   onMount(async () => {
@@ -150,7 +150,7 @@
       } else  {
         const q = {deviceId: tx.deviceId, actorId: tx.actorId, otherId: tx.otherId + tx.code}
         const query = queryString.stringify(q)
-        const { result } = await timedFetch(`identity?${ query }`)
+        const { result } = await u.timedFetch(`identity?${ query }`)
         const { selling } = result
         if (selling.length) tx.description = selling[0]
         store.setMyAccount({ ...$store.myAccount, selling: selling })
@@ -162,14 +162,14 @@
         if (!$store.selfServe) photo = await getPhoto(query)
       }
     } catch (er) {
-      if (isTimeout(er)) { // internet unavailable; recognize a repeat customer or limit CG's liability
+      if (u.isTimeout(er)) { // internet unavailable; recognize a repeat customer or limit CG's liability
         profileOffline()
       } else if (isNaN(er.message)) {
-        return goEr(er.message)
+        return u.goEr(er.message)
       } else if (er.message == '404') { // account not found
-        return goEr('That is not a valid Common Good card.')
+        return u.goEr('That is not a valid Common Good card.')
       } else {
-        return goEr(crash(`An unexpected error occurred. Please alert Common Good's support team.`))
+        return u.goEr(u.crash(`An unexpected error occurred. Please alert Common Good's support team.`))
       }
     }
   })

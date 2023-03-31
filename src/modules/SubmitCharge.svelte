@@ -2,7 +2,7 @@
   import { createEventDispatcher } from 'svelte'
   import Profile from '#modules/Profile.svelte'
   import store from '#store.js'
-  import { postRequest, hash } from '#utils.js'
+  import u from '#utils.js'
   // https://github.com/canutin/svelte-currency-input
 
   // --------------------------------------------
@@ -22,13 +22,13 @@
       const created = Math.floor(Date.now() / 1000) // must be done just once
       tx.created = created // Unix timestamp
       tx.amount = (+tx.amount).toFixed(2)
-      tx.proof = hash(tx.actorId + tx.amount + tx.otherId + tx.code + tx.created)
+      tx.proof = u.hash(tx.actorId + tx.amount + tx.otherId + tx.code + tx.created)
       delete(tx.code)
       tx.offline = false
     }
 
     try {
-      const res = await postRequest('transactions', tx)
+      const res = await u.postRequest('transactions', tx)
       if (res.ok) dispatch('complete'); else dispatch('error', res.message) // update display
     } catch (er) { // except for syntax errors, queue it and treat it as success
       console.log(er)

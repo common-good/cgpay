@@ -7,7 +7,8 @@ Given('I use {string} on an {string} device', async function (browser, sys) { aw
 Given('I am signed in as {string}', async function (who) { await t.signedInAs(who) })
 Given('this {string}:', async function (k, rows) { await t.setThese(k, rows, 1) })
 Given('these {string}:', async function (k, rows) { await t.setThese(k, rows) })
-Given('we are offline', async function () { await t.putv('useWifi', false) })
+Given('we are offline', async function () { await w.page.setOfflineMode(true) })
+Given('we are online', async function () { await w.page.setOfflineMode(false) })
 
 When('I run the app', async function () { await t.visit('') })
 When('I visit {string}', async function (site) { await t.visit(site) })
@@ -27,3 +28,4 @@ Then('? I see {string} in {string}', async function (want, testId) { await t.see
 Then('? I see this error: {string}', async function (msg) { await t.seeIs('messageText', msg, 'part') }) // eventually handle differently: error/alert/confirmation
 Then('? I see this confirmation: {string}', async function (msg) { await t.seeIs('messageText', msg, 'part') })
 Then('? I see this alert: {string}', async function (msg) { await t.seeIs('messageText', msg, 'part') })
+Then('? I do not see {string}', async function (testId) { await t.dontSee(testId) })
