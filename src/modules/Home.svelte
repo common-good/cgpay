@@ -1,7 +1,7 @@
 <script>
   import { onMount } from 'svelte'
   import store from '#store.js'
-  import { dlg, timedFetch } from '#utils.js'
+  import u from '#utils.js'
   import Modal from '#modules/Modal.svelte'; let m0, m1, m2
   import cgLogo from '#modules/assets/cg-logo-300.png?webp'
   import { navigateTo } from 'svelte-router-spa'
@@ -14,7 +14,7 @@
   const myQr = $store.myAccount?.qr
 
   function er(msg) { 
-    ({ m0, m1 } = dlg('Alert', msg, 'Close', () => {m0 = false; store.setMsg(null)})); m0=m0; m1=m1
+    ({ m0, m1 } = u.dlg('Alert', msg, 'Close', () => {m0 = false; store.setMsg(null)})); m0=m0; m1=m1
   }
 
   function fake(code) {
@@ -28,7 +28,7 @@
     if ($store.myAccount) try {
       const q = {deviceId: $store.myAccount.deviceId, actorId: $store.myAccount.accountId, lastTx: $store.myAccount.lastTx || -1 }
       const query = queryString.stringify(q)
-      const { result } = await timedFetch(`latest?${ query }`)
+      const { result } = await u.timedFetch(`latest?${ query }`)
     } catch (er) { console.log(er) }
   })
 </script>

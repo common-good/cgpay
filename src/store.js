@@ -1,5 +1,5 @@
 import { writable } from 'svelte/store'
-import { postRequest, isTimeout, isApple, isAndroid } from '#utils.js'
+import u from '#utils.js'
 
 // --------------------------------------------
 // use this example for set() and get(): https://svelte.dev/repl/ccbc94cb1b4c493a9cf8f117badaeb31?version=3.16.7
@@ -78,7 +78,7 @@ export const createStore = () => {
     msg: null, // not yet used
     erMsg: null,
     cameraCount: 0, // set this when scanning for the first time
-    frontCamera: (!isApple() && !isAndroid()),
+    frontCamera: (!u.isApple() && !u.isAndroid()),
     online: null,
     useWifi: true,
     selfServe: false,
@@ -127,9 +127,9 @@ export const createStore = () => {
     while (cache[k].length > 0) {
       if (!res.useWifi) return; // allow immediate interruptions
       try {
-        await postRequest(endpoint, cache[k][0])
+        await u.postRequest(endpoint, cache[k][0])
       } catch (er) {
-        if (isTimeout(er)) {
+        if (u.isTimeout(er)) {
           res.setOnline(false)
         } else {
           console.log(er.message) // keep this

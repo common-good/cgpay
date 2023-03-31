@@ -2,10 +2,7 @@ import { createStore } from '#store.js'
 import { postRequest, isTimeout } from '#utils.js'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('#utils.js', () => ({
-  postRequest: vi.fn(),
-  isTimeout: vi.fn()
-}))
+vi.mock('#utils.js', () => ({ postRequest:vi.fn(), isTimeout:vi.fn() }))
 
 const storeKey = 'cgpay'
 

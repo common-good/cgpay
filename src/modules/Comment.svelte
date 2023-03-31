@@ -1,5 +1,5 @@
 <script>
-  import { goHome } from '#utils.js'
+  import u from '#utils.js'
   import store from '#store.js'
 
   export let currentRoute // else Svelte complains (I don't know why yet)
@@ -9,7 +9,7 @@
 
   async function submit() {
     store.comment(text)
-    goHome('Thank you for your feedback! We very much appreciate your participation in creating a Common Good economy.')
+    u.goHome('Thank you for your feedback! We very much appreciate your participation in creating a Common Good economy.')
   }
 </script>
 
