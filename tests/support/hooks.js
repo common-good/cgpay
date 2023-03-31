@@ -52,7 +52,7 @@ Before(async () => {
 // After(async () => {})
 
 AfterAll(async () => {
-  if (w.browser) await w.browser.close()
+  w.browser.close().then() // this crashes if no tests are found and you use "await" (trying to catch the error fails)
   //  await fkill(':3000')
 })
 
