@@ -4,6 +4,7 @@ import w from '../support/world.js'
 import { assert, expect } from 'chai'
 
 Given('I use {string} on an {string} device', async function (browser, sys) { await t.setUA(browser, sys) })
+Given('I am signed in as {string}', async function (who) { await t.signedInAs(who) })
 Given('this {string}:', async function (k, rows) { await t.setThese(k, rows, 1) })
 Given('these {string}:', async function (k, rows) { await t.setThese(k, rows) })
 Given('we are offline', async function () { await t.putv('useWifi', false) })

@@ -68,10 +68,17 @@ const t = {
   adjust: (value, k) => {
     if (value == null) return null
     let v = typeof value === 'object' ? value[k] : value
-    if (v == 'now') v = t.now() / 1000
-    if (v == 'null') v = null
-    if (v == 'true') v = true
-    if (v == 'false') v = false
+    if (v == 'now') return t.now() / 1000
+    if (v == 'null') return null
+    if (v == 'true') return true
+    if (v == 'false') return false
+
+    const me = w.accounts[v]
+    if (me != null) return k == 'actorId' ? me.accountId
+    : (k == 'otherId' ? me.accountId + me.cardCode
+    : (k == 'qr' ? 'HTTP://6VM.RC4.ME/' + me.qr.substring(0, 1) + me.qr.substring(4) + me.cardCode
+    : (v) ))
+
     return v
   },
 
@@ -80,9 +87,10 @@ const t = {
    * If mode is not specified, time fields are compared loosely (within a couple seconds)
    * @param {*} got 
    * @param {*} want: what is wanted (recurses if want is an object)
-   * @param {*} mode: exact (default), part, or <n (meaning got and want are less than n apart) 
+   * @param string field: name of field being tested (to inform substitutions)
+   * @param string mode: exact (default), part, or <n (meaning got and want are less than n apart) 
    */
-  test: (got, want, mode = null) => {
+  test: (got, want, field = null, mode = null) => {
     if (typeof want === 'object' && want !== null) {
       assert.isNotNull(got, 'should not be null')
       t.test(typeof got, 'object')
@@ -90,14 +98,14 @@ const t = {
       let modei
       for (let i in want) {
         modei = mode == null ? (t.isTimeField(i) ? '<2' : null) : mode
-        t.test(got[i], want[i], modei)
+        t.test(got[i], want[i], i, modei)
       }
       return
     }
 
     if (want == '?') return // anything is acceptable
     const msg = `got: ${got} wanted: ${want}`
-    want = t.adjust(want)
+    want = t.adjust(want, field)
     if (mode == 'exact' || mode == null) {
       assert.equal(got, want, msg)
      } else if (mode == 'part') {
@@ -162,7 +170,7 @@ const t = {
 
   testThis: async (k, v) => {
     if (typeof v === 'object') return t.testThese(k, v, true)
-    t.test(await t.getv(k), v)
+    t.test(await t.getv(k), v, k)
   },
 
   onPage: async (id) => {
@@ -184,8 +192,16 @@ const t = {
   seeIs: async (testId, want, mode = 'exact') => {
     const gotEl = await t.see(testId)
     const got = await gotEl.evaluate(el => el.textContent)
-    t.test(got, want, mode)
+    t.test(got, want, null, mode)
   },
+
+  dontSee: async (testId) => { assert.isNull(await t.element(testId), "shouldn't see" + testId) },
+
+  signedInAs: async (who) => {
+    const me = w.accounts[who]
+    await t.putv('myAccount', { name:me.name, isCo:me.isCo, accountId:me.accountId, deviceId:me.deviceId, selling:me.selling, qr:'qr' + me.name.substring(0, 1) })
+    // just = 'name isCo accountId deviceId selling'; { ...just, qr:, lastTx:null }
+  }
 
 }
 

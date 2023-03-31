@@ -5,9 +5,7 @@ Feature: Comment
   So I know my user experience is valued and I can help improve it.
 
 Background:
-  * this "myAccount":
-  | accountId | deviceId | name    | qr | isCo  | selling | lastTx |
-  | K6VMDJJ   | devB     | Bea Two | ?  | false | null    | null   |
+  * I am signed in as "Bea"
 
 Scenario: I can access a Comments & Suggestions link from the navigation
   When I visit "home"
@@ -20,7 +18,7 @@ Scenario: I can submit feedback and receive a confirmation message that it was r
   And I click "submit-comment"
   Then ? these "comments":
   | created | actorId | text    |
-  | now     | K6VMDJJ | wow! ❤️ |
+  | now     | Bea     | wow! ❤️ |
   And ? I see this confirmation: "Thank you"
 
 Scenario: I can submit feedback offline
@@ -34,5 +32,5 @@ Scenario: I can submit feedback offline
   And I click "submit-comment"
   Then ? these "comments":
   | created | actorId | text    |
-  | now     | K6VMDJJ | wow! ❤️ |
+  | now     | Bea     | wow! ❤️ |
   And ? I see this confirmation: "Thank you"
