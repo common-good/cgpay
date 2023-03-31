@@ -187,6 +187,7 @@ const t = {
     t.test(got, want, mode)
   },
 
+  dontSee: async (testId) => { assert.isNull(await t.element(testId), "shouldn't see" + testId) },
 }
 
 export default t

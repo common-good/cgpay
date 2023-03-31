@@ -27,3 +27,4 @@ Then('? I see {string} in {string}', async function (want, testId) { await t.see
 Then('? I see this error: {string}', async function (msg) { await t.seeIs('messageText', msg, 'part') }) // eventually handle differently: error/alert/confirmation
 Then('? I see this confirmation: {string}', async function (msg) { await t.seeIs('messageText', msg, 'part') })
 Then('? I see this alert: {string}', async function (msg) { await t.seeIs('messageText', msg, 'part') })
+Then('? I do not see {string}', async function (testId) { await t.dontSee(testId) })
