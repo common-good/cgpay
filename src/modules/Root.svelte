@@ -3,7 +3,7 @@
   import { onMount } from 'svelte'
   import store from '#store.js'
   import u from '#utils.js'
-  import c from '../../constants.js'
+  import c from '#constants.js'
 
   import Empty from '#modules/_Empty.svelte' // for testing
   import AddToHomeScreen from '#modules/AddToHomeScreen.svelte'

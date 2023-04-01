@@ -1,6 +1,7 @@
 <script>
   import store from '#store.js'
   import u from '#utils.js'
+  import c from '#constants.js'
   import { onMount } from 'svelte'
   import { navigateTo } from 'svelte-router-spa'
   import queryString from 'query-string'
@@ -37,8 +38,6 @@
   }
   
   const qr = $store.qr
-  const onlineLimit = 10000
-  const offlineLimit = 250
   let tipable = false
 
   let gotTx = false
@@ -117,7 +116,7 @@
 
   function profileOffline() {
     showEr('OFFLINE. Trust this member or ask for ID.')
-    limit = Math.min(offlineLimit, limit == null ? offlineLimit : limit)
+    limit = Math.min(c.offlineLimit, limit == null ? c.offlineLimit : limit)
   }
   
   /**
@@ -158,7 +157,7 @@
         delete otherAccount.selling
         store.putAcct(card, otherAccount) // store and/or update stored customer account info
         store.setMyAccount({ ...$store.myAccount, lastTx: otherAccount.lastTx })
-        limit = Math.min(otherAccount.limit, onlineLimit)
+        limit = Math.min(otherAccount.limit, c.onlineLimit)
         if (!$store.selfServe) photo = await getPhoto(query)
       }
     } catch (er) {

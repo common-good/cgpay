@@ -23,7 +23,7 @@ export default defineConfig({
     alias: {
       '#store.js':     root + '/src/store.js',
       '#utils.js':     root + '/src/utils.js',
-      '#constants.js': root + '/src/constants.js',
+      '#constants.js': root + '/constants.js',
       '#modules':      root + '/src/modules',
     },
   },

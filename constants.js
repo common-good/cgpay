@@ -4,6 +4,9 @@ const constants = {
   port: 3000,
   fetchTimeoutMs: 3200,
   networkTimeoutMs: 100,
+  onlineLimit: 10000,
+  offlineLimit: 250,
+
   productionUrl: 'https://cgpay.commongood.earth',
   apis: {
     //  test:  'http://localhost/cgmembers-frame/cgmembers/api/',

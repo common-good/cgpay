@@ -7,8 +7,6 @@
   import { onMount } from 'svelte'
   import u from '#utils.js'
 
-  // --------------------------------------------
-
   function skip() {
     store.setSawAdd()
     navigateTo('/sign-in')
