@@ -1,5 +1,6 @@
 import { assert, expect } from 'chai'
 import c from '../../constants.js'
+import u from '../../utils0.js'
 import w from './world.js'
 
 const baseUrl = 'http://localhost:' + c.port + '/'
@@ -44,7 +45,7 @@ const t = {
     let st = await t.getStore()
 //    console.log('st before putv:', st, 'v:', v)
     if (st == null) st = {}
-    st[k] = t.clone(v)
+    st[k] = v
 //    console.log('st after putv:', st, 'v:', v)
     await t.putStore(st)
   },
@@ -57,7 +58,7 @@ const t = {
       v[rowi - 1] = {}
       for (let coli in rows[0]) v[rowi - 1][rows[0][coli]] = t.adjust(rows[rowi], coli)
     }
-    return t.clone(one ? v[0] : v)
+    return u.clone(one ? v[0] : v)
   },
 
   /**
@@ -68,7 +69,7 @@ const t = {
   adjust: (value, k) => {
     if (value == null) return null
     let v = typeof value === 'object' ? value[k] : value
-    if (v == 'now') return t.now() / 1000
+    if (v == 'now') return u.now()
     if (v == 'null') return null
     if (v == 'true') return true
     if (v == 'false') return false
@@ -118,8 +119,6 @@ const t = {
   element: async (testId) => { return await w.page.$(t.sel(testId)) },
   sel: (testId) => { return `[data-testid="${testId}"]` },
   isTimeField: (k) => { return 'created'.split(' ').includes(k) },
-  now: () => { return Date.now() },
-  clone: (v) => { return JSON.parse(JSON.stringify(v)) }, // deep clone (assumes object contains just objects, numbers, and strings)
 
   // MAKE / DO
 
@@ -199,8 +198,8 @@ const t = {
 
   signedInAs: async (who) => {
     const me = w.accounts[who]
-    await t.putv('myAccount', { name:me.name, isCo:me.isCo, accountId:me.accountId, deviceId:me.deviceId, selling:me.selling, qr:'qr' + me.name.substring(0, 1) })
-    // just = 'name isCo accountId deviceId selling'; { ...just, qr:, lastTx:null }
+    if (set) await t.putv('myAccount', { ...u.just('name isCo accountId deviceId selling', me), qr:'qr' + me.name.substring(0, 1) })
+    if (!set) t.test(await t.getv('myAccount'), u.just('name isCo accountId selling', me))
   }
 
 }

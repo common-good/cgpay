@@ -185,7 +185,7 @@ describe('store', () => {
       const store = createStore()
 
       vi.useFakeTimers()
-      const now = Date.now()
+      const now = Math.floor(Date.now() / 1000)
       expect(store.inspect().sawAdd).toEqual(false) // Confirm initial values are set.
       store.setSawAdd()
 

@@ -165,7 +165,7 @@ export const createStore = () => {
         return storeLocal(st)
     })},
 
-    setSawAdd() { set('sawAdd', Date.now()) },
+    setSawAdd() { set('sawAdd', u.now()) },
     setCameraCount(n) { set('cameraCount', n) },
     setFrontCamera(yesno) { set('frontCamera', yesno) },
 
@@ -209,7 +209,7 @@ export const createStore = () => {
     async flushTxs() { await flushQ('txs', 'transactions') },
     deqTx() { return deQ('txs') }, // just for testing (in store.spec.js)
 
-    comment(text) { enQ('comments', { deviceId: cache.myAccount.deviceId, actorId: cache.myAccount.accountId, created: Math.floor(Date.now() / 1000), text: text }) },
+    comment(text) { enQ('comments', { deviceId:cache.myAccount.deviceId, actorId:cache.myAccount.accountId, created:u.now(), text:text }) },
     async flushComments() { flushQ('comments', 'comments') },
 
   }

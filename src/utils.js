@@ -1,20 +1,16 @@
 import store from '#store.js'
 import queryString from 'query-string'
 import { navigateTo } from 'svelte-router-spa'
-import { sha256 } from 'js-sha256'
+import u0 from '../utils0.js' // utilities shared with tests
 
 const api = _apis_[location.href.startsWith(_productionUrl_) ? 'real' : 'demo']
 
 const u = {
+  ...u0, // incorporate all function from utils0.js
+
   dlg(title, text, labels, m1, m2) {
     const m0 = [true, title, text, labels]
     return { m0, m1, m2 }
-  },
-
-  hash(s) {
-    const hash = sha256.create()
-    hash.update(s)
-    return hash.hex()
   },
 
   /**

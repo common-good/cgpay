@@ -7,7 +7,7 @@
   import queryString from 'query-string'
   import SubmitCharge from '#modules/SubmitCharge.svelte'
   import Modal from '#modules/Modal.svelte'; let m0, m1, m2
-  
+
 //  import { encrypt, createMessage, readKey } from 'openpgp'
 
   // --------------------------------------------
@@ -153,7 +153,7 @@
         const { selling } = result
         if (selling.length) tx.description = selling[0]
         store.setMyAccount({ ...$store.myAccount, selling: selling })
-        otherAccount = { ...otherAccount, ...result, lastTx: Date.now() } // lastTx date lets us jettison old customers to save storage
+        otherAccount = { ...otherAccount, ...result, lastTx:u.now() } // lastTx date lets us jettison old customers to save storage
         delete otherAccount.selling
         store.putAcct(card, otherAccount) // store and/or update stored customer account info
         store.setMyAccount({ ...$store.myAccount, lastTx: otherAccount.lastTx })
