@@ -25,10 +25,10 @@ const world = {
     'Gisette': { name:'Gisette', location:'Gton, MA', isCo:true, accountId:'K6VMDCG', cardCode:'12345g', deviceId:'devG', selling:'hardware' },
     'Hal': { name:'Hal Ate', location:'Hton, MA', isCo:false, accountId:'K6VMDCH', cardCode:'12345h', deviceId:'devH', selling:null },
     'Ida': { name:'Ida Nine', location:'Iton, MA', isCo:false, accountId:'K6VMDCI', cardCode:'12345i', deviceId:'devI', selling:null },
-    'Abe/Citre': { name:'Citre', location:'Cton, MA', isCo:true, accountId:'L6VMDCC', cardCode:'98765a', deviceId:'devC', selling:'groceries gifts sundries' },
-    'Bea/Citre': { name:'Citre', location:'Cton, MA', isCo:true, accountId:'L6VMDCC', cardCode:'98765b', deviceId:'devC', selling:'groceries gifts sundries' },
-    'Flo/Gisette': { name:'Gisette', location:'Gton, MA', isCo:true, accountId:'L6VMDCG', cardCode:'98765f', deviceId:'devG', selling:'hardware' },
-    'Invalid': { name:'Gisette', location:'Gton, MA', isCo:true, accountId:'L6VMDCG', cardCode:'98765x', deviceId:'devG', selling:'hardware' }, // bad card code (lost or stolen)
+    'Abe/Citre': { name:'Citre', location:'Cton, MA', isCo:true, accountId:'L6VMDCC0', cardCode:'98765a', deviceId:'devC', selling:'groceries gifts sundries' },
+    'Bea/Citre': { name:'Citre', location:'Cton, MA', isCo:true, accountId:'L6VMDCC1', cardCode:'98765b', deviceId:'devC', selling:'groceries gifts sundries' },
+    'Flo/Gisette': { name:'Gisette', location:'Gton, MA', isCo:true, accountId:'L6VMDCG0', cardCode:'98765f', deviceId:'devG', selling:'hardware' },
+    'Invalid': { name:'Gisette', location:'Gton, MA', isCo:true, accountId:'L6VMDCG0', cardCode:'98765x', deviceId:'devG', selling:'hardware' }, // bad card code (lost or stolen)
   },
 }
   
