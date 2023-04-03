@@ -16,7 +16,7 @@ const world = {
   chromiumPath: '', // can be used to test different versions of chromium
   seeLog: true, // show what the automated browser logs to console
   timeSlop: 10, // seconds between timestamps in tests is treated as negligible
-  maxScreenshots: 5, // tests crash if too many screenshots per run
+  maxScreenshots: 3, // tests crash if too many screenshots per run (5 is too much)
   picCount: 0,
 
   accounts: {
