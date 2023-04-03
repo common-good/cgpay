@@ -18,6 +18,10 @@ const u = {
   now() { return Math.floor(Date.now() / 1000) },
   clone(v) { return JSON.parse(JSON.stringify(v)) }, // deep clone (assumes object contains just objects, numbers, and strings)
 
+  emptyObj(obj) { return (obj === null || JSON.stringify(obj) === '{}') },
+  empty(s) { return (s === null || s === undefined || s === '' || s === 0 || u.emptyObj(s)) },
+  er(msg, details = null) { return { name:msg, message:u.empty(details) ? msg : details } },
+
 }
 
 export default u

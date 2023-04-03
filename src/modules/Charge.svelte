@@ -8,11 +8,8 @@
   import SubmitCharge from '#modules/SubmitCharge.svelte'
   import Modal from '#modules/Modal.svelte'; let m0, m1, m2
 
-//  import { encrypt, createMessage, readKey } from 'openpgp'
-
-  // --------------------------------------------
-  
-  // Example with curl: curl -d "actorId=G6VM03&amount=1234.98&created=1672959981&description=test%20food&deviceId=GrfaVyHkxnTf4cxsyIEjkWyNdK0wUoDK153r2LIBoFocvw73T&offline=false&otherId=H6VM0G0NyCBBlUF1qWNZ2k&proof=d0e4eaeb4e9c1dc9d80bef9eeb3ad1342fd24997156cb57575479bd3ac19d00b" -X POST -H "Content-type: application/x-www-form-urlencoded" 'https://demo.commongood.earth/api/transactions'
+// import { encrypt, createMessage, readKey } from 'openpgp'
+// Example with curl: curl -d "actorId=G6VM03&amount=1234.98&created=1672959981&description=test%20food&deviceId=GrfaVyHkxnTf4cxsyIEjkWyNdK0wUoDK153r2LIBoFocvw73T&offline=false&otherId=H6VM0G0NyCBBlUF1qWNZ2k&proof=d0e4eaeb4e9c1dc9d80bef9eeb3ad1342fd24997156cb57575479bd3ac19d00b" -X POST -H "Content-type: application/x-www-form-urlencoded" 'https://demo.commongood.earth/api/transactions'
 
   const dig36 = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
   const regionLens = '111111112222222233333333333344444444'
@@ -94,9 +91,9 @@
       testing = qr.includes('.RC4.')
     } else throw new Error('That is not a valid Common Good card format.')
 
-    if (!testing && $store.testMode) throw new Error('That is a real Common Good card and cannot be used in test mode.')
-    if (testing && !$store.testMode) throw new Error('That is a CGPay test card and cannot be used in production mode.')
-// NO. This risks our data integrity    if (testing != $store.testMode) changeMode(testing)
+    if (!testing && u.testMode()) throw new Error('That is a real Common Good card and cannot be used in test mode.')
+    if (testing && !u.testMode()) throw new Error('That is a CGPay test card and cannot be used in production mode.')
+// NO. This risks our data integrity    if (testing != u.testMode()) changeMode(testing)
 
     const agentLen = +agentLens[dig36.indexOf(acct[0])]
     const mainId = getMainId(acct)

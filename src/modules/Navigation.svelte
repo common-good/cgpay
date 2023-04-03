@@ -32,7 +32,7 @@
   item('Comments & Suggestions', comment, () => store.isSignedIn() && !$store.selfServe, 'comment')
   item('Sign Out', signOut, () => (store.isSignedIn() || u.pageUri() == 'link-account') && !$store.selfServe, 'signout')
 
-if ($store.testMode) {
+if (u.testMode()) {
     item('🌈 Turn Wifi Off', wifiOff, () => $store.useWifi)
     item('🌈 Turn Wifi On', wifiOn, () => !$store.useWifi)
     item('🌈 START OVER', clearData, () => true)

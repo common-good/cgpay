@@ -1,4 +1,5 @@
-import store from '#store.js'
+import store from './store.js'
+import c from '../constants.js'
 import queryString from 'query-string'
 import { navigateTo } from 'svelte-router-spa'
 import u0 from '../utils0.js' // utilities shared with tests
@@ -28,7 +29,7 @@ const u = {
    * @throws an AbortError if the fetch times out (identify with isTimeout())
    */
   async timedFetch(url, options = {}) {
-    if (!store.inspect().online) throw new Error('offline') // this works for setWifiOff also
+    if (!store.inspect().online) throw u.er('Offline') // this works for setWifiOff also
     if (options.method != 'POST') url += '&version=' + _version_
     const { timeout = _fetchTimeoutMs_, type = 'json' } = options;
     const aborter = new AbortController();
@@ -59,13 +60,14 @@ const u = {
     })
   },
 
-  just(which, obj) { res = {}; for (let k in which.split(' ')) res[k] = obj[k]; return res }, // subset of object
+  testMode() { return !location.href.startsWith(c.productionUrl) },
+  fromTester() { return (typeof window.fromTester === 'function' && window.fromTester()) },
   yesno(question, m1, m2) { return u.dlg('Confirm', question, 'Yes, No', m1, m2) },
   confirm(question) { return u.dlg('Alert', question, 'OK', null, null) },
-  crash(er) { console.log(er); return er.message },
+  crash(er) { console.log('crash', er); return er.message },
   goEr(msg) { store.setMsg(msg); navigateTo('/home') },
   goHome(msg) { store.setMsg(msg), navigateTo('/home') },
-  isTimeout(er) { return (typeof er === 'object' && er.name == 'AbortError') },
+  isTimeout(er) { return (typeof er === 'object' && er.name == 'AbortError' || er.name == 'Offline') },
   pageUri() { return location.href.substring(location.href.lastIndexOf('/') + 1) },
   isApple() { return /iPhone|iPod|iPad/i.test(navigator.userAgent) },
   isAndroid() { return !u.isApple() && /Android/i.test(navigator.userAgent) },

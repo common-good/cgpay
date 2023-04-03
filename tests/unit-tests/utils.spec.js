@@ -1,11 +1,12 @@
 import { createStore } from '#store.js'
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest'
+import c from '#constants.js'
+import u from '#utils.js'
 
-const storeKey = 'cgpay'
 const originalNavigator = navigator
 
 function setupLocalStorage(data) {
-  return localStorage.setItem(storeKey, JSON.stringify(data))
+  return localStorage.setItem(c.storeKey, JSON.stringify(data))
 }
 
 function setUA(agent) {
@@ -26,7 +27,7 @@ describe('utils', () => {
     describe('when the user is on an Android mobile device', () => {
       it('is Android', () => {
         setUA('Android')
-        expect(isAndroid).toEqual(true)
+        expect(u.isAndroid()).toEqual(true)
         expect(isApple()).toEqual(false)
       })
     })
@@ -34,15 +35,15 @@ describe('utils', () => {
     describe('when the user is on an Apple mobile device', () => {
       it('is Apple', () => {
         setUA('Apple')
-        expect(isAndroid).toEqual(false)
-        expect(isApple()).toEqual(true)
+        expect(u.isAndroid()).toEqual(false)
+        expect(u.isApple()).toEqual(true)
       })
     })
 
     describe('when the user is not on a mobile device', () => {
       it('is Other', () => {
         setUA('Other')
-        expect(!isApple() && !isAndroid()).toEqual(true)
+        expect(!u.isApple() && !u.isAndroid()).toEqual(true)
       })
     })
 
@@ -51,7 +52,7 @@ describe('utils', () => {
         it('is true', () => {
           setUA('Apple')
           setupLocalStorage({ sawAdd:false })
-          expect(addableToHome()).toEqual(true)
+          expect(u.addableToHome()).toEqual(true)
         })
       })
 
@@ -59,7 +60,7 @@ describe('utils', () => {
         it('is true', () => {
           setUA('Android')
           setupLocalStorage({ sawAdd:false })
-          expect(addableToHome()).toEqual(true)
+          expect(u.addableToHome()).toEqual(true)
         })
       })
 
@@ -67,7 +68,7 @@ describe('utils', () => {
         it('is false', () => {
           setUA('Other')
           setupLocalStorage({ sawAdd:false })
-          expect(addableToHome()).toEqual(false)
+          expect(u.addableToHome()).toEqual(false)
         })
       })
 
@@ -75,7 +76,7 @@ describe('utils', () => {
         it('is false', () => {
           setUA('Apple')
           setupLocalStorage({ sawAdd:true })
-          expect(addableToHome()).toEqual(false)
+          expect(u.addableToHome()).toEqual(false)
         })
       })
     })

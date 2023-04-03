@@ -23,13 +23,14 @@
   }
 
   onMount(async () => {
+    if ($store.frontCamera == null) store.setFrontCamera(!u.isApple() && !u.isAndroid())
     store.setQr(null) // no going back to previous customer
     if ($store.erMsg) er($store.erMsg)
     if ($store.myAccount) try {
-      const q = {deviceId: $store.myAccount.deviceId, actorId: $store.myAccount.accountId, lastTx: $store.myAccount.lastTx || -1 }
+      const q = {deviceId:$store.myAccount.deviceId, actorId:$store.myAccount.accountId, lastTx:$store.myAccount.lastTx || -1 }
       const query = queryString.stringify(q)
       const { result } = await u.timedFetch(`latest?${ query }`)
-    } catch (er) { console.log(er) }
+    } catch (er) { console.log('latest er', er) }
   })
 </script>
 

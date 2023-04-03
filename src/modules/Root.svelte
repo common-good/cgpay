@@ -18,8 +18,9 @@
 
   // Initialization Helpers
 
+  if (u.fromTester()) store.fromTester()
   function timeOut() {
-    if (typeof window.reloadStore === 'function' && window.reloadStore()) store.reload()
+    if (u.fromTester()) store.fromTester()
     store.resetNetwork()
     setTimeout(timeOut, c.networkTimeoutMs)
   }

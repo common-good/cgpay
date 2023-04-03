@@ -1,6 +1,7 @@
 import { assert, expect } from 'chai'
 import c from '../../constants.js'
 import u from '../../utils0.js'
+import cache from '../../src/cache.js'
 import w from './world.js'
 
 const baseUrl = 'http://localhost:' + c.port + '/'
@@ -9,7 +10,10 @@ const t = {
 
   // UTILITY FUNCTIONS
 
-  whatPage: async () => { 
+  getst(key = c.storeKey) { return JSON.parse(localStorage.getItem(key)) }, // for debugging
+  async pic(picName) { await w.page.screenshot({ path:picName + '.png' }) }, // screen capture
+
+  async whatPage() { 
     const el = await w.page.$('.page')
     try {
       return el ? await w.page.$eval( '.page', el => getAttribute('data-testid') ) : null
@@ -23,33 +27,44 @@ const t = {
    * Get all stored values (the storage state)
    * @returns {*} st: an object containing all the app's stored values
    */
-  getStore: async () => {
-    const st = await w.page.evaluate((key) => localStorage.getItem(key), c.storeKey)
+  async getStore(key = c.storeKey) {
+    const localStorage = await w.page.evaluate(() =>  Object.assign({}, window.localStorage))
+    return JSON.parse(localStorage[key])
+    const st = await w.page.evaluate(k => { return localStorage.getItem(k) }, key)
     return JSON.parse(st)
   },
 
-  putStore: async (st) => {
-    await w.page.evaluate((k, v) => {
-      localStorage.setItem(k, JSON.stringify(v))
-    }, c.storeKey, st)
-    w.reloadStore = true
-    await w.page.waitForTimeout(c.networkTimeoutMs + 1) // give the network timeout function time to reload the store
+  async putStore(st, key = c.storeKey) {
+    if (u.empty(st)) st = {}
+    st = JSON.stringify(st)
+    await w.page.evaluate((k, v) => { localStorage.setItem(k, v) }, key, st)
+    await w.page.waitForTimeout(c.networkTimeoutMs +1) // give the network timeout function time to reload the store
   },
 
-  getv: async (k) => {
+  async getv(k) {
     const st = await t.getStore()
     return st ? st[k] : null
   },
 
-  putv: async (k, v) => {
+  async putv(k, v) {
     let st = await t.getStore()
-//    console.log('st before putv:', st, 'v:', v)
-    if (st == null) st = {}
-    st[k] = v
-//    console.log('st after putv:', st, 'v:', v)
+    if (u.empty(st)) st = { ...cache }
+    st['fromTester'][k] = st[k] = v
+    if (k == 'online') st['fromTester']['useWifi'] = st['useWifi'] = v // these values go together for faking online/offline
     await t.putStore(st)
+    w.tellApp = true
   },
 
+  /**
+   * This function is exposed to the app by the "page.exposeFunction" function in BeforeAll() (see in hooks.js).
+   * @returns true if there is data waiting for the app to store (see t.putv() and store.fromTester())
+   */
+  async tellApp() {
+    const res = w.tellApp
+    w.tellApp = false
+    return res
+  },
+  
   these: ({ rawTable:rows }, one ) => {
 //    console.log('rows:', rows)
     if (one) t.test(rows.length, 2)
@@ -73,11 +88,13 @@ const t = {
     if (v == 'null') return null
     if (v == 'true') return true
     if (v == 'false') return false
+    if (v == 'other') return 'garbage' // this even works for k='qr'
 
     const me = w.accounts[v]
+//    console.log('adjust v', v, 'me', me)
     if (me != null) return k == 'actorId' ? me.accountId
     : (k == 'otherId' ? me.accountId + me.cardCode
-    : (k == 'qr' ? 'HTTP://6VM.RC4.ME/' + me.qr.substring(0, 1) + me.qr.substring(4) + me.cardCode
+    : (k == 'qr' ? 'HTTP://6VM.RC4.ME/' + me.accountId.substring(0, 1) + me.accountId.substring(4) + me.cardCode
     : (v) ))
 
     return v
@@ -98,7 +115,7 @@ const t = {
       t.test(got.length, want.length)
       let modei
       for (let i in want) {
-        modei = mode == null ? (t.isTimeField(i) ? '<2' : null) : mode
+        modei = u.empty(mode) ? (t.isTimeField(i) ? '<' + w.timeSlop : null) : mode
         t.test(got[i], want[i], i, modei)
       }
       return
@@ -107,24 +124,27 @@ const t = {
     if (want == '?') return // anything is acceptable
     const msg = `got: ${got} wanted: ${want}`
     want = t.adjust(want, field)
-    if (mode == 'exact' || mode == null) {
+    if (mode === false) {
+      assert.notEqual(got, want, msg + ' - NOT')
+    } else if (mode == 'exact' || mode == null) {
       assert.equal(got, want, msg)
-     } else if (mode == 'part') {
+    } else if (mode == 'part') {
       assert.include(got, want, msg)
     } else if (mode.substring(0, 1) == '<') {
       assert.isBelow(Math.abs(got - want), +mode.substring(1), msg)
     } else assert.fail('bad mode:' + mode)
   },
 
-  element: async (testId) => { return await w.page.$(t.sel(testId)) },
-  sel: (testId) => { return `[data-testid="${testId}"]` },
-  isTimeField: (k) => { return 'created'.split(' ').includes(k) },
-
+  async element(testId) { return await w.page.$(t.sel(testId)) },
+  sel(testId) { return `[data-testid="${testId}"]` },
+  isTimeField(k) { return 'created'.split(' ').includes(k) },
+  
   // MAKE / DO
 
-  visit: async (target, wait = 'networkidle0') => { 
+  async visit(target, wait = 'networkidle0') { 
     const options = wait ? { waitUntil:wait } : {} // load, domcontentloaded, networkidle0, or networkidle2
-    return await w.page.goto(baseUrl + target, options)
+    await w.page.goto(baseUrl + target, options)
+    t.pic('visited')
   },
 
   /**
@@ -172,6 +192,36 @@ const t = {
     t.test(await t.getv(k), v, k)
   },
 
+  /**
+   * Set or compare accts[] or choices[] in the store to the expected list.
+   * Confirm only that the key, agent, and name of each entry are as expected.
+   * @param string field: which field - accts or choices
+   * @param {*} row: a single row/list of account identifiers
+   * @param bool set: true if setting the value
+   */
+  theseAccts: async (field, { rawTable:row }, set = false) => {
+    row = row[0]
+    let accts = await t.getv(field)
+    if (set && !accts) accts = field == 'accts' ? {} : []
+    if (!set) assert.isNotNull(accts, `missing ${field} array in store`) // accts has no length, so it might have extra accounts, which is fine
+    let me, name, agent
+    for (let i in row) {
+      me = w.accounts[row[i]]
+//      console.log('stored', field, 'i',i,'rowi',row[i],'choice',accts[i])
+      if (field == 'accts') {
+        ;([agent, name] = row[i].includes('/') ? row[i].split('/') : ['', me.name])
+        if (set) {
+          accts[me.accountId] = { hash:u.hash(me.cardCode), data:{ agent:agent, name:name, location:me.location, limit:200, creditLine:9999 } }
+        } else t.test(u.just('agent name', accts[me.accountId].data), { agent:agent, name:name })
+      } else { // choices
+        if (set) {
+          accts.push(u.just('accountId deviceId qr isCo name selling', me))
+        } else t.test(u.just('accountId isCo name selling', accts[i]), u.just('accountId isCo name selling', me))
+      }
+    }
+    if (set) await t.putv(field, accts)
+  },
+
   onPage: async (id) => {
     const el = await w.page.$(`#${id}`)
     if (el == null) {
@@ -196,10 +246,10 @@ const t = {
 
   dontSee: async (testId) => { assert.isNull(await t.element(testId), "shouldn't see" + testId) },
 
-  signedInAs: async (who) => {
+  signedInAs: async (who, set = false) => {
     const me = w.accounts[who]
     if (set) await t.putv('myAccount', { ...u.just('name isCo accountId deviceId selling', me), qr:'qr' + me.name.substring(0, 1) })
-    if (!set) t.test(await t.getv('myAccount'), u.just('name isCo accountId selling', me))
+    if (!set) t.test(u.just('name isCo accountId selling', await t.getv('myAccount')), u.just('name isCo accountId selling', me))
   }
 
 }

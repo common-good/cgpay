@@ -6,6 +6,8 @@ import { exec } from 'node:child_process'
 import w from './world.js' // the world
 import c from '../../constants.js'
 import t from './support.js' // test support utilities
+import u from '../../utils0.js'
+import { empty } from 'svelte/internal'
 
 setDefaultTimeout(w.testTimeoutMs)
 
@@ -22,12 +24,15 @@ BeforeAll(async () => {
   if (w.chromiumPath) launchOptions.executablePath = w.chromiumPath
 
   w.browser = await puppeteer.launch(launchOptions)
-  w.page = await w.browser.newPage()
+})
+
+Before(async () => {
+  w.page = await w.browser.newPage() // open a new page every time, just to make sure it's the same state each time
   w.fetcher = w.page
 //  w.fetcher = await w.browser.newPage() // for fetching done just for test purposes
 //  w.page.setViewport({ width: 1280, height: 1024 })
 
-  w.page.exposeFunction('reloadStore', reloadStore) // tell store to update cache (after we changed localStorage -- see t.putStore)
+  w.page.exposeFunction('fromTester', t.tellApp) // tell store to update cache (after we changed localStorage -- see t.putStore)
 //  w.page.exposeFunction('mockFetch', mockFetch) // tell utils to mock fetches (keep this line)
 
   if (w.seeLog) w.page.on('console', async e => { // log whatever the page logs
@@ -36,32 +41,22 @@ BeforeAll(async () => {
       || (!args[0].includes('was created with unknown prop') && !args[0].includes('[vite] connect'))) console.log(...args)
   })
 
-  setupTestData()
-})
-
-Before(async () => {
-  w.page.setOfflineMode(false)
   try { // initialize API for tests (must happen before initializing store)
     await postToTestEndpoint('initialize')
   } catch (er) { console.log('error initializing API:', er) }  
 
   await t.visit('empty') // required before putStore
-  await t.putStore(null) // have nothing in localStorage until we set it explicitly or visit a page
+//  w.tellApp = true
+//  await t.putStore(null) // have nothing in localStorage until we set it explicitly or visit a page
+  await t.putv('fromTester', 'restart') // has no effect
 })
 
-// After(async () => {})
+After(async () => { w.page.close()})
 
 AfterAll(async () => {
   w.browser.close().then() // this crashes if no tests are found and you use "await" (trying to catch the error fails)
   //  await fkill(':3000')
 })
-
-function reloadStore() {
-  const res = w.reloadStore
-  w.reloadStore = false
-  return res
-}
-
 
 /**
  * Post to the "test" endpoint.

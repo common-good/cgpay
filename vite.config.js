@@ -22,6 +22,7 @@ export default defineConfig({
   resolve: { // note: aliases are not available in tests or style imports
     alias: {
       '#store.js':     root + '/src/store.js',
+      '#cache.js':     root + '/src/cache.js',
       '#utils.js':     root + '/src/utils.js',
       '#constants.js': root + '/constants.js',
       '#modules':      root + '/src/modules',

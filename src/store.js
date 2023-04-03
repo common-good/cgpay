@@ -1,16 +1,9 @@
-import { writable } from 'svelte/store'
-import u from '#utils.js'
-
-// --------------------------------------------
-// use this example for set() and get(): https://svelte.dev/repl/ccbc94cb1b4c493a9cf8f117badaeb31?version=3.16.7
+// use this example for setv() and get(): https://svelte.dev/repl/ccbc94cb1b4c493a9cf8f117badaeb31?version=3.16.7
 
 /**
  * Data structure
  *
  * The following data is stored, and cached in "cache" while the app runs.
- * 
- * CONSTANTS
- *   bool testMode: true if the app is in test mode
  * 
  * SCALARS
  *   int sawAdd: Unix timestamp when user saw the option to save the app to their home screen
@@ -56,7 +49,6 @@ import u from '#utils.js'
  *        name: name of the account
  *        agent: agent for the account, if any
  *        location: location of the account (city, ST)
- *        avatar: small version of the photo associated with the account
  *        limit: maximum amount this account can be charged at this time (leaving room for Stepups)
  *        creditLine: the account's credit line
  *        avgBalance: the account’s average balance over the past 6 months
@@ -67,74 +59,42 @@ import u from '#utils.js'
  *      accountId, deviceId, name, qr, isCo, and selling as in the choices array described above
  *      lastTx: Unixtime (in ms) of the last transaction known to this device (null if none)
  */
+import { writable } from 'svelte/store'
+import u from '#utils.js'
+import c from '#constants.js'
+import cache0 from '#cache.js'
 
 export const createStore = () => {
   const lostMsg = `Tell the customer "I'm sorry, that card is marked "LOST or STOLEN".`
 
-  const defaults = {
-    testMode: !location.href.startsWith(_productionUrl_),
-    sawAdd: false,
-    qr: null,
-    msg: null, // not yet used
-    erMsg: null,
-    cameraCount: 0, // set this when scanning for the first time
-    frontCamera: (!u.isApple() && !u.isAndroid()),
-    online: null,
-    useWifi: true,
-    selfServe: false,
-
-    choices: null,
-    txs: [],
-    comments: [],
-
-    corrupt: null,
-    accts: {},
-    myAccount: null,
-  }
-
-  let cache = { ...defaults, ...storedState() }
-  for (let k in cache) if (!(k in defaults)) delete cache[k]
-  storeLocal(cache) // update store with any changes in defaults (crucial for tests)
+  let cache = { ...cache0, ...getst() }
+  for (let k in cache) if (!(k in cache0)) delete cache[k]
+  save(cache) // update store with any changes in defaults (crucial for tests)
   
   const { subscribe, update } = writable(cache)
 
-  function storedState() { return JSON.parse(localStorage.getItem(_storeKey_)) }
-
-  function storeLocal(state) {
-    localStorage.setItem(_storeKey_, JSON.stringify(state))
-    cache = state
-    return state
-  }
-
-  function set(k, v) { update(st => {
-    st[k] = v
-    return storeLocal(st)
-  })}
-
-  function enQ(k, v) { update(st => {
-    st[k].push(v)
-    return storeLocal(st)
-  })}
-
-  function deQ(k) { update(st => { // this is actually FIFO (shift) not LIFO (pop)
-    st[k].shift()
-    return storeLocal(st)
-  })}
+  function getst() { return JSON.parse(localStorage.getItem(c.storeKey)) }
+  function save(st) { localStorage.setItem(c.storeKey, JSON.stringify(st)); cache = st; return st }
+  function setst(st) { return save(st) }
+  function setv(k, v) { update(st => { st[k] = v; return save(st) })}
+  function enQ(k, v) { update(st => { st[k].push(v); return save(st) })}
+  function deQ(k) { update(st => { st[k].shift(); return save(st) })} // this is actually FIFO (shift) not LIFO (pop)
+  function del(k) { st0.update(st => { delete st[k]; return save(st) }) } // unused, but keep
 
   async function flushQ(k, endpoint) {
-    if (cache.corrupt == _version_) return; else res.setCorrupt(null) // don't retry hopeless tx indefinitely
+    if (cache.corrupt == c.version) return; else st.setCorrupt(null) // don't retry hopeless tx indefinitely
     
     while (cache[k].length > 0) {
-      if (!res.useWifi) return; // allow immediate interruptions
+      if (!st.useWifi) return; // allow immediate interruptions
       try {
         await u.postRequest(endpoint, cache[k][0])
       } catch (er) {
         if (u.isTimeout(er)) {
-          res.setOnline(false)
+          st.setOnline(false)
         } else {
-          console.log(er.message) // keep this
-          console.log(cache[k]) // keep this
-          res.setCorrupt(_version_)
+          console.log(er) // keep this
+          console.log('cache', k, cache[k]) // keep this
+          st.setCorrupt(c.version)
         }
         return // don't deQ when there's an error
       }
@@ -144,35 +104,44 @@ export const createStore = () => {
 
   // --------------------------------------------
 
-  const res = {
-    subscribe,
+  const st = {
+//    subscribe,
+    subscribe(func) { // extend the writable subscribe method to check messages from test framework first
+      if (u.fromTester()) st.fromTester() // make sure we have the latest data before fulfilling a subscription
+      return subscribe(func)
+    },
 
-    reload() { cache = storedState() }, // called only from tests (see Route.svelte and hooks.js)
+    fromTester() { // called only in test mode (see Route.svelte, hooks.js, and t.tellApp)
+      const fromTester = getst().fromTester
+      setv('fromTester', {})
+      if (!u.empty(fromTester)) {
+        if (fromTester === 'restart') return st.clearData()
+        for (let k of Object.keys(fromTester)) setv(k, fromTester[k])
+      }
+    },
     inspect() { return cache },
 
-    setQr(v) { set('qr', v) },
-    setMsg(v) { set('erMsg', v) },
-    setCorrupt(version) { set('corrupt', version) }, // pause uploading until a new version is released
-    setWifi(yesno) { set('useWifi', yesno); set('online', false); this.resetNetwork() },
-    setSelfServe(yesno) { set('selfServe', yesno) },
+    setQr(v) { setv('qr', v) },
+    setMsg(v) { setv('erMsg', v) },
+    setCorrupt(version) { setv('corrupt', version) }, // pause uploading until a new version is released
+    setWifi(yesno) { setv('useWifi', yesno); setv('online', false); st.resetNetwork() },
+    setSelfServe(yesno) { setv('selfServe', yesno) },
 
-    setAcctChoices(v) { set('choices', v) },
-    setMyAccount(acct) { set('myAccount', acct ? { ...acct } : null) },
+    setAcctChoices(v) { setv('choices', v) },
+    setMyAccount(acct) { setv('myAccount', acct ? { ...acct } : null) },
     isSignedIn() { return (cache.myAccount != null) },
-    signOut() { set('myAccount', null) },
-    clearData() { if (cache.testMode) update(st => {
-        st = { ...defaults }
-        return storeLocal(st)
-    })},
+    signOut() { setv('myAccount', null) },
+    clearData() { if (u.testMode()) setst({ ...cache0 }) },
 
-    setSawAdd() { set('sawAdd', u.now()) },
-    setCameraCount(n) { set('cameraCount', n) },
-    setFrontCamera(yesno) { set('frontCamera', yesno) },
+    setSawAdd() { setv('sawAdd', u.now()) },
+    setCameraCount(n) { setv('cameraCount', n) },
+    setFrontCamera(yesno) { setv('frontCamera', yesno) },
 
-    resetNetwork() { if (cache.useWifi) this.setOnline(navigator.onLine) },
-    setOnline(yesno) {
-      set('online', cache.useWifi ? yesno : false) // it makes no sense to store this in localStore, but hurts nothing
-      if (cache.useWifi && yesno) { this.flushTxs(); this.flushComments() }
+    resetNetwork() { if (cache.useWifi) st.setOnline(navigator.onLine) },
+    setOnline(yesno) { // handling this in store helps with testing
+      const v = cache.useWifi ? yesno : false
+      if (v !== cache.online) setv('online', v)
+      if (cache.useWifi && yesno) { st.flushTxs(); st.flushComments() }
     },
 
     /**
@@ -182,7 +151,7 @@ export const createStore = () => {
      */
     putAcct(card, acctData) { update(st => {
       st.accts[card.acct] = { hash: card.hash, data: { ...acctData } } // only the hash of the security code gets stored
-      return storeLocal(st)
+      return save(st)
     })},
     getAcct(card) {
       const acct = cache.accts[card.acct]
@@ -197,7 +166,7 @@ export const createStore = () => {
         const q = [ ...st.txs ]
         const tx2 = q.pop()
         const tx1 = q.pop()
-        if (tx1 && tx2 && tx2.created == tx1.created && tx2.amount == -tx1.amount) return storeLocal({ ...st, txs: q })
+        if (tx1 && tx2 && tx2.created == tx1.created && tx2.amount == -tx1.amount) return save({ ...st, txs: q })
         return st
       })
     },
@@ -214,9 +183,7 @@ export const createStore = () => {
 
   }
 
-  for (let k in cache) res[k] = cache[k]
-
-  return res
+  return st
 }
 
 // --------------------------------------------
