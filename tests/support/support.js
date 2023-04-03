@@ -30,8 +30,6 @@ const t = {
   async getStore(key = c.storeKey) {
     const localStorage = await w.page.evaluate(() =>  Object.assign({}, window.localStorage))
     return JSON.parse(localStorage[key])
-    const st = await w.page.evaluate(k => { return localStorage.getItem(k) }, key)
-    return JSON.parse(st)
   },
 
   async putStore(st, key = c.storeKey) {
