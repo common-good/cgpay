@@ -29,7 +29,7 @@ Scenario: I scan a company agent's QR
   And ? I see "theirLocation" is "Cton, MA"
 
 Rule: Company accounts can scan an individual or company card
-@scan1
+
 Scenario: A company scans an individual's QR
   Given I am signed in as "Bea/Citre"
   When I scan "Abe"
@@ -42,17 +42,17 @@ Scenario: A company scans an individual's QR
   | Abe |
 
 Rule: Scanning an invalid card produces an error message
-@scan2
+
 Scenario: I scan my own card
   When I scan "Bea"
   Then ? I am on page "home" 
   And ? I see this error: "same account as yours"
-@scan3
+
 Scenario: I scan an invalid or stolen card
   When I scan "Invalid"
   Then ? I am on page "home" 
   Then ? I see this error: "not a valid Common Good card"
-@scan4
+
 Scenario: I scan a QR for something else
   When I scan "Other"
   Then ? I am on page "home" 

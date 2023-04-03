@@ -10,7 +10,6 @@
   export let currentRoute // else Svelte complains (I don't know why yet)
   export let params // else Svelte complains (I don't know why yet)
 
-  const devMode = location.href.includes('localhost')
   const myQr = $store.myAccount?.qr
 
   function er(msg) { 
@@ -30,7 +29,7 @@
       const q = {deviceId:$store.myAccount.deviceId, actorId:$store.myAccount.accountId, lastTx:$store.myAccount.lastTx || -1 }
       const query = queryString.stringify(q)
       const { result } = await u.timedFetch(`latest?${ query }`)
-    } catch (er) { console.log('latest er', er) }
+    } catch (er) { if (!u.isTimeOut(er)) console.log('latest er', er) }
   })
 </script>
 
@@ -62,7 +61,7 @@
   { /if }
 
   <div class="charge">
-    { #if devMode }
+    { #if u.devMode() }
       <div class="fakes">
         <button on:click={ () => fake('HTTP://6VM.RC4.ME/KDCA12345a') }>A</button>
         <button on:click={ () => fake('HTTP://6VM.RC4.ME/KDCB12345b') }>B</button>

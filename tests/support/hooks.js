@@ -1,19 +1,18 @@
 import { setDefaultTimeout, After, Before, BeforeAll, AfterAll } from '@cucumber/cucumber'
 import puppeteer from 'puppeteer'
 import queryString from 'query-string'
-import fkill from 'fkill'
 import { exec } from 'node:child_process'
 import w from './world.js' // the world
 import c from '../../constants.js'
 import t from './support.js' // test support utilities
-import u from '../../utils0.js'
-import { empty } from 'svelte/internal'
 
 setDefaultTimeout(w.testTimeoutMs)
 
-BeforeAll(async () => {
-//  await exec('npm run dev')
+BeforeAll(async () => { // before the whole group of tests (NPM test @whatever)
+// fails  exec('NPM RUN DEV', function(err, stdout, stderr) { console.log(stdout) })
+})
 
+Before(async () => { // before each scenario
   const ci = process.env.CIRCLECI // headless and fast when doing continuous integration
   const launchOptions = {
     headless: ci ? true : w.headlessMode,
@@ -22,14 +21,11 @@ BeforeAll(async () => {
 //    ignoreDefaultArgs: ['--disable-extensions'],
   }
   if (w.chromiumPath) launchOptions.executablePath = w.chromiumPath
-
-  w.browser = await puppeteer.launch(launchOptions)
-})
-
-Before(async () => {
-  w.page = await w.browser.newPage() // open a new page every time, just to make sure it's the same state each time
-  w.fetcher = w.page
+  
+  w.browser = await puppeteer.launch(launchOptions) // recreate for each scenario, otherwise page doesn't get fully cleared
 //  w.fetcher = await w.browser.newPage() // for fetching done just for test purposes
+  w.page = await w.browser.newPage()
+  w.fetcher = w.page
 //  w.page.setViewport({ width: 1280, height: 1024 })
 
   w.page.exposeFunction('fromTester', t.tellApp) // tell store to update cache (after we changed localStorage -- see t.putStore)
@@ -46,17 +42,15 @@ Before(async () => {
   } catch (er) { console.log('error initializing API:', er) }  
 
   await t.visit('empty') // required before putStore
-//  w.tellApp = true
-//  await t.putStore(null) // have nothing in localStorage until we set it explicitly or visit a page
-  await t.putv('fromTester', 'restart') // has no effect
+  await t.putStore(null) // have nothing in localStorage until we set it explicitly or visit a page
+  w.tellApp = false
 })
 
-After(async () => { w.page.close()})
-
-AfterAll(async () => {
+After(async () => { 
   w.browser.close().then() // this crashes if no tests are found and you use "await" (trying to catch the error fails)
-  //  await fkill(':3000')
 })
+
+AfterAll(async () => { })
 
 /**
  * Post to the "test" endpoint.

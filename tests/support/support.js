@@ -11,7 +11,8 @@ const t = {
   // UTILITY FUNCTIONS
 
   getst(key = c.storeKey) { return JSON.parse(localStorage.getItem(key)) }, // for debugging
-  async pic(picName) { await w.page.screenshot({ path:picName + '.png' }) }, // screen capture
+  async pic(picName) { w.picCount++; if (w.picCount < w.maxScreenshots) await w.page.screenshot({ path:picName + '.png' }) }, // screen capture
+  async wait(secs) { await w.page.waitForTimeout(secs * 1000) },
 
   async whatPage() { 
     const el = await w.page.$('.page')
@@ -30,8 +31,6 @@ const t = {
   async getStore(key = c.storeKey) {
     const localStorage = await w.page.evaluate(() =>  Object.assign({}, window.localStorage))
     return JSON.parse(localStorage[key])
-    const st = await w.page.evaluate(k => { return localStorage.getItem(k) }, key)
-    return JSON.parse(st)
   },
 
   async putStore(st, key = c.storeKey) {
@@ -94,7 +93,7 @@ const t = {
 //    console.log('adjust v', v, 'me', me)
     if (me != null) return k == 'actorId' ? me.accountId
     : (k == 'otherId' ? me.accountId + me.cardCode
-    : (k == 'qr' ? 'HTTP://6VM.RC4.ME/' + me.accountId.substring(0, 1) + me.accountId.substring(4) + me.cardCode
+    : (k == 'qr' ? c.testQrStart + me.accountId.substring(0, 1) + me.accountId.substring(4) + me.cardCode
     : (v) ))
 
     return v
