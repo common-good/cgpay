@@ -21,6 +21,14 @@ Scenario: A user with one account signs in
   And I click "btn-signin"
   And I wait 2 seconds
   Then ? I am on page "home"
-  And ? this "myAccount":
-  | accountId | deviceId | name     | qr | isCo  | selling | lastTx |
-  | K6VMDJL   | ?        | Dee Four | ?  | false | null    | null   |
+  And ? I am signed in as "Dee"
+@signin1
+Scenario: A user with multiple accounts signs in
+  Then ? I am on page "sign-in"
+  When I input "a" as "identifier"
+  And I input "k" as "password"
+  And I click "btn-signin"
+  And I wait 2 seconds
+  Then ? I am on page "link-account"
+  And ? these choices:
+  | Abe | Abe/Citre |

@@ -7,14 +7,12 @@ Feature: Scan QR Code
 Implicit Background: see features/background.txt
 
 Background:
- * this "myAccount":
- | accountId | deviceId | name    | qr | isCo  | selling | lastTx |
- | K6VMDJJ   | devB     | Bea Two | ?  | false | null    | null   |
+ * I am signed in as "Bea"
 
 Rule: Personal accounts can scan an individual or company card
 
 Scenario: I scan an individual's QR
-  When I scan "HTTP://6VM.RC4.ME/KDJI12345a"
+  When I scan "Abe"
   Then ? I am on page "charge"
   And ? I am on page "charge-profile"
   And ? I see "theirPhoto"
@@ -22,7 +20,7 @@ Scenario: I scan an individual's QR
   And ? I see "theirLocation" is "Aton, MA"
 
 Scenario: I scan a company agent's QR
-  When I scan "HTTP://6VM.RC4.ME/LDJK098765a"
+  When I scan "Abe/Citre"
   Then ? I am on page "charge"
   And ? I am on page "charge-profile"
   And ? I see "theirPhoto"
@@ -31,31 +29,31 @@ Scenario: I scan a company agent's QR
   And ? I see "theirLocation" is "Cton, MA"
 
 Rule: Company accounts can scan an individual or company card
-
+@scan1
 Scenario: A company scans an individual's QR
-  Given this "myAccount":
- | accountId | deviceId | name    | qr | isCo  | selling                  | lastTx |
- | L6VMDJK0  | devC     | Citre   | ?  | true  | groceries/gifts/sundries | %today |
-  When I scan "HTTP://6VM.RC4.ME/KDJI12345a"
+  Given I am signed in as "Bea/Citre"
+  When I scan "Abe"
   Then ? I am on page "charge"
   And ? I am on page "charge-profile"
   And ? I see "theirPhoto"
   And ? I see "theirName" is "Abe One"
   And ? I see "theirLocation" is "Aton, MA"
+  And ? these accounts:
+  | Abe |
 
 Rule: Scanning an invalid card produces an error message
-
+@scan2
 Scenario: I scan my own card
-  When I scan "HTTP://6VM.RC4.ME/KDJJ12345b"
+  When I scan "Bea"
   Then ? I am on page "home" 
   And ? I see this error: "same account as yours"
-
+@scan3
 Scenario: I scan an invalid or stolen card
-  When I scan "HTTP://6VM.RC4.ME/KDJI12345x"
+  When I scan "Invalid"
   Then ? I am on page "home" 
   Then ? I see this error: "not a valid Common Good card"
-
+@scan4
 Scenario: I scan a QR for something else
-  When I scan "whatever"
+  When I scan "Other"
   Then ? I am on page "home" 
   Then ? I see this error: "not a valid Common Good card format"
