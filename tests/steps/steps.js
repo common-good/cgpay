@@ -15,10 +15,10 @@ Given('we are online', async function () { await t.putv('online', true) })
 
 When('I run the app', async function () { await t.visit(''); await t.pic('run') })
 When('I visit {string}', async function (site) { await t.visit(site) })
-When('I click {string}', async function(testId) { await w.page.click(t.sel(testId)); await t.pic('click') })
+When('I click {string}', async function(testId) { await w.page.click(t.sel(testId)); await t.pic('click'); await t.wait(2) })
 When('I scan {string}', async function (who) { await t.putv('qr', t.adjust(who, 'qr')); await t.visit('charge') })
 When('I input {string} as {string}', async function (text, inputId) { await t.input(inputId, text) })
-When('I wait {int} seconds', async function (seconds) { await w.page.waitForTimeout(seconds * 1000) })
+When('I wait {int} seconds', async function (secs) { await t.wait(secs) })
 
 Then('? I am signed in as {string}', async function (who) { await t.signedInAs(who) })
 Then('? this {string}:', async function (k, rows) { await t.testThis(k, rows) }) // object

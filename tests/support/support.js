@@ -12,6 +12,7 @@ const t = {
 
   getst(key = c.storeKey) { return JSON.parse(localStorage.getItem(key)) }, // for debugging
   async pic(picName) { w.picCount++; if (w.picCount < w.maxScreenshots) await w.page.screenshot({ path:picName + '.png' }) }, // screen capture
+  async wait(secs) { await w.page.waitForTimeout(secs * 1000) },
 
   async whatPage() { 
     const el = await w.page.$('.page')
