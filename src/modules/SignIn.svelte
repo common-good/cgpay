@@ -19,7 +19,7 @@
     try {
       const result = await u.postRequest('accounts', credentials)
 
-      if (result.accounts.length > 1) {
+      if (result.accounts.length > 1 && !$store.isReleaseA) {
         store.setAcctChoices(result.accounts)
         navigateTo('/link-account')
       } else {

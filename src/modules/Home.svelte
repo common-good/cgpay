@@ -73,9 +73,11 @@
         <button on:click={ () => fake('garbage') }>Worse</button>
       </div>
     { /if }
-    <!-- Scan feature disabled for A Release -->
-    <!-- <a class="scan-customer" href='/scan'>Scan QR Code to Charge</a> -->
-    <a class="survey" href="https://forms.gle/M8Hv1W2oSgw2yQzS7" target="_blank">Take Our User Experience Survey</a>
+    { #if $store.isReleaseA }
+      <a class="survey" href="https://forms.gle/M8Hv1W2oSgw2yQzS7" target="_blank">Take Our User Experience Survey</a>
+    { :else }
+      <a class="scan-customer" href='/scan'>Scan QR Code to Charge</a>
+    { /if }
   </div>
 </section>
 
