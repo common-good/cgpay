@@ -4,6 +4,9 @@ const constants = {
   port: 3000,
   fetchTimeoutMs: 3200,
   networkTimeoutMs: 100,
+  onlineLimit: 10000,
+  offlineLimit: 250,
+
   productionUrl: 'https://cgpay.commongood.earth',
   apis: {
     //  test:  'http://localhost/cgmembers-frame/cgmembers/api/',
@@ -11,13 +14,6 @@ const constants = {
     demo: 'https://demo.commongood.earth/api/',
     real: 'https://new.commongood.earth/api/',
   },
-
-  // just for testing
-  headlessMode: true,
-  slowMo: 0,
-  testTimeoutMs: 12000,
-  chromiumPath: '', // can be used to test different versions of chromium
-  seeLog: true, // show what the automated browser logs to console
 }
 
 export default constants

@@ -2,7 +2,7 @@
   import queryString from 'query-string'
   import { onMount } from 'svelte'
   import store from '#store.js'
-  import { dlg, goHome } from '#utils.js'
+  import u from '#utils.js'
   import SelectAccount from '#modules/SelectAccount.svelte'
   import Modal from '#modules/Modal.svelte'; let m0, m1, m2
 
@@ -17,13 +17,13 @@
   
   // --------------------------------------------
 
-  function er(msg) { ({ m0, m1 } = dlg('Alert', msg, 'Close', () => m0 = false)); m0=m0; m1=m1 } 
+  function er(msg) { ({ m0, m1 } = u.dlg('Alert', msg, 'Close', () => m0 = false)); m0=m0; m1=m1 } 
 
   function gotAccount(ev) {
     myAccount = accounts && accounts[ev.detail.acct]
     store.setMyAccount(myAccount)
     if (ev.detail.lock) store.setAcctChoices(null)
-    goHome(`This device is now linked to your Common Good account: ${myAccount?.name}.`)
+    u.goHome(`This device is now linked to your Common Good account: ${myAccount?.name}.`)
   }
 
   onMount(async () => {

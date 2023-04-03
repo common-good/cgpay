@@ -1,7 +1,7 @@
 <script>
   import { onMount } from 'svelte'
   import store from '#store.js'
-  import { dlg, timedFetch } from '#utils.js'
+  import u from '#utils.js'
   import Modal from '#modules/Modal.svelte'; let m0, m1, m2
   import cgLogo from '#modules/assets/cg-logo-300.png?webp'
   import { navigateTo } from 'svelte-router-spa'
@@ -14,7 +14,7 @@
   const myQr = $store.myAccount?.qr
 
   function er(msg) { 
-    ({ m0, m1 } = dlg('Alert', msg, 'Close', () => {m0 = false; store.setMsg(null)})); m0=m0; m1=m1
+    ({ m0, m1 } = u.dlg('Alert', msg, 'Close', () => {m0 = false; store.setMsg(null)})); m0=m0; m1=m1
   }
 
   function fake(code) {
@@ -23,13 +23,14 @@
   }
 
   onMount(async () => {
+    if ($store.frontCamera == null) store.setFrontCamera(!u.isApple() && !u.isAndroid())
     store.setQr(null) // no going back to previous customer
     if ($store.erMsg) er($store.erMsg)
     if ($store.myAccount) try {
-      const q = {deviceId: $store.myAccount.deviceId, actorId: $store.myAccount.accountId, lastTx: $store.myAccount.lastTx || -1 }
+      const q = {deviceId:$store.myAccount.deviceId, actorId:$store.myAccount.accountId, lastTx:$store.myAccount.lastTx || -1 }
       const query = queryString.stringify(q)
-      const { result } = await timedFetch(`latest?${ query }`)
-    } catch (er) { console.log(er) }
+      const { result } = await u.timedFetch(`latest?${ query }`)
+    } catch (er) { console.log('latest er', er) }
   })
 </script>
 
@@ -63,12 +64,12 @@
   <div class="charge">
     { #if devMode }
       <div class="fakes">
-        <button on:click={ () => fake('HTTP://6VM.RC4.ME/KDJI12345a') }>A</button>
-        <button on:click={ () => fake('HTTP://6VM.RC4.ME/KDJJ12345b') }>B</button>
-        <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDJK098765a') }>C:A</button>
-        <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDJK198765b') }>C:B</button>
-        <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDJO098765f') }>G:F</button>
-        <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDJO398765f') }>Bad</button>
+        <button on:click={ () => fake('HTTP://6VM.RC4.ME/KDCA12345a') }>A</button>
+        <button on:click={ () => fake('HTTP://6VM.RC4.ME/KDCB12345b') }>B</button>
+        <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDCC098765a') }>C:A</button>
+        <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDCC198765b') }>C:B</button>
+        <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDCG098765f') }>G:F</button>
+        <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDCG398765f') }>Bad</button>
         <button on:click={ () => fake('garbage') }>Worse</button>
       </div>
     { /if }

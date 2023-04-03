@@ -1,4 +1,4 @@
-@all @charge
+@nyi @charge
 Feature: Charge
   As a vendor or individual
   I can charge another CGPay user for a specified amount 

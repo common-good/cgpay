@@ -5,9 +5,7 @@
   import AndroidInstructions from '#modules/AndroidInstructions.svelte'
   import AppleInstructions from '#modules/AppleInstructions.svelte'
   import { onMount } from 'svelte'
-  import { addableToHome, isApple, isAndroid } from '#utils.js'
-
-  // --------------------------------------------
+  import u from '#utils.js'
 
   function skip() {
     store.setSawAdd()
@@ -15,7 +13,7 @@
   }
 
   onMount(async () => {
-    if (!addableToHome()) navigateTo('/sign-in')
+    if (!u.addableToHome()) navigateTo('/sign-in')
   })
 </script>
 
@@ -28,11 +26,11 @@
     <img src= { cgLogo } alt="Common Good logo" />
     <h1>Add to Home Screen</h1>
   </header>
-    { #if isApple() }
+    { #if u.isApple() }
       <AppleInstructions { skip } />
     { /if }
 
-    { #if isAndroid() }
+    { #if u.isAndroid() }
       <AndroidInstructions { skip } />
     { /if }
 </section>

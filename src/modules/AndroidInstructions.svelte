@@ -1,11 +1,11 @@
 <script>
-  import { isChrome } from '#utils.js'
+  import u from '#utils.js'
   export let skip
 </script>
 
 <section class="content" data-testid='android-instructions'>
   <div class='top'>
-    { #if isChrome() }
+    { #if u.isChrome() }
       <p>To add CGPay to your home screen:</p>
         <li>Tap the banner below (it may take a few seconds to appear).</li>
         <li>Wait for installation to complete.</li>

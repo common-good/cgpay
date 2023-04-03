@@ -8,7 +8,7 @@
 { #if !$store.online }
   <section id='network-status'>
     <WifiOff size={"1rem"} />
-    <p>Network is offline.{txsWaiting}</p>
+    <p data-testid="network-offline">Network is offline.{txsWaiting}</p>
   </section>
 { /if }
 

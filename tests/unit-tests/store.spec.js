@@ -2,10 +2,7 @@ import { createStore } from '#store.js'
 import { postRequest, isTimeout } from '#utils.js'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('#utils.js', () => ({
-  postRequest: vi.fn(),
-  isTimeout: vi.fn()
-}))
+vi.mock('#utils.js', () => ({ postRequest:vi.fn(), isTimeout:vi.fn() }))
 
 const storeKey = 'cgpay'
 
@@ -188,7 +185,7 @@ describe('store', () => {
       const store = createStore()
 
       vi.useFakeTimers()
-      const now = Date.now()
+      const now = Math.floor(Date.now() / 1000)
       expect(store.inspect().sawAdd).toEqual(false) // Confirm initial values are set.
       store.setSawAdd()
 

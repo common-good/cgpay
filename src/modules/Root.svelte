@@ -2,8 +2,8 @@
   import { Router } from 'svelte-router-spa'
   import { onMount } from 'svelte'
   import store from '#store.js'
-  import { addableToHome } from '#utils.js'
-  import c from '../../constants.js'
+  import u from '#utils.js'
+  import c from '#constants.js'
 
   import Empty from '#modules/_Empty.svelte' // for testing
   import AddToHomeScreen from '#modules/AddToHomeScreen.svelte'
@@ -18,8 +18,9 @@
 
   // Initialization Helpers
 
+  if (u.fromTester()) store.fromTester()
   function timeOut() {
-    if (typeof window.reloadStore === 'function' && window.reloadStore()) store.reload()
+    if (u.fromTester()) store.fromTester()
     store.resetNetwork()
     setTimeout(timeOut, c.networkTimeoutMs)
   }
@@ -34,7 +35,7 @@
 
   const routes = [
     route('/empty', Empty, true, null, LayoutIntro), // for testing
-    route('/', AddToHomeScreen, addableToHome, '/sign-in', LayoutIntro),
+    route('/', AddToHomeScreen, u.addableToHome, '/sign-in', LayoutIntro),
     route('/sign-in', SignIn, notSignedIn, '/home', LayoutIntro),
     route('/link-account', LinkAccount, notSignedIn, '/home'),
     route('/home', Home, store.isSignedIn, '/'),

@@ -5,9 +5,7 @@ Feature: Pay
   So that funds are deducted from my account and added to theirs.
 
 Background:
-  * this "myAccount":
-  | accountId | deviceId | name    | qr | isCo  | selling | lastTx |
-  | K6VMDJJ   | devB     | Bea Two | ?  | false | null    | null   |
+  * I am signed in as "Bea"
 
 Rule: Personal account members have the ability to show a QR code to pay other members
 
