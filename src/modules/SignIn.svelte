@@ -56,21 +56,34 @@
       <input data-testid="input-identifier" name="account-id" type="text" placeholder="Account ID or Email Address" autocomplete="name" autocapitalize="off" bind:value={ credentials.identifier } required />
       <label class="visuallyhidden" for="password">Password</label>
       <input data-testid="input-password" name="password" type="password" placeholder="Password" autocomplete="current-password" autocapitalize="off" bind:value={ credentials.password } required />
-      <a class="link" data-testid="reset-pw" href="https://new.commongood.earth/settings/password/" target="_blank">Reset password</a>
       <button data-testid="btn-signin" type="submit">Sign In</button>
+      <a data-testid="reset-pw" href="https://new.commongood.earth/settings/password/" target="_blank">Reset password</a>
+       <a class="signup" data-testid="btn-signup" href="https://new.commongood.earth/signup" target="_blank">Not a member yet? Sign Up</a>
       <p class="status">{ statusMsg }</p>
     </form>
-    <p class="sign-up">Not a member?</p>
-    <a class="link-button" data-testid="btn-signup" href="https://new.commongood.earth/signup" target="_blank">Sign Up</a>
   </div>
 </section>
 
 <Modal m0={m0} on:m1={m1} />
 
 <style lang='stylus'>
-  button
-    cgButtonSecondary()
+  a
+    padding 0 $s-1
+    color $c-blue
+    text-decoration underline
+    text-underline-offset 1px
     margin-bottom $s-2
+    width fit-content
+    &.signup
+      margin-bottom $s1
+
+  button
+    cgButton()
+    margin-bottom $s0
+
+  form
+    display flex
+    flex-direction column
 
   h2
     margin-bottom $s0
@@ -81,12 +94,6 @@
   img
     width 75px
     margin 0 $s2 0 0
-
-  form
-    margin-bottom $s0
-
-    input:last-of-type
-      margin-bottom $s-2
 
   .card
     height 100%
@@ -105,21 +112,6 @@
     flex-direction column
     justify-content center
     align-items center
-
-  .link
-    text(sm)
-    display block
-    color $c-blue
-    margin-bottom $s0
-    text-decoration underline
-    text-underline-offset 1px
-
-  .link-button
-    cgButton()
-
-  .sign-up
-    align-self flex-start
-    margin-bottom $s-2
 
   .status
     height 24px
