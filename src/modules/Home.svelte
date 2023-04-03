@@ -30,7 +30,7 @@
       const q = {deviceId:$store.myAccount.deviceId, actorId:$store.myAccount.accountId, lastTx:$store.myAccount.lastTx || -1 }
       const query = queryString.stringify(q)
       const { result } = await u.timedFetch(`latest?${ query }`)
-    } catch (er) { console.log('latest er', er) }
+    } catch (er) { if (!u.isTimeOut(er)) console.log('latest er', er) }
   })
 </script>
 
