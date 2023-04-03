@@ -94,7 +94,7 @@ const t = {
 //    console.log('adjust v', v, 'me', me)
     if (me != null) return k == 'actorId' ? me.accountId
     : (k == 'otherId' ? me.accountId + me.cardCode
-    : (k == 'qr' ? 'HTTP://6VM.RC4.ME/' + me.accountId.substring(0, 1) + me.accountId.substring(4) + me.cardCode
+    : (k == 'qr' ? c.testQrStart + me.accountId.substring(0, 1) + me.accountId.substring(4) + me.cardCode
     : (v) ))
 
     return v
