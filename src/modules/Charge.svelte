@@ -88,7 +88,7 @@
     } else */
     if ((new RegExp(c.qrUrlRegex)).test(qr)) { // like HTTP://6VM.RC4.ME/KDJJ34kjdfKJ4
       acct = parts[5][0] + parts[2] + parts[5].substring(1)
-      testing = qr.startsWith(testQrStart)
+      testing = qr.startsWith(c.testQrStart)
     } else throw new Error('That is not a valid Common Good card format.')
 
     if (!testing && u.testMode()) throw new Error('That is a real Common Good card and cannot be used in test mode.')
