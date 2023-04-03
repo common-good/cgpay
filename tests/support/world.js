@@ -16,6 +16,8 @@ const world = {
   chromiumPath: '', // can be used to test different versions of chromium
   seeLog: true, // show what the automated browser logs to console
   timeSlop: 10, // seconds between timestamps in tests is treated as negligible
+  maxScreenshots: 5, // tests crash if too many screenshots per run
+  picCount: 0,
 
   accounts: {
     'Abe': { name:'Abe One', location:'Aton, MA', isCo:false, accountId:'K6VMDCA', cardCode:'12345a', deviceId:'devA', selling:null },
