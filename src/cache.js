@@ -18,7 +18,6 @@ const cache = {
   corrupt: null,
   accts: {},
   myAccount: null,
-  isReleaseA: true,
 
   fromTester: {}, // values to update at the request of the test framework (see hooks.js and t.putv())
 }

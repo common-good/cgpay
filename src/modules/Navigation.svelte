@@ -5,6 +5,7 @@
   import { focusTrap } from 'svelte-focus-trap'
   import store from '#store.js'
   import u from '#utils.js'
+  import c from '#constants.js'
 
   let nav
 
@@ -24,7 +25,7 @@
   let menuItems = []
   function item(text, callback, criteria, id) { menuItems.push({text, callback, criteria, id}) }
 
-  if (!$store.isReleaseA) {
+  if (!c.isReleaseA) {
     item('Use Rear Camera', rearCamera, () => $store.cameraCount > 1 && $store.frontCamera, 'rear')
     item('Use Front Camera', frontCamera, () => $store.cameraCount > 1 && !$store.frontCamera, 'front')
     item('Sign Out and Exit Self Serve', selfServeOff, () => u.pageUri() == 'home' && $store.selfServe, 'selfOff')
