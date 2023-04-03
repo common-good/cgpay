@@ -22,7 +22,7 @@ Scenario: A user with one account signs in
   And I wait 2 seconds
   Then ? I am on page "home"
   And ? I am signed in as "Dee"
-@signin1
+
 Scenario: A user with multiple accounts signs in
   Then ? I am on page "sign-in"
   When I input "a" as "identifier"

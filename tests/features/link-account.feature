@@ -38,7 +38,7 @@ Scenario: The user chooses from among multiple accounts with default account loc
   And ? this "choices": "null" 
   When I click "btn-nav"
   Then ? I do not see "menu-switch"
-@link1
+
 Scenario: The user chooses a different account without account lock
   When I visit "link-account"
   And I click "option-1"
@@ -47,7 +47,7 @@ Scenario: The user chooses a different account without account lock
   Then ? I see "Citre" in "account-name"
   When I click "btn-nav"
   And ? I see "menu-switch"
-@link2
+
 Scenario: The user chooses an account offline
   Given I visit "link-account"
   And we are offline
