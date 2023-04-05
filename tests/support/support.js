@@ -11,7 +11,7 @@ const t = {
   // UTILITY FUNCTIONS
 
   getst(key = c.storeKey) { return JSON.parse(localStorage.getItem(key)) }, // for debugging
-  async pic(picName) { w.picCount++; if (w.picCount < w.maxScreenshots) await w.page.screenshot({ path:picName + '.png' }) }, // screen capture
+  async pic(picName = 'pic') { await w.page.screenshot({ path:picName + '.png' }) }, // screen capture
   async wait(secs) { await w.page.waitForTimeout(secs * 1000) },
 
   async whatPage() { 
@@ -224,16 +224,14 @@ const t = {
   onPage: async (id) => {
     const el = await w.page.$(`#${id}`)
     if (el == null) {
-      await w.page.screenshot({ path: 'found.png' })
       const here = await t.whatPage()
-      assert.isNotNull(el, `page "${id}" not found. You are on page "${here}" (see page found in found.png).`)
+      assert.isNotNull(el, `page "${id}" not found. You are on page "${here}"`)
     }
   },
 
   see: async (testId) => {
     const el = await t.element(testId)
-    if (el == null) await w.page.screenshot({ path: 'found.png' })
-    assert.isNotNull(el, "see page image in found.png")
+    assert.isNotNull(el)
     return el // this is required (I don't know why)
   },
 
