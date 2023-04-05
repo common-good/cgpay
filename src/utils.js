@@ -39,7 +39,6 @@ const u = {
     const func = typeof window.mockFetch === 'function' ? mockFetch : fetch // mock fetch if testing (keep this line)
     let res = await func(api + url, {...options, signal:aborter.signal })
     if (res.ok === false) throw new Error(res.status)
-    
     if (res.ok && type != 'none') {
       res.result = await (type == 'blob' ? res.blob() : res.json())
       if (options.method == 'POST') res = res.result // a JSON string: {ok, message}
@@ -62,7 +61,8 @@ const u = {
 
   testMode() { return !location.href.startsWith(c.productionUrl) },
   devMode() { return location.href.includes('localhost') },
-  fromTester() { return (typeof window.fromTester === 'function' && window.fromTester()) },
+  testing() { return typeof window.fromTester === 'function' },
+  fromTester() { return (u.testing() && window.fromTester()) },
   yesno(question, m1, m2) { return u.dlg('Confirm', question, 'Yes, No', m1, m2) },
   confirm(question) { return u.dlg('Alert', question, 'OK', null, null) },
   crash(er) { console.log('crash', er); return er.message },
