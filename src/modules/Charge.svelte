@@ -112,7 +112,7 @@
   }
 
   function profileOffline() {
-    showEr('OFFLINE. Trust this member or ask for ID.')
+    if (!$store.selfServe) showEr('OFFLINE. Trust this member or ask for ID.')
     limit = Math.min(c.offlineLimit, limit == null ? c.offlineLimit : limit)
   }
   
