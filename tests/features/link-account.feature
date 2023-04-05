@@ -51,6 +51,7 @@ Scenario: The user chooses a different account without account lock
 Scenario: The user chooses an account offline
   Given I visit "link-account"
   And we are offline
+  And I wait 1 seconds
   And ? I see "network-offline"
   When I click "option-0"
   And I click "btn-link"
