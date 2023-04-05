@@ -147,16 +147,16 @@ const t = {
   },
 
   /**
-   * 
+   * Initialize an array or object
    * @param string k: key to value in store to store 
-   * @param {*} rows: gherkin array of arrays representing records to store
-   *                  first row is a list of field names, subsequent rows are the field values
+   * @param {*} v: value or gherkin array of arrays representing records to store
+   *               for an array, first row is a list of field names, subsequent rows are the field values
    * @param bool one: true to store just the first record rather than an array of records
    */
-  setThese: async (k, multi, one = false) => {
-    const v = t.these(multi, one)
-    await t.putv(k, v)
-//    console.log('after setThese k:', k, 'store:', await t.getStore())
+  setThis: async (k, v, one = false) => {
+    if (typeof v === 'object') v = t.these(v, one)
+    await t.putv(k, t.adjust(v, k))
+//    console.log('after setThis k:', k, v, one)
   },
 
   setUA: async (browser, sys) => {

@@ -6,16 +6,17 @@ import { assert, expect } from 'chai'
 Given('I use {string} on an {string} device', async function (browser, sys) { await t.setUA(browser, sys) })
 Given('I am signed in as {string}', async function (who) { await t.signedInAs(who, true) })
 Given('I am not signed in', async function () { await t.putv('myAccount', null) })
-Given('this {string}:', async function (k, rows) { await t.setThese(k, rows, 1) })
-Given('these {string}:', async function (k, rows) { await t.setThese(k, rows) })
+Given('this {string}:', async function (k, rows) { await t.setThis(k, rows, 1) }) // for myAccount, for example
+Given('this {string}: {string}', async function (k, v) { await t.setThis(k, v) })
+Given('these {string}:', async function (k, rows) { await t.setThis(k, rows) })
 Given('these accounts:', async function (rows) { await t.theseAccts('accts', rows, true) })
 Given('these choices:', async function (rows) { await t.theseAccts('choices', rows, true) })
 Given('we are offline', async function () { await t.putv('online', false) }) // w.page.setOfflineMode(true) prevents all w.page.goto!
 Given('we are online', async function () { await t.putv('online', true) })
 
-When('I run the app', async function () { await t.visit(''); await t.pic('run') })
+When('I run the app', async function () { await t.visit('') })
 When('I visit {string}', async function (site) { await t.visit(site) })
-When('I click {string}', async function(testId) { await w.page.click(t.sel(testId)); await t.pic('click'); await t.wait(2) })
+When('I click {string}', async function(testId) { await w.page.click(t.sel(testId)) })
 When('I scan {string}', async function (who) { await t.putv('qr', t.adjust(who, 'qr')); await t.visit('charge') })
 When('I input {string} as {string}', async function (text, inputId) { await t.input(inputId, text) })
 When('I wait {int} seconds', async function (secs) { await t.wait(secs) })
