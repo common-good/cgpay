@@ -90,7 +90,7 @@ export const createStore = () => {
         await u.postRequest(endpoint, cache[k][0])
       } catch (er) {
         if (u.isTimeout(er)) {
-          st.setOnline(false)
+          await st.setOnline(false)
         } else {
           console.log(er) // keep this
           console.log('cache', k, cache[k]) // keep this
@@ -124,7 +124,7 @@ export const createStore = () => {
     setQr(v) { setv('qr', v) },
     setMsg(v) { setv('erMsg', v) },
     setCorrupt(version) { setv('corrupt', version) }, // pause uploading until a new version is released
-    setWifi(yesno) { setv('useWifi', yesno); setv('online', false); st.resetNetwork() },
+    async setWifi(yesno) { setv('useWifi', yesno); await st.resetNetwork() },
     setSelfServe(yesno) { setv('selfServe', yesno) },
 
     setAcctChoices(v) { setv('choices', v) },
@@ -137,11 +137,11 @@ export const createStore = () => {
     setCameraCount(n) { setv('cameraCount', n) },
     setFrontCamera(yesno) { setv('frontCamera', yesno) },
 
-    resetNetwork() { if (cache.useWifi) st.setOnline(navigator.onLine) },
-    setOnline(yesno) { // handling this in store helps with testing
+    async resetNetwork() { if (cache.useWifi) await st.setOnline(navigator.onLine) },
+    async setOnline(yesno) { // handling this in store helps with testing
       const v = cache.useWifi ? yesno : false
       if (v !== cache.online) setv('online', v)
-      if (cache.useWifi && yesno) { st.flushTxs(); st.flushComments() }
+      if (cache.useWifi && yesno) { await st.flushTxs(); await st.flushComments() }
     },
 
     /**
@@ -179,7 +179,7 @@ export const createStore = () => {
     deqTx() { return deQ('txs') }, // just for testing (in store.spec.js)
 
     comment(text) { enQ('comments', { deviceId:cache.myAccount.deviceId, actorId:cache.myAccount.accountId, created:u.now(), text:text }) },
-    async flushComments() { flushQ('comments', 'comments') },
+    async flushComments() { await flushQ('comments', 'comments') },
 
   }
 

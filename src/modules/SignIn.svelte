@@ -27,7 +27,7 @@
         navigateTo('/home')
       }
     } catch (er) {
-      store.resetNetwork()
+      await store.resetNetwork()
       if (u.isTimeout(er) || !$store.online) {
         showEr('The server is unavailable. Check your internet connection and try again.')
       } else if (er.message == 403) { // forbidden

@@ -18,10 +18,12 @@
 
   // Initialization Helpers
 
+  if (u.testing()) c.networkTimeoutMs = 1000 // give tests a moment to observe before uploading data
+
   if (u.fromTester()) store.fromTester()
-  function timeOut() {
+  async function timeOut() {
     if (u.fromTester()) store.fromTester()
-    store.resetNetwork()
+    await store.resetNetwork()
     setTimeout(timeOut, c.networkTimeoutMs)
   }
 
@@ -45,8 +47,8 @@
   ]
 
   onMount(async () => {
-    addEventListener('offline', () => { store.setOnline(false) })
-    addEventListener('online', () => { store.setOnline(true) })
+    addEventListener('offline', async () => { await store.setOnline(false) })
+    addEventListener('online', async () => { await store.setOnline(true) })
     timeOut()
   })
 

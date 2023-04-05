@@ -143,7 +143,7 @@ const t = {
   async visit(target, wait = 'networkidle0') { 
     const options = wait ? { waitUntil:wait } : {} // load, domcontentloaded, networkidle0, or networkidle2
     await w.page.goto(baseUrl + target, options)
-    t.pic('visited')
+    await t.pic('visited')
   },
 
   /**
