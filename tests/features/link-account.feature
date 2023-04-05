@@ -1,4 +1,4 @@
-@all @link
+@all @b @link
 Feature: Link Account
   As a vendor or individual with more than one account
   I can select the account I wish to link to on my device

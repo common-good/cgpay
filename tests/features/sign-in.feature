@@ -1,4 +1,4 @@
-@all @signin
+@all @a @signin
 Feature: Sign In
   As a vendor or individual
   I can sign in to the CGPay app
