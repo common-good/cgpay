@@ -75,7 +75,7 @@ export const createStore = () => {
 
   function getst() { return JSON.parse(localStorage.getItem(c.storeKey)) }
   function save(st) { localStorage.setItem(c.storeKey, JSON.stringify(st)); cache = st; return st }
-  function setst(st) { return save(st) }
+  function setst(newSt) { update(st => { return save(newSt) } )}
   function setv(k, v) { update(st => { st[k] = v; return save(st) })}
   function enQ(k, v) { update(st => { st[k].push(v); return save(st) })}
   function deQ(k) { update(st => { st[k].shift(); return save(st) })} // this is actually FIFO (shift) not LIFO (pop)
@@ -83,17 +83,16 @@ export const createStore = () => {
 
   async function flushQ(k, endpoint) {
     if (cache.corrupt == c.version) return; else st.setCorrupt(null) // don't retry hopeless tx indefinitely
-    
     while (cache[k].length > 0) {
-      if (!st.useWifi) return; // allow immediate interruptions
+      if (!cache.useWifi) return; // allow immediate interruptions when testing
       try {
         await u.postRequest(endpoint, cache[k][0])
       } catch (er) {
         if (u.isTimeout(er)) {
           await st.setOnline(false)
         } else {
-          console.log(er) // keep this
-          console.log('cache', k, cache[k]) // keep this
+          console.log('corrupt er:', er) // keep this
+          console.log('corrupt cache', k, cache[k]) // keep this
           st.setCorrupt(c.version)
         }
         return // don't deQ when there's an error
