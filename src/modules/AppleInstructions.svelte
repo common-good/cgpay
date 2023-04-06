@@ -7,8 +7,7 @@
 
 <div class="content" data-testid='apple-instructions'>
   <div class='top'>
-    <!--p>To add CGPay to your home screen, tap the banner below.</p-->
-    <p>To add CGPay to your home screen:</p>
+    <h2>Instructions</h2>
     { #if u.isSafari() }
       <ul>
         <li>1. Tap the Share <span class="inline-icon"><ShareIcon class="icon" size={"1.25rem"} /></span> button.</li>
@@ -16,7 +15,10 @@
         <li>3. Then tap "Add".</li>
       </ul>
     { :else }
-      <p>Open Safari and browse to cg4.us/cgpay </p>
+    <ul>
+      <li>1. Open Safari and browse to cgpay.commongood.earth.</li>
+      <li>2. You will be guided to add CGPay to your home screen.</li>
+    </ul>
     { /if }
   </div>
   <button data-testid="continue-button" on:click={ skip }>Continue</button>

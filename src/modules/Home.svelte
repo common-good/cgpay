@@ -2,6 +2,7 @@
   import { onMount } from 'svelte'
   import store from '#store.js'
   import u from '#utils.js'
+  import c from '#constants.js'
   import Modal from '#modules/Modal.svelte'; let m0, m1, m2
   import cgLogo from '#modules/assets/cg-logo-300.png?webp'
   import { navigateTo } from 'svelte-router-spa'
@@ -72,17 +73,15 @@
         <button on:click={ () => fake('garbage') }>Worse</button>
       </div>
     { /if }
-    <!-- Scan feature disabled for A Release -->
-    <!-- <a class="scan-customer" href='/scan'>Scan QR Code to Charge</a> -->
-    <a class="survey" href="https://forms.gle/M8Hv1W2oSgw2yQzS7" target="_blank">Take Our User Experience Survey</a>
+    { #if c.isReleaseA }
+      <a class="survey" href="https://forms.gle/M8Hv1W2oSgw2yQzS7" target="_blank">Take Our User Survey</a>
+    { :else }
+      <a class="scan" href='/scan'>Scan QR Code to Charge</a>
+    { /if }
   </div>
 </section>
 
 <style lang='stylus'>
-  a
-    cgButton()
-    width 100%
-
   .fakes
     display flex
     justify-content space-between
@@ -116,6 +115,9 @@
     flex-direction column
     align-items center
     justify-content space-between
+
+  .scan
+    cgButton()
 
   .survey
     cgButtonSecondary()

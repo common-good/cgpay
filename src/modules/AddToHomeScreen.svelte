@@ -26,6 +26,7 @@
     <img src= { cgLogo } alt="Common Good logo" />
     <h1>Add to Home Screen</h1>
   </header>
+  <p class="intro">We recommend adding CGPay to your home screen for a full app experience.</p>
     { #if u.isApple() }
       <AppleInstructions { skip } />
     { /if }

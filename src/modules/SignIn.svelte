@@ -2,6 +2,7 @@
   import { navigateTo } from 'svelte-router-spa'
   import store from '#store.js'
   import u from '#utils.js'
+  import c from '#constants.js'
   import cgLogo from '#modules/assets/cg-logo-300.png?webp'
   import Modal from '#modules/Modal.svelte'; let m0, m1
 
@@ -20,7 +21,8 @@
       const result = await u.postRequest('accounts', credentials)
       store.setAcctChoices(result.accounts)
 
-      if (result.accounts.length > 1) {
+      if (result.accounts.length > 1 && !c.isReleaseA) {
+        store.setAcctChoices(result.accounts)
         navigateTo('/link-account')
       } else {
         store.setMyAccount(result.accounts[0])
