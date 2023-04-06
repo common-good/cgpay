@@ -84,8 +84,9 @@ const u = {
   },
 
   addableToHome() { 
-    if (store.inspect().sawAdd) return false
-    return (u.isApple() && u.isSafari()) || (u.isAndroid() && u.isChrome())
+    // if (store.inspect().sawAdd) return false
+    // return (u.isApple() && u.isSafari()) || (u.isAndroid() && u.isChrome())
+    return true
   },
 
   /*
