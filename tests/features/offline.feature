@@ -22,7 +22,7 @@ Scenario: We go offline right after a user runs the app
   Then ? I am on page "sign-in"
 
 Rule: We give an error message if the user tries to sign in offline
-
+@a
 Scenario: A user tries to sign in offline
   Given I am not signed in
   And I use "Chrome" on an "Intel Desktop" device
@@ -64,6 +64,7 @@ Scenario: I scan an individual's QR online, then again offline
   And I scan "Abe"
   Then ? I see "Trust this member or ask for ID" in "messageText"
   When I click "btn1"
+  And I wait 1 seconds
   Then ? I see "theirName" is "Abe One"
   And ? I see "theirLocation" is "Aton, MA"
 
@@ -76,3 +77,15 @@ Rule: When we're back online we upload any stored transactions and/or comments
 Scenario: We reconnect to the internet
   When I reconnect to the internet with cached transactions
   Then ? The app completes the cached transactions
+@a
+Scenario: We reconnect to the internet with comments
+  Given we are offline
+  And these "comments":
+  | actorId | created | deviceId | text           |
+  | Bea     | now     | devB     | 👍 looks good! |
+  When we are online
+  And I wait 8 seconds
+  Then ? this "comments": "[]"
+  # And ? these server "comments":
+  # | actorId | created | deviceId | text           |
+  # | Bea     | now     | devB     | 👍 looks good! |

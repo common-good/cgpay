@@ -12,12 +12,10 @@ const world = {
 
   headlessMode: true,
   slowMo: 0,
-  testTimeoutMs: 12000,
+  testTimeout: 25, // test timeout in seconds (12 is not enough)
   chromiumPath: '', // can be used to test different versions of chromium
   seeLog: true, // show what the automated browser logs to console
   timeSlop: 10, // seconds between timestamps in tests is treated as negligible
-  maxScreenshots: 3, // tests crash if too many screenshots per run (5 is too much)
-  picCount: 0,
 
   accounts: {
     'Abe': { name:'Abe One', location:'Aton, MA', isCo:false, accountId:'K6VMDCA', cardCode:'12345a', deviceId:'devA', selling:null },

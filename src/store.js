@@ -45,15 +45,14 @@
  *    corrupt: version number when a transaction or comment upload fails inexplicably
  *    accts: an array of accounts the device has transacted with, keyed by the account ID without cardCode, each with:
  *      hash: SHA256 hash of cardCode
- *      data: JSON object of other account data:
- *        name: name of the account
- *        agent: agent for the account, if any
- *        location: location of the account (city, ST)
- *        limit: maximum amount this account can be charged at this time (leaving room for Stepups)
- *        creditLine: the account's credit line
- *        avgBalance: the account’s average balance over the past 6 months
- *        trustRatio: ratio of the account’s trust rating to the average trust rating of all individual accounts (zero for company accounts)
- *        since: Unix timestamp of when the account was activated
+ *      name: name of the account
+ *      agent: agent for the account, if any
+ *      location: location of the account (city, ST)
+ *      limit: maximum amount this account can be charged at this time (leaving room for Stepups)
+ *      creditLine: the account's credit line
+ *      avgBalance: the account’s average balance over the past 6 months
+ *      trustRatio: ratio of the account’s trust rating to the average trust rating of all individual accounts (zero for company accounts)
+ *      since: Unix timestamp of when the account was activated
  * 
  *    myAccount: information about the account associated with the device
  *      accountId, deviceId, name, qr, isCo, and selling as in the choices array described above
@@ -75,7 +74,7 @@ export const createStore = () => {
 
   function getst() { return JSON.parse(localStorage.getItem(c.storeKey)) }
   function save(st) { localStorage.setItem(c.storeKey, JSON.stringify(st)); cache = st; return st }
-  function setst(st) { return save(st) }
+  function setst(newSt) { update(st => { return save(newSt) } )}
   function setv(k, v) { update(st => { st[k] = v; return save(st) })}
   function enQ(k, v) { update(st => { st[k].push(v); return save(st) })}
   function deQ(k) { update(st => { st[k].shift(); return save(st) })} // this is actually FIFO (shift) not LIFO (pop)
@@ -83,17 +82,16 @@ export const createStore = () => {
 
   async function flushQ(k, endpoint) {
     if (cache.corrupt == c.version) return; else st.setCorrupt(null) // don't retry hopeless tx indefinitely
-    
     while (cache[k].length > 0) {
-      if (!st.useWifi) return; // allow immediate interruptions
+      if (!cache.useWifi) return; // allow immediate interruptions when testing
       try {
         await u.postRequest(endpoint, cache[k][0])
       } catch (er) {
         if (u.isTimeout(er)) {
-          st.setOnline(false)
+          await st.setOnline(false)
         } else {
-          console.log(er) // keep this
-          console.log('cache', k, cache[k]) // keep this
+          console.log('corrupt er:', er) // keep this
+          console.log('corrupt cache', k, cache[k]) // keep this
           st.setCorrupt(c.version)
         }
         return // don't deQ when there's an error
@@ -124,7 +122,7 @@ export const createStore = () => {
     setQr(v) { setv('qr', v) },
     setMsg(v) { setv('erMsg', v) },
     setCorrupt(version) { setv('corrupt', version) }, // pause uploading until a new version is released
-    setWifi(yesno) { setv('useWifi', yesno); setv('online', false); st.resetNetwork() },
+    async setWifi(yesno) { setv('useWifi', yesno); await st.resetNetwork() },
     setSelfServe(yesno) { setv('selfServe', yesno) },
 
     setAcctChoices(v) { setv('choices', v) },
@@ -137,11 +135,11 @@ export const createStore = () => {
     setCameraCount(n) { setv('cameraCount', n) },
     setFrontCamera(yesno) { setv('frontCamera', yesno) },
 
-    resetNetwork() { if (cache.useWifi) st.setOnline(navigator.onLine) },
-    setOnline(yesno) { // handling this in store helps with testing
+    async resetNetwork() { if (cache.useWifi) await st.setOnline(navigator.onLine) },
+    async setOnline(yesno) { // handling this in store helps with testing
       const v = cache.useWifi ? yesno : false
       if (v !== cache.online) setv('online', v)
-      if (cache.useWifi && yesno) { st.flushTxs(); st.flushComments() }
+      if (cache.useWifi && yesno) { await st.flushTxs(); await st.flushComments() }
     },
 
     /**
@@ -150,15 +148,15 @@ export const createStore = () => {
      * @param {*} acctData: information about a customer
      */
     putAcct(card, acctData) { update(st => {
-      st.accts[card.acct] = { hash: card.hash, data: { ...acctData } } // only the hash of the security code gets stored
+      st.accts[card.acct] = { ...acctData, hash: card.hash } // only the hash of the security code gets stored
       return save(st)
     })},
     getAcct(card) {
-      const acct = cache.accts[card.acct]
+      let acct = cache.accts[card.acct]
       if (acct == undefined) return null
       if (card.hash != acct.hash) return null // if later a new hash is validated, this entry will get updated
-      if (acct.data == null) throw new Error(lostMsg) // if we encounter a hash collision for such a short string, it will be an important engineering discovery
-      return acct.data
+      if (acct.name == null) throw new Error(lostMsg) // if we encounter a hash collision for such a short string, it will be an important engineering discovery
+      return acct
     },
 
     deleteTxPair() {
@@ -179,7 +177,7 @@ export const createStore = () => {
     deqTx() { return deQ('txs') }, // just for testing (in store.spec.js)
 
     comment(text) { enQ('comments', { deviceId:cache.myAccount.deviceId, actorId:cache.myAccount.accountId, created:u.now(), text:text }) },
-    async flushComments() { flushQ('comments', 'comments') },
+    async flushComments() { await flushQ('comments', 'comments') },
 
   }
 

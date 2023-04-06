@@ -1,4 +1,4 @@
-@all @link
+@all @b @link
 Feature: Link Account
   As a vendor or individual with more than one account
   I can select the account I wish to link to on my device
@@ -31,6 +31,7 @@ Scenario: The user chooses from among multiple accounts with default account loc
   And ? I see "option-0" is "Bea Two"
   When I click "option-0"
   And I click "btn-link"
+  And I wait 1 seconds
   Then ? I am on page "home"
   And ? I see "Bea Two" in "account-name"
   And ? I see this confirmation: "now linked to your Common Good account: Bea Two"
@@ -44,6 +45,7 @@ Scenario: The user chooses a different account without account lock
   And I click "option-1"
   And I click "lock-account"
   And I click "btn-link"
+  And I wait 1 seconds
   Then ? I see "Citre" in "account-name"
   When I click "btn-nav"
   And ? I see "menu-switch"
@@ -51,6 +53,7 @@ Scenario: The user chooses a different account without account lock
 Scenario: The user chooses an account offline
   Given I visit "link-account"
   And we are offline
+  And I wait 1 seconds
   And ? I see "network-offline"
   When I click "option-0"
   And I click "btn-link"

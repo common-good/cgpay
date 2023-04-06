@@ -1,4 +1,4 @@
-@all @comment
+@all @a @comment
 Feature: Comment
   As a vendor or individual
   I can submit feedback and comments about CGPay from the app
@@ -17,8 +17,8 @@ Scenario: I can submit feedback and receive a confirmation message that it was r
   And I input "wow! ❤️" as "comment"
   And I click "submit-comment"
   Then ? these "comments":
-  | created | actorId | text    |
-  | now     | Bea     | wow! ❤️ |
+  | actorId | created | deviceId | text    |
+  | Bea     | now     | devB     | wow! ❤️ |
   And ? I see this confirmation: "Thank you"
 
 Scenario: I can submit feedback offline
@@ -31,6 +31,6 @@ Scenario: I can submit feedback offline
   When I input "wow! ❤️" as "comment"
   And I click "submit-comment"
   Then ? these "comments":
-  | created | actorId | text    |
-  | now     | Bea     | wow! ❤️ |
+  | actorId | created | deviceId | text    |
+  | Bea     | now     | devB     | wow! ❤️ |
   And ? I see this confirmation: "Thank you"

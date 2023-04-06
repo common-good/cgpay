@@ -1,4 +1,4 @@
-@all @scan
+@all @b @scan
 Feature: Scan QR Code
   As an individual member or member company
   I can scan another member's QR Code (individual or company) from their app or card

@@ -6,7 +6,7 @@ import w from './world.js' // the world
 import c from '../../constants.js'
 import t from './support.js' // test support utilities
 
-setDefaultTimeout(w.testTimeoutMs)
+setDefaultTimeout(w.testTimeout * 1000)
 
 BeforeAll(async () => { // before the whole group of tests (NPM test @whatever)
 // fails  exec('NPM RUN DEV', function(err, stdout, stderr) { console.log(stdout) })
