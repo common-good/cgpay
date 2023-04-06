@@ -7,7 +7,7 @@ import u0 from '../utils0.js' // utilities shared with tests
 const u = {
   ...u0, // incorporate all function from utils0.js
 
-  api() { return c.apis[u.mode() in ['production', 'staging'] ? 'real' : 'demo'] },
+  api() { return ['production', 'staging'].includes(u.mode()) ? c.apis.real : c.apis.demo },
 
   dlg(title, text, labels, m1, m2) {
     const m0 = [true, title, text, labels]
@@ -66,7 +66,7 @@ const u = {
     : 'dev'))
   },
   
-  fakeData() { return !(u.mode() in ['production', 'staging']) },
+  fakeData() { return !['production', 'staging'].includes(u.mode()) },
   localMode() { return (u.mode() == 'local') },
   testing() { return typeof window.fromTester === 'function' },
   fromTester() { return (u.testing() && window.fromTester()) },
