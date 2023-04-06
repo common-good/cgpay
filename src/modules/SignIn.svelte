@@ -22,7 +22,6 @@
       store.setAcctChoices(result.accounts)
 
       if (result.accounts.length > 1 && !c.isReleaseA) {
-        store.setAcctChoices(result.accounts)
         navigateTo('/link-account')
       } else {
         store.setMyAccount(result.accounts[0])
