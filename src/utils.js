@@ -4,7 +4,8 @@ import queryString from 'query-string'
 import { navigateTo } from 'svelte-router-spa'
 import u0 from '../utils0.js' // utilities shared with tests
 
-const api = _apis_[location.href.startsWith(_productionUrl_) ? 'real' : 'demo']
+const api = c.apis[u.mode() in ['production', 'staging'] ? 'real' : 'demo']
+
 
 const u = {
   ...u0, // incorporate all function from utils0.js
@@ -30,8 +31,8 @@ const u = {
    */
   async timedFetch(url, options = {}) {
     if (!store.inspect().online) throw u.er('Offline') // this works for setWifiOff also
-    if (options.method != 'POST') url += '&version=' + _version_
-    const { timeout = _fetchTimeoutMs_, type = 'json' } = options;
+    if (options.method != 'POST') url += '&version=' + c.version
+    const { timeout = c.fetchTimeoutMs, type = 'json' } = options;
     const aborter = new AbortController();
     aborter.name = 'Timeout'
     const timeoutId = setTimeout(() => aborter.abort(), timeout)
@@ -49,7 +50,7 @@ const u = {
   },
 
   async postRequest(endpoint, v) {
-    v.version = _version_
+    v.version = c.version
     return await u.timedFetch(endpoint, {
       method: 'POST',
       headers: { 'Content-type':'application/x-www-form-urlencoded' },
@@ -59,8 +60,15 @@ const u = {
     })
   },
 
-  testMode() { return !location.href.startsWith(c.productionUrl) },
-  devMode() { return location.href.includes('localhost') },
+  mode() {
+    return location.href.startsWith(c.urls.production) ? 'production'
+    : (location.href.startsWith(c.urls.staging) ? 'staging'
+    : (location.href.includes('localhost') ? 'local'
+    : 'dev'))
+  },
+  
+  fakeData() { return !(u.mode() in ['production', 'staging']) },
+  localMode() { return (u.mode() == 'local') },
   testing() { return typeof window.fromTester === 'function' },
   fromTester() { return (u.testing() && window.fromTester()) },
   yesno(question, m1, m2) { return u.dlg('Confirm', question, 'Yes, No', m1, m2) },

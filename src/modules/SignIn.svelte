@@ -46,7 +46,7 @@
 <section class="page card" id="sign-in">
   <header>
     <img src= { cgLogo } alt='Common Good Logo' />
-    <h1>CGPay{ u.testMode() ? ' DEMO' : '' }</h1>
+    <h1>CGPay{ u.fakeData() ? ' DEMO' : '' }</h1>
   </header>
 
   <div class='content'>

@@ -2,6 +2,7 @@
   import { onMount } from 'svelte'
   import store from '#store.js'
   import u from '#utils.js'
+  import c from '#constants.js'
   import Modal from '#modules/Modal.svelte'; let m0, m1, m2
   import cgLogo from '#modules/assets/cg-logo-300.png?webp'
   import { navigateTo } from 'svelte-router-spa'
@@ -44,7 +45,7 @@
     <div class='top'>
       <h1>Show this code to pay</h1>
       <img src="{ myQr }" data-testid='qr' alt="my QR code" />
-      <p>CGPay v{ _version_ }</p>
+      <p>CGPay v{ c.version }</p>
     </div>
   { :else }
     <div class='top business'>
@@ -55,13 +56,13 @@
       { /if }
       <div class='watermark'>
         <img class='logo' src= { cgLogo } alt='Common Good Logo' />
-        <p>CGPay v{ _version_ }</p>
+        <p>CGPay v{ c.version }</p>
       </div>
     </div>
   { /if }
 
   <div class="charge">
-    { #if u.devMode() }
+    { #if u.localMode() }
       <div class="fakes">
         <button on:click={ () => fake('HTTP://6VM.RC4.ME/KDCA12345a') }>A</button>
         <button on:click={ () => fake('HTTP://6VM.RC4.ME/KDCB12345b') }>B</button>
