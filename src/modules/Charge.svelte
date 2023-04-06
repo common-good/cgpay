@@ -153,7 +153,6 @@
         otherAccount = { ...otherAccount, ...result, lastTx:u.now() } // lastTx date lets us jettison old customers to save storage
         delete otherAccount.selling
         store.putAcct(card, otherAccount) // store and/or update stored customer account info
-        store.setMyAccount({ ...$store.myAccount, lastTx: otherAccount.lastTx })
         limit = Math.min(otherAccount.limit, c.onlineLimit)
         if (!$store.selfServe) photo = await getPhoto(query)
       }

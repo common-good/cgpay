@@ -26,12 +26,12 @@
       delete(tx.code)
       tx.offline = false
     }
+    store.setMyAccount({ ...$store.myAccount, lastTx:tx.created })
 
     try {
       const res = await u.postRequest('transactions', tx)
       if (res.ok) dispatch('complete'); else dispatch('error', res.message) // update display
     } catch (er) { // except for syntax errors, queue it and treat it as success
-      console.log('post tx er', er)
       if (er == 400) { // syntax error
         throw new Error('Program issue: request syntax error')
       } else {
