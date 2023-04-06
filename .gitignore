@@ -1,6 +1,8 @@
 .DS_Store
 node_modules/
-.vercel
-/test-results/
-/playwright-report/
-/playwright/.cache/
+dist/
+dev-dist/
+found.png
+click.png
+run.png
+visited.png

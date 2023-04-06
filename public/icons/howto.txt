@@ -1,0 +1,1 @@
+use https://www.appicon.co to generate all necessary icons from two versions of our logo (without the trademark symbol). The version for ioS is 10% smaller and has a white background.
