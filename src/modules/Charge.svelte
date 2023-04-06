@@ -61,7 +61,7 @@
     return cardId.substr(0, len)
   }
   
-  function handleSubmitCharge() { gotTx = true } // state success, show undo/tip/done/receipt buttons
+  function handleSubmitCharge() { gotTx = true; store.setLastOp() } // state success, show undo/tip/done/receipt buttons
     
   /**
    * Get the customer's photo from the server

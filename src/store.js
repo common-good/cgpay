@@ -8,6 +8,7 @@
  * SCALARS
  *   int sawAdd: Unix timestamp when user saw the option to save the app to their home screen
  *   blob qr: a scanned QR url
+ *   int lastOp: Unix timestamp of last operation that will be timed out after c.opTimeout seconds
  *   string msg: an informational message to display on the Home Page
  *   string erMsg: an error message to display on the Home Page
  *   int cameraCount: number of cameras in the device
@@ -120,6 +121,7 @@ export const createStore = () => {
     inspect() { return cache },
 
     setQr(v) { setv('qr', v) },
+    setLastOp(clear = false) { setv('lastOp', clear ? null : u.now()) },
     setMsg(v) { setv('erMsg', v) },
     setCorrupt(version) { setv('corrupt', version) }, // pause uploading until a new version is released
     async setWifi(yesno) { setv('useWifi', yesno); await st.resetNetwork() },

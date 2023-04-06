@@ -1,5 +1,5 @@
 <script>
-  import { Router } from 'svelte-router-spa'
+  import { Router, navigateTo } from 'svelte-router-spa'
   import { onMount } from 'svelte'
   import store from '#store.js'
   import u from '#utils.js'
@@ -25,6 +25,7 @@
     if (u.fromTester()) store.fromTester()
     await store.resetNetwork()
     setTimeout(timeOut, c.networkTimeoutMs)
+    if ($store.lastOp && u.now() - $store.lastOp > c.opTimeout) { store.setLastOp(true); await navigateTo('/home') }
   }
 
   function onlyIf(condition, elseGoTo) { return { guard: condition, redirect: elseGoTo } }
