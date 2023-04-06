@@ -4,10 +4,10 @@ import queryString from 'query-string'
 import { navigateTo } from 'svelte-router-spa'
 import u0 from '../utils0.js' // utilities shared with tests
 
-const api = _apis_[location.href.startsWith(_productionUrl_) ? 'real' : 'demo']
-
 const u = {
   ...u0, // incorporate all function from utils0.js
+
+  api() { return c.apis[u.mode() in ['production', 'staging'] ? 'real' : 'demo'] },
 
   dlg(title, text, labels, m1, m2) {
     const m0 = [true, title, text, labels]
@@ -37,7 +37,7 @@ const u = {
     const timeoutId = setTimeout(() => aborter.abort(), timeout)
 
     const func = typeof window.mockFetch === 'function' ? mockFetch : fetch // mock fetch if testing (keep this line)
-    let res = await func(api + url, {...options, signal:aborter.signal })
+    let res = await func(u.api() + url, {...options, signal:aborter.signal })
     if (res.ok === false) throw new Error(res.status)
     if (res.ok && type != 'none') {
       res.result = await (type == 'blob' ? res.blob() : res.json())
