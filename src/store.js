@@ -45,15 +45,14 @@
  *    corrupt: version number when a transaction or comment upload fails inexplicably
  *    accts: an array of accounts the device has transacted with, keyed by the account ID without cardCode, each with:
  *      hash: SHA256 hash of cardCode
- *      data: JSON object of other account data:
- *        name: name of the account
- *        agent: agent for the account, if any
- *        location: location of the account (city, ST)
- *        limit: maximum amount this account can be charged at this time (leaving room for Stepups)
- *        creditLine: the account's credit line
- *        avgBalance: the account’s average balance over the past 6 months
- *        trustRatio: ratio of the account’s trust rating to the average trust rating of all individual accounts (zero for company accounts)
- *        since: Unix timestamp of when the account was activated
+ *      name: name of the account
+ *      agent: agent for the account, if any
+ *      location: location of the account (city, ST)
+ *      limit: maximum amount this account can be charged at this time (leaving room for Stepups)
+ *      creditLine: the account's credit line
+ *      avgBalance: the account’s average balance over the past 6 months
+ *      trustRatio: ratio of the account’s trust rating to the average trust rating of all individual accounts (zero for company accounts)
+ *      since: Unix timestamp of when the account was activated
  * 
  *    myAccount: information about the account associated with the device
  *      accountId, deviceId, name, qr, isCo, and selling as in the choices array described above
@@ -149,15 +148,15 @@ export const createStore = () => {
      * @param {*} acctData: information about a customer
      */
     putAcct(card, acctData) { update(st => {
-      st.accts[card.acct] = { hash: card.hash, data: { ...acctData } } // only the hash of the security code gets stored
+      st.accts[card.acct] = { ...acctData, hash: card.hash } // only the hash of the security code gets stored
       return save(st)
     })},
     getAcct(card) {
-      const acct = cache.accts[card.acct]
+      let acct = cache.accts[card.acct]
       if (acct == undefined) return null
       if (card.hash != acct.hash) return null // if later a new hash is validated, this entry will get updated
-      if (acct.data == null) throw new Error(lostMsg) // if we encounter a hash collision for such a short string, it will be an important engineering discovery
-      return acct.data
+      if (acct.name == null) throw new Error(lostMsg) // if we encounter a hash collision for such a short string, it will be an important engineering discovery
+      return acct
     },
 
     deleteTxPair() {

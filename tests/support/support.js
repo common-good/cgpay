@@ -232,8 +232,8 @@ const t = {
       if (field == 'accts') {
         ;([agent, name] = row[i].includes('/') ? row[i].split('/') : ['', me.name])
         if (set) {
-          accts[me.accountId] = { hash:u.hash(me.cardCode), data:{ agent:agent, name:name, location:me.location, limit:200, creditLine:9999 } }
-        } else t.test(u.just('agent name', accts[me.accountId].data), { agent:agent, name:name }, null, 'shallow')
+          accts[me.accountId] = { hash:u.hash(me.cardCode), agent:agent, name:name, location:me.location, limit:200, creditLine:9999 }
+        } else t.test(u.just('agent name', accts[me.accountId]), { agent:agent, name:name }, null, 'shallow')
       } else { // choices
         if (set) {
           accts.push(u.just('name accountId deviceId qr isCo selling', me))

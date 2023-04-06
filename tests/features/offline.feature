@@ -64,6 +64,7 @@ Scenario: I scan an individual's QR online, then again offline
   And I scan "Abe"
   Then ? I see "Trust this member or ask for ID" in "messageText"
   When I click "btn1"
+  And I wait 1 seconds
   Then ? I see "theirName" is "Abe One"
   And ? I see "theirLocation" is "Aton, MA"
 
