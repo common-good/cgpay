@@ -1,4 +1,4 @@
-@all @a @signin
+@all @signin
 Feature: Sign In
   As a vendor or individual
   I can sign in to the CGPay app
@@ -8,12 +8,12 @@ Background:
   When I visit "sign-in"
 
 Rule: Users have options to sign in, sign up, or reset password -- all on one page
-
+@a 
 Scenario: A user visits the Sign-in page
   Then ? I see "btn-signin"
   And ? I see "lnk-signup"
   And ? I see "lnk-reset"
-
+@a 
 Scenario: A user with one account signs in
   Then ? I am on page "sign-in"
   When I input "d" as "identifier"
