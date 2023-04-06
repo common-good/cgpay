@@ -76,16 +76,12 @@
     { #if c.isReleaseA }
       <a class="survey" href="https://forms.gle/M8Hv1W2oSgw2yQzS7" target="_blank">Take Our User Experience Survey</a>
     { :else }
-      <a class="scan-customer" href='/scan'>Scan QR Code to Charge</a>
+      <a class="scan" href='/scan'>Scan QR Code to Charge</a>
     { /if }
   </div>
 </section>
 
 <style lang='stylus'>
-  a
-    cgButton()
-    width 100%
-
   .fakes
     display flex
     justify-content space-between
@@ -119,6 +115,9 @@
     flex-direction column
     align-items center
     justify-content space-between
+
+  .scan
+    cgButton()
 
   .survey
     cgButtonSecondary()

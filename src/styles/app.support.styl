@@ -103,8 +103,9 @@ cgButton()
   &:disabled
     opacity 0.5
 
-  &:hover
-    background $c-blue-dark
+  @media (hover) 
+     &:hover
+      background $c-blue-dark
 
 cgButtonSecondary()
   contentCentered()
@@ -120,9 +121,10 @@ cgButtonSecondary()
   &:disabled
     opacity 0.5
 
-  &:hover
-    color $c-blue-dark
-    border-color $c-blue-dark
+  @media (hover) 
+    &:hover
+      color $c-blue-dark
+      border-color $c-blue-dark
 
 cgButtonTertiary()
   contentCentered()
@@ -139,8 +141,9 @@ cgButtonTertiary()
   &:disabled
     opacity 0.5
 
-  &:hover
-    color $c-blue-dark
+  @media (hover) 
+    &:hover
+      color $c-blue-dark
 
 // --------------------------------------------
 // Utilities
