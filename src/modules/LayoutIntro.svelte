@@ -23,6 +23,6 @@
   .container
     constrainWidth($tablet)
     height 100%
-    padding $s-1
+    padding $s-2
     margin 0 auto  
 </style>
