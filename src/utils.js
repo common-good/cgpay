@@ -7,7 +7,7 @@ import u0 from '../utils0.js' // utilities shared with tests
 const u = {
   ...u0, // incorporate all function from utils0.js
 
-  api() { return c.apis[u.mode() in ['production', 'staging'] ? 'real' : 'demo'] },
+  api() { return u.realData() ? c.apis.real : c.apis.demo }, 
 
   dlg(title, text, labels, m1, m2) {
     const m0 = [true, title, text, labels]
@@ -59,16 +59,23 @@ const u = {
     })
   },
 
-  testMode() { return !location.href.startsWith(c.productionUrl) },
-  devMode() { return location.href.includes('localhost') },
+  mode() { 
+    return location.href.startsWith(c.urls.production) ? 'production' 
+    : (location.href.startsWith(c.urls.staging) ? 'staging' 
+    : (location.href.includes('localhost') ? 'local' 
+    : 'dev')) 
+  }, 
+  
+  realData() { return ['production', 'staging'].includes(u.mode()) },
+  localMode() { return (u.mode() == 'local') }, 
   testing() { return typeof window.fromTester === 'function' },
   fromTester() { return (u.testing() && window.fromTester()) },
   yesno(question, m1, m2) { return u.dlg('Confirm', question, 'Yes, No', m1, m2) },
   confirm(question) { return u.dlg('Alert', question, 'OK', null, null) },
   crash(er) { console.log('crash', er); return er.message },
   goEr(msg) { store.setMsg(msg); navigateTo('/home') },
-  goHome(msg) { store.setMsg(msg), navigateTo('/home') },
-  isTimeout(er) { return (typeof er === 'object' && er.name == 'AbortError' || er.name == 'Offline') },
+  goHome(msg) { store.setMsg(msg); navigateTo('/home') },
+  isTimeout(er) { return (typeof er === 'object' && (er.name == 'AbortError' || er.name == 'Offline')) },
   pageUri() { return location.href.substring(location.href.lastIndexOf('/') + 1) },
   isApple() { return /iPhone|iPod|iPad/i.test(navigator.userAgent) },
   isAndroid() { return !u.isApple() && /Android/i.test(navigator.userAgent) },

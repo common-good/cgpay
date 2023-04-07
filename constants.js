@@ -10,7 +10,10 @@ const constants = {
   offlineLimit: 250,
   isReleaseA: true,
 
-  productionUrl: 'https://cgpay.commongood.earth',
+  urls: {
+    staging:    'https://cgpay-staging.commongood.earth',
+    production: 'https://cgpay.commongood.earth',
+  },
   apis: {
     //  test:  'http://localhost/cgmembers-frame/cgmembers/api/',
     test: 'https://demo.commongood.earth/api/',
