@@ -129,7 +129,7 @@ export const createStore = () => {
     setMyAccount(acct) { setv('myAccount', acct ? { ...acct } : null) },
     isSignedIn() { return (cache.myAccount != null) },
     signOut() { setv('myAccount', null) },
-    clearData() { if (u.testMode()) setst({ ...cache0 }) },
+    clearData() { if (!u.realData()) setst({ ...cache0 }) },
 
     setSawAdd() { setv('sawAdd', u.now()) },
     setCameraCount(n) { setv('cameraCount', n) },
