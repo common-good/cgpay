@@ -7,7 +7,7 @@ import u0 from '../utils0.js' // utilities shared with tests
 const u = {
   ...u0, // incorporate all function from utils0.js
 
-  api() { return ['production', 'staging'].includes(u.mode()) ? c.apis.real : c.apis.demo },
+  api() { return u.realData() ? c.apis.real : c.apis.demo }, 
 
   dlg(title, text, labels, m1, m2) {
     const m0 = [true, title, text, labels]
@@ -59,15 +59,15 @@ const u = {
     })
   },
 
-  mode() {
-    return location.href.startsWith(c.urls.production) ? 'production'
-    : (location.href.startsWith(c.urls.staging) ? 'staging'
-    : (location.href.includes('localhost') ? 'local'
-    : 'dev'))
-  },
+  mode() { 
+    return location.href.startsWith(c.urls.production) ? 'production' 
+    : (location.href.startsWith(c.urls.staging) ? 'staging' 
+    : (location.href.includes('localhost') ? 'local' 
+    : 'dev')) 
+  }, 
   
-  fakeData() { return !['production', 'staging'].includes(u.mode()) },
-  localMode() { return (u.mode() == 'local') },
+  realData() { return ['production', 'staging'].includes(u.mode()) },
+  localMode() { return (u.mode() == 'local') }, 
   testing() { return typeof window.fromTester === 'function' },
   fromTester() { return (u.testing() && window.fromTester()) },
   yesno(question, m1, m2) { return u.dlg('Confirm', question, 'Yes, No', m1, m2) },

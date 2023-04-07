@@ -1,4 +1,4 @@
-@a
+@a @rela
 Feature: Release A temporary restrictions and features
   As a vendor or individual
   I can use the CGPay app with a specific feature set
@@ -14,6 +14,7 @@ Scenario: A user with multiple accounts signs in
   When I input "a" as "identifier"
   And I input "k" as "password"
   And I click "btn-signin"
+  And I wait 2 seconds
   Then ? I am on page "home"
   And ? these choices:
   | Abe | Abe/Citre |
@@ -23,6 +24,8 @@ Rule: Menu is limited
 Scenario: The menu shows just Comment and Sign out
   Given I am signed in as "Abe"
   When I visit "home"
+  And I wait 1 seconds
+  And I click "btn-nav"
   Then ? I see "menu-comment"
   And ? I see "menu-signout"
   And ? I do not see "menu-switch"

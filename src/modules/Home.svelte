@@ -80,10 +80,6 @@
 </section>
 
 <style lang='stylus'>
-  a
-    cgButton()
-    width 100%
-
   .fakes
     display flex
     justify-content space-between
@@ -117,6 +113,9 @@
     flex-direction column
     align-items center
     justify-content space-between
+
+  .scan
+    cgButton()
 
   .survey
     cgButtonSecondary()
