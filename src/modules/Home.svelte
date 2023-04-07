@@ -74,7 +74,7 @@
       </div>
     { /if }
     <!-- Scan feature disabled for A Release -->
-    <a class="scan-customer" data-testid="btn-charge" href='/scan'>Scan QR Code to Charge</a>>
+    <a class="scan-customer" data-testid="btn-charge" href='/scan'>Scan QR Code to Charge</a>
     <!-- a class="survey" data-testid="lnk-survey" href="https://forms.gle/M8Hv1W2oSgw2yQzS7" target="_blank">Take Our User Experience Survey</a -->
   </div>
 </section>
