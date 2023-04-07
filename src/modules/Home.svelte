@@ -62,7 +62,7 @@
   { /if }
 
   <div class="charge">
-    { #if u.devMode() }
+    { #if u.localMode() }
       <div class="fakes">
         <button on:click={ () => fake('HTTP://6VM.RC4.ME/KDCA12345a') }>A</button>
         <button on:click={ () => fake('HTTP://6VM.RC4.ME/KDCB12345b') }>B</button>

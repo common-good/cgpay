@@ -12,7 +12,6 @@ export default defineConfig({
   define: { // define these at compile time for efficiency
     _version_:        js(c.version),
     _storeKey_:       js(c.storeKey),
-    _productionUrl_:  js(c.productionUrl),
     _apis_:           js(c.apis),
     _fetchTimeoutMs_: c.fetchTimeoutMs,
   },
