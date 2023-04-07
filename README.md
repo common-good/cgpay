@@ -3,13 +3,13 @@
 A progressive web application for collecting payments with Common Good. 
 
 - [Setting Up](#setting-up)
-- [Developing](#development)
+- [Developing](#developing)
 - [Development Workflow](#development-workflow)
-- [Feature Testing](tree/main/features#readme)
 - [Unit Testing](#unit-testing)
 - [Deploying](#deploying)
+- [Releasing](#releasing)
 
-## Set Up
+## Setting Up
 
 Windows developers do [this](https://docs.google.com/document/d/1d1pGjS5Z9sP_BgYYOFaVamekzxdeOWgg9lOAemVVQKU/edit) instead of the setup commands in the table below.
 
@@ -41,14 +41,14 @@ For more information:
 | :-- | :-- |
 | `npm run dev` | then ctrl-Click http://localhost:3000/ to open in default browser |
 | `npm run tests:watch` | |
-| `npm test` | run Cucumber/Gherkin end-to-end tests (you currently have to do "npm run dev" first, in a separate window) |
+| `npm test @a` | run all Cucumber/Gherkin end-to-end tests (you currently have to do "npm run dev" first, in a separate window) |
 | `npm test @<tag>` | run a subset of tests (or @all) |
 
 **Note:** Use a private browsing window in order to avoid unpredictable caching behavior from the service worker.
 
 ## Development Workflow
 
-1. Create a feature branch off of `develop` (i.e. `feature-sign-in`).
+1. Create a feature branch off of `develop` (i.e. `feature/sign-in`).
 2. Go through an outside-in development workflow.
 
 - Start with a (failing) feature test.
@@ -58,7 +58,7 @@ For more information:
 
 3. Submit a pull request from your feature branch to `develop`, and have it reviewed.
 4. When the pull request is approved and merged into `develop`, test the application on the [test site](#deploying).
-5. When a new release is ready for deployment, merge the `develop` branch into `master`.
+5. When a new release is ready for deployment, merge the `develop` branch into `main`.
 
 ## Unit Testing
 
@@ -77,22 +77,19 @@ We use the following libraries for unit tests:
 
 ### Previewing
 
-[Service workers only work in production builds](https://kit.svelte.dev/docs/service-workers), so to test PWA functionality locally the application must be compiled.
-
-| Command | Description |
-| :-- | :-- |
-| `npm run preview` | Serve the UI compiled for production (in `preview` mode). |
+[Service workers only work in production builds](https://kit.svelte.dev/docs/service-workers), so to test PWA functionality locally the application must be compiled. With Vercel we ran `npm run preview` to build and serve to a preview branch. We are currently developing a replacement.
 
 ## Deploying
 
-Deployments used to be automatic via Vercel's GitHub integration. We are no longer using that, but have no replacement yet.
+Deployments used to be automatic via Vercel's GitHub integration. For now, we deploy manually via SCP(SFTP) to Common Good's Capistrano servers.
 
-Deploy branches to the following URLs (Note: these are not settled yet):
+Deploy branches to the following URLs:
 
-| Git Branch | Environment | URL | Shortcut |
-| :-- | :-- | :-- | :-- |
-| `master` | `production` | https://cgpay.commongood.earth | cg4.us/app |
-| `develop` | `develop` | https://cgpay2.commongood.earth | cg4.us/app2 |
+| Git Branch | Environment |  URL | Shortcut | server URL | API |
+| :-- | :-- | :-- | :-- |:-- |:-- |
+| `main` | `production` | https://cgpay.commongood.earth | ? | new1.commongood.earth |  prod |
+| `staging` | `staging` | https://cgpay-staging.commongood.earth | cg4.us/pay1 | ? | prod |
+| `develop` | `develop` | https://cgpay-dev.commongood.earth | cg4.us/pay2 | ? | demo |
 
 ### Deployment Checklist
 
@@ -101,3 +98,8 @@ Before deploying a new release, remember to:
 1. Run all [UI unit tests](/ui).
 2. Run all [feature tests](/features).
 3. Verify all [manual features](/features).
+
+## Releasing
+
+We use semantic versioning and [github tags](https://github.com/common-good/cg-pay-pwa/releases/new) on the `main` branch to track releases.  
+The first release of CGPay, "Release A", is v4.0.0.
