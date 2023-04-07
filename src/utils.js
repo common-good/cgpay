@@ -66,7 +66,7 @@ const u = {
     : 'dev')) 
   }, 
   
-  realData() { return ['production', 'staging'].includes(u.mode()) },
+  realData() { return ['production', 'staging', 'dev'].includes(u.mode()) },
   localMode() { return (u.mode() == 'local') }, 
   testing() { return typeof window.fromTester === 'function' },
   fromTester() { return (u.testing() && window.fromTester()) },
