@@ -91,9 +91,8 @@
       testing = qr.startsWith(c.testQrStart)
     } else throw new Error('That is not a valid Common Good card format.')
 
-    if (!testing && u.testMode()) throw new Error('That is a real Common Good card and cannot be used in test mode.')
-    if (testing && !u.testMode()) throw new Error('That is a CGPay test card and cannot be used in production mode.')
-// NO. This risks our data integrity    if (testing != u.testMode()) changeMode(testing)
+    if (testing && u.realData()) throw new Error('That is a CGPay test card and cannot be used in production mode.')
+    if (!testing && !u.realData()) throw new Error('That is a real Common Good card and cannot be used in test mode.')
 
     const agentLen = +agentLens[dig36.indexOf(acct[0])]
     const mainId = getMainId(acct)
