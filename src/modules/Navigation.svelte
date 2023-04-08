@@ -25,13 +25,11 @@
   let menuItems = []
   function item(text, callback, criteria, id) { menuItems.push({text, callback, criteria, id}) }
 
-  if (!c.isReleaseA) {
-    item('Use Rear Camera', rearCamera, () => $store.cameraCount > 1 && $store.frontCamera, 'rear')
-    item('Use Front Camera', frontCamera, () => $store.cameraCount > 1 && !$store.frontCamera, 'front')
-    item('Sign Out and Exit Self Serve', selfServeOff, () => u.pageUri() == 'home' && $store.selfServe, 'selfOff')
-    item('Enter Self Serve Mode', selfServeOn, () => u.pageUri() == 'home' && $store.myAccount.isCo && !$store.selfServe, 'selfOn')
-    item('Switch Account', switchAccount, () => $store.choices?.length > 1 && u.pageUri() != 'link-account' && !$store.selfServe, 'switch')
-  }
+  item('Use Rear Camera', rearCamera, () => $store.cameraCount > 1 && $store.frontCamera, 'rear')
+  item('Use Front Camera', frontCamera, () => $store.cameraCount > 1 && !$store.frontCamera, 'front')
+  item('Exit Self Serve (signs out)', selfServeOff, () => u.pageUri() == 'home' && $store.selfServe, 'selfOff')
+  item('Enter Self Serve Mode', selfServeOn, () => u.pageUri() == 'home' && $store.myAccount.isCo && !$store.selfServe, 'selfOn')
+  item('Switch Account', switchAccount, () => $store.choices?.length > 1 && u.pageUri() != 'link-account' && !$store.selfServe, 'switch')
   item('Comments & Suggestions', comment, () => store.isSignedIn() && !$store.selfServe, 'comment')
   item('Sign Out', signOut, () => (store.isSignedIn() || u.pageUri() == 'link-account') && !$store.selfServe, 'signout')
 

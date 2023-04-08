@@ -9,7 +9,6 @@ const constants = {
   networkTimeoutMs: 100,
   onlineLimit: 10000,
   offlineLimit: 250,
-  isReleaseA: true,
 
   urls: {
     staging:    'https://cgpay-staging.commongood.earth',
