@@ -30,10 +30,11 @@ jobs:
         # Here, version is specified via the matrix context, but it can also be set to exact versions, or a single version.
         node-version: '16.x'
         # (Optional) cache specified dependencies
-        # cache: 'npm'
+        cache: 'npm'
     # Executes the specified commands on the runner.
     - name: Install dependencies
     # `npm ci` installs `package-lock.json` versions and prevents updates to the lock file. It is generally faster than `npm install`.
       run: npm ci
-    - run: npm run dev --if-present
-    - run: npm test @all
+    - run: npm run dev 
+    - run: npm test @a
+    
