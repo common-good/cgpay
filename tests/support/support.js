@@ -87,13 +87,13 @@ const t = {
    * Return value with adjustments for special parameters
    * @param string v: value to adjust
    * @param string k: field name (to inform the adjustment)
+   * @param bool numeric: expect result to be numeric (used only for server account numbers)
    */
   adjust(v, k, numeric = false) {
-//    console.log('adjust', v, k)
-    const v0 = typeof v === 'string' ? v.substring(0, 1) : ''
-    if (v == null) return null
+    const v0 = typeof v === 'string' ? v.charAt(0) : ''
+    if (v === null) return null
+    if (v == 'version') return c.version
     if (v == 'now') return u.now()
-    if (v == 'null') return null
     if (v == 'true') return true
     if (v == 'false') return false
     if (v0 == '!') return '!' + t.adjust(v.substring(1), k)
