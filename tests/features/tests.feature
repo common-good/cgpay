@@ -63,14 +63,14 @@ Scenario: these1
   | K6VMDCA | K6VMDCB |
 
   Given these "qr":
-  | one  | two | three | four  | five | six | seven |
-  | null | now | true  | false | []   | {}  | other |
+  | one  | created | three | four  | five | six | seven |
+  | null | now     | true  | false | []   | {}  | other |
   Then ? these "qr":
-  | one  | two | three | four  | five | six | seven |
-  | null | now | true  | false | []   | {}  | other |
+  | one  | created | three | four  | five | six | seven |
+  | null | now     | true  | false | []   | {}  | other |
   And ? these "qr":
-  | one  | two | three | four  | five | six | seven   |
-  | null | now | true  | false | []   | {}  | garbage |
+  | one  | created | three | four  | five | six | seven   |
+  | null | now     | true  | false | []   | {}  | garbage |
 
 Scenario: these2
   Given these "qr":

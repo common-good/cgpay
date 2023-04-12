@@ -32,7 +32,7 @@ Scenario: A company charges an individual
   And ? count "txs" is 0
   And ? these server "txs":
   | amt     | actorId | uid1 | uid2  | agt1 | agt2 | for2  | created | 
-  | 1234.50 | Citre   | Bea  | Citre | Bea  | Abe  | food! | now     |
+  | 1234.50 | Cit     | Bea  | Cit   | Bea  | Abe  | food! | now     |
 
   When I click "btn-undo"
   Then ? I see this alert: "Reverse the transaction?"
@@ -46,7 +46,7 @@ Scenario: A company charges an individual
   Then ? count "txs" is 0
   And ? these server "txs":
   | amt      | actorId | uid1 | uid2  | agt1 | agt2 | for2  | created | 
-  | -1234.50 | Citre   | Bea  | Citre | Bea  | Abe  | food! | now     |
+  | -1234.50 | Cit     | Bea  | Cit   | Bea  | Abe  | food! | now     |
 
 Scenario: A company charges a company
 # abbreviated syntax for first 4 steps

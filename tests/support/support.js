@@ -76,9 +76,12 @@ const t = {
   
   /**
    * For an array of n arrays, the first element being the keys (from a Gherkin multi-value field), return an array of n-1 objects.
+   * @param {*} rows: a list of field names and one or more data records
+   * @param bool one: if true, return just the first/only record
    * @param bool serverField: if true, the rows represent data expected from the server
    */
   these({ rawTable:rows }, one = null, serverField = null ) {
+    if (rows.length === 1) return [ t.adjust(rows[0][0]) ]
     if (one) assert.equal(rows.length, 2)
     let ray = [] // the resulting array of objects
     let field
@@ -112,7 +115,7 @@ const t = {
     if (v == 'other') return 'garbage' // this even works for k='qr'
 
     if (k === 'proof') {
-      if (!v.includes(',')) assert.fail(`v=${v} and k=${k}`)
+      if (!v.includes(',')) return v // already converted
       const p = v.split(',')
       let res = ''
       const post = u.clone(w.post[w.posti].v)
@@ -166,13 +169,15 @@ const t = {
     if (want == '?') return // anything is acceptable
     if (typeof want === 'string' && want.charAt(0) == '!') return test(got, want.substring(1), field, false)
 
-    want = t.adjust(want, field, !isNaN(got))
+    want = t.adjust(want, field)
     const [jGot, jWant] = [JSON.stringify(got), JSON.stringify(want)]
 
     if (mode === false) {
       assert.notEqual(jGot, jWant, msg + ' - NOT')
     } else if (mode == 'exact' || mode === null) {
-      assert.equal(isNaN(want) ? got : +got, want, msg)
+      if (!isNaN(got)) got = +got
+      if (!isNaN(want)) want = +want
+      assert.equal(got, want, msg)
     } else if (mode == 'part') {
       assert.include(got, want, msg)
     } else if (mode.charAt(0) == '<') {
@@ -212,10 +217,9 @@ const t = {
   },
 
   async input(id, text) {
-    if (!isNaN(text)) text = JSON.stringify(text)
     const sel = t.sel('input-' + id) 
     await w.page.click(sel, { clickCount: 3 }) // select field so that typing replaces it
-    await w.page.type(sel, text)
+    await w.page.type(sel, isNaN(text) ? text : JSON.stringify(text))
     const newValue = await w.page.$eval(sel, el => el.value)
     t.test(newValue, text)
   },
