@@ -11,7 +11,7 @@ const t = {
   // UTILITY FUNCTIONS
 
   getst(key = c.storeKey) { return JSON.parse(localStorage.getItem(key)) }, // for debugging
-  async pic(picName = 'pic') { await w.page.screenshot({ path:picName + '.png' }) }, // screen capture
+  async pic(picName = 'snap') { await w.page.screenshot({ path:picName + '.png' }) }, // screen capture
   async wait(secs) { await w.page.waitForTimeout(secs * 1000) },
 
   async whatPage() { 

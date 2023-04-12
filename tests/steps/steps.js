@@ -38,4 +38,9 @@ Then('? I see this error: {string}', async function (msg) { await t.seeIs('messa
 Then('? I see this confirmation: {string}', async function (msg) { await t.seeIs('messageText', msg, 'part') })
 Then('? I see this alert: {string}', async function (msg) { await t.seeIs('messageText', msg, 'part') })
 Then('? I do not see {string}', async function (testId) { await t.dontSee(testId) })
+
+//========== Debugging Steps =============
+
+Given('snap', async function() { await t.pic() }) // name is "pic"
+Given('snap {string}', async function(name) { await t.pic(name) })
  
