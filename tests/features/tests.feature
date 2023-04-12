@@ -7,7 +7,6 @@ Scenario: this
   Given this "qr": "zqx3"
   Then ? this "qr": "zqx3"
 
-Scenario: tmp
   Given this "qr": "Bea"
   Then ? this "qr": "Bea"
   And ? this "qr": "HTTP://6VM.RC4.ME/KDCB12345b"
@@ -29,18 +28,18 @@ Scenario: tmp
   | actorId | otherId |
   | Abe     | Bea     |
   And ? this "qr":
-  | actorId | otherId       |
-  | K6VMDCA | K6VMDCB12345b |
+  | actorId | otherId |
+  | K6VMDCA | K6VMDCB |
 
   Given this "qr":
-  | one  | two | three | four  | five | six | seven |
-  | null | now | true  | false | []   | {}  | other |
+  | one  | created | three | four  | five | six | seven |
+  | null | now     | true  | false | []   | {}  | other |
   Then ? this "qr":
-  | one  | two | three | four  | five | six | seven |
-  | null | now | true  | false | []   | {}  | other |
+  | one  | created | three | four  | five | six | seven |
+  | null | now     | true  | false | []   | {}  | other |
   And ? this "qr":
-  | one  | two | three | four  | five | six | seven   |
-  | null | now | true  | false | []   | {}  | garbage |
+  | one  | created | three | four  | five | six | seven   |
+  | null | now     | true  | false | []   | {}  | garbage |
 
 Scenario: these1
   Given these "qr":
@@ -60,8 +59,8 @@ Scenario: these1
   | actorId | otherId |
   | Abe     | Bea     |
   And ? these "qr":
-  | actorId | otherId       |
-  | K6VMDCA | K6VMDCB12345b |
+  | actorId | otherId |
+  | K6VMDCA | K6VMDCB |
 
   Given these "qr":
   | one  | two | three | four  | five | six | seven |
@@ -96,9 +95,9 @@ Scenario: these2
   | Abe     | Bea     |
   | Dee     | Eli     |
   And ? these "qr":
-  | actorId | otherId       |
-  | K6VMDCA | K6VMDCB12345b |
-  | K6VMDCD | K6VMDCE12345e |
+  | actorId | otherId |
+  | K6VMDCA | K6VMDCB |
+  | K6VMDCD | K6VMDCE |
 
 Scenario: myAccount
   Given I am signed in as "Bea"
@@ -145,10 +144,10 @@ Scenario: theseAccts/choices (notice no quotes around "choices")
 
   Given these choices:
   | Abe |
-  Then ? these choices:
+  Then ? these "choices":
   | { name:'Abe One', location:'Aton, MA', isCo:false, accountId:'K6VMDCA', cardCode:'12345a', deviceId:'devA', selling:null } |
 
-  Given these choices:
+  Given these "choices":
   | { name:'Abe One', location:'Aton, MA', isCo:false, accountId:'K6VMDCA', cardCode:'12345a', deviceId:'devA', selling:null } |
   Then ? these choices:
   | Abe |
