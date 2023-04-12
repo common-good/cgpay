@@ -16,7 +16,7 @@ const u = {
   },
 
   now() { return Math.floor(Date.now() / 1000) },
-  clone(v) { return JSON.parse(JSON.stringify(v)) }, // deep clone (assumes object contains just objects, numbers, and strings)
+  clone(v) { return u.empty(v) ? v: JSON.parse(JSON.stringify(v)) }, // deep clone (assumes object contains just objects, numbers, and strings)
 
   emptyObj(obj) { return (obj === null || JSON.stringify(obj) === '{}') },
   empty(s) { return (s === null || s === undefined || s === '' || s === 0 || u.emptyObj(s)) },
