@@ -114,9 +114,8 @@ export const createStore = () => {
     fromTester() { // called only in test mode (see Route.svelte, hooks.js, and t.tellApp)
       const fromTester = getst().fromTester
       setv('fromTester', {})
-      if (!u.empty(fromTester)) {
+      if (!u.empty(fromTester)) for (let k of Object.keys(fromTester)) {
         if (k === 'flushOk') td.flushOk = true; else setv(k, fromTester[k])
-        for (let k of Object.keys(fromTester)) setv(k, fromTester[k])
       }
     },
     inspect() { return cache },

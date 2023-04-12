@@ -9,6 +9,8 @@ const world = {
   browser: undefined,
   page: undefined,
   tellApp: {}, // for passing setv requests to the app
+  post: [], // for receiving reports of post requests from the app
+  posti: null, // index into post of the post request currently being processed
 
   headlessMode: true,
   slowMo: 0,

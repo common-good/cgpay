@@ -56,9 +56,14 @@ const t = {
 
   /**
    * This function is exposed to the app by the "page.exposeFunction" function in BeforeAll() (see in hooks.js).
+   * It is used for communication (one way at a time) between this testing framework and the app (through its u.testerPipe function)
+   * @param string k: key to add to w or operation
+   * @param {*} v: value to store in w or operation details
    * @returns true if there is data waiting for the app to store (see t.putv() and store.fromTester())
    */
-  async tellApp() {
+  async appPipe(k = null, v = null) {
+    if (k) { w[k].push(v); return false }
+
     const res = w.tellApp
     w.tellApp = false
     return res

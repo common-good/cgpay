@@ -1,9 +1,7 @@
 import { setDefaultTimeout, After, Before, BeforeAll, AfterAll } from '@cucumber/cucumber'
 import puppeteer from 'puppeteer'
-import queryString from 'query-string'
 import { exec } from 'node:child_process'
 import w from './world.js' // the world
-import c from '../../constants.js'
 import t from './support.js' // test support utilities
 
 setDefaultTimeout(w.testTimeout * 1000)
@@ -28,7 +26,7 @@ Before(async () => { // before each scenario
   w.fetcher = w.page
 //  w.page.setViewport({ width: 1280, height: 1024 })
 
-  w.page.exposeFunction('fromTester', t.tellApp) // tell store to update cache (after we changed localStorage -- see t.putStore)
+  w.page.exposeFunction('testerPipe', t.appPipe) // tell store to update cache (after we changed localStorage -- see t.putStore)
 //  w.page.exposeFunction('mockFetch', mockFetch) // tell utils to mock fetches (keep this line)
 
   if (w.seeLog) w.page.on('console', async e => { // log whatever the page logs
