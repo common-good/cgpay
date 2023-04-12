@@ -8,7 +8,7 @@ Feature: Charge
         not to give a warning for duplicate transactions. For example, "food!".
 
 Background:
-  * I am signed in as "Abe/Citre"
+  * I am signed in as "Abe/Cit"
 
 Rule: Charges must include an amount and a description
 

@@ -144,10 +144,10 @@ Scenario: theseAccts/choices (notice no quotes around "choices")
 
   Given these choices:
   | Abe |
-  Then ? these "choices":
-  | { name:'Abe One', location:'Aton, MA', isCo:false, accountId:'K6VMDCA', cardCode:'12345a', deviceId:'devA', selling:null } |
+  Then ? this "choices":
+  | { name:'Abe One', isCo:false, accountId:'K6VMDCA', deviceId:'devA', selling:null } |
 
-  Given these "choices":
-  | { name:'Abe One', location:'Aton, MA', isCo:false, accountId:'K6VMDCA', cardCode:'12345a', deviceId:'devA', selling:null } |
+  Given this "choices":
+  | { name:'Abe One', isCo:false, accountId:'K6VMDCA', deviceId:'devA', selling:null } |
   Then ? these choices:
   | Abe |
