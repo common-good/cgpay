@@ -7,13 +7,17 @@
 
 const AbeUid = 26742000017291 // Abe's uid on the server
 
-const world = {
+const w = {
+  // global test variables to set once
+
+  // global test variables to reset before each scenario (see w.reset() below)
   browser: undefined,
   page: undefined,
   tellApp: {}, // for passing setv requests to the app
   post: [], // for receiving reports of post requests from the app
   posti: null, // index into post of the post request currently being processed
 
+  // test constants
   headlessMode: true,
   slowMo: 0,
   testTimeout: 25, // test timeout in seconds (12 is not enough)
@@ -39,7 +43,12 @@ const world = {
   },
 
   uid(nick) { return AbeUid + nick.charCodeAt(0) - 'Abe'.charCodeAt(0) }, // the given account's uid on the server
+  reset() { // browser and page are reset separately (see hooks.js)
+    w.tellApp = {}
+    w.post = []
+    w.posti = null
+  }
     
 }
 
-export default world
+export default w
