@@ -19,24 +19,21 @@ jobs:
   build:
     # Specifies the VM runner that will run this job.
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [14.x, 15.x, 16.x]
     # Groups together all steps on this job.
     steps:
     # Specifies that this step will run `v3` of the `actions/checkout` action. This action checks out our repo onto the runner. Use it for any workflow runs against our repo's code.
     - uses: actions/checkout@v3
     # The `setup-node` action installs the specified version of Node.js and adds `node` and `npm` commands to `PATH`.
-    - name: Use Node.js ${{ matrix.node-version }}
+    - name: Use Node.js 16.x
       uses: actions/setup-node@v3
       with:
         # Here, version is specified via the matrix context, but it can also be set to exact versions, or a single version.
-        node-version: ${{ matrix.node_version }}
+        node-version: '16.x'
         # (Optional) cache specified dependencies
         # cache: 'npm'
     # Executes the specified commands on the runner.
     - name: Install dependencies
     # `npm ci` installs `package-lock.json` versions and prevents updates to the lock file. It is generally faster than `npm install`.
       run: npm ci
-    - run: npm run build --if-present
-    - run: npm test
+    - run: npm run dev --if-present
+    - run: npm test @all
