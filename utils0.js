@@ -21,8 +21,10 @@ const u = {
   emptyObj(obj) { return (obj === null || JSON.stringify(obj) === '{}') },
   empty(s) { return (s === null || s === undefined || s === '' || s === 0 || u.emptyObj(s)) },
   er(msg, details = null) { return { name:msg, message:u.empty(details) ? msg : details } },
-  parseObjString(objString) { return (eval(`[${objString}]`)[0]) }, // perversely, JS cannot evaluate an object literal without a wrapper
-//  parseObjString(objString) { return JSON.parse(objString) }, // perversely, JS cannot evaluate an object literal without a wrapper
+  parseObjString(objString) { // perversely, JS cannot evaluate an object literal without a wrapper
+    if (!'[{'.includes(objString.charAt(0))) throw new Error('Invalid object string')
+    return eval(`[${objString}]`)[0]
+  },
 }
 
 export default u

@@ -23,6 +23,22 @@ describe('utils', () => {
     navigator = originalNavigator
   })
 
+
+  describe('.parseObjString', () => {
+    it('parses arrays and objects correctly', () => {
+      expect(u.parseObjString(`[]`)).toStrictEqual([])
+      expect(u.parseObjString(`[1, 'two']`)).toStrictEqual([1, 'two'])
+      expect(u.parseObjString(`[1, "two"]`)).toStrictEqual([1, 'two'])
+      expect(u.parseObjString(`[1, [2, 'two']]`)).toStrictEqual([1, [2, 'two']])
+
+      expect(u.parseObjString(`{}`)).toStrictEqual({})
+      expect(u.parseObjString(`{a:1, b:'two', 'c d':'three'}`)).toStrictEqual({a:1, b:'two', 'c d':'three'})
+
+      const arg = `{a:1, b:[3, 'c', "d", {e:'f', 'g':{h:9, i:'ten', "j k":['11', 12]}}]}`
+      const want = {a:1, b:[3, 'c', 'd', {e:'f',  g :{h:9, i:'ten', 'j k':['11', 12]}}]}
+      expect(u.parseObjString(arg)).toStrictEqual(want)
+    })
+  })
   describe('.ua', () => {
     describe('when the user is on an Android mobile device', () => {
       it('is Android', () => {
