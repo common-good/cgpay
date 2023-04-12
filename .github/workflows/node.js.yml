@@ -41,8 +41,8 @@ jobs:
     - name: Install dependencies
     # `npm ci` installs `package-lock.json` versions and prevents updates to the lock file. It is generally faster than `npm install`.
       run: npm ci
-    - name: Run preview build
-      run: npm run preview
+    - name: Build files to /dist
+      run: npm run build
     - name: Run tests
-      run: npm test
+      run: npm test @a
     
