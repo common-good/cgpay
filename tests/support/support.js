@@ -3,6 +3,7 @@ import c from '../../constants.js'
 import u from '../../utils0.js'
 import cache from '../../src/cache.js'
 import w from './world.js'
+import queryString from 'query-string'
 
 const baseUrl = 'http://localhost:' + c.port + '/'
 
@@ -37,7 +38,7 @@ const t = {
     if (u.empty(st)) st = {}
     st = JSON.stringify(st)
     await w.page.evaluate((k, v) => { localStorage.setItem(k, v) }, key, st)
-    await w.page.waitForTimeout(c.networkTimeoutMs +1) // give the network timeout function time to reload the store
+    await t.waitACycle() // give the network timeout function time to reload the store
   },
 
   async getv(k) {
@@ -112,11 +113,12 @@ const t = {
 
     const me = u.clone(w.accounts[v])
     if (me != null) return  (k == 'account') ? me
-                            : (k == 'myAccount' ? u.just('name isCo accountId deviceId selling', me)
-                            : (k == 'actorId' ? me.accountId
-                            : (k == 'otherId' ? me.accountId + me.cardCode
-                            : (k == 'qr' ? c.testQrStart + me.accountId.substring(0, 1) + me.accountId.substring(4) + me.cardCode
-                            : v ))))
+                          : (numeric && 'actorId uid1 uid2 agt1 agt2'.split(' ').includes(k) ? w.uid(v)
+                          : (k == 'myAccount' ? u.just('name isCo accountId deviceId selling', me)
+                          : (k == 'actorId' ? me.accountId
+                          : (k == 'otherId' ? me.accountId
+                          : (k == 'qr' ? c.testQrStart + me.accountId.charAt(0) + me.accountId.substring(4) + me.cardCode
+                          : v )))))
     return v
   },
 
@@ -201,8 +203,11 @@ const t = {
   },
 
   async input(id, text) {
-    await w.page.type(t.sel('input-' + id), text)
-    const newValue = await w.page.$eval(t.sel('input-' + id), el => el.value)
+    if (!isNaN(text)) text = JSON.stringify(text)
+    const sel = t.sel('input-' + id) 
+    await w.page.click(sel, { clickCount: 3 }) // select field so that typing replaces it
+    await w.page.type(sel, text)
+    const newValue = await w.page.$eval(sel, el => el.value)
     t.test(newValue, text)
   },
 
@@ -269,6 +274,27 @@ async mockFetch(url, options = {}) {
     t.test(await t.getv(k), v, k)
   },
 
+  async testServer(table, rows) {
+    const want = t.these(rows)
+    let msg, kvs, i
+    const got = await t.postToTestEndpoint('rows', { fieldList:'*', table:table })
+    for (let rowi in want) {
+      kvs = table == 'txs' ? { amt:want[rowi].amt, for2:want[rowi].for2 } : { none:0 }
+      msg = `want server ${table} row (${rowi}) with ` + JSON.stringify(kvs)
+      i = u.findByValue(got, kvs)
+      assert.isNotNull(i, msg)
+      t.test(got[i], want[rowi])
+    }
+  },
+
+  async posted(endpoint, rows, method) {
+    await t.waitACycle()
+    w.posti = u.findByValue(w.post, { endpoint:endpoint })
+    assert.isNotNull(w.posti, `expected a "${method}" request to endpoint "${endpoint}"`)
+    t.test({ ...w.post[w.posti] }, { endpoint:endpoint, v:t.these(rows, true), method:method } )
+    delete w.post[w.posti]
+  },
+
   /**
    * Set or compare accts[] or choices[] in the store to the expected list.
    * Confirm only that the key, agent, and name of each entry are as expected.
@@ -284,17 +310,16 @@ async mockFetch(url, options = {}) {
     let me, name, agent
     for (let i in row) {
       me = w.accounts[row[i]]
-      if (me == null) me = row[i]
-//      console.log('stored', field, 'i',i,'rowi',row[i],'choice',accts[i])
+      if (me === null) me = u.parseObjString(row[i])
       if (field == 'accts') {
         ;([agent, name] = row[i].includes('/') ? row[i].split('/') : ['', me.name])
         if (set) {
           accts[me.accountId] = { hash:u.hash(me.cardCode), agent:agent, name:name, location:me.location, limit:200, creditLine:9999 }
-        } else t.test(u.just('agent name', accts[me.accountId]), { agent:agent, name:name }, null, 'shallow')
+        } else t.test(u.just('agent name', accts[me.accountId]), { agent:agent, name:name }, field, 'shallow')
       } else { // choices
         if (set) {
           accts.push(u.just('name accountId deviceId qr isCo selling', me))
-        } else t.test(u.just('name accountId isCo selling', accts[i]), u.just('name accountId isCo selling', me), null, 'shallow')
+        } else t.test(u.just('name accountId isCo selling', accts[i]), u.just('name accountId isCo selling', me), field, 'shallow')
       }
     }
     if (set) await t.putv(field, accts)
@@ -302,7 +327,7 @@ async mockFetch(url, options = {}) {
 
   async onPage(id) {
     const el = await w.page.$(`#${id}`)
-    if (el == null) {
+    if (el === null) {
       const here = await t.whatPage()
       assert.isNotNull(el, `page "${id}" not found. You are on page "${here}"`)
     }
@@ -324,13 +349,17 @@ async mockFetch(url, options = {}) {
 
   async signedInAs(who, set = false) {
     const me = w.accounts[who]
-//    if (set) console.log('signedinas', { ...u.just('name isCo accountId deviceId selling', me), qr:'qr' + me.name.substring(0, 1) })
-//    if (!set) console.log('?signedinas', u.just('name isCo accountId selling', await t.getv('myAccount')), u.just('name isCo accountId selling', me))
-    if (set) await t.putv('myAccount', { ...u.just('name isCo accountId deviceId selling', me), qr:'qr' + me.name.substring(0, 1) })
+    if (set) await t.putv('myAccount', { ...u.just('name isCo accountId deviceId selling', me), qr:'qr' + me.name.charAt(0) })
     if (!set) t.test(u.just('name isCo accountId selling', await t.getv('myAccount')), u.just('name isCo accountId selling', me), 'myAccount', 'shallow')
   },
 
   async scan(who) { await t.putv('qr', t.adjust(who, 'qr')); await t.visit('charge') },
+  async tx(who, amount, description) {
+    await t.scan(who)
+    await t.input('amount', amount)
+    await t.input('description', description)
+    await w.page.click(t.sel('btn-submit'))
+  },
 
 }
 
