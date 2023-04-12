@@ -8,6 +8,9 @@ import queryString from 'query-string'
 const baseUrl = 'http://localhost:' + c.port + '/'
 
 const t = {
+  // Constants
+  ONE: true, // parameter for these()
+  SERVER: true, // parameter for these()
 
   // UTILITY FUNCTIONS
 
@@ -270,12 +273,12 @@ async mockFetch(url, options = {}) {
   },
 
   async testThis(k, v) {
-    if (typeof v === 'object') return t.testThese(k, v, true)
+    if (typeof v === 'object') return t.testThese(k, v, t.ONE)
     t.test(await t.getv(k), v, k)
   },
 
   async testServer(table, rows) {
-    const want = t.these(rows)
+    const want = t.these(rows, false, t.SERVER)
     let msg, kvs, i
     const got = await t.postToTestEndpoint('rows', { fieldList:'*', table:table })
     for (let rowi in want) {
@@ -291,7 +294,7 @@ async mockFetch(url, options = {}) {
     await t.waitACycle()
     w.posti = u.findByValue(w.post, { endpoint:endpoint })
     assert.isNotNull(w.posti, `expected a "${method}" request to endpoint "${endpoint}"`)
-    t.test({ ...w.post[w.posti] }, { endpoint:endpoint, v:t.these(rows, true), method:method } )
+    t.test({ ...w.post[w.posti] }, { endpoint:endpoint, v:t.these(rows, t.ONE), method:method } )
     delete w.post[w.posti]
   },
 
