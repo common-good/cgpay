@@ -23,7 +23,7 @@
   }
 
   onMount(async () => {
-    if ($store.frontCamera == null) store.setFrontCamera(!u.isApple() && !u.isAndroid())
+    if ($store.frontCamera === null) store.setFrontCamera(!u.isApple() && !u.isAndroid())
     store.setQr(null) // no going back to previous customer
     if ($store.erMsg) er($store.erMsg)
     if ($store.myAccount) try {

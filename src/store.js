@@ -158,7 +158,7 @@ export const createStore = () => {
       let acct = cache.accts[card.acct]
       if (acct == undefined) return null
       if (card.hash != acct.hash) return null // if later a new hash is validated, this entry will get updated
-      if (acct.name == null) throw new Error(lostMsg) // if we encounter a hash collision for such a short string, it will be an important engineering discovery
+      if (acct.name === null) throw new Error(lostMsg) // if we encounter a hash collision for such a short string, it will be an important engineering discovery
       return acct
     },
 

@@ -55,7 +55,7 @@
    * Return the cardId with cardCode (and everything that follows) removed
    */
   function noCardCode(cardId) {
-    if (cardId == null) return null
+    if (cardId === null) return null
     const i = dig36.indexOf(cardId[0])
     const len = regionLens[i] + acctLens[i] + agentLens[i]
     return cardId.substr(0, len)
@@ -112,7 +112,7 @@
 
   function profileOffline() {
     if (!$store.selfServe) showEr('OFFLINE. Trust this member or ask for ID.')
-    limit = Math.min(c.offlineLimit, limit == null ? c.offlineLimit : limit)
+    limit = Math.min(c.offlineLimit, limit === null ? c.offlineLimit : limit)
   }
   
   /**
@@ -130,7 +130,7 @@
 
   onMount(async () => {
     try {
-      if (qr == null) return navigateTo('/home') // pressed back button from Home page
+      if (qr === null) return navigateTo('/home') // pressed back button from Home page
       const card = qrParse(qr) // does not return if format is bad
       const mainId = getMainId($store.myAccount.accountId)
       if (card.main == mainId) throw new Error('That card is for the same account as yours.')
