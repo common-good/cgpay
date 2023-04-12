@@ -9,7 +9,7 @@
   "type": "module",
   "scripts": {
     "build": "mode=production vite build",
-    "dev": "vite dev",
+    "dev": "mode=dev vite dev",
     "dev:testing": "mode=testing vite dev",
     "preview": "mode=production vite build && mode=production vite preview",
     "watch": "mode=dev vitest",
