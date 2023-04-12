@@ -75,13 +75,13 @@ Scenario: these1
 
 Scenario: these2
   Given these "qr":
-  | one | two | account   |
-  | 1   | 2   | Bea       |
-  | 3   | 4   | Abe/Citre |
+  | one | two | account |
+  | 1   | 2   | Bea     |
+  | 3   | 4   | Abe/Cit |
   Then ? these "qr":
-  | one | two | account   |
-  | 1   | 2   | Bea       |
-  | 3   | 4   | Abe/Citre |
+  | one | two | account |
+  | 1   | 2   | Bea     |
+  | 3   | 4   | Abe/Cit |
   And ? these "qr":
   | one | two | account |
   | 1   | 2   | { name:'Bea Two', location:'Bton, MA', isCo:false, accountId:'K6VMDCB', cardCode:'12345b', deviceId:'devB', selling:null }                             |
@@ -107,9 +107,9 @@ Scenario: myAccount
 
 Scenario: theseAccts/accounts (notice no quotes around "accounts")
   Given these accounts:
-  | Abe | Bea | Bea/Citre |
+  | Abe | Bea | Bea/Cit |
   Then ? these accounts:
-  | Abe | Bea | Bea/Citre |
+  | Abe | Bea | Bea/Cit |
 #  And ? these "accts" keyed by "accountId":
 #  | name    | agent   | location | hash  |
 #  | Abe One | null    | Aton, MA | !null |
@@ -122,13 +122,13 @@ Scenario: theseAccts/accounts (notice no quotes around "accounts")
 #  | Bea Two | null    | Bton, MA |
 #  | Citre   | Bea Two | Cton, MA |
 #  Then ? these accounts:
-#  | Abe | Bea | Bea/Citre |
+#  | Abe | Bea | Bea/Cit |
 
 Scenario: theseAccts/choices (notice no quotes around "choices")
   Given these choices:
-  | Abe | Bea | Bea/Citre |
+  | Abe | Bea | Bea/Cit |
   Then ? these choices:
-  | Abe | Bea | Bea/Citre |
+  | Abe | Bea | Bea/Cit |
   And ? these "choices":
   | name    | isCo  | accountId | deviceId | selling |
   | Abe One | false | K6VMDCA   | devA     | null    |
@@ -141,7 +141,7 @@ Scenario: theseAccts/choices (notice no quotes around "choices")
   | Bea Two | false | K6VMDCB   | devB     | null    |
   | Citre   | true  | L6VMDCC1  | devC     | ['groceries', 'gifts', 'sundries'] |
   Then ? these choices:
-  | Abe | Bea | Bea/Citre |
+  | Abe | Bea | Bea/Cit |
 
   Given these choices:
   | Abe |

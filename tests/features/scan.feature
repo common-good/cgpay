@@ -20,7 +20,7 @@ Scenario: I scan an individual's QR
   And ? I see "theirLocation" is "Aton, MA"
 
 Scenario: I scan a company agent's QR
-  When I scan "Abe/Citre"
+  When I scan "Abe/Cit"
   Then ? I am on page "charge"
   And ? I am on page "charge-profile"
   And ? I see "theirPhoto"
@@ -31,7 +31,7 @@ Scenario: I scan a company agent's QR
 Rule: Company accounts can scan an individual or company card
 
 Scenario: A company scans an individual's QR
-  Given I am signed in as "Bea/Citre"
+  Given I am signed in as "Bea/Cit"
   When I scan "Abe"
   Then ? I am on page "charge"
   And ? I am on page "charge-profile"

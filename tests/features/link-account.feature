@@ -20,7 +20,7 @@ Background:
 # Abe, Bea, and Flo have two accounts
 # Dee, Hal, and Ida have just one (see the sigin-in feature, because linking is automatic)
   * these choices:
-  | Bea   | Bea/Citre |
+  | Bea   | Bea/Cit |
 
 Rule: Users must link their device to a CGPay account to use the app
 

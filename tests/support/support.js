@@ -128,7 +128,7 @@ const t = {
    * @param {*} got 
    * @param {*} want: what is wanted (recurses if want is an object)
    * @param string field: name of field being tested (to inform substitutions)
-   * @param string mode: exact (default), false (exact not), part, shallow, or <n (meaning got and want are less than n apart) 
+   * @param string mode: exact (default), false (exact not), part, or <n (meaning got and want are less than n apart) 
    */
   test(got, want, field = null, mode = null) {
     if (typeof want === 'string' && '{['.includes(want.charAt(0)) && want !== '') want = u.parseObjString(want)
@@ -156,7 +156,7 @@ const t = {
     if (want == '?') return // anything is acceptable
     if (typeof want === 'string' && want.charAt(0) == '!') return test(got, want.substring(1), field, false)
 
-    if (mode == 'shallow') mode = 'exact'; else want = t.adjust(want, field, !isNaN(got))
+    want = t.adjust(want, field, !isNaN(got))
     const [jGot, jWant] = [JSON.stringify(got), JSON.stringify(want)]
 
     if (mode === false) {
@@ -315,11 +315,11 @@ async mockFetch(url, options = {}) {
         ;([agent, name] = row[i].includes('/') ? row[i].split('/') : ['', me.name])
         if (set) {
           accts[me.accountId] = { hash:u.hash(me.cardCode), agent:agent, name:name, location:me.location, limit:200, creditLine:9999 }
-        } else t.test(u.just('agent name', accts[me.accountId]), { agent:agent, name:name }, field, 'shallow')
+        } else t.test(u.just('agent name', accts[me.accountId]), { agent:agent, name:name }, field)
       } else { // choices
         if (set) {
           accts.push(u.just('name accountId deviceId qr isCo selling', me))
-        } else t.test(u.just('name accountId isCo selling', accts[i]), u.just('name accountId isCo selling', me), field, 'shallow')
+        } else t.test(u.just('name accountId isCo selling', accts[i]), u.just('name accountId isCo selling', me), field)
       }
     }
     if (set) await t.putv(field, accts)
@@ -350,7 +350,7 @@ async mockFetch(url, options = {}) {
   async signedInAs(who, set = false) {
     const me = w.accounts[who]
     if (set) await t.putv('myAccount', { ...u.just('name isCo accountId deviceId selling', me), qr:'qr' + me.name.charAt(0) })
-    if (!set) t.test(u.just('name isCo accountId selling', await t.getv('myAccount')), u.just('name isCo accountId selling', me), 'myAccount', 'shallow')
+    if (!set) t.test(u.just('name isCo accountId selling', await t.getv('myAccount')), u.just('name isCo accountId selling', me), 'myAccount')
   },
 
   async scan(who) { await t.putv('qr', t.adjust(who, 'qr')); await t.visit('charge') },
