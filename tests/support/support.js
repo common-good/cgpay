@@ -17,6 +17,7 @@ const t = {
   getst(key = c.storeKey) { return JSON.parse(localStorage.getItem(key)) }, // for debugging
   async pic(picName = 'snap') { await w.page.screenshot({ path:picName + '.png' }) }, // screen capture
   async wait(secs) { await w.page.waitForTimeout(secs * 1000) },
+  mapServerField(field) { return field == 'actorId' ? 'actorUid' : field }, // disambiguate server's from app's actorId field
 
   async whatPage() { 
     const el = await w.page.$('.page')
@@ -75,14 +76,19 @@ const t = {
   
   /**
    * For an array of n arrays, the first element being the keys (from a Gherkin multi-value field), return an array of n-1 objects.
+   * @param bool serverField: if true, the rows represent data expected from the server
    */
-  these({ rawTable:rows }, one = false ) {
+  these({ rawTable:rows }, one = null, serverField = null ) {
     if (one) assert.equal(rows.length, 2)
     let ray = [] // the resulting array of objects
+    let field
     
     for (let rowi = 1; rowi < rows.length; rowi++) {
       ray[rowi - 1] = {}
-      for (let coli in rows[0]) ray[rowi - 1][rows[0][coli]] = rows[rowi][coli], rows[0][coli]
+      for (let coli in rows[0]) {
+        field = rows[0][coli]
+        ray[rowi - 1][field] = t.adjust(rows[rowi][coli], serverField ? t.mapServerField(field) : field )
+      }
     }
     return u.clone(one ? ray[0] : ray)
   },
@@ -91,9 +97,8 @@ const t = {
    * Return value with adjustments for special parameters
    * @param string v: value to adjust
    * @param string k: field name (to inform the adjustment)
-   * @param bool numeric: expect result to be numeric (used only for server account numbers)
    */
-  adjust(v, k, numeric = false) {
+  adjust(v, k) {
     const v0 = typeof v === 'string' ? v.charAt(0) : ''
     if (v === null) return null
     if (v == 'version') return c.version
@@ -116,7 +121,7 @@ const t = {
 
     const me = u.clone(w.accounts[v])
     if (me != null) return  (k == 'account') ? me
-                          : (numeric && 'actorId uid1 uid2 agt1 agt2'.split(' ').includes(k) ? w.uid(v)
+                          : ('actorUid uid1 uid2 agt1 agt2'.split(' ').includes(k) ? w.uid(v)
                           : (k == 'myAccount' ? u.just('name isCo accountId deviceId selling', me)
                           : (k == 'actorId' ? me.accountId
                           : (k == 'otherId' ? me.accountId
