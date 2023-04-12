@@ -5,6 +5,7 @@ Feature: Self Serve Mode
  So that customers can use it to charge themselves without having administrative privileges.
 
 Background:
+  * I am signed in as "Abe/Citre"
 
 Rule: Business accounts have the option to enter self serve mode
 

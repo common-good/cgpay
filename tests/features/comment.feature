@@ -14,6 +14,7 @@ Scenario: I can access a Comments & Suggestions link from the navigation
 
 Scenario: I can submit feedback and receive a confirmation message that it was received
   When I visit "comment"
+  Then ? I am on page "comment"
   And I input "wow! ❤️" as "comment"
   And I click "submit-comment"
   Then ? these "comments":
