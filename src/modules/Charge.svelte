@@ -176,39 +176,39 @@
 
 <section class="page" id="charge">
   { #if gotTx }
-    <h1>Transaction Complete</h1>
+    <h1 data-testid="transaction-complete">Transaction Complete</h1>
     <div class='top'>
       <div class='charge-info'>
         <div class='row payee-info'>
-          <p>{pastAction} to:</p>
+          <p><span data-testid="action">{pastAction}</span> to:</p>
           <div class='payee-details'>
           { #if $store.selfServe }
-            <p>{ $store.myAccount.name }</p>
+            <p data-testid="other-name">{ $store.myAccount.name }</p>
           { :else }
             {#if otherAccount.agent}
-              <p>{ otherAccount.agent }</p>
-              <p class='co'>{ otherAccount.name }</p>
+              <p data-testid="agent">{ otherAccount.agent }</p>
+              <p class='co' data-testid="other-name">{ otherAccount.name }</p>
             {:else}
-              <p>{ otherAccount.name }</p>
+              <p data-testid="other-name">{ otherAccount.name }</p>
             {/if}
           {/if}
           </div>
         </div>
         <div class='row'>
           <p>Description:</p>
-          <p>{ tx.description }</p>
+          <p data-testid="description">{ tx.description }</p>
         </div>
         <div class='row'>
           <p>Amount:</p>
           <p>$ <span data-testid="amount">{ u.withCommas(tx.amount) }</span></p>
         </div>
       </div>
-      <div class="note">Thank you for using CGPay<br>for democracy and the common good!</div>
+      <div class="note" data-testid="thank-you">Thank you for using CGPay<br>for democracy and the common good!</div>
     </div>
     <div class="actions">
       { #if tipable }<a class="secondary" href='/tip'>Add Tip</a>{ /if }
       <!-- button>Receipt</button -->
-      <button on:click={ askUndo } class="tertiary">Undo</button>
+      <button data-testid="btn-undo" on:click={ askUndo } class="tertiary">Undo</button>
       <a class="primary" href='/home'>Done</a>
     </div>
 
