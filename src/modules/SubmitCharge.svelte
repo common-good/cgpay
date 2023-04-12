@@ -22,8 +22,9 @@
       const created = u.now() // must be done just once
       tx.created = created // Unix timestamp
       tx.amount = (+tx.amount).toFixed(2)
-      tx.proof = u.hash(tx.actorId + tx.amount + tx.otherId + tx.code + tx.created)
-      delete(tx.code)
+      const tx2 = { ... tx }
+      tx.proof = u.hash(tx.actorId + tx.amount + tx.otherId + tx2.code + tx.created)
+      delete tx.code
       tx.offline = false
     }
     store.setMyAccount({ ...$store.myAccount, lastTx:tx.created })

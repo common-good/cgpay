@@ -100,7 +100,17 @@ const t = {
     if (v0 == '[' || v0 == '{') return u.parseObjString(v)
     if (v == 'other') return 'garbage' // this even works for k='qr'
 
-    const me = w.accounts[v]
+    if (k === 'proof') {
+      if (!v.includes(',')) assert.fail(`v=${v} and k=${k}`)
+      const p = v.split(',')
+      let res = ''
+      const post = u.clone(w.post[w.posti].v)
+      const other = u.findByValue(w.accounts, { accountId:post.otherId })
+      for (let fld of p) res += fld == 'otherId' ? post.otherId + w.accounts[other].cardCode : post[fld] // the individual w.post fields in proof are tested separately
+      return u.hash(res)
+    }
+
+    const me = u.clone(w.accounts[v])
     if (me != null) return  (k == 'account') ? me
                             : (k == 'myAccount' ? u.just('name isCo accountId deviceId selling', me)
                             : (k == 'actorId' ? me.accountId
