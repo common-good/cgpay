@@ -10,13 +10,13 @@ const constants = {
   onlineLimit: 10000,
   offlineLimit: 250,
 
-  urls: {
+  urls: { // list at least the ones that use real data
     staging:    'https://cgpay-staging.commongood.earth',
     production: 'https://cgpay.commongood.earth',
   },
   apis: {
-    //  test:  'http://localhost/cgmembers-frame/cgmembers/api/',
-    test: 'https://demo.commongood.earth/api/',
+//    test:  'http://localhost/cgmembers-frame/cgmembers/api/',
+    test: 'https://demo.commongood.earth/api/', // should be test.cg.e when that db exists
     demo: 'https://demo.commongood.earth/api/',
     real: 'https://new.commongood.earth/api/',
   },
