@@ -1,6 +1,6 @@
 import { Given, When, Then } from '@cucumber/cucumber'
-import t from '../support/support.js'
-import w from '../support/world.js'
+import t from './support.js'
+import w from './world.js'
 import { assert, expect } from 'chai'
 
 Given('I use {string} on an {string} device', async function (browser, sys) { await t.setUA(browser, sys) })
@@ -48,4 +48,3 @@ Then('? we request this from {string}:', async function (endpoint, rows) { await
 
 Given('snap', async function() { await t.pic() }) // name is "pic"
 Given('snap {string}', async function(name) { await t.pic(name) })
- 
