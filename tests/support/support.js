@@ -321,7 +321,9 @@ async mockFetch(url, options = {}) {
 //    if (!set) console.log('?signedinas', u.just('name isCo accountId selling', await t.getv('myAccount')), u.just('name isCo accountId selling', me))
     if (set) await t.putv('myAccount', { ...u.just('name isCo accountId deviceId selling', me), qr:'qr' + me.name.substring(0, 1) })
     if (!set) t.test(u.just('name isCo accountId selling', await t.getv('myAccount')), u.just('name isCo accountId selling', me), 'myAccount', 'shallow')
-  }
+  },
+
+  async scan(who) { await t.putv('qr', t.adjust(who, 'qr')); await t.visit('charge') },
 
 }
 
