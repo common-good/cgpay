@@ -41,8 +41,8 @@ For more information:
 | :-- | :-- |
 | `npm run dev` | then ctrl-Click http://localhost:3000/ to open in default browser |
 | `npm run tests:watch` | |
-| `npm test @a` | run all Cucumber/Gherkin end-to-end tests (you currently have to do "npm run dev" first, in a separate window) |
-| `npm test @<tag>` | run a subset of tests (or @all) |
+| `npm test @all` | run all Cucumber/Gherkin end-to-end tests (you currently have to do "npm run dev" first, in a separate window) |
+| `npm test @<tag>` | run a subset of tests -- tests are tagged at the top and/or before any Scenario |
 
 **Note:** Use a private browsing window in order to avoid unpredictable caching behavior from the service worker.
 
@@ -77,19 +77,23 @@ We use the following libraries for unit tests:
 
 ### Previewing
 
-[Service workers only work in production builds](https://kit.svelte.dev/docs/service-workers), so to test PWA functionality locally the application must be compiled. With Vercel we ran `npm run preview` to build and serve to a preview branch. We are currently developing a replacement.
+NPM RUN DEV first compiles the app into dev-dist before previewing the app in development mode.
+The service worker provides offline functionality even in a development environment.
+To view a production version locally, do NPM RUN BUILD, then copy the dist/ files to your web root.
 
 ## Deploying
 
-Deployments used to be automatic via Vercel's GitHub integration. For now, we deploy manually via SCP(SFTP) to Common Good's Capistrano servers.
+For now, we deploy manually via SCP(SFTP) to Common Good's various servers.
 
 Deploy branches to the following URLs:
 
-| Git Branch | Environment |  URL | Shortcut | server URL | API |
+| Git Branch | Environment |  URL | Shortcut | Server URL | API/data |
 | :-- | :-- | :-- | :-- |:-- |:-- |
-| `main` | `production` | https://cgpay.commongood.earth | ? | new1.commongood.earth |  prod |
-| `staging` | `staging` | https://cgpay-staging.commongood.earth | cg4.us/pay1 | ? | prod |
-| `develop` | `develop` | https://cgpay-dev.commongood.earth | cg4.us/pay2 | ? | demo |
+| `main` | `production` | https://cgpay.commongood.earth | cg4.us/pay | new.commongood.earth |  prod |
+| `staging` | `staging` | https://cgpay-staging.commongood.earth | cg4.us/pay1 | new1.commongood.earth | prod |
+| `develop` | `dev` | https://cgpay-dev.commongood.earth | cg4.us/pay2 | new1.commongood.earth | dev |
+| `(other)` | `local` | https://localhost:3000 | (none) | localhost | dev or local |
+| `demo` | `staging` | https://cgpay-demo.commongood.earth | cg4.us/demo | new1.commongood.earth | prod |
 
 ### Deployment Checklist
 
