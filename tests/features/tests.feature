@@ -99,37 +99,31 @@ Scenario: these2
   | actorId | otherId       |
   | K6VMDCA | K6VMDCB12345b |
   | K6VMDCD | K6VMDCE12345e |
-@tmp
+
 Scenario: myAccount
   Given I am signed in as "Bea"
   Then ? I am signed in as "Bea"
-  And ? this "myAccount": "Bea"
-  And ? this "myAccount": "{ name:'Bea Two', location:'Bton, MA', isCo:false, accountId:'K6VMDCB', cardCode:'12345b', deviceId:'devB', selling:null }"
-
-  Given I am signed in as "{ name:'Bea Two', location:'Bton, MA', isCo:false, accountId:'K6VMDCB', cardCode:'12345b', deviceId:'devB', selling:null }"
-  Then ? I am signed in as "Bea"
+  And ? this "myAccount": "{ name:'Bea Two', isCo:false, accountId:'K6VMDCB', deviceId:'devB', selling:null }"
 
 Scenario: theseAccts/accounts (notice no quotes around "accounts")
   Given these accounts:
   | Abe | Bea | Bea/Citre |
   Then ? these accounts:
   | Abe | Bea | Bea/Citre |
-  And ? these "accounts":
-  | name    | agent   | location | hash  |
-  | Abe One | null    | Aton, MA | !null |
-  | Bea Two | null    | Bton, MA | !null |
-  | Citre   | Bea Two | Cton, MA | !null |
+#  And ? these "accts" keyed by "accountId":
+#  | name    | agent   | location | hash  |
+#  | Abe One | null    | Aton, MA | !null |
+#  | Bea Two | null    | Bton, MA | !null |
+#  | Citre   | Bea Two | Cton, MA | !null |
 
-  Given these "accounts":
-  | name    | agent   | location |
-  | Abe One | null    | Aton, MA |
-  | Bea Two | null    | Bton, MA |
-  | Citre   | Bea Two | Cton, MA |
-  Then ? these accounts:
-  | Abe | Bea | Bea/Citre |
-  And ? these accounts:
-  | { name:'Abe One', agent:null, location:'Aton, MA' } | { name:'Bea Two', agent:null, location:'Bton, MA' } | { name:'Citre', agent:'Bea Two', location:'Cton, MA' } |
-  
+#  Given ? these "accts" keyed by "accountId"
+#  | name    | agent   | location |
+#  | Abe One | null    | Aton, MA |
+#  | Bea Two | null    | Bton, MA |
+#  | Citre   | Bea Two | Cton, MA |
+#  Then ? these accounts:
+#  | Abe | Bea | Bea/Citre |
+
 Scenario: theseAccts/choices (notice no quotes around "choices")
   Given these choices:
   | Abe | Bea | Bea/Citre |
@@ -146,8 +140,15 @@ Scenario: theseAccts/choices (notice no quotes around "choices")
   | Abe One | false | K6VMDCA   | devA     | null    |
   | Bea Two | false | K6VMDCB   | devB     | null    |
   | Citre   | true  | L6VMDCC1  | devC     | ['groceries', 'gifts', 'sundries'] |
+  Then ? these choices:
+  | Abe | Bea | Bea/Citre |
 
   Given these choices:
   | Abe |
   Then ? these choices:
   | { name:'Abe One', location:'Aton, MA', isCo:false, accountId:'K6VMDCA', cardCode:'12345a', deviceId:'devA', selling:null } |
+
+  Given these choices:
+  | { name:'Abe One', location:'Aton, MA', isCo:false, accountId:'K6VMDCA', cardCode:'12345a', deviceId:'devA', selling:null } |
+  Then ? these choices:
+  | Abe |

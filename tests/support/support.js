@@ -72,16 +72,13 @@ const t = {
   /**
    * For an array of n arrays, the first element being the keys (from a Gherkin multi-value field), return an array of n-1 objects.
    */
-  these: ({ rawTable:rows }, one ) => {
-//    console.log('rows:', rows)
+  these({ rawTable:rows }, one = false ) {
     if (one) assert.equal(rows.length, 2)
     let ray = [] // the resulting array of objects
     
     for (let rowi = 1; rowi < rows.length; rowi++) {
       ray[rowi - 1] = {}
-      for (let coli in rows[0]) {
-        ray[rowi - 1][rows[0][coli]] = t.adjust(rows[rowi][coli], rows[0][coli])
-      }
+      for (let coli in rows[0]) ray[rowi - 1][rows[0][coli]] = rows[rowi][coli], rows[0][coli]
     }
     return u.clone(one ? ray[0] : ray)
   },
@@ -121,18 +118,20 @@ const t = {
    * @param string field: name of field being tested (to inform substitutions)
    * @param string mode: exact (default), false (exact not), part, shallow, or <n (meaning got and want are less than n apart) 
    */
-  test: (got, want, field = null, mode = null) => {
-    const msg = `got: ~${JSON.stringify(got)}~ wanted: ~${JSON.stringify(want)}~`
-    if (typeof want === 'object' && !u.empty(want)) {
+  test(got, want, field = null, mode = null) {
+    if (typeof want === 'string' && '{['.includes(want.charAt(0)) && want !== '') want = u.parseObjString(want)
+    const msg = `got: \`${JSON.stringify(got)}\` wanted: \`${JSON.stringify(want)}\` mode: \`${mode}\``
+
+    if (typeof want === 'object') {
       assert.equal(typeof got, 'object', msg) // do this before empty test
-      assert.isTrue(!u.empty(got), 'should not be empty - ' + msg) // don't use assert.isNotEmpty here
-      if (Array.isArray(want)) { // array
+      if (u.empty(want)) {
+        assert.deepStrictEqual(got, want, msg)
+      } else if (Array.isArray(want)) { // array
         assert.isTrue(Array.isArray(got), msg)
         assert.equal(got.length, want.length, msg)
         for (let i in want) t.test(got[i], want[i], i, mode)
       } else { // object
         if (field == 'myAccount') want = { ...want, deviceId:'?', qr:'?' }
-//        if (field == 'myAccount') console.log('myAccount got', got, 'want', want)
         let modei
         for (let i of Object.keys(want)) {
           modei = u.empty(mode) ? (t.isTimeField(i) ? '<' + w.timeSlop : null) : mode
@@ -143,19 +142,18 @@ const t = {
     }
 
     if (want == '?') return // anything is acceptable
-    if (typeof want === 'string' && want.substring(0, 1) == '!') return test(got, want.substring(1), field, false)
+    if (typeof want === 'string' && want.charAt(0) == '!') return test(got, want.substring(1), field, false)
 
-    if (mode == 'shallow') mode = 'exact'; else want = t.adjust(want, field)
+    if (mode == 'shallow') mode = 'exact'; else want = t.adjust(want, field, !isNaN(got))
     const [jGot, jWant] = [JSON.stringify(got), JSON.stringify(want)]
 
     if (mode === false) {
       assert.notEqual(jGot, jWant, msg + ' - NOT')
-    } else if (mode == 'exact' || mode == null) {
-//      console.log('got', got, 'want', want)
-      assert.isTrue(got == want || JSON.stringify(got) == JSON.stringify(want), msg) // has to work for [] and {} (don't use assert.equal)
+    } else if (mode == 'exact' || mode === null) {
+      assert.equal(isNaN(want) ? got : +got, want, msg)
     } else if (mode == 'part') {
       assert.include(got, want, msg)
-    } else if (mode.substring(0, 1) == '<') {
+    } else if (mode.charAt(0) == '<') {
       assert.isBelow(Math.abs(got - want), +mode.substring(1), msg)
     } else assert.fail('bad mode:' + mode)
   },
@@ -163,6 +161,7 @@ const t = {
   async element(testId) { return await w.page.$(t.sel(testId)) },
   sel(testId) { return `[data-testid="${testId}"]` },
   isTimeField(k) { return 'created'.split(' ').includes(k) },
+  async waitACycle() { return w.page.waitForTimeout(c.networkTimeoutMs +1) },
   
   // MAKE / DO
 
