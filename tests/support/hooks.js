@@ -16,18 +16,17 @@ Before(async () => { // before each scenario
     headless: ci ? true : w.headlessMode,
     slowMo: ci ? 0 : w.slowMo,
     args: ['--remote-debugging-port=9222'], // allows use of chrome's remote debugging (see https://www.browserless.io/blog/2019/02/26/puppeteer-debugging)
-//    ignoreDefaultArgs: ['--disable-extensions'],
+  //    ignoreDefaultArgs: ['--disable-extensions'],
   }
   if (w.chromiumPath) launchOptions.executablePath = w.chromiumPath
-  
+
   w.browser = await puppeteer.launch(launchOptions) // recreate for each scenario, otherwise page doesn't get fully cleared
-//  w.fetcher = await w.browser.newPage() // for fetching done just for test purposes
+  w.fetcher = await w.browser.newPage() // for fetching done just for test purposes (must be different from w.page)
   w.page = await w.browser.newPage()
-  w.fetcher = w.page
-//  w.page.setViewport({ width: 1280, height: 1024 })
+  //  w.page.setViewport({ width: 1280, height: 1024 })
 
   w.page.exposeFunction('testerPipe', t.appPipe) // tell store to update cache (after we changed localStorage -- see t.putStore)
-//  w.page.exposeFunction('mockFetch', mockFetch) // tell utils to mock fetches (keep this line)
+  //  w.page.exposeFunction('mockFetch', mockFetch) // tell utils to mock fetches (keep this line)
 
   if (w.seeLog) w.page.on('console', async e => { // log whatever the page logs
     const args = await Promise.all(e.args().map(a => a.jsonValue()))
