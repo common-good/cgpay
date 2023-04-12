@@ -25,6 +25,7 @@ const u = {
     if (!'[{'.includes(objString.charAt(0))) throw new Error('Invalid object string')
     return eval(`[${objString}]`)[0]
   },
+  withCommas(num) { return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') },
 }
 
 export default u
