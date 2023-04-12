@@ -121,7 +121,7 @@ export const createStore = () => {
     inspect() { return cache },
 
     setQr(v) { setv('qr', v) },
-    setLastOp(clear = false) { setv('lastOp', clear ? null : u.now()) },
+    setLastOp(set = 'now') { setv('lastOp', set == 'now' ? u.now() : set ) },
     setMsg(v) { setv('erMsg', v) },
     setCorrupt(version) { setv('corrupt', version) }, // pause uploading until a new version is released
     async setWifi(yesno) { setv('useWifi', yesno); await st.resetNetwork() },
@@ -171,13 +171,9 @@ export const createStore = () => {
       })
     },
 
-    enqTx(tx) {
-      tx.offline = true
-      enQ('txs', { ...tx })
-    },
+    enqTx(tx) { tx.offline = true; enQ('txs', { ...tx }) },
     async flushTxs() { await flushQ('txs', 'transactions') },
     deqTx() { return deQ('txs') }, // just for testing (in store.spec.js)
-
     comment(text) { enQ('comments', { deviceId:cache.myAccount.deviceId, actorId:cache.myAccount.accountId, created:u.now(), text:text }) },
     async flushComments() { await flushQ('comments', 'comments') },
     async flushAll() {
