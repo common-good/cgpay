@@ -193,6 +193,51 @@ const t = {
     t.test(newValue, text)
   },
 
+/**
+ * Post to the "test" endpoint.
+ * @param string op: the specific operation
+ * @param {*} args: parameters to that operation
+ * @returns a JSON object just like other POST endpoints
+ */
+async postToTestEndpoint(op, args = null) {
+  const options = {
+    method: 'POST',
+    body: queryString.stringify({ version:c.version, op:op, ...args }),
+    headers: { 'Content-type':'application/x-www-form-urlencoded' },
+  }
+  try { // initialize API for tests (must happen before initializing store)
+    return await t.mockFetch(c.apis.demo + 'test', options)
+  } catch (er) { console.log(`error posting to test endpoint "${c.apis.demo}test" with options ${options}`, er) }  
+},
+
+/**
+ * Mock fetches or use the "test" endpoint (see postToTestEndpoint). Interface matches JS fetch interface.
+ * NOTE: Making API calls when this function was called as a mock fetch did not work (no connection to internet?)
+ * @param string url 
+ * @param {*} options 
+ * @returns the result
+ */
+async mockFetch(url, options = {}) {
+  options = { ...options, mode:'cors', postData:options.body }
+  const keysToDelete = 'signal body'.split(' ')
+  for (let i in keysToDelete) delete options[keysToDelete[i]]
+
+  await w.fetcher.setRequestInterception(true)
+  await w.fetcher.once('request', async (interceptedRequest ) => {
+    try {
+      interceptedRequest.continue(options)
+    } catch (er) { console.log('Error while intercepting request', er) }
+  })
+  let res
+  try {
+    res = await w.fetcher.goto(url)
+    if (res.ok()) res = await res.json()
+  } catch (er) { console.log(`Error while mock fetching "${url}" with options ${options}`, er)}
+  await w.fetcher.setRequestInterception(false)
+//  await w.fetcher.close()
+  return res
+},
+
   // TEST
 
   /**
