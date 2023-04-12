@@ -4,6 +4,7 @@
  * Data structure
  *
  * The following data is stored, and cached in "cache" while the app runs.
+ * Some items do not NEED to be stored in localStore, but it's simpler code and hurts nothing.
  * 
  * SCALARS
  *   int sawAdd: Unix timestamp when user saw the option to save the app to their home screen
@@ -78,8 +79,8 @@ export const createStore = () => {
   function save(st) { localStorage.setItem(c.storeKey, JSON.stringify(st)); cache = st; return st }
   function setst(newSt) { update(st => { return save(newSt) } )}
   function setv(k, v) { update(st => { st[k] = v; return save(st) })}
-  function enQ(k, v) { update(st => { st[k].push(v); return save(st) })}
-  function deQ(k) { update(st => { st[k].shift(); return save(st) })} // this is actually FIFO (shift) not LIFO (pop)
+  function enQ(k, v) { td.counters.enQ++; update(st => { st[k].push(v); return save(st) })}
+  function deQ(k) { td.counters.deQ++; update(st => { st[k].shift(); return save(st) })} // this is actually FIFO (shift) not LIFO (pop)
   function del(k) { st0.update(st => { delete st[k]; return save(st) }) } // unused, but keep
 
   async function flushQ(k, endpoint) {
