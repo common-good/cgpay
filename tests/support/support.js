@@ -53,8 +53,8 @@ const t = {
   async putv(k, v) {
     let st = await t.getStore()
     if (u.empty(st)) st = { ...cache }
-    st['fromTester'][k] = st[k] = v
-    if (k == 'online') st['fromTester']['useWifi'] = st['useWifi'] = v // these values go together for faking online/offline
+    st.fromTester[k] = st[k] = v
+    if (k == 'online') st.fromTester.useWifi = st.useWifi = v // these values go together for faking online/offline
     await t.putStore(st)
     w.tellApp = true
   },
@@ -100,11 +100,13 @@ const t = {
    */
   adjust(v, k) {
     const v0 = typeof v === 'string' ? v.charAt(0) : ''
+
     if (v === null) return null
-    if (v == 'version') return c.version
-    if (v == 'now') return u.now()
+    if (v == 'null') return null
     if (v == 'true') return true
     if (v == 'false') return false
+    if (v == 'now') return u.now()
+    if (v == 'version') return c.version
     if (v0 == '!') return '!' + t.adjust(v.substring(1), k)
     if (v0 == '[' || v0 == '{') return u.parseObjString(v)
     if (v == 'other') return 'garbage' // this even works for k='qr'
@@ -181,7 +183,7 @@ const t = {
   async element(testId) { return await w.page.$(t.sel(testId)) },
   sel(testId) { return `[data-testid="${testId}"]` },
   isTimeField(k) { return 'created'.split(' ').includes(k) },
-  async waitACycle() { return w.page.waitForTimeout(c.networkTimeoutMs +1) },
+  async waitACycle() { return w.page.waitForTimeout(c.networkTimeoutMs + 1) },
   
   // MAKE / DO
 
@@ -199,8 +201,7 @@ const t = {
    * @param bool one: true to store just the first record rather than an array of records
    */
   async setThis(k, v, one = false) {
-    if (typeof v === 'object') v = t.these(v, one)
-    await t.putv(k, t.adjust(v, k))
+    await t.putv(k, t.adjust(typeof v === 'string' ? v : t.these(v, one), k))
   },
 
   async setUA(browser, sys) {
@@ -260,7 +261,6 @@ async mockFetch(url, options = {}) {
     if (res.ok()) res = await res.json()
   } catch (er) { console.log(`Error while mock fetching "${url}" with options ${options}`, er)}
   await w.fetcher.setRequestInterception(false)
-//  await w.fetcher.close()
   return res
 },
 
@@ -311,26 +311,30 @@ async mockFetch(url, options = {}) {
    * @param bool set: true if setting the value
    */
   async theseAccts(field, { rawTable:row }, set = false) {
-    row = row[0]
-    let accts = await t.getv(field)
-    if (set && !accts) accts = field == 'accts' ? {} : []
-    if (!set) assert.isNotNull(accts, `missing ${field} array in store`) // accts has no length, so it might have extra accounts, which is fine
-    let me, name, agent
-    for (let i in row) {
-      me = w.accounts[row[i]]
-      if (me === null) me = u.parseObjString(row[i])
+    let got, me, name, agent
+    let want = row[0]
+    let make = field == 'accts' ? {} : []
+
+    if (!set) {
+       got = await t.getv(field)
+      assert.isNotNull(got, `missing ${field} array in store`) // accts has no length, so it might have extra accounts, which is fine
+    }
+
+    for (let i in want) {
+      me = w.accounts[want[i]]
+      if (me === null) me = u.parseObjString(want[i])
       if (field == 'accts') {
-        ;([agent, name] = row[i].includes('/') ? row[i].split('/') : ['', me.name])
+        ;([agent, name] = want[i].includes('/') ? want[i].split('/') : ['', me.name])
         if (set) {
-          accts[me.accountId] = { hash:u.hash(me.cardCode), agent:agent, name:name, location:me.location, limit:200, creditLine:9999 }
-        } else t.test(u.just('agent name', accts[me.accountId]), { agent:agent, name:name }, field)
+          make[me.accountId] = { hash:u.hash(me.cardCode), agent:agent, name:name, location:me.location, limit:200, creditLine:9999 }
+        } else t.test(u.just('agent name', got[me.accountId]), { agent:agent, name:name }, field)
       } else { // choices
         if (set) {
-          accts.push(u.just('name accountId deviceId qr isCo selling', me))
-        } else t.test(u.just('name accountId isCo selling', accts[i]), u.just('name accountId isCo selling', me), field)
+          make.push(u.just('name accountId deviceId qr isCo selling', me))
+        } else t.test(u.just('name accountId isCo selling', got[i]), u.just('name accountId isCo selling', me), field)
       }
     }
-    if (set) await t.putv(field, accts)
+    if (set) await t.putv(field, make) // make is an object or array
   },
 
   async onPage(id) {
