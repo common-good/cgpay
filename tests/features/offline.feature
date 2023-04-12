@@ -74,8 +74,7 @@ Scenario: I charge another user while offline
 
 Rule: When we're back online we upload any stored transactions and/or comments
 
-Scenario: We reconnect to the internet
-  When I reconnect to the internet with cached transactions
+Scenario: We reconnect to the internet with cached transactions
   Then ? The app completes the cached transactions
 @a
 Scenario: We reconnect to the internet with comments
@@ -84,7 +83,7 @@ Scenario: We reconnect to the internet with comments
   | actorId | created | deviceId | text           |
   | Bea     | now     | devB     | 👍 looks good! |
   When we are online
-  And I wait 8 seconds
+  And we wait for uploads
   Then ? this "comments": "[]"
   # And ? these server "comments":
   # | actorId | created | deviceId | text           |

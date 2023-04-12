@@ -63,6 +63,7 @@ import { writable } from 'svelte/store'
 import u from '#utils.js'
 import c from '#constants.js'
 import cache0 from '#cache.js'
+import td from '#testData.js'
 
 export const createStore = () => {
   const lostMsg = `Tell the customer "I'm sorry, that card is marked "LOST or STOLEN".`
@@ -114,7 +115,7 @@ export const createStore = () => {
       const fromTester = getst().fromTester
       setv('fromTester', {})
       if (!u.empty(fromTester)) {
-        if (fromTester === 'restart') return st.clearData()
+        if (k === 'flushOk') td.flushOk = true; else setv(k, fromTester[k])
         for (let k of Object.keys(fromTester)) setv(k, fromTester[k])
       }
     },
@@ -141,7 +142,7 @@ export const createStore = () => {
     async setOnline(yesno) { // handling this in store helps with testing
       const v = cache.useWifi ? yesno : false
       if (v !== cache.online) setv('online', v)
-      if (cache.useWifi && yesno) { await st.flushTxs(); await st.flushComments() }
+      if (cache.useWifi && yesno) await st.flushAll() // only do *explicit* flushing when testing
     },
 
     /**
@@ -180,6 +181,12 @@ export const createStore = () => {
 
     comment(text) { enQ('comments', { deviceId:cache.myAccount.deviceId, actorId:cache.myAccount.accountId, created:u.now(), text:text }) },
     async flushComments() { await flushQ('comments', 'comments') },
+    async flushAll() {
+      if (u.testing() && !td.flushOk) return
+      await st.flushTxs()
+      await st.flushComments()
+      td.flushOk = false
+    }
 
   }
 

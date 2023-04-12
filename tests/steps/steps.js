@@ -20,6 +20,7 @@ When('I click {string}', async function(testId) { await w.page.click(t.sel(testI
 When('I scan {string}', async function (who) { await t.putv('qr', t.adjust(who, 'qr')); await t.visit('charge') })
 When('I input {string} as {string}', async function (text, inputId) { await t.input(inputId, text) })
 When('I wait {int} seconds', async function (secs) { await t.wait(secs) })
+When('we wait for uploads', async function () {await t.putv('flushOk', true); await t.wait(1) })
 
 Then('? I am signed in as {string}', async function (who) { await t.signedInAs(who) })
 Then('? this {string}:', async function (k, rows) { await t.testThis(k, rows) }) // object
