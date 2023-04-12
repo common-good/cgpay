@@ -8,7 +8,7 @@ import td from '#testData.js'
 const u = {
   ...u0, // incorporate all function from utils0.js
 
-  api() { return u.realData() ? c.apis.real : c.apis.demo }, 
+  api() { return u.realData() ? c.apis.real : c.apis.test }, 
 
   dlg(title, text, labels, m1, m2) {
     const m0 = [true, title, text, labels]

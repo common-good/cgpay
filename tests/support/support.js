@@ -237,8 +237,8 @@ async postToTestEndpoint(op, args = null) {
     headers: { 'Content-type':'application/x-www-form-urlencoded' },
   }
   try { // initialize API for tests (must happen before initializing store)
-    return await t.mockFetch(c.apis.demo + 'test', options)
-  } catch (er) { console.log(`error posting to test endpoint "${c.apis.demo}test" with options ${options}`, er) }  
+    return await t.mockFetch(c.apis.test + 'test', options)
+  } catch (er) { console.log(`error posting to test endpoint "${c.apis.test}test" with options ${options}`, er) }  
 },
 
 /**
