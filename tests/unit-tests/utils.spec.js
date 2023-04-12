@@ -23,6 +23,11 @@ describe('utils', () => {
     navigator = originalNavigator
   })
 
+  describe('findByValue', () => {
+    it('returns the correct index to an object with the given keyed value', () => {
+      expect(u.findByValue({ a:{ one:1, two:-1 }, b:{ one:2, two:-1 }, c:{ one:2, two:-2, three:3 } }, { one:2, two:-2 })).toEqual('c')
+    })
+  })
 
   describe('.parseObjString', () => {
     it('parses arrays and objects correctly', () => {
@@ -39,6 +44,7 @@ describe('utils', () => {
       expect(u.parseObjString(arg)).toStrictEqual(want)
     })
   })
+
   describe('.ua', () => {
     describe('when the user is on an Android mobile device', () => {
       it('is Android', () => {
@@ -97,4 +103,5 @@ describe('utils', () => {
       })
     })
   })
+
 })
