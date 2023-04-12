@@ -88,7 +88,7 @@ const t = {
    * @param string v: value to adjust
    * @param string k: field name (to inform the adjustment)
    */
-  adjust: (v, k) => {
+  adjust(v, k, numeric = false) {
 //    console.log('adjust', v, k)
     const v0 = typeof v === 'string' ? v.substring(0, 1) : ''
     if (v == null) return null
@@ -178,20 +178,19 @@ const t = {
    *               for an array, first row is a list of field names, subsequent rows are the field values
    * @param bool one: true to store just the first record rather than an array of records
    */
-  setThis: async (k, v, one = false) => {
+  async setThis(k, v, one = false) {
     if (typeof v === 'object') v = t.these(v, one)
     await t.putv(k, t.adjust(v, k))
-//    console.log('after setThis k:', k, v, one)
   },
 
-  setUA: async (browser, sys) => {
+  async setUA(browser, sys) {
     let agent = ''
     if (sys == 'Apple' && browser == 'Safari') agent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) FxiOS/36.0  Mobile/15E148 Safari/605.1.15'
     if (sys == 'Android' && browser == 'Chrome') agent = 'Mozilla/5.0 (Linux; Android 11; SM-T227U Build/RP1A.200720.012; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/87.0.4280.141 Safari/537.36'
     await w.page.setUserAgent(agent)
   },
 
-  input: async (id, text) => { 
+  async input(id, text) {
     await w.page.type(t.sel('input-' + id), text)
     const newValue = await w.page.$eval(t.sel('input-' + id), el => el.value)
     t.test(newValue, text)
@@ -251,12 +250,11 @@ async mockFetch(url, options = {}) {
    *                   first row is a list of field names, subsequent rows are the field values
    * @param bool one: true to test just the first record rather than an array of records
    */
-  testThese: async (k, multi, one = false) => {
-//    console.log('in testThese k:', k, 'multi:', multi, 'one:', one, 'store(k):', await t.getv(k))
+  async testThese(k, multi, one = false) {
     t.test(await t.getv(k), t.these(multi, one))
   },
 
-  testThis: async (k, v) => {
+  async testThis(k, v) {
     if (typeof v === 'object') return t.testThese(k, v, true)
     t.test(await t.getv(k), v, k)
   },
@@ -268,7 +266,7 @@ async mockFetch(url, options = {}) {
    * @param {*} row: a single row/list of account identifiers
    * @param bool set: true if setting the value
    */
-  theseAccts: async (field, { rawTable:row }, set = false) => {
+  async theseAccts(field, { rawTable:row }, set = false) {
     row = row[0]
     let accts = await t.getv(field)
     if (set && !accts) accts = field == 'accts' ? {} : []
@@ -292,7 +290,7 @@ async mockFetch(url, options = {}) {
     if (set) await t.putv(field, accts)
   },
 
-  onPage: async (id) => {
+  async onPage(id) {
     const el = await w.page.$(`#${id}`)
     if (el == null) {
       const here = await t.whatPage()
@@ -300,21 +298,21 @@ async mockFetch(url, options = {}) {
     }
   },
 
-  see: async (testId) => {
+  async see(testId) {
     const el = await t.element(testId)
     assert.isNotNull(el)
     return el // this is required (I don't know why)
   },
 
-  seeIs: async (testId, want, mode = 'exact') => {
+  async seeIs(testId, want, mode = 'exact') {
     const gotEl = await t.see(testId)
     const got = await gotEl.evaluate(el => el.textContent)
     t.test(got, want, null, mode)
   },
 
-  dontSee: async (testId) => { assert.isNull(await t.element(testId), "shouldn't see" + testId) },
+  async dontSee(testId) { assert.isNull(await t.element(testId), "shouldn't see" + testId) },
 
-  signedInAs: async (who, set = false) => {
+  async signedInAs(who, set = false) {
     const me = w.accounts[who]
 //    if (set) console.log('signedinas', { ...u.just('name isCo accountId deviceId selling', me), qr:'qr' + me.name.substring(0, 1) })
 //    if (!set) console.log('?signedinas', u.just('name isCo accountId selling', await t.getv('myAccount')), u.just('name isCo accountId selling', me))
