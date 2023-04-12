@@ -51,7 +51,7 @@
   </header>
 
   <div class='content'>
-    <h2>Sign In</h2>
+    <h2>Sign In - A Change Has Been Made</h2>
     <form on:submit|preventDefault={ signIn }>
       <label class="visuallyhidden" for="account-id">Account ID or Email Address</label>
       <input data-testid="input-identifier" name="account-id" type="text" placeholder="Account ID or Email Address" autocomplete="name" autocapitalize="off" bind:value={ credentials.identifier } required />
