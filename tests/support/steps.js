@@ -30,7 +30,7 @@ Then('? these {string}:', async function (k, rows) { await t.testThese(k, rows) 
 Then('? these accounts:', async function (rows) { await t.theseAccts('accts', rows) })
 Then('? these choices:', async function (rows) { await t.theseAccts('choices', rows) })
 Then('? these server {string}:', async function (table, rows) { await t.testServer(table, rows) })
-Then('? count {string} is {int}', async function (list, count) { assert.equal(await t.getv(list), count) })
+Then('? count {string} is {int}', async function (list, count) { await t.countIs(list, count) })
 Then('? I am on page {string}', async function (page) { await t.onPage(page) })
 Then('? I see installation instructions for {string}', async function (testId) { await t.see(testId + '-instructions') })
 Then('? I see {string}', async function (testId) { await t.see(testId) })
@@ -46,5 +46,5 @@ Then('? we request this from {string}:', async function (endpoint, rows) { await
 
 //========== Debugging Steps =============
 
-Given('snap', async function() { await t.pic() }) // name is "pic"
-Given('snap {string}', async function(name) { await t.pic(name) })
+Given('snap', async function() { await t.snap() }) // name is "snap"
+Given('snap {string}', async function(name) { await t.snap(name) })

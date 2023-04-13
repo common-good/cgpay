@@ -15,7 +15,7 @@ const t = {
   // UTILITY FUNCTIONS
 
   getst(key = c.storeKey) { return JSON.parse(localStorage.getItem(key)) }, // for debugging
-  async pic(picName = 'snap') { await w.page.screenshot({ path:picName + '.png' }) }, // screen capture
+  async snap(picName = 'snap') { await w.page.screenshot({ path:picName + '.png' }) }, // screen capture
   async wait(secs) { await w.page.waitForTimeout(secs * 1000) },
   mapServerField(field) { return field == 'actorId' ? 'actorUid' : field }, // disambiguate server's from app's actorId field
 
@@ -196,7 +196,6 @@ const t = {
   async visit(target, wait = 'networkidle0') { 
     const options = wait ? { waitUntil:wait } : {} // load, domcontentloaded, networkidle0, or networkidle2
     await w.page.goto(baseUrl + target, options)
-    await t.pic('visited')
   },
 
   /**
@@ -223,6 +222,14 @@ const t = {
     await w.page.type(sel, isNaN(text) ? text : JSON.stringify(text))
     const newValue = await w.page.$eval(sel, el => el.value)
     t.test(newValue, text)
+  },
+
+  async scan(who) { await t.putv('qr', t.adjust(who, 'qr')); await t.visit('charge') },
+  async tx(who, amount, description) {
+    await t.scan(who)
+    await t.input('amount', amount)
+    await t.input('description', description)
+    await w.page.click(t.sel('btn-submit'))
   },
 
 /**
@@ -364,18 +371,15 @@ async mockFetch(url, options = {}) {
 
   async dontSee(testId) { assert.isNull(await t.element(testId), "shouldn't see" + testId) },
 
+  async countIs(list, count) {
+    const ray = await t.getv(list)
+    assert.equal(ray.length, count, `want list ${list} count=${count}`)
+  },
+
   async signedInAs(who, set = false) {
     const me = w.accounts[who]
     if (set) await t.putv('myAccount', { ...u.just('name isCo accountId deviceId selling', me), qr:'qr' + me.name.charAt(0) })
     if (!set) t.test(u.just('name isCo accountId selling', await t.getv('myAccount')), u.just('name isCo accountId selling', me), 'myAccount')
-  },
-
-  async scan(who) { await t.putv('qr', t.adjust(who, 'qr')); await t.visit('charge') },
-  async tx(who, amount, description) {
-    await t.scan(who)
-    await t.input('amount', amount)
-    await t.input('description', description)
-    await w.page.click(t.sel('btn-submit'))
   },
 
 }
