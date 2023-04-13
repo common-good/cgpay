@@ -28,14 +28,15 @@
  *      selling: a list (array) of items for sale
  * 
  *    txs: transaction objects waiting to be uploaded to the server, each comprising:
+ *      deviceId: a unique ID for the device associated with the actorId account
  *      amount: dollars to transfer from actorId to otherId (signed)
  *      actorId: the account initiating the transaction
  *      otherId: the other participant in the transaction
  *      description: the transaction description
  *      created: Unix timestamp when the transaction was created
- *      proof: the proof of the transaction -- a SHA256 hash of actorId, amount, otherId (including cardCode), and created
+ *      proof: the proof of the transaction -- a SHA256 hash of actorId, amount, otherId, cardCode, and created
  *        The amount has exactly two digits after the decimal point. For an Undo, proof contains the original amount.
- *      offline: true -- only transactions completed offline are in the txs queue (all Undos are handled offline)
+ *      offline: true -- transactions completed offline are in the txs queue. All Undos are handled as though offline.
  *      version: the app's integer version number
  * 
  *    comments: user-submitted comments to be uploaded to the server
