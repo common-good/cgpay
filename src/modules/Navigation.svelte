@@ -25,8 +25,8 @@
   let menuItems = []
   function item(text, callback, criteria, id) { menuItems.push({text, callback, criteria, id}) }
 
-  item('Use Rear Camera', rearCamera, () => $store.cameraCount > 1 && $store.frontCamera, 'rear')
-  item('Use Front Camera', frontCamera, () => $store.cameraCount > 1 && !$store.frontCamera, 'front')
+  item('Use Rear Camera', rearCamera, () => $store.cameraCount > 1 && $store.frontCamera && $store.selfServe, 'rear')
+  item('Use Front Camera', frontCamera, () => $store.cameraCount > 1 && !$store.frontCamera && $store.selfServe, 'front')
   item('Exit Self Serve (signs out)', selfServeOff, () => u.pageUri() == 'home' && $store.selfServe, 'selfOff')
   item('Enter Self Serve Mode', selfServeOn, () => u.pageUri() == 'home' && $store.myAccount.isCo && !$store.selfServe, 'selfOn')
   item('Switch Account', switchAccount, () => $store.choices?.length > 1 && u.pageUri() != 'link-account' && !$store.selfServe, 'switch')
