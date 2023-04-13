@@ -16,19 +16,23 @@ Rule: For most offline functionality, see the individual features
 
 Scenario: The network goes offline and status is visible
 #  Given I wait 2 seconds
-  And I wait 2 seconds
   When I run the app
   Then ? I see "network-offline"
-
-
-Scenario: I charge another user while offline
-  When I charge another user while offline
-  Then ? The app caches the transaction to be completed when I reconnect
 
 Rule: When we're back online we upload any stored transactions and/or comments
 
 Scenario: We reconnect to the internet with cached transactions
-  Then ? The app completes the cached transactions
+  Given these "txs":
+  | deviceId | amount   | actorId | otherId | description | created | proof | offline | version |
+  | devC     | 1234.50  | Abe/Cit | Bea     | food!       | now     | hash  | true    | version |
+  | devC     | -1234.50 | Abe/Cit | Bea     | food!       | now     | hash  | true    | version |
+  When we are online
+  And we wait for uploads
+  Then ? count "txs" is 0
+  And ? these server "txs":
+  | amt      | actorId | uid1 | uid2  | agt1 | agt2 | for2  | created | 
+  | 1234.50  | Cit     | Bea  | Cit   | Bea  | Abe  | food! | now     |
+  | -1234.50 | Cit     | Bea  | Cit   | Bea  | Abe  | food! | now     |
 @a
 Scenario: We reconnect to the internet with comments
   Given we are offline
@@ -37,7 +41,7 @@ Scenario: We reconnect to the internet with comments
   | Bea     | now     | devB     | 👍 looks good! |
   When we are online
   And we wait for uploads
-  Then ? this "comments": "[]"
-  # And ? these server "comments":
-  # | actorId | created | deviceId | text           |
-  # | Bea     | now     | devB     | 👍 looks good! |
+  Then ? we post this to "comments":
+  | actorId | created | deviceId | text           |
+  | Bea     | now     | devB     | 👍 looks good! |
+  And ? this "comments": "[]"
