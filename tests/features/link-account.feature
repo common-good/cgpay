@@ -59,3 +59,20 @@ Scenario: The user chooses an account offline
   And I click "btn-link"
   Then ? I am on page "home"
   And ? I see "Bea Two" in "account-name"
+
+Scenario: The user restarts the app after signing in but before linking
+  When I run the app
+  Then ? I am on page "link-account"
+
+Scenario: The user restarts the app offline after signing in but before linking
+  Given we are offline
+  When I run the app
+  Then ? I am on page "link-account"
+
+Scenario: The user restarts the app after choosing to switch accounts
+  Given I am signed in as "Bea"
+  When I run the app
+  And I click "btn-nav"
+  And I click "menu-switch"
+  When I run the app
+  Then ? I am on page "link-account"
