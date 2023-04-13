@@ -32,17 +32,19 @@
     return { name: name, component: component, layout: layout, onlyIf: onlyIf(condition, elseGoTo) }
   }
 
-  const notSignedIn = ( () => !store.isSignedIn() )
+  const needSignin = ( () => u.empty($store.choices) && !store.linked() )
+  const needLink = ( () => !store.linked() )
+  const gotQr = ( () => store.qr !== null )
 
   const routes = [
     route('/empty', Empty, true, null, LayoutIntro), // for testing
     route('/', AddToHomeScreen, u.addableToHome, '/sign-in', LayoutIntro),
-    route('/sign-in', SignIn, notSignedIn, '/home', LayoutIntro),
-    route('/link-account', LinkAccount, notSignedIn, '/home'),
-    route('/home', Home, store.isSignedIn, '/'),
-    route('/scan', Scan, store.isSignedIn, '/sign-in'),
-    route('/charge', Charge, store.isSignedIn, '/sign-in'),
-    route('/comment', Comment, store.isSignedIn, '/sign-in')
+    route('/sign-in', SignIn, needSignin, '/link-account', LayoutIntro),
+    route('/link-account', LinkAccount, needLink, '/home'),
+    route('/home', Home, store.linked, '/'),
+    route('/scan', Scan, store.linked, '/'),
+    route('/charge', Charge, gotQr, '/'),
+    route('/comment', Comment, store.linked, '/')
   ]
 
   onMount(async () => {
