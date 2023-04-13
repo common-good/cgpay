@@ -18,8 +18,8 @@ Scenario: A company charges an individual
   And I input "food!" as "description"
   And I click "btn-submit"
   Then ? we post this to "transactions":
-  | amount  | actorId | otherId | description | created | proof                          | offline | version |
-  | 1234.50 | Abe/Cit | Bea     | food!       | now     | actorId,amount,otherId,created | false   | version |
+  | amount  | actorId | otherId | description | created | proof | offline | version |
+  | 1234.50 | Abe/Cit | Bea     | food!       | now     | hash  | false   | version |
   * I wait 1 seconds
   Then ? I see "transaction-complete"
   And ? I see "action" is "Charged"
@@ -52,8 +52,8 @@ Scenario: A company charges a company
 # abbreviated syntax for first 4 steps
   When I charge "Flo/Gis" 1234.50 for "food!"
   Then ? we post this to "transactions":
-  | amount  | actorId | otherId | description | created | proof                          | offline | version |
-  | 1234.50 | Abe/Cit | Flo/Gis | food!       | now     | actorId,amount,otherId,created | false   | version |
+  | amount  | actorId | otherId | description | created | proof | offline | version |
+  | 1234.50 | Abe/Cit | Flo/Gis | food!       | now     | hash  | false   | version |
   * I wait 1 seconds
   Then ? I see "transaction-complete"
   And ? I see "action" is "Charged"
@@ -69,8 +69,8 @@ Scenario: An individual charges an individual
   Given I am signed in as "Abe"
   When I charge "Bea" 1234.50 for "food!"
   Then ? we post this to "transactions":
-  | amount  | actorId | otherId | description | created | proof                          | offline | version |
-  | 1234.50 | Abe     | Bea     | food!       | now     | actorId,amount,otherId,created | false   | version |
+  | amount  | actorId | otherId | description | created | proof | offline | version |
+  | 1234.50 | Abe     | Bea     | food!       | now     | hash  | false   | version |
   * I wait 1 seconds
   Then ? I see "transaction-complete"
   And ? I see "action" is "Charged"

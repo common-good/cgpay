@@ -84,13 +84,16 @@ const t = {
     if (rows.length === 1) return [ t.adjust(rows[0][0]) ]
     if (one) assert.equal(rows.length, 2)
     let ray = [] // the resulting array of objects
-    let field
+    let obo  // original object before adjustments (current row)
+    let k // current field name
     
-    for (let rowi = 1; rowi < rows.length; rowi++) {
-      ray[rowi - 1] = {}
+    for (let rowi = 0; rowi < rows.length - 1; rowi++) {
+      ray[rowi] = {}; obo = {} // don't combine these
       for (let coli in rows[0]) {
-        field = rows[0][coli]
-        ray[rowi - 1][field] = t.adjust(rows[rowi][coli], serverField ? t.mapServerField(field) : field )
+        k = rows[0][coli]
+        obo[k] = rows[rowi + 1][coli] // remember original value of this cell
+        if (k == 'proof') w.proofRow = { ...ray[rowi], amount:obo.amount.replace('-', ''), cardCode:t.adjust(obo.otherId, 'cardCode') } // save this for calculating the wanted proof value in adjust
+        ray[rowi][k] = t.adjust(obo[k], serverField ? t.mapServerField(k) : k)
       }
     }
     return u.clone(one ? ray[0] : ray)
@@ -114,13 +117,10 @@ const t = {
     if (v0 == '[' || v0 == '{') return u.parseObjString(v)
     if (v == 'other') return 'garbage' // this even works for k='qr'
 
-    if (k === 'proof') {
-      if (!v.includes(',')) return v // already converted
-      const p = v.split(',')
+    if (k == 'proof' && v == 'hash') {
+      const proof = 'actorId/amount/otherId/cardCode/created'.split('/')
       let res = ''
-      const post = u.clone(w.post[w.posti].v)
-      const other = u.findByValue(w.accounts, { accountId:post.otherId })
-      for (let fld of p) res += fld == 'otherId' ? post.otherId + w.accounts[other].cardCode : post[fld] // the individual w.post fields in proof are tested separately
+      for (let fld of proof) res += w.proofRow[fld] // the individual fields in proof are tested separately
       return u.hash(res)
     }
 
@@ -130,8 +130,9 @@ const t = {
                           : (k == 'myAccount' ? u.just('name isCo accountId deviceId selling', me)
                           : (k == 'actorId' ? me.accountId
                           : (k == 'otherId' ? me.accountId
+                          : (k == 'cardCode' ? me.cardCode
                           : (k == 'qr' ? c.testQrStart + me.accountId.charAt(0) + me.accountId.substring(4) + me.cardCode
-                          : v )))))
+                          : v ))))))
     return v
   },
 
