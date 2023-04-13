@@ -130,8 +130,9 @@ export const createStore = () => {
 
     setAcctChoices(v) { setv('choices', v) },
     setMyAccount(acct) { setv('myAccount', acct ? { ...acct } : null) },
-    isSignedIn() { return (cache.myAccount != null) },
-    signOut() { setv('myAccount', null) },
+    linked() { return (cache.myAccount !== null) },
+    unlink() { setv('myAccount', null) },
+    signOut() { st.unlink(); st.setAcctChoices(null) },
     clearData() { if (!u.realData()) setst({ ...cache0 }) },
 
     setSawAdd() { setv('sawAdd', u.now()) },

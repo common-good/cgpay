@@ -58,14 +58,14 @@ describe('store', () => {
       })
     })
 
-    describe('.isSignedIn()', () => {
+    describe('.linked()', () => {
       describe('when there is a linked account', () => {
         it('is true', () => {
           setupLocalStorage({
             myAccount: {name: 'bar'}
           })
           const store = createStore()
-          expect(store.isSignedIn()).toEqual(true)
+          expect(store.linked()).toEqual(true)
         })
       })
 
@@ -76,7 +76,7 @@ describe('store', () => {
           })
 
           const store = createStore()
-          expect(store.isSignedIn()).toEqual(false)
+          expect(store.linked()).toEqual(false)
         })
       })
     })
