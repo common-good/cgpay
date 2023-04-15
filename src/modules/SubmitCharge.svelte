@@ -46,7 +46,7 @@
 </script>
 
 <section id="submit-charge">
-  <h1>{action}</h1>
+  <h1 data-testid="action">{action}</h1>
   <form on:submit|preventDefault={ charge }>
     { #if !$store.selfServe }<Profile { otherAccount } {photo} />{ /if }
     <div class="bottom">
