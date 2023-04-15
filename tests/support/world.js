@@ -16,6 +16,7 @@ const w = {
   tellApp: {}, // for passing setv requests to the app
   post: [], // for receiving reports of post requests from the app
   posti: null, // index into post of the post request currently being processed
+  proofRow: null, // current row that may contain a proof field (to construct the wanted proof value)
 
   // test constants
   headlessMode: true,
@@ -46,7 +47,7 @@ const w = {
   reset() { // browser and page are reset separately (see hooks.js)
     w.tellApp = {}
     w.post = []
-    w.posti = null
+    w.posti = w.proofRow = null
   }
     
 }

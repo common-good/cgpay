@@ -57,3 +57,26 @@ Scenario: I scan a QR for something else
   When I scan "Other"
   Then ? I am on page "home" 
   Then ? I see this error: "not a valid Common Good card format"
+
+Rule: Scanning works fine offline
+
+Scenario: I scan an individual's QR offline
+  Given we are offline
+  When I scan "Abe"
+  Then ? I am on page "charge"
+  And ? I am on page "charge-profile"
+  And ? I see "theirName" is not "Abe One"
+  And ? I see "network-offline"
+  And ? I see "Trust this member or ask for ID" in "messageText"
+
+Scenario: I scan an individual's QR online, then again offline
+  Given I run the app
+  And these accounts:
+  | Abe |
+  And we are offline
+  And I scan "Abe"
+  Then ? I see "Trust this member or ask for ID" in "messageText"
+  When I click "btn1"
+  And I wait 1 seconds
+  Then ? I see "theirName" is "Abe One"
+  And ? I see "theirLocation" is "Aton, MA"
