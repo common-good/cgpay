@@ -23,7 +23,7 @@
   }
 
   onMount(async () => {
-    if ($store.frontCamera == null) store.setFrontCamera(!u.isApple() && !u.isAndroid())
+    if ($store.frontCamera === null) store.setFrontCamera(!u.isApple() && !u.isAndroid())
     store.setQr(null) // no going back to previous customer
     if ($store.erMsg) er($store.erMsg)
     if ($store.myAccount) try {
@@ -45,7 +45,7 @@
     <div class='top'>
       <h1>Show this code to pay</h1>
       <img src="{ myQr }" data-testid='qr' alt="my QR code" />
-      <p>CGPay v{ _version_ }</p>
+      <p>CGPay v{ c.version }</p>
     </div>
   { :else }
     <div class='top business'>
@@ -56,7 +56,7 @@
       { /if }
       <div class='watermark'>
         <img class='logo' src= { cgLogo } alt='Common Good Logo' />
-        <p>CGPay v{ _version_ }</p>
+        <p>CGPay v{ c.version }</p>
       </div>
     </div>
   { /if }
@@ -73,11 +73,9 @@
         <button on:click={ () => fake('garbage') }>Worse</button>
       </div>
     { /if }
-    { #if c.isReleaseA }
-      <a class="survey" href="https://forms.gle/M8Hv1W2oSgw2yQzS7" target="_blank">Take Our User Survey</a>
-    { :else }
-      <a class="scan" href='/scan'>Scan QR Code to Charge</a>
-    { /if }
+
+    <a class="scan-customer" data-testid="btn-charge" href='/scan'>Scan QR Code to Charge</a>
+    <!-- a class="survey" data-testid="lnk-survey" href="https://forms.gle/M8Hv1W2oSgw2yQzS7" target="_blank">Take Our User Experience Survey</a -->
   </div>
 </section>
 

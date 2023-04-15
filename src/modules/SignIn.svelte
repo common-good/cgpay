@@ -21,7 +21,7 @@
       const result = await u.postRequest('accounts', credentials)
       store.setAcctChoices(result.accounts)
 
-      if (result.accounts.length > 1 && !c.isReleaseA) {
+      if (result.accounts.length > 1) {
         navigateTo('/link-account')
       } else {
         store.setMyAccount(result.accounts[0])

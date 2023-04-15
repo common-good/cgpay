@@ -4,10 +4,12 @@
  * Data structure
  *
  * The following data is stored, and cached in "cache" while the app runs.
+ * Some items do not NEED to be stored in localStore, but it's simpler code and hurts nothing.
  * 
  * SCALARS
  *   int sawAdd: Unix timestamp when user saw the option to save the app to their home screen
  *   blob qr: a scanned QR url
+ *   int lastOp: Unix timestamp of last operation that will be timed out after c.opTimeout seconds
  *   string msg: an informational message to display on the Home Page
  *   string erMsg: an error message to display on the Home Page
  *   int cameraCount: number of cameras in the device
@@ -62,6 +64,7 @@ import { writable } from 'svelte/store'
 import u from '#utils.js'
 import c from '#constants.js'
 import cache0 from '#cache.js'
+import td from '#testData.js'
 
 export const createStore = () => {
   const lostMsg = `Tell the customer "I'm sorry, that card is marked "LOST or STOLEN".`
@@ -76,8 +79,8 @@ export const createStore = () => {
   function save(st) { localStorage.setItem(c.storeKey, JSON.stringify(st)); cache = st; return st }
   function setst(newSt) { update(st => { return save(newSt) } )}
   function setv(k, v) { update(st => { st[k] = v; return save(st) })}
-  function enQ(k, v) { update(st => { st[k].push(v); return save(st) })}
-  function deQ(k) { update(st => { st[k].shift(); return save(st) })} // this is actually FIFO (shift) not LIFO (pop)
+  function enQ(k, v) { td.counters.enQ++; update(st => { st[k].push(v); return save(st) })}
+  function deQ(k) { td.counters.deQ++; update(st => { st[k].shift(); return save(st) })} // this is actually FIFO (shift) not LIFO (pop)
   function del(k) { st0.update(st => { delete st[k]; return save(st) }) } // unused, but keep
 
   async function flushQ(k, endpoint) {
@@ -112,14 +115,14 @@ export const createStore = () => {
     fromTester() { // called only in test mode (see Route.svelte, hooks.js, and t.tellApp)
       const fromTester = getst().fromTester
       setv('fromTester', {})
-      if (!u.empty(fromTester)) {
-        if (fromTester === 'restart') return st.clearData()
-        for (let k of Object.keys(fromTester)) setv(k, fromTester[k])
+      if (!u.empty(fromTester)) for (let k of Object.keys(fromTester)) {
+        if (k === 'flushOk') td.flushOk = true; else setv(k, fromTester[k])
       }
     },
     inspect() { return cache },
 
     setQr(v) { setv('qr', v) },
+    setLastOp(set = 'now') { setv('lastOp', set == 'now' ? u.now() : set ) },
     setMsg(v) { setv('erMsg', v) },
     setCorrupt(version) { setv('corrupt', version) }, // pause uploading until a new version is released
     async setWifi(yesno) { setv('useWifi', yesno); await st.resetNetwork() },
@@ -127,8 +130,9 @@ export const createStore = () => {
 
     setAcctChoices(v) { setv('choices', v) },
     setMyAccount(acct) { setv('myAccount', acct ? { ...acct } : null) },
-    isSignedIn() { return (cache.myAccount != null) },
-    signOut() { setv('myAccount', null) },
+    linked() { return (cache.myAccount !== null) },
+    unlink() { setv('myAccount', null) },
+    signOut() { st.unlink(); st.setAcctChoices(null) },
     clearData() { if (!u.realData()) setst({ ...cache0 }) },
 
     setSawAdd() { setv('sawAdd', u.now()) },
@@ -139,7 +143,7 @@ export const createStore = () => {
     async setOnline(yesno) { // handling this in store helps with testing
       const v = cache.useWifi ? yesno : false
       if (v !== cache.online) setv('online', v)
-      if (cache.useWifi && yesno) { await st.flushTxs(); await st.flushComments() }
+      if (cache.useWifi && yesno) await st.flushAll() // only do *explicit* flushing when testing
     },
 
     /**
@@ -155,7 +159,7 @@ export const createStore = () => {
       let acct = cache.accts[card.acct]
       if (acct == undefined) return null
       if (card.hash != acct.hash) return null // if later a new hash is validated, this entry will get updated
-      if (acct.name == null) throw new Error(lostMsg) // if we encounter a hash collision for such a short string, it will be an important engineering discovery
+      if (acct.name === null) throw new Error(lostMsg) // if we encounter a hash collision for such a short string, it will be an important engineering discovery
       return acct
     },
 
@@ -169,15 +173,17 @@ export const createStore = () => {
       })
     },
 
-    enqTx(tx) {
-      tx.offline = true
-      enQ('txs', { ...tx })
-    },
+    enqTx(tx) { tx.offline = true; enQ('txs', { ...tx }) },
     async flushTxs() { await flushQ('txs', 'transactions') },
     deqTx() { return deQ('txs') }, // just for testing (in store.spec.js)
-
     comment(text) { enQ('comments', { deviceId:cache.myAccount.deviceId, actorId:cache.myAccount.accountId, created:u.now(), text:text }) },
     async flushComments() { await flushQ('comments', 'comments') },
+    async flushAll() {
+      if (u.testing() && !td.flushOk) return
+      await st.flushTxs()
+      await st.flushComments()
+      td.flushOk = false
+    }
 
   }
 

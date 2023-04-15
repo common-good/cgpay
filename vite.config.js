@@ -9,11 +9,7 @@ const root = process.cwd()
 function js(s) { return JSON.stringify(s) }
 
 export default defineConfig({
-  define: { // define these at compile time for efficiency
-    _version_:        js(c.version),
-    _storeKey_:       js(c.storeKey),
-    _apis_:           js(c.apis),
-    _fetchTimeoutMs_: c.fetchTimeoutMs,
+  define: { // global literals (wrap non-numeric values in js())
   },
 
   plugins: [imagetools(), svelte(), VitePWA(pwaConfig)],
@@ -22,6 +18,7 @@ export default defineConfig({
     alias: {
       '#store.js':     root + '/src/store.js',
       '#cache.js':     root + '/src/cache.js',
+      '#testData.js':  root + '/src/testData.js',
       '#utils.js':     root + '/src/utils.js',
       '#constants.js': root + '/constants.js',
       '#modules':      root + '/src/modules',

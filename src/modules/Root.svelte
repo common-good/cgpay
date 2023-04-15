@@ -1,5 +1,5 @@
 <script>
-  import { Router } from 'svelte-router-spa'
+  import { Router, navigateTo } from 'svelte-router-spa'
   import { onMount } from 'svelte'
   import store from '#store.js'
   import u from '#utils.js'
@@ -18,13 +18,12 @@
 
   // Initialization Helpers
 
-  if (u.testing()) c.networkTimeoutMs = 1000 // give tests a moment to observe before uploading data
-
   if (u.fromTester()) store.fromTester()
   async function timeOut() {
     if (u.fromTester()) store.fromTester()
     await store.resetNetwork()
     setTimeout(timeOut, c.networkTimeoutMs)
+    if ($store.lastOp && u.now() - $store.lastOp > c.opTimeout) { store.setLastOp(null); await navigateTo('/home') }
   }
 
   function onlyIf(condition, elseGoTo) { return { guard: condition, redirect: elseGoTo } }
@@ -33,17 +32,19 @@
     return { name: name, component: component, layout: layout, onlyIf: onlyIf(condition, elseGoTo) }
   }
 
-  const notSignedIn = ( () => !store.isSignedIn() )
+  const needSignin = ( () => u.empty($store.choices) && !store.linked() )
+  const needLink = ( () => !store.linked() )
+  const gotQr = ( () => store.qr !== null )
 
   const routes = [
     route('/empty', Empty, true, null, LayoutIntro), // for testing
     route('/', AddToHomeScreen, u.addableToHome, '/sign-in', LayoutIntro),
-    route('/sign-in', SignIn, notSignedIn, '/home', LayoutIntro),
-    route('/link-account', LinkAccount, notSignedIn, '/home'),
-    route('/home', Home, store.isSignedIn, '/'),
-    route('/scan', Scan, store.isSignedIn, '/sign-in'),
-    route('/charge', Charge, store.isSignedIn, '/sign-in'),
-    route('/comment', Comment, store.isSignedIn, '/sign-in')
+    route('/sign-in', SignIn, needSignin, '/link-account', LayoutIntro),
+    route('/link-account', LinkAccount, needLink, '/home'),
+    route('/home', Home, store.linked, '/'),
+    route('/scan', Scan, store.linked, '/'),
+    route('/charge', Charge, gotQr, '/'),
+    route('/comment', Comment, store.linked, '/')
   ]
 
   onMount(async () => {

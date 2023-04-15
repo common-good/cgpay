@@ -31,4 +31,4 @@ Scenario: A user with multiple accounts signs in
   And I wait 2 seconds
   Then ? I am on page "link-account"
   And ? these choices:
-  | Abe | Abe/Citre |
+  | Abe | Abe/Cit |

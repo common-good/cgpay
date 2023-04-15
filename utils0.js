@@ -16,12 +16,34 @@ const u = {
   },
 
   now() { return Math.floor(Date.now() / 1000) },
-  clone(v) { return JSON.parse(JSON.stringify(v)) }, // deep clone (assumes object contains just objects, numbers, and strings)
+  clone(v) { return u.empty(v) ? v: JSON.parse(JSON.stringify(v)) }, // deep clone (assumes object contains just objects, numbers, and strings)
+  ray(s) { return s.split(s.includes(', ') ? ', ' : (s.includes(',') ? ',' : ' ')) }, // express an array as a space or comma-delimited string list
 
   emptyObj(obj) { return (obj === null || JSON.stringify(obj) === '{}') },
   empty(s) { return (s === null || s === undefined || s === '' || s === 0 || u.emptyObj(s)) },
   er(msg, details = null) { return { name:msg, message:u.empty(details) ? msg : details } },
-  parseObjString(objString) { return (eval(`[${objString}]`)[0]) }, // perversely, JS cannot evaluate an object literal without a wrapper
+  parseObjString(objString) { // perversely, JS cannot evaluate an object literal without a wrapper
+    if (!'[{'.includes(objString.charAt(0))) throw new Error('Invalid object string')
+    return eval(`[${objString}]`)[0]
+  },
+
+  /**
+   * Return Find the object, in a list of objects, that has a given keyed value.
+   * @param {*} obj: the object to search
+   * @param {*} kvs: keyed values to find
+   * @return index to the found object (or null)
+   */
+  findByValue(obj, kvs) {
+    let k
+    outer: for (let i in obj) {
+      for (k in kvs) if (obj[i][k] != kvs[k]) continue outer
+      return i
+    }
+    return null
+  },
+
+  withCommas(num) { return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') },
+
 }
 
 export default u
