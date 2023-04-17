@@ -34,15 +34,15 @@ jobs:
         cache: 'npm'
     - name: Install dependencies
       run: npm ci
-    - name: Build build
+    - name: Build
       run: npm run build
     # Tests fail because they currently rely on the app runing localhost:3000/empty
     # - name: Run tests
     #   run: npm test @a
 
-  # Deploy job. We can move variables from secrets, which is stored on the server, to `env` context in GitHub
+  # Deploy job. `secrets` are stored encrypted on GitHub.
   run_pull:
-    name: run pull
+    name: deploy
     needs: build
     runs-on: ubuntu-latest
     
@@ -55,6 +55,6 @@ jobs:
         echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
         ssh-keyscan -H ${{ secrets.SSH_HOST }} > ~/.ssh/known_hosts
     - name: connect and pull
-      run: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ${{ secrets.WORK_DIR }} && git checkout tools/github-actions && git pull && exit"
+      run: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ${{ secrets.WORK_DIR }} && git checkout tools/github-actions/dist && git pull && exit"
     - name: cleanup
       run: rm -rf ~/.ssh
