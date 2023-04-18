@@ -25,6 +25,7 @@
   onMount(async () => {
     if ($store.frontCamera === null) store.setFrontCamera(!u.isApple() && !u.isAndroid())
     store.setQr(null) // no going back to previous customer
+    store.setLastOp(null) // stop the timeout timer from interrupting us
     if ($store.erMsg) er($store.erMsg)
     if ($store.myAccount) try {
       const q = {deviceId:$store.myAccount.deviceId, actorId:$store.myAccount.accountId, lastTx:$store.myAccount.lastTx || -1 }

@@ -15,7 +15,7 @@
   let viewHeight
   let isNavOpen
 
-  const toggleNav = () => {isNavOpen = !isNavOpen}
+  const toggleNav = () => { isNavOpen = !isNavOpen; store.setLastOp(null) } // going anywhere from confirmation screen stops the timer
 
   onMount(() => {
     viewHeight = window?.visualViewport?.height

@@ -24,7 +24,7 @@
     store.fromTester().then()
     store.resetNetwork()
     setTimeout(timeOut, c.networkTimeoutMs)
-    if ($store.lastOp && u.now() - $store.lastOp > c.opTimeout) { store.setLastOp(null); navigateTo('/home') }
+    if ($store.lastOp && u.now() - $store.lastOp > c.opTimeout) navigateTo('/home')
   }
 
   function onlyIf(condition, elseGoTo) { return { guard: condition, redirect: elseGoTo } }
