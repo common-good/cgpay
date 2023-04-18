@@ -74,8 +74,10 @@
       </div>
     { /if }
 
-    <a class="scan-customer" data-testid="btn-charge" href='/scan'>Scan QR Code to Charge</a>
-    <!-- a class="survey" data-testid="lnk-survey" href="https://forms.gle/M8Hv1W2oSgw2yQzS7" target="_blank">Take Our User Experience Survey</a -->
+    { #if !$store.selfServe }
+      <a class="survey" data-testid="lnk-survey" href="https://forms.gle/M8Hv1W2oSgw2yQzS7" target="_blank">Take Our User Experience Survey</a>
+    { /if }
+    <button class="scan" data-testid="btn-charge" href='/scan'>Scan QR Code to Charge</button>
   </div>
 </section>
 
@@ -83,7 +85,6 @@
   .fakes
     display flex
     justify-content space-between
-    overflow-x scroll
 
   .fakes button
     cgButtonSecondary()
@@ -94,6 +95,7 @@
 
   .charge
     width 100%
+    text-align center
 
   .update p
     text-align center
@@ -114,12 +116,16 @@
     align-items center
     justify-content space-between
 
+  a
+    padding 0 $s-1
+    color $c-blue
+    text-decoration underline
+    text-underline-offset 5px
+
   .scan
     cgButton()
-
-  .survey
-    cgButtonSecondary()
-
+    margin-top $s0
+  
   .top
     width 100%
     height 100%
