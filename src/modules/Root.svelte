@@ -35,7 +35,7 @@
 
   const needSignin = ( () => u.empty($store.choices) && !store.linked() )
   const needLink = ( () => !store.linked() )
-  const gotQr = ( () => store.qr !== null )
+  const gotQr = ( () => $store.qr !== null )
 
   const routes = [
     route('/empty', Empty, true, null, LayoutIntro), // for testing

@@ -40,6 +40,7 @@ const u = {
     return null
   },
 
+  in(k, ks) { return ks.split(' ').includes(k) },
   withCommas(num) { return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') },
 
 }

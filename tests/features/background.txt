@@ -2,7 +2,7 @@ Feature Background
 
 Normally, in Gherkin feature testing, all initial data must be set up explicitly as "Background".
 To save programming time, our Background includes some specific account and transaction data on the server.
-See setupTestData() in hooks.js.
+See Before() in hooks.js.
 
 We also use some conventions to specify data in the scenarios:
 

@@ -83,31 +83,36 @@ export const createStore = () => {
 
   function getst() { return JSON.parse(localStorage.getItem(c.storeKey)) }
   function save(st) { localStorage.setItem(c.storeKey, JSON.stringify(st)); cache = st; return st }
-  function setst(newSt) { update(st => { return save(newSt) } )}
+  function setst(newS) { update(s => { return save(newS) } )}
   function setv(k, v) { update(st => { st[k] = v; return save(st) })}
   function enQ(k, v) { st.bump('enQ'); cache[k].push(v); return setv(k, cache[k]) }
   function deQ(k) { st.bump('deQ'); cache[k].shift(); return setv(k, cache[k]) } // this is actually FIFO (shift) not LIFO (pop)
   function del(k) { st0.update(st => { delete st[k]; return save(st) }) } // unused, but keep
   let doing = false // true if we are handling a list of things the tester has told us (the app) to do
+  let flushing = {} // queue name set true if we are flushing
 
   async function flushQ(k, endpoint) {
-    if (cache.corrupt == c.version) return; else st.setCorrupt(null) // don't retry hopeless tx indefinitely
+    if (flushing[k]) return; else flushing[k] = true
+    if (cache.corrupt == c.version) return; else if (cache.corrupt) st.setCorrupt(null) // don't retry hopeless tx indefinitely
     while (cache[k].length > 0) {
       if (!cache.useWifi) return; // allow immediate interruptions when testing
       try {
         await u.postRequest(endpoint, cache[k][0])
       } catch (er) {
+        flushing[k] = false
         if (u.isTimeout(er)) {
           st.setOnline(false)
         } else {
           console.log('corrupt er:', er) // keep this
           console.log('corrupt cache', k, cache[k]) // keep this
           st.setCorrupt(c.version)
+          if (u.testing()) throw 'corrupt'
         }
         return // don't deQ when there's an error
       }
       deQ(k)
     }
+    flushing[k] = false
   }
 
   const st = {
@@ -158,10 +163,10 @@ export const createStore = () => {
      * @param {*} card: account identification parsed from QR
      * @param {*} acctData: information about a customer
      */
-    putAcct(card, acctData) { update(st => {
-      st.accts[card.acct] = { ...acctData, hash: card.hash } // only the hash of the security code gets stored
-      return save(st)
-    })},
+    putAcct(card, acctData) {
+      cache.accts[card.acct] = { ...acctData, hash: card.hash } // only the hash of the security code gets stored
+      return setv('accts', cache.accts)
+    },
     getAcct(card) {
       let acct = cache.accts[card.acct]
       if (acct == undefined) return null
@@ -182,11 +187,12 @@ export const createStore = () => {
 
     enqTx(tx) { tx.offline = true; enQ('txs', { ...tx }) },
     async flushTxs() { await flushQ('txs', 'transactions') },
-    deqTx() { return deQ('txs') }, // just for testing (in store.spec.js)
+    deqTx() { deQ('txs') }, // just for testing (in store.spec.js)
     comment(text) { enQ('comments', { deviceId:cache.myAccount.deviceId, actorId:cache.myAccount.accountId, created:u.now(), text:text }) },
     async flushComments() { await flushQ('comments', 'comments') },
     async flushAll() {
       if (u.testing() && !cache.flushOk) return
+      if (u.empty(cache.txs) && u.empty(cache.comments)) return
       await st.flushTxs()
       await st.flushComments()
       td.flushOk = false

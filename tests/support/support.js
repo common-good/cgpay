@@ -10,7 +10,7 @@ const baseUrl = 'http://localhost:' + c.port + '/'
 const t = {
   // Constants
   ONE: true, // parameter for these()
-  SERVER: true, // parameter for these()
+  SERVER: 'server', // parameter for these()
 
   // UTILITY FUNCTIONS
 
@@ -126,7 +126,7 @@ const t = {
 
     const me = u.clone(w.accounts[v])
     if (me != null) return  (k == 'account') ? me
-                          : ('actorUid uid1 uid2 agt1 agt2'.split(' ').includes(k) ? w.uid(v)
+                          : u.in(k, 'actorUid uid1 uid2 agt1 agt2') ? w.uid(v)
                           : (k == 'myAccount' ? u.just('name isCo accountId deviceId selling', me)
                           : (k == 'actorId' ? me.accountId
                           : (k == 'otherId' ? me.accountId
@@ -189,7 +189,7 @@ const t = {
 
   async element(testId) { return await w.page.$(t.sel(testId)) },
   sel(testId) { return `[data-testid="${testId}"]` },
-  isTimeField(k) { return 'created'.split(' ').includes(k) },
+  isTimeField(k) { return u.in(k, 'created') },
   async waitACycle() { return w.page.waitForTimeout(c.networkTimeoutMs + 1) },
   
   // MAKE / DO
@@ -226,6 +226,7 @@ const t = {
   },
 
   async scan(who) { await t.putv('qr', t.adjust(who, 'qr')); await t.visit('charge') },
+
   async tx(who, amount, description) {
     await t.scan(who)
     await t.input('amount', amount)
