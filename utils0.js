@@ -19,7 +19,7 @@ const u = {
   clone(v) { return u.empty(v) ? v: JSON.parse(JSON.stringify(v)) }, // deep clone (assumes object contains just objects, numbers, and strings)
   ray(s) { return s.split(s.includes(', ') ? ', ' : (s.includes(',') ? ',' : ' ')) }, // express an array as a space or comma-delimited string list
 
-  emptyObj(obj) { return (obj === null || JSON.stringify(obj) === '{}') },
+  emptyObj(obj) { return obj === null || (typeof obj === 'object' && Object.keys(obj).length == 0) },
   empty(s) { return (s === null || s === undefined || s === '' || s === 0 || u.emptyObj(s)) },
   er(msg, details = null) { return { name:msg, message:u.empty(details) ? msg : details } },
   parseObjString(objString) { // perversely, JS cannot evaluate an object literal without a wrapper
