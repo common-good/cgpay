@@ -127,12 +127,12 @@ export const createStore = () => {
         doing = true
         u.tellTester('tellme').then(todo => { // if we have a todo list, another thread is already handling it
           if (!todo) return doing = false
-          let kv
+          let k, v
           while (todo.length) { // for each item
-            kv = todo.shift()
-            if (kv.k == 'clear') {
+            ({ k, v } = todo.shift())
+            if (k == 'clear') {
               st.clearData()
-            } else setv(kv.k, kv.v, true)
+            } else setv(k, v, true)
           }
           u.tellTester('done').then(() => doing = false)
         })

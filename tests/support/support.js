@@ -29,6 +29,7 @@ const t = {
     }
   },
 
+  /* UNUSED, but keep this arround (we may need it)
   async putStore(st, key = c.storeKey) {
     if (u.empty(st)) st = {}
     w.store = st
@@ -36,6 +37,7 @@ const t = {
     await w.page.evaluate((k, v) => { localStorage.setItem(k, v) }, key, st)
     await t.waitACycle() // give the network timeout function time to reload the store
   },
+  */
 
   async getv(k) { await t.waitForApp(); return w.store[k] },
 
@@ -45,16 +47,15 @@ const t = {
     w.tellApp.push({ k:k, v:v }); w.store[k] = v
     if (k == 'online') { w.tellApp.push({ k:'useWifi', v:v}); w.store.useWifi = v } // these values go together for faking online/offline
     await t.waitACycle() // give app time to ask
-//    await t.putStore(st)
   },
 
   /**
-   * This function is exposed to the app by the "page.exposeFunction" function in BeforeAll() (see in hooks.js).
-   * It is used for communication (one way at a time) between this testing framework and the app (through its u.testerPipe function)
+   * This function is exposed to the app by the "page.exposeFunction" function in Before() in hooks.js).
+   * It is used for communication (one way at a time) between this testing framework and the app using u.tellTester()
    * @param string op: the operation to be performed by the tester (notified/requested by the app)
    * @param string k: key to store in w or localStore
    * @param {*} v: value operation details
-   * @returns true if there is data waiting for the app to store (see t.putv() and store.fromTester())
+   * @returns an array of key/value pairs waiting for the app to store (see t.putv() and store.fromTester())
    */
   async appPipe(op = null, k = null, v = null) {
     if (op == 'store') {
@@ -157,12 +158,7 @@ const t = {
         for (let i in want) t.test(got[i], want[i], i, mode)
       } else { // object
         if (field == 'myAccount') want = { ...want, deviceId:'?', qr:'?' }
-        let modei
-        for (let i of Object.keys(want)) {
-//          modei = (mode == t.SERVER && t.isTimeField(i)) ? '<' + w.timeSlop : mode
-          modei = u.empty(mode) ? null : mode
-          t.test(got[i], want[i], i, modei)
-        }
+        for (let i of Object.keys(want)) t.test(got[i], want[i], i, u.empty(mode) ? null : mode)
       }
       return
     }

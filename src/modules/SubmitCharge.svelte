@@ -15,11 +15,9 @@
 
   async function charge() {
     if (!tx.proof) { // unless retrying
-      const created = u.now() // must be done just once
-      tx.created = created // Unix timestamp
+      tx.created = u.now() // Unix timestamp
       tx.amount = (+tx.amount).toFixed(2)
-      const tx2 = { ... tx }
-      tx.proof = u.hash(tx.actorId + tx.amount + tx.otherId + tx2.code + tx.created)
+      tx.proof = u.hash(tx.actorId + tx.amount + tx.otherId + tx.code + tx.created)
       delete tx.code
       tx.offline = false
     }

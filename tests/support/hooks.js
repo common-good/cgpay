@@ -27,7 +27,7 @@ Before(async () => { // before each scenario
   w.page = await w.browser.newPage()
   //  w.page.setViewport({ width: 1280, height: 1024 })
 
-  w.page.exposeFunction('testerPipe', t.appPipe) // tell store to update cache (after we changed localStorage -- see t.putStore)
+  w.page.exposeFunction('testerPipe', t.appPipe) // to communicate between tests and app
   //  w.page.exposeFunction('mockFetch', mockFetch) // tell utils to mock fetches (keep this line)
 
   if (w.seeLog) w.page.on('console', async e => { // log whatever the page logs
