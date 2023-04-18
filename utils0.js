@@ -9,9 +9,7 @@ const u = {
   },
 
   just(which, obj) { // subset of object
-    const ks = which.split(' ')
-    let res = {}
-    for (let i in ks) res[ks[i]] = obj[ks[i]]
+    let res = {}; for (let k of u.ray(which)) res[k] = obj[k]
     return res
   },
 
