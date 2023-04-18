@@ -74,6 +74,7 @@ const u = {
     : 'dev')) 
   }, 
   
+  now() { return (u.testing()) ? store.inspect().now : u.now0() }, // keep "now" constant in tests
   realData() { return ['production', 'staging'].includes(u.mode()) },
   localMode() { return (u.mode() == 'local') }, 
   testing() { return typeof window.testerPipe === 'function' },

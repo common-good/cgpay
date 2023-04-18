@@ -111,7 +111,7 @@ const t = {
     if (v == 'null') return null
     if (v == 'true') return true
     if (v == 'false') return false
-    if (v == 'now') return u.now()
+    if (v == 'now') return w.now
     if (v == 'version') return c.version
     if (v0 == '!') return '!' + t.adjust(v.substring(1), k)
     if (v0 == '[' || v0 == '{') return u.parseObjString(v)
@@ -160,7 +160,8 @@ const t = {
         if (field == 'myAccount') want = { ...want, deviceId:'?', qr:'?' }
         let modei
         for (let i of Object.keys(want)) {
-          modei = u.empty(mode) ? (t.isTimeField(i) ? '<' + w.timeSlop : null) : mode
+//          modei = (mode == t.SERVER && t.isTimeField(i)) ? '<' + w.timeSlop : mode
+          modei = u.empty(mode) ? null : mode
           t.test(got[i], want[i], i, modei)
         }
       }

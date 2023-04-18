@@ -38,6 +38,7 @@ Before(async () => { // before each scenario
   await t.postToTestEndpoint('initialize')
   await t.visit('empty') // required before putStore
   await t.putStore(null) // have nothing in localStorage until we set it explicitly or visit a page
+  await t.putv('now', w.now) // synchronize time between tester and app
 })
 
 After(async () => { 

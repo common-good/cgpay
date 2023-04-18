@@ -13,7 +13,7 @@ const u = {
     return res
   },
 
-  now() { return Math.floor(Date.now() / 1000) },
+  now0() { return Math.floor(Date.now() / 1000) },
   clone(v) { return u.empty(v) ? v: JSON.parse(JSON.stringify(v)) }, // deep clone (assumes object contains just objects, numbers, and strings)
   ray(s) { return s.split(s.includes(', ') ? ', ' : (s.includes(',') ? ',' : ' ')) }, // express an array as a space or comma-delimited string list
 
