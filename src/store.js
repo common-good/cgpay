@@ -60,12 +60,17 @@
  *    myAccount: information about the account associated with the device
  *      accountId, deviceId, name, qr, isCo, and selling as in the choices array described above
  *      lastTx: Unixtime (in ms) of the last transaction known to this device (null if none)
+ * 
+ * TEST DATA*
+ *    now: a stable timestamp (in seconds)
+ *    flushOk: if true, the tester is ready for data to be uploaded to the server
+ *    enQ, deQ, and posts: operation counters
+ *    fromTester: key/value pairs from tester (to set)
  */
 import { writable } from 'svelte/store'
 import u from '#utils.js'
 import c from '#constants.js'
 import cache0 from '#cache.js'
-import td from '#testData.js'
 
 export const createStore = () => {
   const lostMsg = `Tell the customer "I'm sorry, that card is marked "LOST or STOLEN".`
@@ -80,9 +85,10 @@ export const createStore = () => {
   function save(st) { localStorage.setItem(c.storeKey, JSON.stringify(st)); cache = st; return st }
   function setst(newSt) { update(st => { return save(newSt) } )}
   function setv(k, v) { update(st => { st[k] = v; return save(st) })}
-  function enQ(k, v) { td.counters.enQ++; update(st => { st[k].push(v); return save(st) })}
-  function deQ(k) { td.counters.deQ++; update(st => { st[k].shift(); return save(st) })} // this is actually FIFO (shift) not LIFO (pop)
+  function enQ(k, v) { st.bump('enQ'); cache[k].push(v); return setv(k, cache[k]) }
+  function deQ(k) { st.bump('deQ'); cache[k].shift(); return setv(k, cache[k]) } // this is actually FIFO (shift) not LIFO (pop)
   function del(k) { st0.update(st => { delete st[k]; return save(st) }) } // unused, but keep
+  let doing = false // true if we are handling a list of things the tester has told us (the app) to do
 
   async function flushQ(k, endpoint) {
     if (cache.corrupt == c.version) return; else st.setCorrupt(null) // don't retry hopeless tx indefinitely
@@ -104,8 +110,6 @@ export const createStore = () => {
     }
   }
 
-  // --------------------------------------------
-
   const st = {
 //    subscribe,
     subscribe(func) { // extend the writable subscribe method to check messages from test framework first
@@ -114,13 +118,15 @@ export const createStore = () => {
     },
 
     fromTester() { // called only in test mode (see Route.svelte, hooks.js, and t.tellApp)
-      const fromTester = getst().fromTester
-      setv('fromTester', {})
+      if (u.testing() && !doing) {
+        doing = true
       if (!u.empty(fromTester)) for (let k of Object.keys(fromTester)) {
         if (k === 'flushOk') td.flushOk = true; else setv(k, fromTester[k])
       }
     },
     inspect() { return cache },
+
+    bump(k)  { if (u.testing()) { cache[k]++; setv(k, cache[k]) } },
 
     setQr(v) { setv('qr', v) },
     setLastOp(set = 'now') { setv('lastOp', set == 'now' ? u.now() : set ) },

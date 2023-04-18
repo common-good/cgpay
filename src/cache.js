@@ -20,7 +20,12 @@ const cache = {
   accts: {}, // keyed list of accounts that user has transacted with (or tried to)
   myAccount: null, // information about user's account, signed in
 
-  fromTester: {}, // values to update at the request of the test framework (see hooks.js and t.putv())
+  // for testing
+  posts: 0,
+  enQ: 0,
+  deQ: 0,
+  flushOk: false,
+  now: null, // static timestamp while testing
 }
 
 export default cache

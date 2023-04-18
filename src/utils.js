@@ -3,7 +3,6 @@ import c from '#constants.js'
 import queryString from 'query-string'
 import { navigateTo } from 'svelte-router-spa'
 import u0 from '../utils0.js' // utilities shared with tests
-import td from '#testData.js'
 
 const u = {
   ...u0, // incorporate all function from utils0.js
@@ -56,7 +55,7 @@ const u = {
   },
 
   async postRequest(endpoint, v) {
-    td.counters.post++
+    store.bump('posts')
     v.version = c.version
     u.tellTester('post', { endpoint:endpoint, v:{ ...v }, method:'post' })
     return await u.timedFetch(endpoint, {

@@ -18,7 +18,6 @@ export default defineConfig({
     alias: {
       '#store.js':     root + '/src/store.js',
       '#cache.js':     root + '/src/cache.js',
-      '#testData.js':  root + '/src/testData.js',
       '#utils.js':     root + '/src/utils.js',
       '#constants.js': root + '/constants.js',
       '#modules':      root + '/src/modules',
