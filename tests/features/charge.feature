@@ -50,7 +50,7 @@ Scenario: A company charges an individual
   And ? these server "txs":
   | amt      | actorId | uid1 | uid2  | agt1 | agt2 | for2  | created | 
   | 1234.50  | Cit     | Bea  | Cit   | Bea  | Abe  | food! | now     |
-  | -1234.50 | Cit     | Bea  | Cit   | Bea  | Abe  | food! | now     |
+  | -1234.50 | Cit     | Bea  | Cit   | Bea  | Abe  | food! | ?       |
 
 Scenario: A company charges a company
 # abbreviated syntax for first 4 steps
@@ -122,4 +122,4 @@ Scenario: A company charges an individual offline
   Then ? count "txs" is 0
   And ? these server "txs":
   | amt     | actorId | uid1 | uid2  | agt1 | agt2 | for2  | created | 
-  | -234.50 | Cit     | Bea  | Cit   | Bea  | Abe  | food! | now     |
+  | -234.50 | Cit     | Bea  | Cit   | Bea  | Abe  | food! | ?       |

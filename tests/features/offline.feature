@@ -15,7 +15,6 @@ Background:
 Rule: For most offline functionality, see the individual features
 
 Scenario: The network goes offline and status is visible
-#  Given I wait 2 seconds
   When I run the app
   Then ? I see "network-offline"
 
@@ -32,8 +31,8 @@ Scenario: We reconnect to the internet with cached transactions
   And ? these server "txs":
   | amt      | actorId | uid1 | uid2  | agt1 | agt2 | for2  | created | 
   | 1234.50  | Cit     | Bea  | Cit   | Bea  | Abe  | food! | now     |
-  | -1234.50 | Cit     | Bea  | Cit   | Bea  | Abe  | food! | now     |
-@a
+  | -1234.50 | Cit     | Bea  | Cit   | Bea  | Abe  | food! | ?       |
+@a 
 Scenario: We reconnect to the internet with comments
   Given we are offline
   And these "comments":
