@@ -69,9 +69,9 @@ const u = {
 
   mode() { 
     return location.href.startsWith(c.urls.production) ? 'production' 
-    : (location.href.startsWith(c.urls.staging) ? 'staging' 
-    : (location.href.includes('localhost') ? 'local' 
-    : 'dev')) 
+    : location.href.startsWith(c.urls.staging) ? 'staging' 
+    : location.href.includes('localhost') ? 'local' 
+    : 'dev'
   }, 
   
   now() { return (u.testing()) ? store.inspect().now : u.now0() }, // keep "now" constant in tests

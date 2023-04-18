@@ -127,12 +127,12 @@ const t = {
     const me = u.clone(w.accounts[v])
     if (me != null) return  (k == 'account') ? me
                           : u.in(k, 'actorUid uid1 uid2 agt1 agt2') ? w.uid(v)
-                          : (k == 'myAccount' ? u.just('name isCo accountId deviceId selling', me)
-                          : (k == 'actorId' ? me.accountId
-                          : (k == 'otherId' ? me.accountId
-                          : (k == 'cardCode' ? me.cardCode
-                          : (k == 'qr' ? c.testQrStart + me.accountId.charAt(0) + me.accountId.substring(4) + me.cardCode
-                          : v ))))))
+                          : k == 'myAccount' ? u.just('name isCo accountId deviceId selling', me)
+                          : k == 'actorId' ? me.accountId
+                          : k == 'otherId' ? me.accountId
+                          : k == 'cardCode' ? me.cardCode
+                          : k == 'qr' ? c.testQrStart + me.accountId.charAt(0) + me.accountId.substring(4) + me.cardCode
+                          : v 
     return v
   },
 
