@@ -4,17 +4,17 @@
  * Data structure
  *
  * The following data is stored, and cached in "cache" while the app runs.
- * Some items do not NEED to be stored in localStore, but it's simpler code and hurts nothing.
+ * All items are also stored in localStore, except those marked with an asterisk (*).
  * 
  * SCALARS
  *   int sawAdd: Unix timestamp when user saw the option to save the app to their home screen
- *   blob qr: a scanned QR url
- *   int lastOp: Unix timestamp of last operation that will be timed out after c.opTimeout seconds
- *   string msg: an informational message to display on the Home Page
- *   string erMsg: an error message to display on the Home Page
+ *   blob qr*: a scanned QR url
+ *   int lastOp*: Unix timestamp of last operation that will be timed out after c.opTimeout seconds
+ *   string msg*: an informational message to display on the Home Page
+ *   string erMsg*: an error message to display on the Home Page
  *   int cameraCount: number of cameras in the device
  *   bool frontCamera: true to use front camera instead of rear (default false iff mobile)
- *   bool online: true if the device is connected to the Internet
+ *   bool online*: true if the device is connected to the Internet
  *   bool useWifi: true to use wifi whenever possible (otherwise disable wifi)
  *   bool selfServe: true for selfServer mode
  * 
