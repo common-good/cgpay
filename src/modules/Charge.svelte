@@ -120,11 +120,10 @@
    * To avoid timing issues with store.flushTxs(), queue the reversed transaction,
    * then delete both transactions at once.
    */
-  async function Undo() {
+  function Undo() {
     tx.amount = -tx.amount
     store.enqTx(tx)
-    // NO! With flaky internet, this could queue the tx after unknowingly uploading it, then canceling the undo -- store.deleteTxPair()
-    // Maybe see whether original tx was definitely taken offline, if this seems important
+    // NO! (could lose the undo) store.deleteTxPair() 
     u.goHome('The transaction has been reversed.')
   }
 

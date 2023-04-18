@@ -5,8 +5,6 @@
   import u from '#utils.js'
   // https://github.com/canutin/svelte-currency-input
 
-  // --------------------------------------------
-
   export let otherAccount
   export let photo
   export let tx
@@ -14,8 +12,6 @@
 
   const action = $store.selfServe ? 'Pay' : 'Charge'
   const dispatch = createEventDispatcher()
-
-  // --------------------------------------------
 
   async function charge() {
     if (!tx.proof) { // unless retrying

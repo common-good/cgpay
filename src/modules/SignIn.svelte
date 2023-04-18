@@ -20,7 +20,6 @@
     try {
       const result = await u.postRequest('accounts', credentials)
       store.setAcctChoices(result.accounts)
-
       if (result.accounts.length > 1) {
         navigateTo('/link-account')
       } else {
@@ -28,7 +27,7 @@
         navigateTo('/home')
       }
     } catch (er) {
-      await store.resetNetwork()
+      store.resetNetwork()
       if (u.isTimeout(er) || !$store.online) {
         showEr('The server is unavailable. Check your internet connection and try again.')
       } else if (er.message == 403) { // forbidden

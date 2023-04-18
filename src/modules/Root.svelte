@@ -18,12 +18,13 @@
 
   // Initialization Helpers
 
-  if (u.fromTester()) store.fromTester()
-  async function timeOut() {
-    if (u.fromTester()) store.fromTester()
-    await store.resetNetwork()
+  store.fromTester().then() // we must check for tester instructions before doing anything
+
+  function timeOut() {
+    store.fromTester().then()
+    store.resetNetwork()
     setTimeout(timeOut, c.networkTimeoutMs)
-    if ($store.lastOp && u.now() - $store.lastOp > c.opTimeout) { store.setLastOp(null); await navigateTo('/home') }
+    if ($store.lastOp && u.now() - $store.lastOp > c.opTimeout) { store.setLastOp(null); navigateTo('/home') }
   }
 
   function onlyIf(condition, elseGoTo) { return { guard: condition, redirect: elseGoTo } }
@@ -48,8 +49,8 @@
   ]
 
   onMount(async () => {
-    addEventListener('offline', async () => { await store.setOnline(false) })
-    addEventListener('online', async () => { await store.setOnline(true) })
+    addEventListener('offline', () => { store.setOnline(false) })
+    addEventListener('online', () => { store.setOnline(true) })
     timeOut()
   })
 

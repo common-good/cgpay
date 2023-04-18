@@ -9,18 +9,18 @@
 
   let nav
 
-  const dispatch = createEventDispatcher();
+  const dispatch = createEventDispatcher()
   function closeNav() { dispatch('toggleNav', {}) }
   function signOut() { store.signOut(); navigateTo('/') }
   function switchAccount() { store.unlink(); navigateTo('/link-account') }
   function rearCamera() { store.setFrontCamera(false) }
   function frontCamera() { store.setFrontCamera(true) }
   function comment() { navigateTo('/comment')}
-  async function wifiOn() { await store.setWifi(true) }
-  async function wifiOff() { await store.setWifi(false) }
+  function wifiOn() { store.setWifi(true) }
+  function wifiOff() { store.setWifi(false) }
   function selfServeOn() { store.setSelfServe(true) }
   function selfServeOff() { store.setSelfServe(false); signOut() } // sign out so naughty customers can't switch accounts or whatever
-  async function clearData() { store.clearData(); navigateTo('/'); navigateTo('/') }
+  function clearData() { store.clearData(); navigateTo('/'); navigateTo('/') }
 
   let menuItems = []
   function item(text, callback, criteria, id) { menuItems.push({text, callback, criteria, id}) }
@@ -34,8 +34,8 @@
   item('Sign Out', signOut, () => (store.linked() || u.pageUri() == 'link-account') && !$store.selfServe, 'signout')
 
 if (u.localMode()) {
-    item('🌈 Turn Wifi Off', wifiOff, async () => $store.useWifi)
-    item('🌈 Turn Wifi On', wifiOn, async () => !$store.useWifi)
+    item('🌈 Turn Wifi Off', wifiOff, () => $store.useWifi)
+    item('🌈 Turn Wifi On', wifiOn, () => !$store.useWifi)
     item('🌈 START OVER', clearData, () => true)
   }
 

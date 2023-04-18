@@ -98,7 +98,7 @@ export const createStore = () => {
         await u.postRequest(endpoint, cache[k][0])
       } catch (er) {
         if (u.isTimeout(er)) {
-          await st.setOnline(false)
+          st.setOnline(false)
         } else {
           console.log('corrupt er:', er) // keep this
           console.log('corrupt cache', k, cache[k]) // keep this
@@ -132,7 +132,7 @@ export const createStore = () => {
     setLastOp(set = 'now') { setv('lastOp', set == 'now' ? u.now() : set ) },
     setMsg(v) { setv('erMsg', v) },
     setCorrupt(version) { setv('corrupt', version) }, // pause uploading until a new version is released
-    async setWifi(yesno) { setv('useWifi', yesno); await st.resetNetwork() },
+    setWifi(yesno) { setv('useWifi', yesno); st.resetNetwork() },
     setSelfServe(yesno) { setv('selfServe', yesno) },
 
     setAcctChoices(v) { setv('choices', v) },
@@ -146,11 +146,11 @@ export const createStore = () => {
     setCameraCount(n) { setv('cameraCount', n) },
     setFrontCamera(yesno) { setv('frontCamera', yesno) },
 
-    async resetNetwork() { if (cache.useWifi) await st.setOnline(navigator.onLine) },
-    async setOnline(yesno) { // handling this in store helps with testing
+    resetNetwork() { if (cache.useWifi) st.setOnline(navigator.onLine) },
+    setOnline(yesno) { // handling this in store helps with testing
       const v = cache.useWifi ? yesno : false
       if (v !== cache.online) setv('online', v)
-      if (cache.useWifi && yesno) await st.flushAll() // only do *explicit* flushing when testing
+      if (cache.useWifi && yesno) st.flushAll().then() // when testing only do *explicit* flushing
     },
 
     /**
@@ -186,7 +186,7 @@ export const createStore = () => {
     comment(text) { enQ('comments', { deviceId:cache.myAccount.deviceId, actorId:cache.myAccount.accountId, created:u.now(), text:text }) },
     async flushComments() { await flushQ('comments', 'comments') },
     async flushAll() {
-      if (u.testing() && !td.flushOk) return
+      if (u.testing() && !cache.flushOk) return
       await st.flushTxs()
       await st.flushComments()
       td.flushOk = false
