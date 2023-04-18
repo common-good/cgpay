@@ -42,6 +42,8 @@ const u = {
 
   in(k, ks) { return ks.split(' ').includes(k) },
   withCommas(num) { return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') },
+  testing() { return (typeof window !== 'undefined' && typeof window.testerPipe === 'function') },
+  async tellTester(op, k = null, v = null) { return u.testing() ? await window.testerPipe(op, k, v) : null },
 
 }
 

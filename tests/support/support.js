@@ -29,51 +29,50 @@ const t = {
     }
   },
 
-  /**
-   * Get all stored values (the storage state)
-   * @returns {*} st: an object containing all the app's stored values
-   */
-  async getStore(key = c.storeKey) {
-    const localStorage = await w.page.evaluate(() =>  Object.assign({}, window.localStorage))
-    return JSON.parse(localStorage[key])
-  },
-
   async putStore(st, key = c.storeKey) {
     if (u.empty(st)) st = {}
+    w.store = st
     st = JSON.stringify(st)
     await w.page.evaluate((k, v) => { localStorage.setItem(k, v) }, key, st)
     await t.waitACycle() // give the network timeout function time to reload the store
   },
 
-  async getv(k) {
-    const st = await t.getStore()
-    return st ? st[k] : null
-  },
+  async getv(k) { await t.waitForApp(); return w.store[k] },
 
   async putv(k, v) {
-    let st = await t.getStore()
-    if (u.empty(st)) st = { ...cache }
-    st.fromTester[k] = st[k] = v
-    if (k == 'online') st.fromTester.useWifi = st.useWifi = v // these values go together for faking online/offline
-    await t.putStore(st)
-    w.tellApp = true
+    await t.waitForApp()
+    if (u.empty(w.store)) w.store = { ...cache }
+    w.tellApp.push({ k:k, v:v }); w.store[k] = v
+    if (k == 'online') { w.tellApp.push({ k:'useWifi', v:v}); w.store.useWifi = v } // these values go together for faking online/offline
+    await t.waitACycle() // give app time to ask
+//    await t.putStore(st)
   },
 
   /**
    * This function is exposed to the app by the "page.exposeFunction" function in BeforeAll() (see in hooks.js).
    * It is used for communication (one way at a time) between this testing framework and the app (through its u.testerPipe function)
-   * @param string k: key to add to w or operation
-   * @param {*} v: value to store in w or operation details
+   * @param string op: the operation to be performed by the tester (notified/requested by the app)
+   * @param string k: key to store in w or localStore
+   * @param {*} v: value operation details
    * @returns true if there is data waiting for the app to store (see t.putv() and store.fromTester())
    */
-  async appPipe(k = null, v = null) {
-    if (k) { w[k].push(v); return false }
-
-    const res = w.tellApp
-    w.tellApp = false
-    return res
+  async appPipe(op = null, k = null, v = null) {
+    if (op == 'store') {
+      w.store[k] = v
+    } else if (op == 'post' || op == 'get') {
+      w[op][k] = v
+    } else if (op == 'done') { // app has finished handling our instructions, so stop waitForApp()
+      w.tellApp = []
+    } else if (op == 'tellme') {
+      if (u.empty(w.tellApp)) return null
+      const res = u.clone(w.tellApp)
+      w.tellApp = null // prevent most steps until this step is done
+      return res
+    } else assert.fail('invalid appPipe op: ' + op)
   },
-  
+
+  async waitForApp() { while(w.tellApp === null) await t.waitACycle() }, // wait for app to handle instructions before going on to next step
+
   /**
    * For an array of n arrays, the first element being the keys (from a Gherkin multi-value field), return an array of n-1 objects.
    * @param {*} rows: a list of field names and one or more data records
@@ -187,7 +186,7 @@ const t = {
     } else assert.fail('bad mode:' + mode)
   },
 
-  async element(testId) { return await w.page.$(t.sel(testId)) },
+  async element(testId) { await t.waitForApp(); return await w.page.$(t.sel(testId)) },
   sel(testId) { return `[data-testid="${testId}"]` },
   isTimeField(k) { return u.in(k, 'created') },
   async waitACycle() { return w.page.waitForTimeout(c.networkTimeoutMs + 1) },
@@ -195,6 +194,7 @@ const t = {
   // MAKE / DO
 
   async visit(target, wait = 'networkidle0') { 
+    await t.waitForApp()
     const options = wait ? { waitUntil:wait } : {} // load, domcontentloaded, networkidle0, or networkidle2
     await w.page.goto(baseUrl + target, options)
   },
@@ -218,6 +218,7 @@ const t = {
   },
 
   async input(id, text) {
+    await t.waitForApp()
     const sel = t.sel('input-' + id) 
     await w.page.click(sel, { clickCount: 3 }) // select field so that typing replaces it
     await w.page.type(sel, isNaN(text) ? text : JSON.stringify(text))
@@ -260,8 +261,7 @@ async postToTestEndpoint(op, args = null) {
  */
 async mockFetch(url, options = {}) {
   options = { ...options, mode:'cors', postData:options.body }
-  const keysToDelete = 'signal body'.split(' ')
-  for (let i in keysToDelete) delete options[keysToDelete[i]]
+  for (let k of u.ray('signal body')) delete options[k]
 
   await w.fetcher.setRequestInterception(true)
   await w.fetcher.once('request', async (interceptedRequest ) => {
@@ -311,10 +311,9 @@ async mockFetch(url, options = {}) {
 
   async posted(endpoint, rows, method) {
     await t.waitACycle()
-    w.posti = u.findByValue(w.post, { endpoint:endpoint })
-    assert.isNotNull(w.posti, `expected a "${method}" request to endpoint "${endpoint}"`)
-    t.test({ ...w.post[w.posti] }, { endpoint:endpoint, v:t.these(rows, t.ONE), method:method } )
-    delete w.post[w.posti]
+    assert.isNotNull(w[method][endpoint], `expected a "${method}" request to endpoint "${endpoint}"`)
+    t.test({ ...w[method][endpoint] }, t.these(rows, t.ONE) )
+    delete w[method][endpoint]
   },
 
   /**

@@ -80,14 +80,14 @@ export const createStore = () => {
   save(cache) // update store with any changes in defaults (crucial for tests)
   
   const { subscribe, update } = writable(cache)
-
   function getst() { return JSON.parse(localStorage.getItem(c.storeKey)) }
-  function save(st) { localStorage.setItem(c.storeKey, JSON.stringify(st)); cache = st; return st }
+  function save(s) { localStorage.setItem(c.storeKey, JSON.stringify(s)); cache = { ...s }; return s }
   function setst(newS) { update(s => { return save(newS) } )}
-  function setv(k, v) { update(st => { st[k] = v; return save(st) })}
+  function setv(k, v, fromTest = false) { update(s => { s[k] = v; return save(s) }); tSetV(k, v, fromTest) }
   function enQ(k, v) { st.bump('enQ'); cache[k].push(v); return setv(k, cache[k]) }
   function deQ(k) { st.bump('deQ'); cache[k].shift(); return setv(k, cache[k]) } // this is actually FIFO (shift) not LIFO (pop)
-  function del(k) { st0.update(st => { delete st[k]; return save(st) }) } // unused, but keep
+  function tSetV(k, v, fromTest) { if (u.testing() && !fromTest) u.tellTester('store', k, v).then() }
+
   let doing = false // true if we are handling a list of things the tester has told us (the app) to do
   let flushing = {} // queue name set true if we are flushing
 
@@ -118,15 +118,24 @@ export const createStore = () => {
   const st = {
 //    subscribe,
     subscribe(func) { // extend the writable subscribe method to check messages from test framework first
-      if (u.fromTester()) st.fromTester() // make sure we have the latest data before fulfilling a subscription
+      st.fromTester().then() // make sure we have the latest data before fulfilling a subscription
       return subscribe(func)
     },
 
-    fromTester() { // called only in test mode (see Route.svelte, hooks.js, and t.tellApp)
+    async fromTester() { // called only in test mode (see Route.svelte, hooks.js, and t.tellApp)
       if (u.testing() && !doing) {
         doing = true
-      if (!u.empty(fromTester)) for (let k of Object.keys(fromTester)) {
-        if (k === 'flushOk') td.flushOk = true; else setv(k, fromTester[k])
+        u.tellTester('tellme').then(todo => { // if we have a todo list, another thread is already handling it
+          if (!todo) return doing = false
+          let kv
+          while (todo.length) { // for each item
+            kv = todo.shift()
+            if (kv.k == 'clear') {
+              st.clearData()
+            } else setv(kv.k, kv.v, true)
+          }
+          u.tellTester('done').then(() => doing = false)
+        })
       }
     },
     inspect() { return cache },
@@ -185,7 +194,7 @@ export const createStore = () => {
       if (u.empty(cache.txs) && u.empty(cache.comments)) return
       await st.flushTxs()
       await st.flushComments()
-      td.flushOk = false
+      if (u.testing()) setv('flushOk', false)
     }
 
   }

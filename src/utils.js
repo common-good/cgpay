@@ -34,15 +34,13 @@ const u = {
     if (!post) {
       url += '&version=' + c.version
       const urlRay = url.split('?')
-      u.tellTester('post', { endpoint:urlRay[0], v:urlRay[1].split('&'), method:'get' })
+      await u.tellTester('get', urlRay[0], urlRay[1].split('&'))
     }
     const { timeout = c.fetchTimeoutMs, type = 'json' } = options;
     const aborter = new AbortController();
     aborter.name = 'Timeout'
     const timeoutId = setTimeout(() => aborter.abort(), timeout)
-
     const func = typeof window.mockFetch === 'function' ? mockFetch : fetch // mock fetch if testing (keep this line)
-    
     let res = await func(u.api() + url, {...options, signal:aborter.signal })
     if (res.ok === false) throw new Error(res.status)
     if (res.ok && type != 'none') {
@@ -57,7 +55,7 @@ const u = {
   async postRequest(endpoint, v) {
     store.bump('posts')
     v.version = c.version
-    u.tellTester('post', { endpoint:endpoint, v:{ ...v }, method:'post' })
+    await u.tellTester('post', endpoint, { ...v })
     return await u.timedFetch(endpoint, {
       method: 'POST',
       headers: { 'Content-type':'application/x-www-form-urlencoded' },
@@ -77,9 +75,6 @@ const u = {
   now() { return (u.testing()) ? store.inspect().now : u.now0() }, // keep "now" constant in tests
   realData() { return ['production', 'staging'].includes(u.mode()) },
   localMode() { return (u.mode() == 'local') }, 
-  testing() { return typeof window.testerPipe === 'function' },
-  fromTester() { return (u.testing() && window.testerPipe()) },
-  tellTester(k, v = null) { if (u.testing()) window.testerPipe(k, v) },
   yesno(question, m1, m2) { return u.dlg('Confirm', question, 'Yes, No', m1, m2) },
   confirm(question) { return u.dlg('Alert', question, 'OK', null, null) },
   crash(er) { console.log('crash', er); return er.message },

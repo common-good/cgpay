@@ -3,6 +3,7 @@ import puppeteer from 'puppeteer'
 import { exec } from 'node:child_process'
 import w from './world.js' // the world
 import t from './support.js' // test support utilities
+import cache0 from '../../src/cache.js'
 
 setDefaultTimeout(w.testTimeout * 1000)
 
@@ -35,9 +36,9 @@ Before(async () => { // before each scenario
       || (!args[0].includes('was created with unknown prop') && !args[0].includes('[vite] connect'))) console.log(...args)
   })
   
-  await t.postToTestEndpoint('initialize')
-  await t.visit('empty') // required before putStore
-  await t.putStore(null) // have nothing in localStorage until we set it explicitly or visit a page
+  await t.postToTestEndpoint('initialize') // initialize data on the server (real or fake)
+  w.store = cache0
+  await t.visit('empty') // a page is required before app can save anything to localStorage
   await t.putv('now', w.now) // synchronize time between tester and app
 })
 
