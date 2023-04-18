@@ -8,7 +8,10 @@
   import store from '#store.js'
   import u from '#utils.js'
 
-  // --------------------------------------------
+  /**
+   * Layout the standard page.
+   * In self-serve mode, the menu is available only on the home page.
+   */
 
   export let currentRoute
 
@@ -29,7 +32,11 @@
   <header>
     <button on:click={ () => navigateTo('/home') }><img src={ cgLogo } alt='Common Good Logo' /></button>
     <p data-testid="account-name">{ ($store.myAccount ? $store.myAccount.name : '') + (u.realData() ? '' : ' (DEMO)')}</p>
-    <button data-testid="btn-nav" on:click={toggleNav}> <NavIcon width={'100%'} height={'100%'} ariaLabel={'menu'} /></button>
+      <button data-testid="btn-nav" on:click={toggleNav}>
+        { #if !$store.selfServe || u.pageUri() == 'home' }
+          <NavIcon width={'100%'} height={'100%'} ariaLabel={'menu'} />
+        { /if }
+      </button>
   </header>
   { #key currentRoute }<NetworkStatus/>{ /key }
   <div class='content'>
