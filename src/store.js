@@ -175,16 +175,6 @@ export const createStore = () => {
       return acct
     },
 
-    deleteTxPair() {
-      update(st => {
-        const q = [ ...st.txs ]
-        const tx2 = q.pop()
-        const tx1 = q.pop()
-        if (tx1 && tx2 && tx2.created == tx1.created && tx2.amount == -tx1.amount) return save({ ...st, txs: q })
-        return st
-      })
-    },
-
     enqTx(tx) { tx.offline = true; enQ('txs', { ...tx }) },
     async flushTxs() { await flushQ('txs', 'transactions') },
     deqTx() { deQ('txs') }, // just for testing (in store.spec.js)
