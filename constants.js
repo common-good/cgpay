@@ -1,5 +1,5 @@
 const constants = {
-  version: '4.0.0',
+  version: '4.0.1',
   storeKey: 'cgpay',
   qrUrlRegex: '^HTTP://[0-9A-Za-z]{1,4}\.RC[24]\.ME/[0-9A-Za-z]{6,28}$', // like HTTP://6VM.RC4.ME/KDJJ34kjdfKJ4
   testQrStart: 'HTTP://6VM.RC4.ME/', // is a test QR if it starts with this string
