@@ -61,7 +61,7 @@ jobs:
           REMOTE_HOST: ${{ secrets.SSH_HOST }}
           REMOTE_USER: ${{ secrets.SSH_USER }}
           REMOTE_PORT: 7822
-          TARGET: /home/new/current
+          TARGET: /home/new/cgpay-dev/current
     
 
     # - name: Save built files
