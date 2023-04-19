@@ -1,14 +1,11 @@
 // initial values for store
 
 const cache = {
+  persist: 'sawAdd cameraCount frontCamera useWifi selfServe choices txs comments corrupt accts myAccount',
+
   sawAdd: false, // user pressed Continue on the Add-to-home-screen page
-  qr: null, // scanned qr URL
-  lastOp: null, // timestamp of last operation to timeout
-  msg: null, // not yet used
-  erMsg: null, // error message to display on Home page
   cameraCount: 0, // set this when scanning for the first time
   frontCamera: null, // set this in Root.svelte (can't be defaulted from tests)
-  online: null, // true if app is online
   useWifi: true, // false if developer or test framework has disabled wifi
   selfServe: false, // self-serve mode
 
@@ -19,6 +16,13 @@ const cache = {
   corrupt: null, // timestamp that cached data got corrupted
   accts: {}, // keyed list of accounts that user has transacted with (or tried to)
   myAccount: null, // information about user's account, signed in
+
+  // transient data (not stored in local storage)
+  qr: null, // scanned qr URL
+  lastOp: null, // timestamp of last operation to timeout
+  msg: null, // not yet used
+  erMsg: null, // error message to display on Home page
+  online: null, // true if app is online
 
   // for testing
   posts: 0,

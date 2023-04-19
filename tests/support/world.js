@@ -23,7 +23,7 @@ const w = {
   // test constants
   headlessMode: true,
   slowMo: 0,
-  testTimeout: 25, // test timeout in seconds (12 is not enough)
+  testTimeout: 18, // test timeout in seconds (12 is not enough)
   chromiumPath: '', // can be used to test different versions of chromium
   seeLog: true, // show what the automated browser logs to console
   timeSlop: 10, // seconds between timestamps in tests is treated as negligible
