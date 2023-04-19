@@ -2,7 +2,7 @@ Feature Background
 
 Normally, in Gherkin feature testing, all initial data must be set up explicitly as "Background".
 To save programming time, our Background includes some specific account and transaction data on the server.
-See setupTestData() in hooks.js.
+See Before() in hooks.js.
 
 We also use some conventions to specify data in the scenarios:
 
@@ -10,7 +10,7 @@ We also use some conventions to specify data in the scenarios:
    . I am signed in as "Bea" -- means an object with whatever properties are correct for Bea's account.
    . I scan "Bea"            -- means whatever Bea's QR code is.
    . Bea                     -- when listed in a column headed "actorId" means Bea's accountId.
-   . Bea/Citre               -- means Bea acting as an agent for the Citre company.
+   . Bea/Cit                 -- means Bea acting as an agent for the Citre company.
  - null, true, and false     -- mean those values, rather than those strings.
  - now                       -- means the current second (the server does not store milliseconds, so neither do we).
  - @                         -- in an account identifier means @example.com (Bea's email is b@ meaning b@example.com).

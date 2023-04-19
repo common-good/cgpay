@@ -55,13 +55,13 @@
    * Return the cardId with cardCode (and everything that follows) removed
    */
   function noCardCode(cardId) {
-    if (cardId == null) return null
+    if (cardId === null) return null
     const i = dig36.indexOf(cardId[0])
     const len = regionLens[i] + acctLens[i] + agentLens[i]
     return cardId.substr(0, len)
   }
   
-  function handleSubmitCharge() { gotTx = true } // state success, show undo/tip/done/receipt buttons
+  function handleSubmitCharge() { gotTx = true; store.setLastOp() } // state success, show undo/tip/done/receipt buttons
     
   /**
    * Get the customer's photo from the server
@@ -111,8 +111,8 @@
   }
 
   function profileOffline() {
-    showEr('OFFLINE. Trust this member or ask for ID.')
-    limit = Math.min(c.offlineLimit, limit == null ? c.offlineLimit : limit)
+    if (!$store.selfServe) showEr('OFFLINE. Trust this member or ask for ID.')
+    limit = Math.min(c.offlineLimit, limit === null ? c.offlineLimit : limit)
   }
   
   /**
@@ -120,17 +120,16 @@
    * To avoid timing issues with store.flushTxs(), queue the reversed transaction,
    * then delete both transactions at once.
    */
-  async function Undo() {
+  function Undo() {
     tx.amount = -tx.amount
     store.enqTx(tx)
-    // NO! With flaky internet, this could queue the tx after unknowingly uploading it, then canceling the undo -- store.deleteTxPair()
-    // Maybe see whether original tx was definitely taken offline, if this seems important
+    // NO! (could lose the undo) store.deleteTxPair() 
     u.goHome('The transaction has been reversed.')
   }
 
   onMount(async () => {
     try {
-      if (qr == null) return navigateTo('/home') // pressed back button from Home page
+      if (qr === null) return navigateTo('/home') // pressed back button from Home page
       const card = qrParse(qr) // does not return if format is bad
       const mainId = getMainId($store.myAccount.accountId)
       if (card.main == mainId) throw new Error('That card is for the same account as yours.')
@@ -152,7 +151,6 @@
         otherAccount = { ...otherAccount, ...result, lastTx:u.now() } // lastTx date lets us jettison old customers to save storage
         delete otherAccount.selling
         store.putAcct(card, otherAccount) // store and/or update stored customer account info
-        store.setMyAccount({ ...$store.myAccount, lastTx: otherAccount.lastTx })
         limit = Math.min(otherAccount.limit, c.onlineLimit)
         if (!$store.selfServe) photo = await getPhoto(query)
       }
@@ -177,39 +175,39 @@
 
 <section class="page" id="charge">
   { #if gotTx }
-    <h1>Transaction Complete</h1>
+    <h1 data-testid="transaction-complete">Transaction Complete</h1>
     <div class='top'>
       <div class='charge-info'>
         <div class='row payee-info'>
-          <p>{pastAction} to:</p>
+          <p><span data-testid="action">{pastAction}</span> to:</p>
           <div class='payee-details'>
           { #if $store.selfServe }
-            <p>{ $store.myAccount.name }</p>
+            <p data-testid="other-name">{ $store.myAccount.name }</p>
           { :else }
             {#if otherAccount.agent}
-              <p>{ otherAccount.agent }</p>
-              <p class='co'>{ otherAccount.name }</p>
+              <p data-testid="agent">{ otherAccount.agent }</p>
+              <p class='co' data-testid="other-name">{ otherAccount.name }</p>
             {:else}
-              <p>{ otherAccount.name }</p>
+              <p data-testid="other-name">{ otherAccount.name }</p>
             {/if}
           {/if}
           </div>
         </div>
         <div class='row'>
           <p>Description:</p>
-          <p>{ tx.description }</p>
+          <p data-testid="description">{ tx.description }</p>
         </div>
         <div class='row'>
           <p>Amount:</p>
-          <p>$ { tx.amount }</p>
+          <p>$ <span data-testid="amount">{ u.withCommas(tx.amount) }</span></p>
         </div>
       </div>
-      <div class="note">Thank you for using CGPay<br>for democracy and the common good!</div>
+      <div class="note" data-testid="thank-you">Thank you for using CGPay<br>for democracy and the common good!</div>
     </div>
     <div class="actions">
       { #if tipable }<a class="secondary" href='/tip'>Add Tip</a>{ /if }
       <!-- button>Receipt</button -->
-      <button on:click={ askUndo } class="tertiary">Undo</button>
+      <button data-testid="btn-undo" on:click={ askUndo } class="tertiary">Undo</button>
       <a class="primary" href='/home'>Done</a>
     </div>
 

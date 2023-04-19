@@ -9,35 +9,33 @@
 
   let nav
 
-  const dispatch = createEventDispatcher();
+  const dispatch = createEventDispatcher()
   function closeNav() { dispatch('toggleNav', {}) }
   function signOut() { store.signOut(); navigateTo('/') }
-  function switchAccount() { store.signOut(); navigateTo('/link-account') }
+  function switchAccount() { store.unlink(); navigateTo('/link-account') }
   function rearCamera() { store.setFrontCamera(false) }
   function frontCamera() { store.setFrontCamera(true) }
   function comment() { navigateTo('/comment')}
-  async function wifiOn() { await store.setWifi(true) }
-  async function wifiOff() { await store.setWifi(false) }
+  function wifiOn() { store.setWifi(true) }
+  function wifiOff() { store.setWifi(false) }
   function selfServeOn() { store.setSelfServe(true) }
   function selfServeOff() { store.setSelfServe(false); signOut() } // sign out so naughty customers can't switch accounts or whatever
-  async function clearData() { store.clearData(); navigateTo('/'); navigateTo('/') }
+  function clearData() { store.clearData(); navigateTo('/'); navigateTo('/') }
 
   let menuItems = []
   function item(text, callback, criteria, id) { menuItems.push({text, callback, criteria, id}) }
 
-  if (!c.isReleaseA) {
-    item('Use Rear Camera', rearCamera, () => $store.cameraCount > 1 && $store.frontCamera, 'rear')
-    item('Use Front Camera', frontCamera, () => $store.cameraCount > 1 && !$store.frontCamera, 'front')
-    item('Sign Out and Exit Self Serve', selfServeOff, () => u.pageUri() == 'home' && $store.selfServe, 'selfOff')
-    item('Enter Self Serve Mode', selfServeOn, () => u.pageUri() == 'home' && $store.myAccount.isCo && !$store.selfServe, 'selfOn')
-    item('Switch Account', switchAccount, () => $store.choices?.length > 1 && u.pageUri() != 'link-account' && !$store.selfServe, 'switch')
-  }
-  item('Comments & Suggestions', comment, () => store.isSignedIn() && !$store.selfServe, 'comment')
-  item('Sign Out', signOut, () => (store.isSignedIn() || u.pageUri() == 'link-account') && !$store.selfServe, 'signout')
+  item('Use Rear Camera', rearCamera, () => $store.cameraCount > 1 && $store.frontCamera && $store.selfServe, 'rear')
+  item('Use Front Camera', frontCamera, () => $store.cameraCount > 1 && !$store.frontCamera && $store.selfServe, 'front')
+  item('Exit Self Serve (signs out)', selfServeOff, () => u.pageUri() == 'home' && $store.selfServe, 'selfOff')
+  item('Enter Self Serve Mode', selfServeOn, () => u.pageUri() == 'home' && $store.myAccount.isCo && !$store.selfServe, 'selfOn')
+  item('Switch Account', switchAccount, () => $store.choices?.length > 1 && u.pageUri() != 'link-account' && !$store.selfServe, 'switch')
+  item('Comments & Suggestions', comment, () => store.linked() && !$store.selfServe, 'comment')
+  item('Sign Out', signOut, () => (store.linked() || u.pageUri() == 'link-account') && !$store.selfServe, 'signout')
 
 if (u.localMode()) {
-    item('🌈 Turn Wifi Off', wifiOff, async () => $store.useWifi)
-    item('🌈 Turn Wifi On', wifiOn, async () => !$store.useWifi)
+    item('🌈 Turn Wifi Off', wifiOff, () => $store.useWifi)
+    item('🌈 Turn Wifi On', wifiOn, () => !$store.useWifi)
     item('🌈 START OVER', clearData, () => true)
   }
 
