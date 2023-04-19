@@ -208,7 +208,7 @@
       { #if tipable }<a class="secondary" href='/tip'>Add Tip</a>{ /if }
       <!-- button>Receipt</button -->
       <button data-testid="btn-undo" on:click={ askUndo } class="tertiary">Undo</button>
-      <a class="primary" href='/home'>Done</a>
+      <a class="primary" data-testid="done" href='/home'>Done</a>
     </div>
 
   { :else }
