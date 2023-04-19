@@ -75,13 +75,22 @@ import cache0 from '#cache.js'
 export const createStore = () => {
   const lostMsg = `Tell the customer "I'm sorry, that card is marked "LOST or STOLEN".`
 
-  let cache = { ...cache0, ...getst() }
-  for (let k in cache) if (!(k in cache0)) delete cache[k]
-  save(cache) // update store with any changes in defaults (crucial for tests)
-  
+  let cache
+  save({ ...cache0, ...getst() }) // update store with any changes in defaults (crucial for tests)
   const { subscribe, update } = writable(cache)
-  function getst() { return JSON.parse(localStorage.getItem(c.storeKey)) }
-  function save(s) { localStorage.setItem(c.storeKey, JSON.stringify(s)); cache = { ...s }; return s }
+  
+  function getst() { return {
+    ...JSON.parse(localStorage.getItem(c.storeKey)),
+    ...JSON.parse(sessionStorage.getItem(c.storeKey))
+  }}
+
+  function save(s) {
+    cache = { ...s }
+    localStorage.setItem(c.storeKey, JSON.stringify(u.just(cache0.persist, s)))
+    sessionStorage.setItem(c.storeKey, JSON.stringify(u.justNot(cache0.persist, s)))
+    return s
+  }
+
   function setst(newS) { update(s => { return save(newS) } )}
   function setv(k, v, fromTest = false) { update(s => { s[k] = v; return save(s) }); tSetV(k, v, fromTest) }
   function enQ(k, v) { st.bump('enQ'); cache[k].push(v); return setv(k, cache[k]) }
