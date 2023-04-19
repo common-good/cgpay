@@ -47,22 +47,20 @@ jobs:
     - name: Install dependencies
     # `npm ci` installs `package-lock.json` versions and prevents updates to the lock file. It is generally faster than `npm install`.
       run: npm ci
-    - name: Build deploy
+    - name: Build deploy files
       run: npm run build
     # Tests fail because they currently rely on the app runing localhost:3000/empty
     # - name: Run tests
     #   run: npm test @a
     - name: Deploy to Server
-      uses: easingthemes/ssh-deploy@main
-      env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          ARGS: "-avz"
-          SOURCE: "dist/"
-          REMOTE_HOST: ${{ secrets.SSH_HOST }}
-          REMOTE_USER: ${{ secrets.SSH_USER }}
-          REMOTE_PORT: 7822
-          TARGET: /home/new/cgpay-dev/current
-    
+      uses: ErenKrt/ssh-push@main
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USER }}
+        private_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: 7822
+        source: "dist/"
+        outdir: "/home/new/cgpay-dev/current"
 
     # - name: Save built files
     #   run: |
