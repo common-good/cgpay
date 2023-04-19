@@ -9,10 +9,14 @@ html
     font-size text(md)
 
 html, body, main
-  font-family: 'Poppins', sans-serif
-  height: 100%
-  width: 100%
-  margin: 0
+  font-family 'Poppins', sans-serif
+  height 100%
+  width 100%
+  margin 0
+  scroll-behavior smooth
+
+body.keyboard
+  height calc(100% + 500px); /* add padding for keyboard */
 
 main
   overflow-x hidden

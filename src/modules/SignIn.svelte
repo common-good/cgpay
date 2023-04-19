@@ -53,7 +53,7 @@
     <h2>Sign In</h2>
     <form on:submit|preventDefault={ signIn }>
       <label class="visuallyhidden" for="account-id">Account ID or Email Address</label>
-      <input data-testid="input-identifier" name="account-id" type="text" placeholder="Account ID or Email Address" autocomplete="name" autocapitalize="off" bind:value={ credentials.identifier } required />
+      <input data-testid="input-identifier" name="account-id" type="text" placeholder="Account ID or Email Address" autocomplete="off" autocapitalize="off" bind:value={ credentials.identifier } required />
       <label class="visuallyhidden" for="password">Password</label>
       <input data-testid="input-password" name="password" type="password" placeholder="Password" autocomplete="current-password" autocapitalize="off" bind:value={ credentials.password } required />
       <button data-testid="btn-signin" type="submit">Sign In</button>

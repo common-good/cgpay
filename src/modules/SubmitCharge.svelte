@@ -10,6 +10,8 @@
   export let tx
   export let limit
 
+  let form
+
   const action = $store.selfServe ? 'Pay' : 'Charge'
   const dispatch = createEventDispatcher()
 
@@ -37,11 +39,52 @@
       }
     }
   }
+
+  // document.body.addEventListener("focus", event => {
+  //     const target = event.target;
+  //     console.log(target)
+  //     switch (target.tagName) {
+  //       case "INPUT":
+  //       case "TEXTAREA":
+  //       case "SELECT":
+  //         document.body.classList.add("keyboard");
+  //         // console.log("ELEM: ", target.scrollY)
+  //         target.parentElement.scrollIntoView()
+  //     }
+  //   }, true); 
+
+  //   document.body.addEventListener("blur", () => {
+  //     document.body.classList.remove("keyboard");
+  //   }, true); 
+
+  let formHasFocus = false;
+  function handleFocusIn(e) {
+    console.log("TARGET? ", e.target)
+    // if (formHasFocus) return;
+
+    formHasFocus = true;
+    document.body.classList.add("keyboard")
+    e.target.classList.add('focused')
+    form.scrollIntoView()
+
+    form.addEventListener('focusout', (e) => {
+      document.body.classList.remove("keyboard")
+      console.log("BLURRED ", e.target)
+    }, true)
+  }
+
+  function handleFocusOut() {
+    console.log("FOCUS OUT")
+    // form.addEventListener('focusout', (e) => {
+      document.body.classList.remove("keyboard")
+      console.log("BLURRED ", e.target)
+    // }, true)
+  }
 </script>
 
 <section id="submit-charge">
   <h1 data-testid="action">{action}</h1>
-  <form on:submit|preventDefault={ charge }>
+  <form on:submit|preventDefault={ charge } on:focusin={handleFocusIn} bind:this={form}>
     { #if !$store.selfServe }<Profile { otherAccount } {photo} />{ /if }
     <div class="bottom">
       <fieldset>
@@ -72,7 +115,6 @@
     flex-direction column
     align-items center
     justify-content space-between
-    padding-bottom 800px
 
   button
     cgButton()
