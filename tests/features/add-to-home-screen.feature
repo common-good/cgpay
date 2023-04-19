@@ -43,3 +43,12 @@ Scenario: I click continue and am not shown the instructions again.
   And I click "continue-button"
   And I run the app
   Then ? I am on page "sign-in"
+
+Rule: If we go offline when the user is adding to home screen, the user can still click continue
+
+Scenario: We go offline right after a user runs the app
+  Given I use "Chrome" on an "Android" device
+  When I run the app
+  And we are offline
+  When I click "continue-button"
+  Then ? I am on page "sign-in"

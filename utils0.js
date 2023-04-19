@@ -9,19 +9,42 @@ const u = {
   },
 
   just(which, obj) { // subset of object
-    const ks = which.split(' ')
-    let res = {}
-    for (let i in ks) res[ks[i]] = obj[ks[i]]
+    let res = {}; for (let k of u.ray(which)) res[k] = obj[k]
     return res
   },
 
-  now() { return Math.floor(Date.now() / 1000) },
-  clone(v) { return JSON.parse(JSON.stringify(v)) }, // deep clone (assumes object contains just objects, numbers, and strings)
+  now0() { return Math.floor(Date.now() / 1000) },
+  clone(v) { return u.empty(v) ? v: JSON.parse(JSON.stringify(v)) }, // deep clone (assumes object contains just objects, numbers, and strings)
+  ray(s) { return s.split(s.includes(', ') ? ', ' : (s.includes(',') ? ',' : ' ')) }, // express an array as a space or comma-delimited string list
 
-  emptyObj(obj) { return (obj === null || JSON.stringify(obj) === '{}') },
+  emptyObj(obj) { return obj === null || (typeof obj === 'object' && Object.keys(obj).length == 0) },
   empty(s) { return (s === null || s === undefined || s === '' || s === 0 || u.emptyObj(s)) },
   er(msg, details = null) { return { name:msg, message:u.empty(details) ? msg : details } },
-  parseObjString(objString) { return (eval(`[${objString}]`)[0]) }, // perversely, JS cannot evaluate an object literal without a wrapper
+  parseObjString(objString) { // perversely, JS cannot evaluate an object literal without a wrapper
+    if (!'[{'.includes(objString.charAt(0))) throw new Error('Invalid object string')
+    return eval(`[${objString}]`)[0]
+  },
+
+  /**
+   * Return Find the object, in a list of objects, that has a given keyed value.
+   * @param {*} obj: the object to search
+   * @param {*} kvs: keyed values to find
+   * @return index to the found object (or null)
+   */
+  findByValue(obj, kvs) {
+    let k
+    outer: for (let i in obj) {
+      for (k in kvs) if (obj[i][k] != kvs[k]) continue outer
+      return i
+    }
+    return null
+  },
+
+  in(k, ks) { return ks.split(' ').includes(k) },
+  withCommas(num) { return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') },
+  testing() { return (typeof window !== 'undefined' && typeof window.testerPipe === 'function') },
+  async tellTester(op, k = null, v = null) { return u.testing() ? await window.testerPipe(op, k, v) : null },
+
 }
 
 export default u

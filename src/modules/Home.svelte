@@ -23,8 +23,9 @@
   }
 
   onMount(async () => {
-    if ($store.frontCamera == null) store.setFrontCamera(!u.isApple() && !u.isAndroid())
+    if ($store.frontCamera === null) store.setFrontCamera(!u.isApple() && !u.isAndroid())
     store.setQr(null) // no going back to previous customer
+    store.setLastOp(null) // stop the timeout timer from interrupting us
     if ($store.erMsg) er($store.erMsg)
     if ($store.myAccount) try {
       const q = {deviceId:$store.myAccount.deviceId, actorId:$store.myAccount.accountId, lastTx:$store.myAccount.lastTx || -1 }
@@ -45,7 +46,7 @@
     <div class='top'>
       <h1>Show this code to pay</h1>
       <img src="{ myQr }" data-testid='qr' alt="my QR code" />
-      <p>CGPay v{ _version_ }</p>
+      <p>CGPay v{ c.version }</p>
     </div>
   { :else }
     <div class='top business'>
@@ -56,7 +57,7 @@
       { /if }
       <div class='watermark'>
         <img class='logo' src= { cgLogo } alt='Common Good Logo' />
-        <p>CGPay v{ _version_ }</p>
+        <p>CGPay v{ c.version }</p>
       </div>
     </div>
   { /if }
@@ -73,11 +74,11 @@
         <button on:click={ () => fake('garbage') }>Worse</button>
       </div>
     { /if }
-    { #if c.isReleaseA }
-      <a class="survey" href="https://forms.gle/M8Hv1W2oSgw2yQzS7" target="_blank">Take Our User Survey</a>
-    { :else }
-      <a class="scan" href='/scan'>Scan QR Code to Charge</a>
+
+    { #if !$store.selfServe }
+      <a class="survey" data-testid="lnk-survey" href="https://forms.gle/M8Hv1W2oSgw2yQzS7" target="_blank">Take Our User Experience Survey</a>
     { /if }
+    <a class="scan" data-testid="btn-charge" href='/scan'>Scan QR Code to Charge</a>
   </div>
 </section>
 
@@ -85,7 +86,6 @@
   .fakes
     display flex
     justify-content space-between
-    overflow-x scroll
 
   .fakes button
     cgButtonSecondary()
@@ -96,6 +96,7 @@
 
   .charge
     width 100%
+    text-align center
 
   .update p
     text-align center
@@ -116,12 +117,16 @@
     align-items center
     justify-content space-between
 
+  .survey
+    padding 0 $s-1
+    color $c-blue
+    text-decoration underline
+    text-underline-offset 5px
+
   .scan
     cgButton()
-
-  .survey
-    cgButtonSecondary()
-
+    margin-top $s0
+  
   .top
     width 100%
     height 100%
