@@ -52,25 +52,37 @@ jobs:
     # Tests fail because they currently rely on the app runing localhost:3000/empty
     # - name: Run tests
     #   run: npm test @a
-    - name: Save built files
-      run: |
-        mkdir ../build
-        cp -TR ./dist ../build
-        tar -cvf deploy.tar ../build/
-    - name: Install ssh keys
-      # check this thread to understand why its needed:
-      # https://stackoverflow.com/a/70447517
-      run: |
-        mkdir ~/.ssh/
-        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-        sudo chmod 600 ~/.ssh/id_rsa
-        echo ${{ secrets.SSH_HOST }} > ~/.ssh/known_hosts
-    - name: Connect to dev server
-      run: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} -p 7822
-    - name: Deploy build to server
-      run: "cp deploy.tar ~/home/new/current"
-    - name: Cleanup
-      run: "rm -rf ~/.ssh rm -rf ../build"
+    - name: Deploy to Server
+      uses: easingthemes/ssh-deploy@main
+      env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          ARGS: "-avz"
+          SOURCE: "dist/"
+          REMOTE_HOST: ${{ secrets.SSH_HOST }}
+          REMOTE_USER: ${{ secrets.SSH_USER }}
+          REMOTE_PORT: 7822
+          TARGET: /home/new/current
+    
+
+    # - name: Save built files
+    #   run: |
+    #     mkdir ../build
+    #     cp -TR ./dist ../build
+    #     tar -cvf deploy.tar ../build/
+    # - name: Install ssh keys
+    #   # check this thread to understand why its needed:
+    #   # https://stackoverflow.com/a/70447517
+    #   run: |
+    #     mkdir ~/.ssh/
+    #     echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+    #     sudo chmod 600 ~/.ssh/id_rsa
+    #     echo ${{ secrets.SSH_HOST }} > ~/.ssh/known_hosts
+    # - name: Connect to dev server
+    #   run: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} -p 7822
+    # - name: Deploy build to server
+    #   run: "cp deploy.tar ~/home/new/current"
+    # - name: Cleanup
+    #   run: "rm -rf ~/.ssh rm -rf ../build"
 
   # Deploy job. `secrets` are stored encrypted on GitHub.
   # deploy:
