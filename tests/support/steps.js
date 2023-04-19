@@ -32,7 +32,6 @@ Then('? these choices:', async function (rows) { await t.theseAccts('choices', r
 Then('? these server {string}:', async function (table, rows) { await t.testServer(table, rows) })
 Then('? count {string} is {int}', async function (list, count) { await t.countIs(list, count) })
 Then('? I am on page {string}', async function (page) { await t.onPage(page) })
-Then('? I see installation instructions for {string}', async function (testId) { await t.see(testId + '-instructions') })
 Then('? I see {string}', async function (testId) { await t.see(testId) })
 Then('? I see {string} is {string}', async function (testId, want) { await t.seeIs(testId, want) })
 Then('? I see {string} is not {string}', async function (testId, want) { await t.seeIs(testId, want, false) })
