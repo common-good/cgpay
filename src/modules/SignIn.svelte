@@ -53,9 +53,9 @@
     <h2>Sign In</h2>
     <form on:submit|preventDefault={ signIn }>
       <label class="visuallyhidden" for="account-id">Account ID or Email Address</label>
-      <input data-testid="input-identifier" name="account-id" type="text" placeholder="Account ID or Email Address" autocomplete="name" autocapitalize="off" bind:value={ credentials.identifier } required />
+      <input data-testid="input-identifier" name="account-id" type="text" placeholder="Account ID or Email Address" autocomplete="off" autocapitalize="off" bind:value={ credentials.identifier } required />
       <label class="visuallyhidden" for="password">Password</label>
-      <input data-testid="input-password" name="password" type="password" placeholder="Password" autocomplete="current-password" autocapitalize="off" bind:value={ credentials.password } required />
+      <input data-testid="input-password" name="password" type="password" placeholder="Password" autocomplete="off" autocapitalize="off" bind:value={ credentials.password } required />
       <button data-testid="btn-signin" type="submit">Sign In</button>
       <a data-testid="lnk-reset" href="https://new.commongood.earth/settings/password/" target="_blank">Reset password</a>
        <a class="signup" data-testid="lnk-signup" href="https://new.commongood.earth/signup" target="_blank">Not a member yet? Sign Up</a>
@@ -79,7 +79,7 @@
 
   button
     cgButton()
-    margin-bottom $s0
+    margin-bottom $s2
 
   form
     display flex
@@ -90,6 +90,7 @@
 
   header
     contentCentered()
+    margin-bottom $s5
 
   img
     width 75px
@@ -110,7 +111,6 @@
     height 100%
     display flex
     flex-direction column
-    justify-content center
     align-items center
 
   .status
