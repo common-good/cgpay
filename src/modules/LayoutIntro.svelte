@@ -6,7 +6,10 @@
 
   export let currentRoute
   let viewHeight
-  onMount(() => viewHeight = window?.visualViewport?.height)
+  onMount(() => {
+    viewHeight = window?.visualViewport?.height
+    document.documentElement.classList.add('green')
+  })
 </script>
 
 <div class='layout-intro' style="height: {viewHeight}px">
