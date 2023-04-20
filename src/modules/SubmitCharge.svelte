@@ -10,8 +10,6 @@
   export let tx
   export let limit
 
-  let form
-
   const action = $store.selfServe ? 'Pay' : 'Charge'
   const dispatch = createEventDispatcher()
 
@@ -40,28 +38,21 @@
     }
   }
 
-  onMount(() => {
-    // adjust form position for visible keyboard
-    const sumEdges = window?.innerWidth + window?.innerHeight;
-    window?.addEventListener('resize', () => {
-      if (window.innerWidth + window.innerHeight < sumEdges) {
-        document.body.classList.add('keyboard')
-        form.scrollIntoView()
-      } else {
-        document.body.classList.remove('keyboard')
-      }
-    })
-  })
+  const handleFocusIn = (e) => {
+    if (!u.isAndroid()) return;
+    document.body.classList.add('keyboard')
+    e.target.scrollIntoView()
+  }
 </script>
 
 <section id="submit-charge">
   <h1 data-testid="action">{action}</h1>
-  <form on:submit|preventDefault={ charge }>
+  <form on:submit|preventDefault={ charge } on:focusin={handleFocusIn}>
     { #if !$store.selfServe }<Profile { otherAccount } {photo} />{ /if }
     <div class="bottom">
       <fieldset>
         <label for="amount">Amount</label>
-        <input id="amount" data-testid="input-amount" type="number" min="0.01" step="0.01" max={ limit } name="amount" placeholder="$0.00" bind:value={ tx.amount } required bind:this={form} />
+        <input id="amount" data-testid="input-amount" type="number" min="0.01" step="0.01" max={ limit } name="amount" placeholder="$0.00" bind:value={ tx.amount } required />
         <label for="description">Description</label>
         <input id="description" data-testid="input-description" type="text" name="description" placeholder="e.g. lunch, rent, supplies, loan, etc." bind:value={ tx.description } autocomplete required />
       </fieldset>
