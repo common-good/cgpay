@@ -152,7 +152,7 @@ export const createStore = () => {
     bump(k)  { if (u.testing()) { cache[k]++; setv(k, cache[k]) } },
 
     setQr(v) { setv('qr', v) },
-    setLastOp(set = 'now') { setv('lastOp', set == 'now' ? u.now() : set ) },
+    setLastOp(set = 'now') { setv('lastOp', set == 'now' ? u.now0() : set ) }, // must be now0 (not now) for tests
     setMsg(v) { setv('erMsg', v) },
     setCorrupt(version) { setv('corrupt', version) }, // pause uploading until a new version is released
     setWifi(yesno) { setv('useWifi', yesno); st.resetNetwork() },

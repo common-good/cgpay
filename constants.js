@@ -4,7 +4,8 @@ const constants = {
   qrUrlRegex: '^HTTP://[0-9A-Za-z]{1,4}\.RC[24]\.ME/[0-9A-Za-z]{6,28}$', // like HTTP://6VM.RC4.ME/KDJJ34kjdfKJ4
   testQrStart: 'HTTP://6VM.RC4.ME/', // is a test QR if it starts with this string
   port: 3000,
-  opTimeout: 30, // how long user has, on the current screeng (in seconds), before we return automatically to Home
+  opTimeout: 10, // how long user has, on the current screen (in seconds), before we return automatically to Home
+  testOpTimeout: 0.7, // how long user has when testing (compress time to make the tests run faster)
   fetchTimeoutMs: 3200,
   networkTimeoutMs: 100,
   onlineLimit: 10000,
