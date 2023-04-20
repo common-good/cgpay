@@ -43,11 +43,16 @@
     document.body.classList.add('keyboard')
     e.target.scrollIntoView()
   }
+
+  const handleFocusOut = () => {
+    if (!u.isAndroid()) return;
+    document.body.classList.remove('keyboard')
+  }
 </script>
 
 <section id="submit-charge">
   <h1 data-testid="action">{action}</h1>
-  <form on:submit|preventDefault={ charge } on:focusin={handleFocusIn}>
+  <form on:submit|preventDefault={ charge } on:focusin={handleFocusIn} on:focusout={handleFocusOut}>
     { #if !$store.selfServe }<Profile { otherAccount } {photo} />{ /if }
     <div class="bottom">
       <fieldset>
