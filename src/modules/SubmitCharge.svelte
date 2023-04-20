@@ -1,5 +1,5 @@
 <script>
-  import { createEventDispatcher } from 'svelte'
+  import { createEventDispatcher, onMount } from 'svelte'
   import Profile from '#modules/Profile.svelte'
   import store from '#store.js'
   import u from '#utils.js'
@@ -40,6 +40,20 @@
     }
   }
 
+  onMount(() => {
+    var sumedges = window?.innerWidth + window?.innerWidth;
+
+    window?.addEventListener('resize', () => {
+      console.log('resizing: ', sumedges)
+      if (window.innerWidth + window.innerHeight < sumedges) {
+        document.body.classList.add('keyboard')
+        form.scrollIntoView()
+      } else {
+        document.body.classList.remove('keyboard')
+      }
+    });
+  })
+
   // document.body.addEventListener("focus", event => {
   //     const target = event.target;
   //     console.log(target)
@@ -57,39 +71,27 @@
   //     document.body.classList.remove("keyboard");
   //   }, true); 
 
-  let formHasFocus = false;
-  function handleFocusIn(e) {
-    console.log("TARGET? ", e.target)
-    // if (formHasFocus) return;
+  // function handleFocusIn(e) {
+  //   console.log("TARGET? ", e.target)
 
-    formHasFocus = true;
-    document.body.classList.add("keyboard")
-    e.target.classList.add('focused')
-    form.scrollIntoView()
+  //   document.body.classList.add("keyboard")
+  //   e.target.scrollIntoView()
 
-    form.addEventListener('focusout', (e) => {
-      document.body.classList.remove("keyboard")
-      console.log("BLURRED ", e.target)
-    }, true)
-  }
-
-  function handleFocusOut() {
-    console.log("FOCUS OUT")
-    // form.addEventListener('focusout', (e) => {
-      document.body.classList.remove("keyboard")
-      console.log("BLURRED ", e.target)
-    // }, true)
-  }
+  //   form.addEventListener('focusout', (e) => {
+  //     document.body.classList.remove("keyboard")
+  //     console.log("BLURRED ", e.target)
+  //   }, true)
+  // }
 </script>
 
 <section id="submit-charge">
   <h1 data-testid="action">{action}</h1>
-  <form on:submit|preventDefault={ charge } on:focusin={handleFocusIn} bind:this={form}>
+  <form on:submit|preventDefault={ charge }>
     { #if !$store.selfServe }<Profile { otherAccount } {photo} />{ /if }
     <div class="bottom">
       <fieldset>
         <label for="amount">Amount</label>
-        <input id="amount" data-testid="input-amount" type="number" min="0.01" step="0.01" max={ limit } name="amount" placeholder="$0.00" bind:value={ tx.amount } required />
+        <input id="amount" data-testid="input-amount" type="number" min="0.01" step="0.01" max={ limit } name="amount" placeholder="$0.00" bind:value={ tx.amount } required bind:this={form} />
         <label for="description">Description</label>
         <input id="description" data-testid="input-description" type="text" name="description" placeholder="e.g. lunch, rent, supplies, loan, etc." bind:value={ tx.description } autocomplete required />
       </fieldset>
