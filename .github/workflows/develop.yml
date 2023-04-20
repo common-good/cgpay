@@ -52,16 +52,11 @@ jobs:
     # Tests fail because they currently rely on the app runing localhost:3000/empty
     # - name: Run tests
     #   run: npm test @a
-    - name: Deploy to dev server
-      uses: ErenKrt/ssh-push@main
-      with:
-        host: ${{ secrets.SSH_HOST }}
-        username: ${{ secrets.SSH_USER }}
-        private_key: ${{ secrets.SSH_PRIVATE_KEY }}
-        port: 7822
-        source: "dist/"
-        outdir: "/home/new/cgpay-dev/current"
-    # steps:
+    - name: Save built files
+      run: |
+        mkdir ../build
+        cp -TR ./dist ../build
+        tar -cvf deploy.tar ../build/
     # - name: install ssh keys
     #   # check this thread to understand why its needed:
     #   # https://stackoverflow.com/a/70447517
@@ -73,6 +68,25 @@ jobs:
     # - name: connect to server
     #   run: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} -p 7822 
     # - name: copy dist to server
-    #   run: "cp deploy.tar ~/home/new/current"
-    # - name: cleanup
-    #   run: rm -rf ~/.ssh
+    #   run: "cp deploy.tar /home/new/cgpay-dev/current"
+    - name: Deploy via ssh
+      uses: appleboy/scp-action@master
+      with: 
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: 7822
+        source: "deploy.tar"
+        target: "~/home/new/cgpay-dev/current"
+    - name: cleanup
+      run: rm -rf ~/.ssh
+
+    # - name: Deploy to dev server
+    #   uses: ErenKrt/ssh-push@main
+    #   with:
+    #     host: ${{ secrets.SSH_HOST }}
+    #     username: ${{ secrets.SSH_USER }}
+    #     private_key: ${{ secrets.SSH_PRIVATE_KEY }}
+    #     port: 7822
+    #     source: "dist/"
+    #     outdir: "/home/new/cgpay-dev/current"
