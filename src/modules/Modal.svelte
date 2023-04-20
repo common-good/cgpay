@@ -60,14 +60,15 @@ $:  [lab1, lab2, zot] = (labels + ', ').split(', ')
 
   .modal
     position absolute
-    left 50%
-    top 50%
-    width calc(100vw - 4em)
-    max-width 32em
-    max-height calc(100vh - 4em)
+    left 0
+    right 0
+    top 144px
+    margin 0 auto
+    width calc(100vw - 3rem)
+    max-width 512px
+    max-height calc(100vh - 3rem)
     overflow auto
-    transform translate(-50%,-50%)
-    border-radius 1em
+    border-radius $s0
     background white
     z-index: 1
 
