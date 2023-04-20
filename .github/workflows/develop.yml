@@ -1,7 +1,7 @@
-View this workflow on GitHub: https://github.com/common-good/cgpay/actions 
+# View this workflow on GitHub: https://github.com/common-good/cgpay/actions 
 
-(Optional) Name of the workflow as it appears on GitHub
-name: Deploy to cgpay-dev
+# (Optional) Name of the workflow as it appears on GitHub
+# name: Deploy to cgpay-dev
 
 # (Optional) Restricts one active and one pending workflow to the specified environment.
 # concurrency: develop
