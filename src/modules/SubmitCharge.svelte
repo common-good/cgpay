@@ -41,47 +41,17 @@
   }
 
   onMount(() => {
-    var sumedges = window?.innerWidth + window?.innerWidth;
-
+    // adjust form position for visible keyboard
+    const sumEdges = window?.innerWidth + window?.innerHeight;
     window?.addEventListener('resize', () => {
-      console.log('resizing: ', sumedges)
-      if (window.innerWidth + window.innerHeight < sumedges) {
+      if (window.innerWidth + window.innerHeight < sumEdges) {
         document.body.classList.add('keyboard')
         form.scrollIntoView()
       } else {
         document.body.classList.remove('keyboard')
       }
-    });
+    })
   })
-
-  // document.body.addEventListener("focus", event => {
-  //     const target = event.target;
-  //     console.log(target)
-  //     switch (target.tagName) {
-  //       case "INPUT":
-  //       case "TEXTAREA":
-  //       case "SELECT":
-  //         document.body.classList.add("keyboard");
-  //         // console.log("ELEM: ", target.scrollY)
-  //         target.parentElement.scrollIntoView()
-  //     }
-  //   }, true); 
-
-  //   document.body.addEventListener("blur", () => {
-  //     document.body.classList.remove("keyboard");
-  //   }, true); 
-
-  // function handleFocusIn(e) {
-  //   console.log("TARGET? ", e.target)
-
-  //   document.body.classList.add("keyboard")
-  //   e.target.scrollIntoView()
-
-  //   form.addEventListener('focusout', (e) => {
-  //     document.body.classList.remove("keyboard")
-  //     console.log("BLURRED ", e.target)
-  //   }, true)
-  // }
 </script>
 
 <section id="submit-charge">
