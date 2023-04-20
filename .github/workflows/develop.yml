@@ -57,27 +57,27 @@ jobs:
         mkdir ../build
         cp -TR ./dist ../build
         tar -cvf deploy.tar ../build/
-    # - name: install ssh keys
-    #   # check this thread to understand why its needed:
-    #   # https://stackoverflow.com/a/70447517
-    #   run: |
-    #     mkdir ~/.ssh/
-    #     echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-    #     sudo chmod 600 ~/.ssh/id_rsa
-    #     echo ${{ secrets.SSH_HOST }} > ~/.ssh/known_hosts
-    # - name: connect to server
-    #   run: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} -p 7822 
-    # - name: copy dist to server
-    #   run: "cp deploy.tar /home/new/cgpay-dev/current"
-    - name: Deploy via ssh
-      uses: appleboy/scp-action@master
-      with: 
-        host: ${{ secrets.SSH_HOST }}
-        username: ${{ secrets.SSH_USER }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        port: 7822
-        source: "deploy.tar"
-        target: "~/home/new/cgpay-dev/current"
+    - name: install ssh keys
+      # check this thread to understand why its needed:
+      # https://stackoverflow.com/a/70447517
+      run: |
+        mkdir ~/.ssh/
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        sudo chmod 600 ~/.ssh/id_rsa
+        echo ${{ secrets.SSH_HOST }} > ~/.ssh/known_hosts
+    - name: connect to server
+      run: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} -p 7822 
+    - name: copy dist to server
+      run: "cp deploy.tar /home/new/cgpay-dev/current"
+    # - name: Deploy via ssh
+    #   uses: appleboy/scp-action@master
+    #   with: 
+    #     host: ${{ secrets.SSH_HOST }}
+    #     username: ${{ secrets.SSH_USER }}
+    #     key: ${{ secrets.SSH_PRIVATE_KEY }}
+    #     port: 7822
+    #     source: "deploy.tar"
+    #     target: "~/home/new/cgpay-dev/current"
     - name: cleanup
       run: rm -rf ~/.ssh
 
