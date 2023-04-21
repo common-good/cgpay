@@ -3,36 +3,36 @@
   import { onMount } from 'svelte'
   import store from '#store.js'
   import u from '#utils.js'
-  import SelectAccount from '#modules/SelectAccount.svelte'
+  import SelectX from '#modules/SelectX.svelte'
   import Modal from '#modules/Modal.svelte'; let m0, m1, m2
 
   // --------------------------------------------
 
-  let accountOptions = []
+  let acctOpts = []
   let size = 4 // number of choices to show without scrolling (fails on Android)
-
+  let lock = true
   let myAccount
   let ready = false
-  const accounts = $store.choices
+  let acctIndex = null
+  const choices = $store.choices
   
   // --------------------------------------------
 
   function er(msg) { ({ m0, m1 } = u.dlg('Alert', msg, 'Close', () => m0 = false)); m0=m0; m1=m1 } 
 
-  function gotAccount(ev) {
-    myAccount = accounts && accounts[ev.detail.acct]
+  function gotAccount() {
+    myAccount = choices && choices[acctIndex]
     store.setMyAccount(myAccount)
-    if (ev.detail.lock) store.setAcctChoices(null)
+    if (lock) store.setAcctChoices(null)
     u.goHome(`This device is now linked to your Common Good account: ${myAccount?.name}.`)
   }
 
   onMount(async () => {
     ready = true
-    if (accounts?.length) {
-      for (let i = 0; i < accounts.length; i++) {
-        accountOptions[i] = {id: i, name: accounts[i].name}
-      }
-      size = Math.min(size, accounts.length + 1)
+    if (choices?.length) {
+      for (let i in choices) acctOpts[i] = choices[i].name
+      size = Math.min(size, acctOpts.length)
+      acctIndex = Math.min(size, 1) // default to first managed account, if any, else individual's own
     } else {
       er('Your account is not yet active. Sign in at CommonGood.earth to finish opening your account.')
     }
@@ -45,13 +45,27 @@
 
 <section class="page" id="link-account">
   <h1>Link Account</h1>
-  { #if ready }
-    <SelectAccount { accountOptions } { size } on:complete={ gotAccount } />
-  { :else }
+  {#if ready}
+    <div class="select-account">
+      <div class="top">
+        <p>Select a Common Good account to link to CGPay on this device:</p>
+        <form>
+          <SelectX name="account" options={acctOpts} size={size} bind:value={acctIndex} required="required" />
+          {#if acctIndex > 0}
+            <p>Allow payments from this account:</p>
+          {/if}
+          {#if size > 0}
+            <label><input type="checkbox" data-testid="lock-account" name="lock-account" bind:checked={lock} /> Require sign-in to change account</label>
+          {/if}
+        </form>
+      </div>
+      <button type="submit" data-testid="btn-link" on:click={gotAccount} disabled={ acctIndex === null }>Link Account</button>
+    </div>
+  {:else}
     <div class="loading">
       <p>Loading your accounts...</p>
     </div>
-  { /if }
+  {/if}
 </section>
 
 <Modal m0={m0} on:m1={m1} on:m2={m2} />
@@ -61,7 +75,6 @@
     display flex
     flex-direction column
     align-items center
-    justify-content space-between
     width 100%
     height 100%
 
@@ -71,4 +84,23 @@
     align-items center
     font-style italic
     margin-bottom $s5
+
+  button
+    cgButton()
+
+  h1 
+    margin-bottom $s1
+
+  p
+    margin-bottom 0.5rem
+
+  label
+    text(md)
+    display flex
+    align-items center
+    letter-spacing 0.005rem
+    margin-bottom 1rem
+
+  .top
+    padding 0 $s0
 </style>
