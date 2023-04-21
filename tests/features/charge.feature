@@ -22,11 +22,11 @@ Scenario: A company charges an individual
   | 1234.50 | Abe/Cit | Bea     | food!       | now     | hash  | false   | version |
   * I wait 1 seconds
   Then ? I see "transaction-complete"
-  And ? I see "action" is "Charged"
-  And ? I see "other-name" is "Bea Two"
+  And ? "action" is "Charged"
+  And ? "other-name" is "Bea Two"
   And ? I do not see "agent"
-  And ? I see "description" is "food!"
-  And ? I see "amount" is "1,234.50"
+  And ? "description" is "food!"
+  And ? "amount" is "1,234.50"
   And ? I see "thank-you"
   And ? I see "btn-undo"
   And ? count "txs" is 0
@@ -36,7 +36,7 @@ Scenario: A company charges an individual
 
   When I click "btn-undo"
   Then ? I see this alert: "Reverse the transaction?"
-  And ? I see "btn1" is "Yes"
+  And ? "btn1" is "Yes"
   When I click "btn1"
   * I wait 1 seconds
   Then ? I see this confirmation: "The transaction has been reversed."
@@ -60,11 +60,11 @@ Scenario: A company charges a company
   | 1234.50 | Abe/Cit | Flo/Gis | food!       | now     | hash  | false   | version |
   * I wait 1 seconds
   Then ? I see "transaction-complete"
-  And ? I see "action" is "Charged"
-  And ? I see "other-name" is "Gisette"
-  And ? I see "agent" is "Flo Six"
-  And ? I see "description" is "food!"
-  And ? I see "amount" is "1,234.50"
+  And ? "action" is "Charged"
+  And ? "other-name" is "Gisette"
+  And ? "agent" is "Flo Six"
+  And ? "description" is "food!"
+  And ? "amount" is "1,234.50"
   And ? I see "thank-you"
   And ? I see "btn-undo"
   And ? count "txs" is 0
@@ -77,7 +77,7 @@ Scenario: An individual charges an individual
   | 1234.50 | Abe     | Bea     | food!       | now     | hash  | false   | version |
   * I wait 1 seconds
   Then ? I see "transaction-complete"
-  And ? I see "action" is "Charged"
+  And ? "action" is "Charged"
 
 Scenario: A company charges an individual offline
   Given we are offline
@@ -94,18 +94,18 @@ Scenario: A company charges an individual offline
   | 234.50 | Abe/Cit | Bea     | food!       | now     | true    | version |
   # Offline limit is $250
   Then ? I see "transaction-complete"
-  And ? I see "action" is "Charged"
-  And ? I see "other-name" is "Unidentified Customer"
+  And ? "action" is "Charged"
+  And ? "other-name" is "Unidentified Customer"
   And ? I do not see "agent"
-  And ? I see "description" is "food!"
-  And ? I see "amount" is "234.50"
+  And ? "description" is "food!"
+  And ? "amount" is "234.50"
   And ? I see "thank-you"
   And ? I see "btn-undo"
   And ? count "txs" is 1
 
   When I click "btn-undo"
   Then ? I see this alert: "Reverse the transaction?"
-  And ? I see "btn1" is "Yes"
+  And ? "btn1" is "Yes"
   When I click "btn1"
   * I wait 1 seconds
   Then ? I see this confirmation: "The transaction has been reversed."

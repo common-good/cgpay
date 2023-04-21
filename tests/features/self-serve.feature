@@ -51,8 +51,8 @@ Scenario: A customer pays in self-serve mode
   Given I am signed in as "Abe/Cit"
   And this "selfServe": "true"
   When I scan "Bea"
-  Then ? I see "action" is "Pay"
-  And ? I see "btn-submit" is "Pay"
+  Then ? "action" is "Pay"
+  And ? "btn-submit" is "Pay"
 
   When I input "1234.50" as "amount"
   And I input "food!" as "description"
@@ -62,11 +62,11 @@ Scenario: A customer pays in self-serve mode
   | 1234.50 | Abe/Cit | Bea     | food!       | now     | hash  | false   | version |
   * I wait 1 seconds
   Then ? I see "transaction-complete"
-  And ? I see "action" is "Paid"
-  And ? I see "other-name" is "Citre"
+  And ? "action" is "Paid"
+  And ? "other-name" is "Citre"
   And ? I do not see "agent"
-  And ? I see "description" is "food!"
-  And ? I see "amount" is "1,234.50"
+  And ? "description" is "food!"
+  And ? "amount" is "1,234.50"
   And ? I see "thank-you"
   And ? I see "btn-undo"
 

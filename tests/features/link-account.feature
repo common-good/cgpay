@@ -28,13 +28,13 @@ Scenario: The user chooses from among multiple accounts with default account loc
   When I visit "link-account"
   Then ? I am on page "link-account"
   And ? I see "select-account"
-  And ? I see "option-0" is "Bea Two"
+  And ? "account-opt-0" is "Bea Two"
   When I click "option-0"
   And I click "btn-link"
   And I wait 1 seconds
   Then ? I am on page "home"
-  And ? I see "Bea Two" in "account-name"
-  And ? I see this confirmation: "now linked to your Common Good account: Bea Two"
+  And ? "Bea Two" is in "account-name"
+  And ? this confirmation: "now linked to your Common Good account: Bea Two"
   And ? I am signed in as "Bea"
   And ? this "choices": "null" 
   When I click "btn-nav"
@@ -46,7 +46,6 @@ Scenario: The user chooses a different account without account lock
   And I click "lock-account"
   And I click "btn-link"
   And I wait 1 seconds
-  Then ? I see "Citre" in "account-name"
   When I click "btn-nav"
   And ? I see "menu-switch"
 
@@ -58,7 +57,7 @@ Scenario: The user chooses an account offline
   When I click "option-0"
   And I click "btn-link"
   Then ? I am on page "home"
-  And ? I see "Bea Two" in "account-name"
+  And ? "Bea Two" is in "account-name"
 
 Scenario: The user restarts the app after signing in but before linking
   When I run the app

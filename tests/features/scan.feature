@@ -16,17 +16,17 @@ Scenario: I scan an individual's QR
   Then ? I am on page "tx"
   And ? I am on page "charge-profile"
   And ? I see "theirPhoto"
-  And ? I see "theirName" is "Abe One"
-  And ? I see "theirLocation" is "Aton, MA"
+  And ? "theirName" is "Abe One"
+  And ? "theirLocation" is "Aton, MA"
 
 Scenario: I scan a company agent's QR
   When I scan "Abe/Cit"
   Then ? I am on page "tx"
   And ? I am on page "charge-profile"
   And ? I see "theirPhoto"
-  And ? I see "theirAgent" is "Abe One"
-  And ? I see "theirCompany" is "Citre"
-  And ? I see "theirLocation" is "Cton, MA"
+  And ? "theirAgent" is "Abe One"
+  And ? "theirCompany" is "Citre"
+  And ? "theirLocation" is "Cton, MA"
 
 Rule: Company accounts can scan an individual or company card
 
@@ -36,8 +36,8 @@ Scenario: A company scans an individual's QR
   Then ? I am on page "tx"
   And ? I am on page "charge-profile"
   And ? I see "theirPhoto"
-  And ? I see "theirName" is "Abe One"
-  And ? I see "theirLocation" is "Aton, MA"
+  And ? "theirName" is "Abe One"
+  And ? "theirLocation" is "Aton, MA"
   And ? these accounts:
   | Abe |
 
@@ -65,7 +65,7 @@ Scenario: I scan an individual's QR offline
   When I scan "Abe"
   Then ? I am on page "tx"
   And ? I am on page "charge-profile"
-  And ? I see "theirName" is not "Abe One"
+  And ? "theirName" is not "Abe One"
   And ? I see "network-offline"
   And ? I see "Trust this member or ask for ID" in "messageText"
 
@@ -78,5 +78,5 @@ Scenario: I scan an individual's QR online, then again offline
   Then ? I see "Trust this member or ask for ID" in "messageText"
   When I click "btn1"
   And I wait 1 seconds
-  Then ? I see "theirName" is "Abe One"
-  And ? I see "theirLocation" is "Aton, MA"
+  Then ? "theirName" is "Abe One"
+  And ? "theirLocation" is "Aton, MA"
