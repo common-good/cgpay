@@ -19,7 +19,7 @@
 
   function fake(code) {
     store.setQr(code)
-    navigateTo('/charge')
+    navigateTo('/tx')
   }
 
   onMount(async () => {

@@ -41,7 +41,7 @@ Scenario: A customer scans in self-serve mode
   Given I am signed in as "Abe/Cit"
   And this "selfServe": "true"
   When I scan "Bea"
-  Then ? I am on page "charge"
+  Then ? I am on page "tx"
   And ? I do not see "theirPhoto"
   And ? I do not see "theirLocation"
 

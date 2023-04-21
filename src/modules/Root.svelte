@@ -8,7 +8,7 @@
   import Empty from '#modules/_Empty.svelte' // for testing
   import AddToHomeScreen from '#modules/AddToHomeScreen.svelte'
   import Home from '#modules/Home.svelte'
-  import Charge from '#modules/Charge.svelte'
+  import Tx from '#modules/Tx.svelte'
   import LinkAccount from '#modules/LinkAccount.svelte'
   import Scan from '#modules/Scan.svelte'
   import SignIn from '#modules/SignIn.svelte'
@@ -44,7 +44,7 @@
     route('/link-account', LinkAccount, needLink, '/home'),
     route('/home', Home, store.linked, '/'),
     route('/scan', Scan, store.linked, '/'),
-    route('/charge', Charge, gotQr, '/'),
+    route('/tx', Tx, gotQr, '/'),
     route('/comment', Comment, store.linked, '/')
   ]
 

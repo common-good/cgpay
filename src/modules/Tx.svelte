@@ -173,7 +173,7 @@
   <title>CGPay - Charge Customer</title>
 </svelte:head>
 
-<section class="page" id="charge">
+<section class="page" id="tx">
   { #if gotTx }
     <h1 data-testid="transaction-complete">Transaction Complete</h1>
     <div class='top'>

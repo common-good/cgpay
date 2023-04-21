@@ -29,7 +29,7 @@
             async (decodedText, decodedResult) => { // Handle code
               store.setQr(decodedText)
               await scanner.stop()
-              navigateTo('/charge')
+              navigateTo('/tx')
             },
             (erMsg) => { } // ignore "parse" errors -- no valid QR yet (keep scanning)
 
