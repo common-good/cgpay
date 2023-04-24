@@ -20,7 +20,7 @@ When('I click {string}', async function(testId) { await w.page.click(t.sel(testI
 When('I scan {string}', async function (who) { await t.scan(who) })
 When('I input {string} as {string}', async function (text, inputId) { await t.input(inputId, text) })
 When('I charge {string} {float} for {string}', async function (who, amount, description) { await t.tx(who, amount, description) })
-When('I wait {int} seconds', async function (secs) { await t.wait(secs) })
+When('I wait {float} seconds', async function (secs) { await t.wait(secs) })
 When('we wait for uploads', async function () {await t.putv('flushOk', true); await t.wait(1.5) }) // wait(1) is sometimes not enough
 
 Then('? I am signed in as {string}', async function (who) { await t.signedInAs(who) })
@@ -32,7 +32,6 @@ Then('? these choices:', async function (rows) { await t.theseAccts('choices', r
 Then('? these server {string}:', async function (table, rows) { await t.testServer(table, rows) })
 Then('? count {string} is {int}', async function (list, count) { await t.countIs(list, count) })
 Then('? I am on page {string}', async function (page) { await t.onPage(page) })
-Then('? I see installation instructions for {string}', async function (testId) { await t.see(testId + '-instructions') })
 Then('? I see {string}', async function (testId) { await t.see(testId) })
 Then('? I see {string} is {string}', async function (testId, want) { await t.seeIs(testId, want) })
 Then('? I see {string} is not {string}', async function (testId, want) { await t.seeIs(testId, want, false) })

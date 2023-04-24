@@ -6,11 +6,17 @@
 
   export let currentRoute
   let viewHeight
+
   onMount(() => {
-    viewHeight = window?.visualViewport?.height
     document.documentElement.classList.add('green')
   })
+  
+  const setViewportHeight = () => {
+    viewHeight = window.visualViewport.height
+  }
 </script>
+
+<svelte:window on:load={setViewportHeight}/>
 
 <div class='layout-intro' style="height: {viewHeight}px">
   <div class='container'>
