@@ -10,13 +10,14 @@
   export let tx
   export let limit
 
-  const action = $store.selfServe ? 'Pay' : 'Charge'
+  const pay = $store.intent == 'pay'
+  const action = (pay || $store.selfServe) ? 'Pay' : 'Charge'
   const dispatch = createEventDispatcher()
 
   async function charge() {
     if (!tx.proof) { // unless retrying
       tx.created = u.now() // Unix timestamp
-      tx.amount = (+tx.amount).toFixed(2)
+      tx.amount = (pay ? -tx.amount : +tx.amount).toFixed(2)
       tx.proof = u.hash(tx.actorId + tx.amount + tx.otherId + tx.code + tx.created)
       delete tx.code
       tx.offline = false
@@ -32,7 +33,7 @@
       } else {
         console.log('saving tx for upload later:',tx)
         store.enqTx(tx)                                                                                                         
-        if (!otherAccount.name) otherAccount.name = 'Unidentified Customer'
+        if (!otherAccount.name) otherAccount.name = 'Unidentified Member'
         dispatch('complete') // update display
       }
     }

@@ -27,9 +27,14 @@
             { qrbox: { width: 250, height: 250 } }, // Configuration options.
 
             async (decodedText, decodedResult) => { // Handle code
-              store.setQr(decodedText)
               await scanner.stop()
-              navigateTo('/tx')
+              if ($store.intent == 'scanIn') {
+                store.setTimeout(c.scannedInTimeout)
+                navigateTo('/home')
+              } else { // intent is pay or charge
+                store.setQr(decodedText)
+                navigateTo('/tx') // pass intent through
+              }
             },
             (erMsg) => { } // ignore "parse" errors -- no valid QR yet (keep scanning)
 

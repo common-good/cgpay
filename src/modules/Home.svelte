@@ -4,35 +4,48 @@
   import u from '#utils.js'
   import c from '#constants.js'
   import Modal from '#modules/Modal.svelte'; let m0, m1, m2
-  import cgLogo from '#modules/assets/cg-logo-300.png?webp'
+//  import cgLogo from '#modules/assets/cg-logo-300.png?webp'
   import { navigateTo } from 'svelte-router-spa'
   import queryString from 'query-string'
 
   export let currentRoute // else Svelte complains (I don't know why yet)
   export let params // else Svelte complains (I don't know why yet)
 
-  const myQr = $store.myAccount?.qr
+  const surveyLink = 'https://forms.gle/M8Hv1W2oSgw2yQzS7'
+  let me, myQr, isCo, self, coPay, coChg, hdr, qr, alt, btnText, intent
 
   function er(msg) { 
     ({ m0, m1 } = u.dlg('Alert', msg, 'Close', () => {m0 = false; store.setMsg(null)})); m0=m0; m1=m1
   }
 
-  function fake(code) {
-    store.setQr(code)
-    navigateTo('/tx')
-  }
+  function receiveQR() { return u.generateQr(u.makeQrUrl(u.getMainId(me.accountId))) }
+  function fake(code) { store.setQr(code); store.setIntent('charge'); navigateTo('/tx') }
+  function pay() { charge(self ? 'charge' : 'pay') }
+  function charge(intent = 'charge') { store.setIntent(intent); navigateTo('/scan') }
 
   onMount(async () => {
+    me = $store.myAccount
+    myQr = me.qr
+    isCo = me.isCo
+    self = $store.selfServe
+    coPay = (isCo && $store.coPaying)
+    coChg = (isCo && !coPay)
+    ;([hdr, qr, alt, btnText] = self ? ['Self-Serve Mode<br>Scan this code to pay ', receiveQR(), 'pay', 'Or Scan Your Own QR Code to Pay']
+    : !isCo ? ['Show this code to pay or be paid', myQr, 'pay or charge', 'Scan QR Code to Charge Someone']
+    : coPay ? ['Show this code to pay someone', myQr, 'charge', `Scan Someone's QR Code to Pay Them`]
+    : ['Scan this code to pay ' + me.name, receiveQR(), 'pay', 'Scan QR Code to Charge Someone'])
+
     if ($store.frontCamera === null) store.setFrontCamera(!u.isApple() && !u.isAndroid())
     store.setQr(null) // no going back to previous customer
-    store.setLastOp(null) // stop the timeout timer from interrupting us
+    if (!coPay) store.setTimeout(null) // stop the timeout timer from interrupting us
     if ($store.erMsg) er($store.erMsg)
-    if ($store.myAccount) try {
-      const q = {deviceId:$store.myAccount.deviceId, actorId:$store.myAccount.accountId, lastTx:$store.myAccount.lastTx || -1 }
+    try {
+      const q = {deviceId:me.deviceId, actorId:me.accountId, lastTx:me.lastTx || -1 }
       const query = queryString.stringify(q)
       const { result } = await u.timedFetch(`latest?${ query }`)
-    } catch (er) { if (!u.isTimeOut(er)) console.log('latest er', er) }
+    } catch (er) { if (!u.isTimeout(er)) console.log('latest er', er) }
   })
+
 </script>
 
 <Modal m0={m0} on:m1={m1} on:m2={m2} />
@@ -42,28 +55,14 @@
 </svelte:head>
 
 <section class="page" id="home">
-  { #if myQr }
-    <div class='top'>
-      <h1>Show this code to pay</h1>
-      <img src="{ myQr }" data-testid='qr' alt="my QR code" />
-      <p>CGPay v{ c.version }</p>
-    </div>
-  { :else }
-    <div class='top business'>
-      { #if $store.selfServe }
-        <h1>Self-Serve Mode</h1>
-      { :else }
-        <h1>Ready to charge people.</h1>
-      { /if }
-      <div class='watermark'>
-        <img class='logo' src= { cgLogo } alt='Common Good Logo' />
-        <p>CGPay v{ c.version }</p>
-      </div>
-    </div>
-  { /if }
+  <div class="top">
+    <h1 data-testid="header">{@html hdr}</h1>
+    <img src="{qr}" data-testid="qr" alt="Scan this QR Code to {alt + ' ' + me?.name}" />
+    <p>CGPay v{c.version}</p>
+  </div>
 
   <div class="charge">
-    { #if u.localMode() }
+    {#if u.localMode()}
       <div class="fakes">
         <button on:click={ () => fake('HTTP://6VM.RC4.ME/KDCA12345a') }>A</button>
         <button on:click={ () => fake('HTTP://6VM.RC4.ME/KDCB12345b') }>B</button>
@@ -73,17 +72,24 @@
         <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDCG398765f') }>Bad</button>
         <button on:click={ () => fake('garbage') }>Worse</button>
       </div>
-    { /if }
+    {/if}
 
-    { #if !$store.selfServe }
-      <a class="survey" data-testid="lnk-survey" href="https://forms.gle/M8Hv1W2oSgw2yQzS7" target="_blank">Take Our User Experience Survey</a>
-    { /if }
-    <a class="scan" data-testid="btn-charge" href='/scan'>Scan QR Code to Charge</a>
+    {#if !self}
+      <a class="survey" data-testid="lnk-survey" href="{surveyLink}" target="_blank">Take Our User Experience Survey</a>
+    {/if}
+    <div class="buttons">
+      {#if coPay || !isCo}
+        <button class="scan" data-testid="btn-pay" on:click={pay}>Scan a QR Code to Pay</button>
+      {/if}
+      {#if !self}
+        <button class="scan" data-testid="btn-charge" on:click={charge}>Scan a QR Code to Charge</button>
+      {/if}
+    </div>
   </div>
 </section>
 
-<style lang='stylus'>
-  .fakes
+<style lang="stylus">
+  .fakes, .buttons
     display flex
     justify-content space-between
 

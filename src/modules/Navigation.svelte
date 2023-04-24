@@ -11,20 +11,28 @@
 
   const dispatch = createEventDispatcher()
   function closeNav() { dispatch('toggleNav', {}) }
-  function signOut() { store.signOut(); navigateTo('/') }
-  function switchAccount() { store.unlink(); navigateTo('/link-account') }
+
+  function coReceive() { store.setCoPaying(false); navigateTo('/home') }
+  function coPay() { store.setCoPaying(true); navigateTo('/home') }
+  function scanIn() { store.setCoPaying(true); navigateTo('/scan?op=scanIn') }
   function rearCamera() { store.setFrontCamera(false) }
   function frontCamera() { store.setFrontCamera(true) }
-  function comment() { navigateTo('/comment')}
-  function wifiOn() { store.setWifi(true) }
-  function wifiOff() { store.setWifi(false) }
   function selfServeOn() { store.setSelfServe(true) }
   function selfServeOff() { store.setSelfServe(false); signOut() } // sign out so naughty customers can't switch accounts or whatever
+  function switchAccount() { store.unlink(); navigateTo('/link-account') }
+  function comment() { navigateTo('/comment')}
+  function signOut() { store.signOut(); navigateTo('/') }
+
+  function wifiOn() { store.setWifi(true) }
+  function wifiOff() { store.setWifi(false) }
   function clearData() { store.clearData(); navigateTo('/'); navigateTo('/') }
 
   let menuItems = []
   function item(text, callback, criteria, id) { menuItems.push({text, callback, criteria, id}) }
 
+  item('Show Your QR to Receive', coReceive, () => $store.payOk == 'always' && $store.coPaying, 'showToReceive') // for companies
+  item('Show Your QR to Pay', coPay, () => $store.payOk == 'always' && !$store.coPaying && !$store.selfServe, 'showToPay') // for companies
+  item('Scan Yourself In to Pay', scanIn, () => $store.payOk == 'scan' && !$store.selfServe, 'scanIn') // for managers
   item('Use Rear Camera', rearCamera, () => $store.cameraCount > 1 && $store.frontCamera && $store.selfServe, 'rear')
   item('Use Front Camera', frontCamera, () => $store.cameraCount > 1 && !$store.frontCamera && $store.selfServe, 'front')
   item('Exit Self Serve (signs out)', selfServeOff, () => u.pageUri() == 'home' && $store.selfServe, 'selfOff')
@@ -33,7 +41,7 @@
   item('Comments & Suggestions', comment, () => store.linked() && !$store.selfServe, 'comment')
   item('Sign Out', signOut, () => (store.linked() || u.pageUri() == 'link-account') && !$store.selfServe, 'signout')
 
-if (u.localMode()) {
+  if (u.localMode()) {
     item('🌈 Turn Wifi Off', wifiOff, () => $store.useWifi)
     item('🌈 Turn Wifi On', wifiOn, () => !$store.useWifi)
     item('🌈 START OVER', clearData, () => true)

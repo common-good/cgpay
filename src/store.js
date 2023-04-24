@@ -1,71 +1,8 @@
 // use this example for setv() and get(): https://svelte.dev/repl/ccbc94cb1b4c493a9cf8f117badaeb31?version=3.16.7
 
 /**
- * Data structure
- *
- * The following data is stored, and cached in "cache" while the app runs.
- * All items are also stored in localStore, except those marked with an asterisk (*).
- * 
- * SCALARS
- *   int sawAdd: Unix timestamp when user saw the option to save the app to their home screen
- *   blob qr*: a scanned QR url
- *   int lastOp*: Unix timestamp of last operation that will be timed out after c.opTimeout seconds
- *   string msg*: an informational message to display on the Home Page
- *   string erMsg*: an error message to display on the Home Page
- *   int cameraCount: number of cameras in the device
- *   bool frontCamera: true to use front camera instead of rear (default false iff mobile)
- *   bool online*: true if the device is connected to the Internet
- *   bool useWifi: true to use wifi whenever possible (otherwise disable wifi)
- *   bool selfServe: true for selfServer mode
- * 
- * ARRAYS
- *    choices: a list (array) of Common Good accounts the signed-in user may choose to connect (one of) to the device
- *      accountId: the account ID including cardCode
- *      deviceId: a unique ID for the device associated with the account
- *      name: the name on the account
- *      qr: an image of the account’s QR code and ID photo (if any)
- *      isCo: true if the account is a company account
- *      selling: a list (array) of items for sale
- * 
- *    txs: transaction objects waiting to be uploaded to the server, each comprising:
- *      deviceId: a unique ID for the device associated with the actorId account
- *      amount: dollars to transfer from actorId to otherId (signed)
- *      actorId: the account initiating the transaction
- *      otherId: the other participant in the transaction
- *      description: the transaction description
- *      created: Unix timestamp when the transaction was created
- *      proof: the proof of the transaction -- a SHA256 hash of actorId, amount, otherId, cardCode, and created
- *        The amount has exactly two digits after the decimal point. For an Undo, proof contains the original amount.
- *      offline: true -- transactions completed offline are in the txs queue. All Undos are handled as though offline.
- *      version: the app's integer version number
- * 
- *    comments: user-submitted comments to be uploaded to the server
- *      created: Unix timestamp
- *      actorId: the account making the comment
- *      text: the comment
- * 
- * OBJECTS
- *    corrupt: version number when a transaction or comment upload fails inexplicably
- *    accts: an array of accounts the device has transacted with, keyed by the account ID without cardCode, each with:
- *      hash: SHA256 hash of cardCode
- *      name: name of the account
- *      agent: agent for the account, if any
- *      location: location of the account (city, ST)
- *      limit: maximum amount this account can be charged at this time (leaving room for Stepups)
- *      creditLine: the account's credit line
- *      avgBalance: the account’s average balance over the past 6 months
- *      trustRatio: ratio of the account’s trust rating to the average trust rating of all individual accounts (zero for company accounts)
- *      since: Unix timestamp of when the account was activated
- * 
- *    myAccount: information about the account associated with the device
- *      accountId, deviceId, name, qr, isCo, and selling as in the choices array described above
- *      lastTx: Unixtime (in ms) of the last transaction known to this device (null if none)
- * 
- * TEST DATA*
- *    now: a stable timestamp (in seconds)
- *    flushOk: if true, the tester is ready for data to be uploaded to the server
- *    enQ, deQ, and posts: operation counters
- *    fromTester: key/value pairs from tester (to set)
+ * Handle stored values for the app (persistent and transient).
+ * See data structure definition in cache.js
  */
 import { writable } from 'svelte/store'
 import u from '#utils.js'
@@ -76,12 +13,12 @@ export const createStore = () => {
   const lostMsg = `Tell the customer "I'm sorry, that card is marked "LOST or STOLEN".`
 
   let cache
-  save({ ...cache0, ...getst() }) // update store with any changes in defaults (crucial for tests)
+  save({ ...cache, ...convert(getst()), version:c.version }) // update store with any changes in defaults (crucial for tests)
   const { subscribe, update } = writable(cache)
-  
+ 
   function getst() { return {
     ...JSON.parse(localStorage.getItem(c.storeKey)),
-    ...JSON.parse(sessionStorage.getItem(c.storeKey))
+    ...JSON.parse(sessionStorage.getItem(c.storeKey)),
   }}
 
   function save(s) {
@@ -92,7 +29,7 @@ export const createStore = () => {
   }
 
   function setst(newS) { update(s => { return save(newS) } )}
-  function setv(k, v, fromTest = false) { update(s => { s[k] = v; return save(s) }); tSetV(k, v, fromTest) }
+  function setv(k, v, fromTest = false) { update(s => { s[k] = v; return save(s) }); tSetV(k, v, fromTest); return v }
   function enQ(k, v) { st.bump('enQ'); cache[k].push(v); return setv(k, cache[k]) }
   function deQ(k) { st.bump('deQ'); cache[k].shift(); return setv(k, cache[k]) } // this is actually FIFO (shift) not LIFO (pop)
   function tSetV(k, v, fromTest) { if (u.testing() && !fromTest) u.tellTester('store', k, v).then() }
@@ -152,11 +89,13 @@ export const createStore = () => {
     bump(k)  { if (u.testing()) { cache[k]++; setv(k, cache[k]) } },
 
     setQr(v) { setv('qr', v) },
-    setLastOp(set = 'now') { setv('lastOp', set == 'now' ? u.now0() : set ) }, // must be now0 (not now) for tests
+    setIntent(v) { setv('intent', v) },
     setMsg(v) { setv('erMsg', v) },
     setCorrupt(version) { setv('corrupt', version) }, // pause uploading until a new version is released
     setWifi(yesno) { setv('useWifi', yesno); st.resetNetwork() },
     setSelfServe(yesno) { setv('selfServe', yesno) },
+    setCoPaying(yesno) { setv('coPaying', yesno) },
+    setPayOk(v) { setv('payOk', v) },
 
     setAcctChoices(v) { setv('choices', v) },
     setMyAccount(acct) { setv('myAccount', acct ? { ...acct } : null) },
@@ -174,6 +113,18 @@ export const createStore = () => {
       const v = cache.useWifi ? yesno : false
       if (v !== cache.online) setv('online', v)
       if (cache.useWifi && yesno) st.flushAll().then() // when testing only do *explicit* flushing
+    },
+
+    /**
+     * Set inactivity timeout
+     * @param int t: omitted=decrement by one timer cycle, null=cancel timeout, n=number of seconds before return to Home Page
+     * @return new value of timeout
+     */
+    setTimeout(t = -1) { // -1 means one timer cycle
+      t = t == -1 ? Math.max(0, cache.timeout - c.networkTimeoutMs) // decrement
+      : t === null ? null // cancel
+      : 1000 * (u.testing() ? c.testTimeout : t) // set
+      return setv('timeout', t )
     },
 
     /**
@@ -196,7 +147,7 @@ export const createStore = () => {
     enqTx(tx) { tx.offline = true; enQ('txs', { ...tx }) },
     async flushTxs() { await flushQ('txs', 'transactions') },
     deqTx() { deQ('txs') }, // just for testing (in store.spec.js)
-    comment(text) { enQ('comments', { deviceId:cache.myAccount.deviceId, actorId:cache.myAccount.accountId, created:u.now(), text:text }) },
+    comment(text) { enQ('comments', { deviceId:cache.deviceId, actorId:cache.myAccount.accountId, created:u.now(), text:text }) },
     async flushComments() { await flushQ('comments', 'comments') },
     async flushAll() {
       if (u.testing() && !cache.flushOk) return
@@ -204,13 +155,30 @@ export const createStore = () => {
       await st.flushTxs()
       await st.flushComments()
       if (u.testing()) setv('flushOk', false)
-    }
-
+    },
   }
 
   return st
 }
 
-// --------------------------------------------
+function reconcileDeviceIds(chx, ids) {
+  let i, ch, old
+  for (i in chx) {
+    ch = chx[i]
+    old = ids[ch.accountId]
+    if (old) chx[i].deviceId = old; else ids[ch.accountId] = ch.deviceId
+  }
+  return [chx, ids]
+}
+
+function convert(s) {
+  if (u.empty(s) || c.version == s.version) return s
+  if (u.empty(s.version)) { // v4.0.0 has no stored version number
+    if (s.choices) [s.choices, s.deviceIds] = reconcileDeviceIds(s.choices, s.deviceIds)
+    if (s.myAccount) s.deviceIds[s.myAccount.accountId] = s.myAccount.deviceId
+  }
+
+  return s
+}
 
 export default createStore()

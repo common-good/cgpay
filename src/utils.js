@@ -3,6 +3,13 @@ import c from '#constants.js'
 import queryString from 'query-string'
 import { navigateTo } from 'svelte-router-spa'
 import u0 from '../utils0.js' // utilities shared with tests
+import QRCode from 'qrcode'
+
+const dig36 = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+const regionLens = '111111112222222233333333333344444444'
+const acctLens = '222233332222333322223333444444445555'
+const agentLens = '012301230123012301230123012301230123'
+const mainLens = '.12.13.22.23.32.33.34.44.45' // region and acct lens without agent
 
 const u = {
   ...u0, // incorporate all function from utils0.js
@@ -65,6 +72,68 @@ const u = {
     }, true)
   },
 
+  async generateQr(text) {
+    try {
+      return await QRCode.toDataURL(text)
+    } catch (er) { console.error(er) }
+  },
+
+  makeQrUrl(acctId) {
+    const c1 = acctId.charAt(0)
+    const f = dig36.indexOf(c1)
+    const regLen = +regionLens.charAt(f)
+    const domain = c.domains[u.realData() ? 'real' : 'test']
+    return 'HTTP://' + acctId.substring(1, 1 + regLen) + `.${domain}/` + c1 + acctId.substring(1 + regLen)
+  },
+  
+  /**
+   * Parse the given account identifier from a QR code.
+   * Note that the cardCode part of the account identifier ranges from 9-15 chars (and may be extended to 20 someday)
+   * @param qr: the QR code to parse
+   * @return { acct, code, hash } where the accountId is separated into acct and code and hash is the cardCode hashed for storage
+   */
+  qrParse(qr) {
+    let acct, testing
+    const parts = qr.split(/[\/.]/)
+
+/*    if ((new RegExp('^[0-9A-Za-z]{12,29}[\.!]$')).test(qr)) { // like H6VM0G0NyCBBlUF1qWNZ2k.
+      acct = parts[0]
+      testing = qr.slice(-1) == '.'
+    } else */
+    if ((new RegExp(c.qrUrlRegex)).test(qr)) { // like HTTP://6VM.RC4.ME/KDJJ34kjdfKJ4
+      acct = parts[5][0] + parts[2] + parts[5].substring(1)
+      testing = qr.startsWith(c.testQrStart)
+    } else throw new Error('That is not a valid Common Good card format.')
+
+    if (testing && u.realData()) throw new Error('That is a CGPay test card and cannot be used in production mode.')
+    if (!testing && !u.realData()) throw new Error('That is a real Common Good card and cannot be used in test mode.')
+
+    const agentLen = +agentLens[dig36.indexOf(acct[0])]
+    const mainId = u.getMainId(acct)
+    const acct0 = acct.substring(0, mainId.length + agentLen) // include agent chars in original account ID
+    const code = acct.substring(acct0.length)
+    return { acct: acct0, main: mainId, code: code, hash: u.hash(code) }
+  },
+  
+  /**
+   * Return just the region and acct parts of the QR.
+   */
+  getMainId(acct) { 
+    const i = dig36.indexOf(acct[0])
+    const c1 = dig36[4 * mainLens.indexOf('.' + regionLens[i] + acctLens[i]) / 3] // format character without agent
+    return c1 + acct.substring(1, 1 + +regionLens[i] + +acctLens[i])
+  },
+
+  /**
+   * Return the cardId with cardCode (and everything that follows) removed
+   */
+  noCardCode(cardId) {
+    if (cardId === null) return null
+    const i = dig36.indexOf(cardId[0])
+    const len = regionLens[i] + acctLens[i] + agentLens[i]
+    return cardId.substr(0, len)
+  },
+  
   mode() { 
     return location.href.startsWith(c.urls.production) ? 'production' 
     : location.href.startsWith(c.urls.staging) ? 'staging' 
@@ -77,7 +146,7 @@ const u = {
   localMode() { return (u.mode() == 'local') }, 
   yesno(question, m1, m2) { return u.dlg('Confirm', question, 'Yes, No', m1, m2) },
   confirm(question) { return u.dlg('Alert', question, 'OK', null, null) },
-  crash(er) { console.log('crash', er); return er.message },
+  crash(er) { console.log('crash', er); return typeof er === 'string' ? er : er.message },
   goEr(msg) { store.setMsg(msg); navigateTo('/home') },
   goHome(msg) { store.setMsg(msg); navigateTo('/home') },
   isTimeout(er) { return (typeof er === 'object' && (er.name == 'AbortError' || er.name == 'Offline')) },
@@ -121,7 +190,7 @@ const u = {
   */
 
   /* for POST auth in HTTP header (any advantage?)
-          'authorization': `Bearer ${ $store.myAccount.deviceId }`,
+          'authorization': `Bearer ${ $store.deviceId }`,
           'Accept': 'application/json',
           'Content-type': 'application/json',
           body: JSON.stringify(tx)
