@@ -74,10 +74,6 @@
         <button on:click={ () => fake('garbage') }>Worse</button>
       </div>
     { /if }
-
-    { #if !$store.selfServe }
-      <a class="survey" data-testid="lnk-survey" href="https://forms.gle/M8Hv1W2oSgw2yQzS7" target="_blank">Take Our User Experience Survey</a>
-    { /if }
     <a class="scan" data-testid="btn-charge" href='/scan'>Scan QR Code to Charge</a>
   </div>
 </section>
@@ -116,12 +112,6 @@
     flex-direction column
     align-items center
     justify-content space-between
-
-  .survey
-    padding 0 $s-1
-    color $c-blue
-    text-decoration underline
-    text-underline-offset 5px
 
   .scan
     cgButton()
