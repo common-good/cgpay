@@ -6,6 +6,10 @@
 
   export let currentRoute
   let viewHeight
+
+  onMount(() => {
+    document.documentElement.classList.add('green')
+  })
   
   const setViewportHeight = () => {
     viewHeight = window.visualViewport.height
