@@ -20,10 +20,12 @@
 
   const toggleNav = () => { isNavOpen = !isNavOpen; store.setLastOp(null) } // going anywhere from confirmation screen stops the timer
 
-  onMount(() => {
-    viewHeight = window?.visualViewport?.height
-  })
+  const setViewportHeight = () => {
+    viewHeight = window.visualViewport.height
+  }
 </script>
+
+<svelte:window on:load={setViewportHeight}/>
 
 <div class='layout-step' style="height: {viewHeight}px">
   { #if isNavOpen }
