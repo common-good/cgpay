@@ -97,7 +97,7 @@ export const createStore = () => {
     setCoPaying(yesno) { setv('coPaying', yesno) },
     setPayOk(v) { setv('payOk', v) },
 
-    setAcctChoices(v) { setv('choices', v) },
+    setAcctChoices(v) { setv('choices', v); if (v) reconcileDeviceIds(v) },
     setMyAccount(acct) { setv('myAccount', acct ? { ...acct } : null) },
     linked() { return (cache.myAccount !== null) },
     unlink() { setv('myAccount', null) },
@@ -161,20 +161,22 @@ export const createStore = () => {
   return st
 }
 
-function reconcileDeviceIds(chx, ids) {
+function reconcileDeviceIds(chx) {
+  let s = getst()
+  let ids = s.deviceIds
   let i, ch, old
   for (i in chx) {
     ch = chx[i]
     old = ids[ch.accountId]
     if (old) chx[i].deviceId = old; else ids[ch.accountId] = ch.deviceId
   }
-  return [chx, ids]
+  return [setv('choices', chx), setv('deviceIds', ids)] // setv for call from setAcctChoices, return for call from convert()
 }
 
 function convert(s) {
   if (u.empty(s) || c.version == s.version) return s
   if (u.empty(s.version)) { // v4.0.0 has no stored version number
-    if (s.choices) [s.choices, s.deviceIds] = reconcileDeviceIds(s.choices, s.deviceIds)
+    if (s.choices) [s.choices, s.deviceIds] = reconcileDeviceIds(s.choices)
     if (s.myAccount) s.deviceIds[s.myAccount.accountId] = s.myAccount.deviceId
   }
 

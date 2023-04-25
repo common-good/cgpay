@@ -48,10 +48,9 @@
  */
 
 const cache = {
-  persist: 'version deviceId sawAdd cameraCount frontCamera useWifi selfServe payOk choices txs comments corrupt accts myAccount',
+  persist: 'version deviceId sawAdd cameraCount frontCamera useWifi selfServe payOk choices txs comments deviceIds corrupt accts myAccount',
 
   version: null, // latest app version that touched this data
-  deviceId: null, // a unique identifier for the device (also identifies the device owner)
   sawAdd: null, // time user pressed Continue on the Add-to-home-screen page
   cameraCount: 0, // number of cameras in the device - set this when scanning for the first time
   frontCamera: null, // true to use front camera instead of rear (default false iff mobile) - set this in Root.svelte (can't be defaulted from tests)

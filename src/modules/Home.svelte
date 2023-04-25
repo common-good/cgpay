@@ -12,7 +12,7 @@
   export let params // else Svelte complains (I don't know why yet)
 
   const surveyLink = 'https://forms.gle/M8Hv1W2oSgw2yQzS7'
-  let me, myQr, isCo, self, coPay, coChg, hdr, qr, alt, btnText, intent
+  let me, myQr, isCo, self, coPay, coChg, hdr, qr, alt, btnPay
 
   function er(msg) { 
     ({ m0, m1 } = u.dlg('Alert', msg, 'Close', () => {m0 = false; store.setMsg(null)})); m0=m0; m1=m1
@@ -30,10 +30,14 @@
     self = $store.selfServe
     coPay = (isCo && $store.coPaying)
     coChg = (isCo && !coPay)
-    ;([hdr, qr, alt, btnText] = self ? ['Self-Serve Mode<br>Scan this code to pay ', receiveQR(), 'pay', 'Or Scan Your Own QR Code to Pay']
-    : !isCo ? ['Show this code to pay or be paid', myQr, 'pay or charge', 'Scan QR Code to Charge Someone']
-    : coPay ? ['Show this code to pay someone', myQr, 'charge', `Scan Someone's QR Code to Pay Them`]
-    : ['Scan this code to pay ' + me.name, receiveQR(), 'pay', 'Scan QR Code to Charge Someone'])
+    btnPay = self ? 'Or Scan Your Own QR Code to Pay'
+    : isCo ? 'Scan to Pay / Refund / Receive Cash for Credit'
+    : 'Scan a QR Code to Pay'
+
+    ;([hdr, qr, alt] = !isCo ? ['Show this code to pay or be paid', myQr, 'pay or charge']
+    : self ? ['Self-Serve Mode<br>Scan this code to pay ', receiveQR(), 'pay']
+    : coPay ? ['Show this code to pay someone', myQr, 'charge']
+    : ['Scan this code to pay ' + me.name, receiveQR(), 'pay'])
 
     if ($store.frontCamera === null) store.setFrontCamera(!u.isApple() && !u.isAndroid())
     store.setQr(null) // no going back to previous customer
@@ -75,11 +79,11 @@
     {/if}
 
     {#if !self}
-      <a class="survey" data-testid="lnk-survey" href="{surveyLink}" target="_blank">Take Our User Experience Survey</a>
+      <!--a class="survey" data-testid="lnk-survey" href="{surveyLink}" target="_blank">Take Our User Experience Survey</a-->
     {/if}
     <div class="buttons">
       {#if coPay || !isCo}
-        <button class="scan" data-testid="btn-pay" on:click={pay}>Scan a QR Code to Pay</button>
+        <button class="scan" data-testid="btn-pay" on:click={pay}>{btnPay}</button>
       {/if}
       {#if !self}
         <button class="scan" data-testid="btn-charge" on:click={charge}>Scan a QR Code to Charge</button>
