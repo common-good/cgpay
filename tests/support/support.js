@@ -222,7 +222,7 @@ const t = {
     t.test(newValue, text)
   },
 
-  async scan(who) { await t.putv('qr', t.adjust(who, 'qr')); await t.visit('charge') },
+  async scan(who, why) { await t.putv('qr', t.adjust(who, 'qr')); await t.visit('charge') },
 
   async tx(who, amount, description) {
     await t.scan(who)

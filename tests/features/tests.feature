@@ -19,7 +19,7 @@ Scenario: this
   | 1   | 2   | Bea     |
   And ? this "qr":
   | one | two | account |
-  | 1   | 2   | { name:'Bea Two', location:'Bton, MA', isCo:false, accountId:'K6VMDCB', cardCode:'12345b', deviceId:'devB', selling:null } |
+  | 1   | 2   | { name:'Bea Two', location:'Bton, MA', isCo:false, accountId:'K6VMDCB', cardCode:'12345b', selling:null } |
 
   Given this "qr":
   | actorId | otherId |
@@ -50,7 +50,7 @@ Scenario: these1
   | 1   | 2   | Bea     |
   And ? these "qr":
   | one | two | account |
-  | 1   | 2   | { name:'Bea Two', location:'Bton, MA', isCo:false, accountId:'K6VMDCB', cardCode:'12345b', deviceId:'devB', selling:null } |
+  | 1   | 2   | { name:'Bea Two', location:'Bton, MA', isCo:false, accountId:'K6VMDCB', cardCode:'12345b', selling:null } |
 
   Given these "qr":
   | actorId | otherId |
@@ -83,8 +83,8 @@ Scenario: these2
   | 3   | 4   | Abe/Cit |
   And ? these "qr":
   | one | two | account |
-  | 1   | 2   | { name:'Bea Two', location:'Bton, MA', isCo:false, accountId:'K6VMDCB', cardCode:'12345b', deviceId:'devB', selling:null }                             |
-  | 3   | 4   | { name:'Citre', location:'Cton, MA', isCo:true, accountId:'L6VMDCC0', cardCode:'98765a', deviceId:'devC', selling:['groceries', 'gifts', 'sundries'] } |
+  | 1   | 2   | { name:'Bea Two', location:'Bton, MA', isCo:false, accountId:'K6VMDCB', cardCode:'12345b', selling:null }                             |
+  | 3   | 4   | { name:'Citre', location:'Cton, MA', isCo:true, accountId:'L6VMDCC0', cardCode:'98765a', selling:['groceries', 'gifts', 'sundries'] } |
 
   Given these "qr":
   | actorId | otherId |
@@ -102,7 +102,15 @@ Scenario: these2
 Scenario: myAccount
   Given I am signed in as "Bea"
   Then ? I am signed in as "Bea"
-  And ? this "myAccount": "{ name:'Bea Two', isCo:false, accountId:'K6VMDCB', deviceId:'devB', selling:null }"
+  And ? this "myAccount": "{ name:'Bea Two', isCo:false, accountId:'K6VMDCB', agentId:'K6VMDCB', selling:null }"
+
+Scenario: deviceId
+  Given this "deviceId": "Bea"
+  Then ? this "deviceId": "Bea"
+  And ? this "deviceId": "devB"
+
+  Given this "deviceId": "devB"
+  Then ? this "deviceId": "Bea"
 
 Scenario: theseAccts/accounts (notice no quotes around "accounts")
   Given these accounts:
@@ -129,25 +137,25 @@ Scenario: theseAccts/choices (notice no quotes around "choices")
   Then ? these choices:
   | Abe | Bea | Bea/Cit |
   And ? these "choices":
-  | name    | isCo  | accountId | deviceId | selling |
-  | Abe One | false | K6VMDCA   | devA     | null    |
-  | Bea Two | false | K6VMDCB   | devB     | null    |
-  | Citre   | true  | L6VMDCC1  | devC     | ['groceries', 'gifts', 'sundries'] |
+  | name    | isCo  | accountId | selling |
+  | Abe One | false | K6VMDCA   | null    |
+  | Bea Two | false | K6VMDCB   | null    |
+  | Citre   | true  | L6VMDCC1  | ['groceries', 'gifts', 'sundries'] |
 
   Given these "choices":
-  | name    | isCo  | accountId | deviceId | selling |
-  | Abe One | false | K6VMDCA   | devA     | null    |
-  | Bea Two | false | K6VMDCB   | devB     | null    |
-  | Citre   | true  | L6VMDCC1  | devC     | ['groceries', 'gifts', 'sundries'] |
+  | name    | isCo  | accountId | selling |
+  | Abe One | false | K6VMDCA   | null    |
+  | Bea Two | false | K6VMDCB   | null    |
+  | Citre   | true  | L6VMDCC1  | ['groceries', 'gifts', 'sundries'] |
   Then ? these choices:
   | Abe | Bea | Bea/Cit |
 
   Given these choices:
   | Abe |
   Then ? this "choices":
-  | { name:'Abe One', isCo:false, accountId:'K6VMDCA', deviceId:'devA', selling:null } |
+  | { name:'Abe One', isCo:false, accountId:'K6VMDCA', selling:null } |
 
   Given this "choices":
-  | { name:'Abe One', isCo:false, accountId:'K6VMDCA', deviceId:'devA', selling:null } |
+  | { name:'Abe One', isCo:false, accountId:'K6VMDCA', selling:null } |
   Then ? these choices:
   | Abe |

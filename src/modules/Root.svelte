@@ -24,7 +24,7 @@
     store.fromTester().then()
     store.resetNetwork()
     setTimeout(timeOut, c.networkTimeoutMs)
-    if ($store.lastOp && u.now0() - $store.lastOp > (u.testing() ? c.testOpTimeout : c.opTimeout)) navigateTo('/home') // must be now0 (not now) for tests
+    if ($store.timeout && !store.setTimeout()) { store.setScannedIn(false); navigateTo('/home') }
   }
 
   function onlyIf(condition, elseGoTo) { return { guard: condition, redirect: elseGoTo } }

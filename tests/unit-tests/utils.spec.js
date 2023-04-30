@@ -23,6 +23,12 @@ describe('utils', () => {
     navigator = originalNavigator
   })
 
+  describe('makeQrUrl', () => {
+    it('returns a QR URL for the given account ID', () => {
+      expect(u.makeQrUrl('K6VMDCA12345a')).toEqual('HTTP://6VM.RC4.ME/KDCA12345a')
+    })
+  })
+
   describe('findByValue', () => {
     it('returns the correct index to an object with the given keyed value', () => {
       expect(u.findByValue({ a:{ one:1, two:-1 }, b:{ one:2, two:-1 }, c:{ one:2, two:-2, three:3 } }, { one:2, two:-2 })).toEqual('c')

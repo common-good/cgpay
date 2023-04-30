@@ -4,6 +4,7 @@
   import store from '#store.js'
   import u from '#utils.js'
   import SelectX from '#modules/SelectX.svelte'
+  import Radios from '#modules/Radios.svelte'
   import Modal from '#modules/Modal.svelte'; let m0, m1, m2
 
   // --------------------------------------------
@@ -14,16 +15,17 @@
   let myAccount
   let ready = false
   let acctIndex = null
+  let payOk = 'scan'
   const choices = $store.choices
+  const payOkOptions = { always:'always', scan:'only if a manager scans in', never:'never' }
   
-  // --------------------------------------------
-
   function er(msg) { ({ m0, m1 } = u.dlg('Alert', msg, 'Close', () => m0 = false)); m0=m0; m1=m1 } 
 
   function gotAccount() {
     myAccount = choices && choices[acctIndex]
     store.setMyAccount(myAccount)
     if (lock) store.setAcctChoices(null)
+    store.setPayOk(payOk)
     u.goHome(`This device is now linked to your Common Good account: ${myAccount?.name}.`)
   }
 
@@ -53,6 +55,7 @@
           <SelectX name="account" options={acctOpts} size={size} bind:value={acctIndex} required="required" />
           {#if acctIndex > 0}
             <p>Allow payments from this account:</p>
+            <Radios name="payOk" options={payOkOptions} bind:value={payOk} required="required" />
           {/if}
           {#if size > 0}
             <label><input type="checkbox" data-testid="lock-account" name="lock-account" bind:checked={lock} /> Require sign-in to change account</label>

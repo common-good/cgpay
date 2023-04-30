@@ -18,33 +18,34 @@
   let viewHeight
   let isNavOpen
 
-  const toggleNav = () => { isNavOpen = !isNavOpen; store.setLastOp(null) } // going anywhere from confirmation screen stops the timer
+  function toggleNav() { isNavOpen = !isNavOpen; store.setCoPaying(false) }
+  function clickLogo() { navigateTo('/home') }
 
   onMount(() => {
     viewHeight = window?.visualViewport?.height
   })
 </script>
 
-<div class='layout-step' style="height: {viewHeight}px">
+<div class="layout-step" style="height: {viewHeight}px">
   { #if isNavOpen }
     <Navigation on:toggleNav={toggleNav}/>
   { /if }
   <header>
-    <button on:click={ () => navigateTo('/home') }><img src={ cgLogo } alt='Common Good Logo' /></button>
+    <button on:click={clickLogo}><img src={cgLogo} alt="Common Good Logo" /></button>
     <p data-testid="account-name">{ ($store.myAccount ? $store.myAccount.name : '') + (u.realData() ? '' : ' (DEMO)')}</p>
       <button data-testid="btn-nav" on:click={toggleNav}>
-        { #if !$store.selfServe || u.pageUri() == 'home' }
+        { #if !$store.selfServe || u.pageUri() == "home" }
           <NavIcon width={'100%'} height={'100%'} ariaLabel={'menu'} />
         { /if }
       </button>
   </header>
   { #key currentRoute }<NetworkStatus/>{ /key }
-  <div class='content'>
+  <div class="content">
     <Route { currentRoute }/>
   </div>
 </div>
 
-<style lang='stylus'>
+<style lang="stylus">
   button
     height 48px
     width 48px

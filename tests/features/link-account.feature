@@ -22,39 +22,58 @@ Background:
   * these choices:
   | Bea   | Bea/Cit |
 
-Rule: Users must link their device to a CGPay account to use the app
+Rule: Users can link their device to a specific CGPay account
 
-Scenario: The user chooses from among multiple accounts with default account lock
+Scenario: A user with multiple accounts visits the link-account page
   When I visit "link-account"
   Then ? I am on page "link-account"
   And ? I see "select-account"
   And ? "account-opt-0" is "Bea Two"
-  When I click "option-0"
-  And I click "btn-link"
-  And I wait 1 seconds
-  Then ? I am on page "home"
-  And ? "Bea Two" is in "account-name"
-  And ? this confirmation: "now linked to your Common Good account: Bea Two"
-  And ? I am signed in as "Bea"
-  And ? this "choices": "null" 
-  When I click "btn-nav"
-  Then ? I do not see "menu-switch"
+  And ? "account-opt-1" is "Citre"
+  And ? "account-opt-1" is "selected"
+  And ? "lock" is "checked"
+  And ? "payOk-opt-always" is "unchecked"
+  And ? "payOk-opt-scan" is "checked"
+  And ? "payOk-opt-never" is "unchecked"
 
-Scenario: The user chooses a different account without account lock
+Scenario: A user with multiple accounts selects an account with all the defaults
   When I visit "link-account"
-  And I click "option-1"
+  And I click "btn-link"
+  Then ? this "payOk": "scan"
+  And ? this "choices": "null"
+  And ? I am signed in as "Bea/Cit"
+  And ? this confirmation: "now linked to your Common Good account: Citre"
+  And ? I am on page "home"
+  And ? "Citre" is in "account-name"
+  When I click "btn-nav"
+  Then ? I see "menu-scanIn"
+  But ? I do not see "menu-showToPay"
+  And ? I do not see "menu-switch"
+
+Scenario: A user with multiple accounts selects different options
+  When I visit "link-account"
+  And I click "account-opt-0"
   And I click "lock-account"
+  And I click "payOk-radio-never"
   And I click "btn-link"
   And I wait 1 seconds
+  Then ? this "payOk": "never"
+  And ? these choices:
+  | Bea | Bea/Cit |
+  And ? I am signed in as "Bea"
+  And ? I am on page "home"
+  And ? "Bea Two" is in "account-name"
   When I click "btn-nav"
-  And ? I see "menu-switch"
+  Then ? I do not see "menu-scanIn"
+  And ? I do not see "menu-showToPay"
+  But ? I see "menu-switch"
 
 Scenario: The user chooses an account offline
   Given I visit "link-account"
   And we are offline
   And I wait 1 seconds
   And ? I see "network-offline"
-  When I click "option-0"
+  When I click "account-opt-0"
   And I click "btn-link"
   Then ? I am on page "home"
   And ? "Bea Two" is in "account-name"
