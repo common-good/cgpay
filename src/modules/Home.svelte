@@ -37,12 +37,17 @@
     : isCo ? 'Scan to Pay / Refund / Receive Cash for Credit'
     : 'Scan a QR Code to Pay'
 
-    ;([hdr, qr, alt] = !isCo ? ['Show this code to pay or be paid', myQr, 'pay or charge']
-    : self ? ['Self-Serve Mode<br>Scan this code to pay ', receiveQR(), 'pay']
-    : coPay ? ['Show this code to pay someone', myQr, 'charge']
-    : ['Scan this code to pay ' + me.name, receiveQR(), 'pay'])
+  function scanIn() {
+    try {
+      const card = u.qrParse($store.qr) // does not return if format is bad
+      const mainId = u.getMainId($store.myAccount.accountId)
+      if (card.main != mainId) throw new Error('That is not a QR for this company.')
+      store.setCoPaying(true)
+    } catch (er) { showEr(u.qrEr(er)) }
+  }
 
     if ($store.frontCamera === null) store.setFrontCamera(!u.isApple() && !u.isAndroid())
+    if ($store.intent == 'scanIn') scanIn() // must precede setQr
     store.setQr(null) // no going back to previous customer
     if (!coPay) store.setTimeout(null) // stop the timeout timer from interrupting us
     if ($store.erMsg) er($store.erMsg)

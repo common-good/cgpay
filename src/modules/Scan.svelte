@@ -4,6 +4,7 @@
   import { onMount } from 'svelte'
   import store from '#store.js'
   import u from '#utils.js'
+  import c from '#constants.js'
   import cgLogo from '#modules/assets/cg-logo-300.png?webp'
 
   // --------------------------------------------
@@ -12,6 +13,7 @@
   let di = 0 // default to first device
 
   onMount(async () => {
+    if (!$store.intent) u.goEr(u.crash('scan with no intent'))
     try {
       Html5Qrcode.getCameras().then(devices => {
         if (devices?.length) {
@@ -28,13 +30,8 @@
 
             async (decodedText, decodedResult) => { // Handle code
               await scanner.stop()
-              if ($store.intent == 'scanIn') {
-                store.setTimeout(c.scannedInTimeout)
-                navigateTo('/home')
-              } else { // intent is pay or charge
-                store.setQr(decodedText)
-                navigateTo('/tx') // pass intent through
-              }
+              store.setQr(decodedText)
+              navigateTo($store.intent == 'scanIn' ? '/home' : '/tx')
             },
             (erMsg) => { } // ignore "parse" errors -- no valid QR yet (keep scanning)
 
