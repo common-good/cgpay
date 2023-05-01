@@ -20,7 +20,10 @@
 
   function receiveQR() { return u.generateQr(u.makeQrUrl(u.getMainId(me.accountId))) }
   function fake(code) { store.setQr(code); store.setIntent('charge'); navigateTo('/tx') }
-  function pay() { charge(self ? 'charge' : 'pay') }
+  function pay() {
+    if ($store.payOk == 'scan') { payOk = false; store.setCoPaying(false) }
+    charge(store.selfServe() ? 'charge' : 'pay')
+  }
   function charge(intent = 'charge') { store.setIntent(intent); navigateTo('/scan') }
 
   onMount(async () => {

@@ -24,7 +24,7 @@
     store.fromTester().then()
     store.resetNetwork()
     setTimeout(timeOut, c.networkTimeoutMs)
-    if ($store.timeout && !store.setTimeout()) { store.setScannedIn(false); navigateTo('/home') }
+    if ($store.timeout && !store.setTimeout()) navigateTo('/home')
   }
 
   function onlyIf(condition, elseGoTo) { return { guard: condition, redirect: elseGoTo } }
