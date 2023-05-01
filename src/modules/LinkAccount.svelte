@@ -59,7 +59,8 @@
             <Radios name="payOk" options={payOkOptions} bind:value={payOk} required="required" />
           {/if}
           {#if size > 0}
-            <label><input type="checkbox" data-testid="lock-account" name="lock-account" bind:checked={lock} /> Require sign-in to change account</label>
+            <label><input type="checkbox" data-testid="lock-account" name="lock-account" 
+              bind:checked={lock} class={ lock ? 'checked' : '' }/> Require sign-in to change account</label>
           {/if}
         </form>
       </div>
