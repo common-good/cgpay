@@ -12,19 +12,21 @@
   export let params // else Svelte complains (I don't know why yet)
 
   const surveyLink = 'https://forms.gle/M8Hv1W2oSgw2yQzS7'
-  let me, myQr, isCo, self, coPay, coChg, hdr, qr, alt, btnPay
+  const me = $store.myAccount
+  let hdr, qr, alt, btnPay, payOk
 
   function er(msg) { 
     ({ m0, m1 } = u.dlg('Alert', msg, 'Close', () => {m0 = false; store.setMsg(null)})); m0=m0; m1=m1
   }
 
-  function receiveQR() { return u.generateQr(u.makeQrUrl(u.getMainId(me.accountId))) }
+  async function receiveQr() { return await u.generateQr(u.makeQrUrl(u.getMainId(me.accountId))) }
   function fake(code) { store.setQr(code); store.setIntent('charge'); navigateTo('/tx') }
   function pay() {
     if ($store.payOk == 'scan') { payOk = false; store.setCoPaying(false) }
     charge(store.selfServe() ? 'charge' : 'pay')
   }
   function charge(intent = 'charge') { store.setIntent(intent); navigateTo('/scan') }
+  function isQrToPay() { return (qr.length == me.qr.length) }
 
   onMount(async () => {
     me = $store.myAccount
@@ -51,6 +53,8 @@
     store.setQr(null) // no going back to previous customer
     if (!coPay) store.setTimeout(null) // stop the timeout timer from interrupting us
     if ($store.erMsg) er($store.erMsg)
+    payOk = !me.isCo || $store.payOk == 'always' || $store.coPaying
+    btnPay = me.isCo ? 'Scan to Pay / Refund / Sell CG Credit' : 'Scan to Pay'
     try {
       const q = {deviceId:me.deviceId, actorId:me.accountId, lastTx:me.lastTx || -1 }
       const query = queryString.stringify(q)
@@ -73,7 +77,7 @@
     <p>CGPay v{c.version}</p>
   </div>
 
-  <div class="charge">
+  <div class="bottom">
     {#if u.localMode()}
       <div class="fakes">
         <button on:click={ () => fake('HTTP://6VM.RC4.ME/KDCA12345a') }>A</button>
@@ -90,12 +94,10 @@
       <!--a class="survey" data-testid="lnk-survey" href="{surveyLink}" target="_blank">Take Our User Experience Survey</a-->
     {/if}
     <div class="buttons">
-      {#if coPay || !isCo}
-        <button class="scan" data-testid="btn-pay" on:click={pay}>{btnPay}</button>
+      {#if payOk }
+        <button class="scan pay" data-testid="btn-pay" on:click={pay}>{btnPay}</button>
       {/if}
-      {#if !self}
-        <button class="scan" data-testid="btn-charge" on:click={charge}>Scan a QR Code to Charge</button>
-      {/if}
+      <button class="scan charge" data-testid="btn-charge" on:click={charge}>Scan to Charge</button>
     </div>
   </div>
 </section>
@@ -112,7 +114,7 @@
     flex-grow 1
     margin-right $s-2
 
-  .charge
+  .bottom
     width 100%
     text-align center
 
@@ -141,7 +143,12 @@
     text-decoration underline
     text-underline-offset 5px
 
-  .scan
+  .pay
+    cgButtonSecondary()
+    margin-top $s0
+    margin-right $s-2
+
+  .charge
     cgButton()
     margin-top $s0
   
