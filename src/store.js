@@ -13,9 +13,31 @@ export const createStore = () => {
   const lostMsg = `Tell the customer "I'm sorry, that QR Code is marked "LOST or STOLEN".`
 
   let cache
-  save({ ...cache, ...convert(getst()), version:c.version }) // update store with any changes in defaults (crucial for tests)
+  save({ ...cache0, ...convert(getst()), version:c.version }) // update store (and cache) with any changes in defaults (crucial for tests)
   const { subscribe, update } = writable(cache)
  
+  function reconcileDeviceIds(chx) {
+    let s = getst()
+    let ids = s.deviceIds
+    let i, ch, old
+    for (i in chx) {
+      ch = chx[i]
+      old = ids[ch.accountId]
+      if (old) chx[i].deviceId = old; else ids[ch.accountId] = ch.deviceId
+    }
+    return [chx, ids]
+  }
+  
+  function convert(s) {
+    if (u.empty(s) || c.version == s.version) return s
+    if (u.empty(s.version)) { // v4.0.0 has no stored version number
+      if (s.choices) [s.choices, s.deviceIds] = reconcileDeviceIds(s.choices)
+      if (s.myAccount) s.deviceIds[s.myAccount.accountId] = s.myAccount.deviceId
+    }
+  
+    return s
+  }
+
   function getst() { return {
     ...JSON.parse(localStorage.getItem(c.storeKey)),
     ...JSON.parse(sessionStorage.getItem(c.storeKey)),
@@ -97,9 +119,21 @@ export const createStore = () => {
     setPayOk(v) { setv('payOk', v) },
     selfServe() { return cache.payOk == 'self' },
 
-    setAcctChoices(v) { setv('choices', v); if (v) reconcileDeviceIds(v) },
-    setMyAccount(acct) { setv('myAccount', acct ? { ...acct } : null) },
+    setAcctChoices(v) {
+      setv('choices', v)
+      if (v) {
+        const [chx, ids] = reconcileDeviceIds(v)
+        setv('choices', chx)
+        setv('deviceIds', ids)
+      }
+    },
+    setMyAccount(acct) {
+      setv('myAccount', acct ? { ...acct } : null)
+      if (acct === null) { // LinkAccount calls this with null to clear any preferences (Tx calls to add info)
         st.setPayOk(null)
+        st.setCoPaying(false)
+      }
+    },
     linked() { return (cache.myAccount !== null) },
     unlink() { setv('myAccount', null) },
     signOut() { st.unlink(); st.setAcctChoices(null) },
@@ -148,7 +182,7 @@ export const createStore = () => {
     enqTx(tx) { tx.offline = true; enQ('txs', { ...tx }) },
     async flushTxs() { await flushQ('txs', 'transactions') },
     deqTx() { deQ('txs') }, // just for testing (in store.spec.js)
-    comment(text) { enQ('comments', { deviceId:cache.deviceId, actorId:cache.myAccount.accountId, created:u.now(), text:text }) },
+    comment(text) { enQ('comments', { deviceId:cache.myAccount.deviceId, actorId:cache.myAccount.accountId, created:u.now(), text:text }) },
     async flushComments() { await flushQ('comments', 'comments') },
     async flushAll() {
       if (u.testing() && !cache.flushOk) return
@@ -160,28 +194,6 @@ export const createStore = () => {
   }
 
   return st
-}
-
-function reconcileDeviceIds(chx) {
-  let s = getst()
-  let ids = s.deviceIds
-  let i, ch, old
-  for (i in chx) {
-    ch = chx[i]
-    old = ids[ch.accountId]
-    if (old) chx[i].deviceId = old; else ids[ch.accountId] = ch.deviceId
-  }
-  return [setv('choices', chx), setv('deviceIds', ids)] // setv for call from setAcctChoices, return for call from convert()
-}
-
-function convert(s) {
-  if (u.empty(s) || c.version == s.version) return s
-  if (u.empty(s.version)) { // v4.0.0 has no stored version number
-    if (s.choices) [s.choices, s.deviceIds] = reconcileDeviceIds(s.choices)
-    if (s.myAccount) s.deviceIds[s.myAccount.accountId] = s.myAccount.deviceId
-  }
-
-  return s
 }
 
 export default createStore()
