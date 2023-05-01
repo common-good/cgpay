@@ -63,7 +63,6 @@
     {/if}
       <div id='scanner'></div> 
   </div>
-  <a href="/home">Cancel</a>
 </section>
 
 <style lang='stylus'>

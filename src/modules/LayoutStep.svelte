@@ -2,6 +2,7 @@
   import { Route, navigateTo } from 'svelte-router-spa'
   import { onMount } from 'svelte'
   import NavIcon from "svelte-material-icons/Menu.svelte"
+  import BackIcon from "svelte-material-icons/ChevronLeft.svelte"
   import Navigation from '#modules/Navigation.svelte'
   import NetworkStatus from '#modules/NetworkStatus.svelte'
   import cgLogo from '#modules/assets/cg-logo-300.png?webp'
@@ -32,11 +33,15 @@
     <Navigation on:toggleNav={toggleNav}/>
   { /if }
   <header>
-    <button on:click={ () => navigateTo('/home') }><img src={ cgLogo } alt='Common Good Logo' /></button>
-    <p data-testid="account-name">{ ($store.myAccount ? $store.myAccount.name : '') + (u.realData() ? '' : ' (DEMO)')}</p>
-      <button data-testid="btn-nav" on:click={toggleNav}>
+      <img src={ cgLogo } alt='Common Good Logo' />
+      <!-- TODO: Back Button -->
+      <!-- <button on:click={GO BACK} class="btn" aria-label="Back">
+        <BackIcon width={'100%'} height={'100%'} />
+      </button> -->
+    <button on:click={ () => navigateTo('/home') } data-testid="account-name">{ ($store.myAccount ? $store.myAccount.name : '') + (u.realData() ? '' : ' (DEMO)')}</button>
+      <button data-testid="btn-nav" class="btn" aria-label="Menu" on:click={toggleNav}>
         { #if !$store.selfServe || u.pageUri() == 'home' }
-          <NavIcon width={'100%'} height={'100%'} ariaLabel={'menu'} />
+          <NavIcon width={'100%'} height={'100%'} />
         { /if }
       </button>
   </header>
@@ -47,7 +52,7 @@
 </div>
 
 <style lang='stylus'>
-  button
+  img, .btn
     height 48px
     width 48px
 
