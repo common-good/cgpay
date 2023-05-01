@@ -357,12 +357,16 @@ async mockFetch(url, options = {}) {
   async see(testId) {
     const el = await t.element(testId)
     assert.isNotNull(el)
-    return el // this is required (I don't know why)
+    return el
   },
 
   async seeIs(testId, want, mode = 'exact') {
-    const gotEl = await t.see(testId)
-    const got = await gotEl.evaluate(el => el.textContent)
+    const el0 = await t.see(testId)
+    if (u.in(want, 'selected checked')) { // Svelte doesn't use selected and checked so we simulate it with class
+      const has = (await (await el0.getProperty('className')).jsonValue()).split(' ').includes(want)
+      return assert.isTrue(mode === false ? !has : has)
+    }
+    const got = await el0.evaluate(el => el.textContent)
     t.test(got, want, null, mode)
   },
 

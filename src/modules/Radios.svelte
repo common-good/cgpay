@@ -7,7 +7,8 @@
 
 { #each Object.keys(options) as k }
   <label>
-    <input type=radio value={k} data-testid={ `${name}-radio-${k}` } bind:group={value} name={name} required={required} />{ options[k] }
+    <input type=radio value={k} data-testid={ `${name}-radio-${k}` } bind:group={value} 
+      class={ value == k ? 'checked' : '' } name={name} required={required} />{options[k]}
   </label>
 { /each }
 

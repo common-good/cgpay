@@ -7,7 +7,7 @@
 
 <select name="select-{name}" data-testid="select-{name}" size={size} bind:value={value} required="required">
   { #each Object.keys(options) as k }
-    <option value={k} id={ `${name}-opt-${k}` } data-testid={ `${name}-opt-${k}` } style:background-color={ k==value ? '#1E90FF' : 'white'}>{ options[k] }</option>
+    <option value={k} id={ `${name}-opt-${k}` } data-testid={ `${name}-opt-${k}` } class={ k==value ? 'selected' : '' }>{ options[k] }</option>
   { /each }
 </select>
 
@@ -19,6 +19,9 @@
     display flex
     flex-direction column
     justify-content space-between
+
+  .selected
+    background-color #1E90FF
 
   option
     display flex

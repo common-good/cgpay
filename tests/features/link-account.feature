@@ -31,10 +31,10 @@ Scenario: A user with multiple accounts visits the link-account page
   And ? "account-opt-0" is "Bea Two"
   And ? "account-opt-1" is "Citre"
   And ? "account-opt-1" is "selected"
-  And ? "lock" is "checked"
-  And ? "payOk-opt-always" is "unchecked"
-  And ? "payOk-opt-scan" is "checked"
-  And ? "payOk-opt-never" is "unchecked"
+  And ? "lock-account" is "checked"
+  And ? "payOk-radio-always" is not "checked"
+  And ? "payOk-radio-scan" is "checked"
+  And ? "payOk-radio-never" is not "checked"
 
 Scenario: A user with multiple accounts selects an account with all the defaults
   When I visit "link-account"
