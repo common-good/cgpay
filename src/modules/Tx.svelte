@@ -52,8 +52,12 @@
    * @param query: query data for photoId endpoint
    */
   async function getPhoto(query) {
-    const { result } = await u.timedFetch(`idPhoto?${ query }`, { type: 'blob' })
-    return { alt:'photo of the other party', blob:URL.createObjectURL(result) }
+    let blob = null
+    if (!pay) {
+      const { result } = await u.timedFetch(`idPhoto?${ query }`, { type:'blob' })
+      blob = URL.createObjectURL(result)
+    }
+    return { alt:'photo of the other party', blob:blob }
   }
 
   function profileOffline() {
