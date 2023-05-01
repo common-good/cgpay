@@ -38,7 +38,10 @@
 
   // --------------------------------------------
 
-  function askUndo() { ({ m0, m1, m2 } = u.yesno('Reverse the transaction?', Undo, () => m0 = false)); m0=m0; m1=m1; m2=m2 }
+  function askUndo() {
+    ;({ m0, m1, m2 } = u.yesno('Reverse the transaction?', Undo, () => m0 = false)); m0=m0; m1=m1; m2=m2
+    store.setTimeout(null)
+  }
   function showEr(msg0) {
     let msg = typeof msg0 == 'object' ? msg0.detail : msg0 // receive string or dispatch from SubmitCharge
     msg = msg; // this needs to be responsive
