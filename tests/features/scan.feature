@@ -12,20 +12,19 @@ Background:
 Rule: Scanning requires an intent
 
 Scenario: We scan with intent to charge
-  When I visit "scan/op=charge"
-  Then ? I am on page "scan"
-
-Scenario: We scan with intent to charge
-  When I visit "scan/op=pay"
-  Then ? I am on page "scan"
-
-Scenario: We scan with intent to charge
-  When I visit "scan/op=scanIn"
-  Then ? I am on page "scan"
-
-Scenario: We try to scan without an intent
+  Given this "intent": "charge"
   When I visit "scan"
-  Then ? I am on page "home"
+  Then ? I am on page "scan"
+
+Scenario: We scan with intent to pay
+  Given this "intent": "pay"
+  When I visit "scan"
+  Then ? I am on page "scan"
+
+Scenario: We scan with intent to scanIn
+  Given this "intent": "scanIn"
+  When I visit "scan"
+  Then ? I am on page "scan"
 
 Rule: Personal accounts can scan an individual or company card
 
@@ -49,7 +48,7 @@ Scenario: I scan a company agent's QR
 Rule: Company accounts can scan an individual or company card
 
 Scenario: A company scans an individual's QR
-  Given I am signed in as "Bea/Cit" to "charge"
+  Given I am signed in as "Bea/Cit"
   When I scan "Abe" to "charge"
   Then ? I am on page "tx"
   And ? I am on page "charge-profile"
@@ -97,7 +96,7 @@ Scenario: I scan an individual's QR offline
   And ? I am on page "charge-profile"
   And ? "theirName" is not "Abe One"
   And ? I see "network-offline"
-  And ? I see "Trust this member or ask for ID" in "messageText"
+  And ? "Trust this member or ask for ID" is in "messageText"
 
 Scenario: I scan an individual's QR online, then again offline
   Given I run the app
@@ -105,7 +104,7 @@ Scenario: I scan an individual's QR online, then again offline
   | Abe |
   And we are offline
   And I scan "Abe" to "charge"
-  Then ? I see "Trust this member or ask for ID" in "messageText"
+  Then ? "Trust this member or ask for ID" is in "messageText"
   When I click "btn1"
   And I wait 1 seconds
   Then ? "theirName" is "Abe One"
@@ -121,7 +120,7 @@ Scenario: I scan my employee card to scan in
   And ? this "coPaying": "true"
   And ? I see "btn-pay"
   And ? I see "qr"
-  And ? "Show this QR Code to Pay" is in "header"
+  And ? "Show this code to BE PAID" is in "header"
 
 Scenario: I scan another employee card to scan in
   Given I am signed in as "Bea/Cit"

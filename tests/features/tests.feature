@@ -102,7 +102,7 @@ Scenario: these2
 Scenario: myAccount
   Given I am signed in as "Bea"
   Then ? I am signed in as "Bea"
-  And ? this "myAccount": "{ name:'Bea Two', isCo:false, accountId:'K6VMDCB', agentId:'K6VMDCB', selling:null }"
+  And ? this "myAccount": "{ name:'Bea Two', isCo:false, accountId:'K6VMDCB', deviceId:'devB', selling:null }"
 
 Scenario: deviceId
   Given this "deviceId": "Bea"

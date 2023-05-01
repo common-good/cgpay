@@ -11,8 +11,8 @@
   const dispatch = createEventDispatcher()
   function closeNav() { dispatch('toggleNav', {}) }
 
-  function coReceive() { store.setCoPaying(false); navigateTo('/home') }
-  function coPay() { store.setCoPaying(true); navigateTo('/home') }
+  /*function coReceive() { store.setCoPaying(false); navigateTo('/home') }
+  function coPay() { store.setCoPaying(true); navigateTo('/home') }*/
   function scanIn() { store.setIntent('scanIn'); navigateTo('/scan') }
   function rearCamera() { store.setFrontCamera(false) }
   function frontCamera() { store.setFrontCamera(true) }
@@ -27,8 +27,8 @@
   let menuItems = []
   function item(text, callback, criteria, id) { menuItems.push({text, callback, criteria, id}) }
 
-  item('Show Your QR to Receive', coReceive, () => $store.payOk == 'always' && $store.coPaying, 'showToReceive') // for companies
-  item('Show Your QR to Pay', coPay, () => $store.payOk == 'always' && !$store.coPaying && !store.selfServe(), 'showToPay') // for companies
+/*  item('Show Your QR to Receive', coReceive, () => $store.payOk == 'always' && $store.coPaying, 'showToReceive') // for companies
+  item('Show Your QR to Pay', coPay, () => $store.payOk == 'always' && !$store.coPaying && !store.selfServe(), 'showToPay') // for companies*/
   item('Scan Yourself In to Pay', scanIn, () => u.pageUri() == 'home' && $store.payOk == 'scan' && !$store.coPaying, 'scanIn') // for managers
   item('Use Rear Camera', rearCamera, () => $store.cameraCount > 1 && $store.frontCamera && !store.selfServe(), 'rear')
   item('Use Front Camera', frontCamera, () => $store.cameraCount > 1 && !$store.frontCamera && !store.selfServe(), 'front')

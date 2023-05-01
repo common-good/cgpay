@@ -18,7 +18,7 @@
   let viewHeight
   let isNavOpen
 
-  function toggleNav() { isNavOpen = !isNavOpen; store.setCoPaying(false) }
+  function toggleNav() { isNavOpen = !isNavOpen }
   function clickLogo() { navigateTo('/home') }
 
   onMount(() => {

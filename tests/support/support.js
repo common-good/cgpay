@@ -131,6 +131,7 @@ const t = {
                           : k == 'actorId' ? me.accountId
                           : k == 'otherId' ? me.accountId
                           : k == 'cardCode' ? me.cardCode
+                          : k == 'deviceId' ? me.deviceId
                           : k == 'qr' ? c.testQrStart + me.accountId.charAt(0) + me.accountId.substring(4) + me.cardCode
                           : v 
     return v
@@ -222,7 +223,11 @@ const t = {
     t.test(newValue, text)
   },
 
-  async scan(who, why) { await t.putv('qr', t.adjust(who, 'qr')); await t.visit('charge') },
+  async scan(who, why) {
+    await t.putv('qr', t.adjust(who, 'qr'))
+    await t.putv('intent', why)
+    await t.visit(why == 'scanIn' ? 'home' : 'tx')
+  },
 
   async tx(who, amount, description) {
     await t.scan(who)

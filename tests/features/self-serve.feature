@@ -6,26 +6,12 @@ Feature: Self Serve Mode
 
 Background:
 
-Rule: Business accounts have the option to enter self-serve mode
-
-Scenario: A business account sees self-serve mode
-  Given I am signed in as "Abe/Cit"
-  And I run the app
-  When I click "btn-nav"
-  Then ? I see "menu-selfOn"
-  And ? I do not see "menu-selfOff"
-
-Rule: The only menu option in self-serve mode is to exit self-serve mode and sign out
+Rule: The only menu option in self-serve mode is to sign out
 
 Scenario: A business account chooses self-serve mode
   Given I am signed in as "Abe/Cit"
   And this "payOk": "self"
   And I run the app
-
-  When I click "btn-nav"
-  And I click "menu-selfOn"
-  Then ? this "selfServe": "true"
-
   When I click "btn-nav"
   Then ? I see "menu-selfOff"
   And ? I see no "menu-front"
@@ -33,14 +19,13 @@ Scenario: A business account chooses self-serve mode
   And ? I see no "menu-switch"
   And ? I see no "menu-comment"
   And ? I see no "menu-signout"
-  And ? I do not see "menu-signout"
 
 Rule: In self-serve mode, no photo or customer name or location is shown
 
 Scenario: A customer scans in self-serve mode
   Given I am signed in as "Abe/Cit"
   And this "payOk": "self"
-  When I scan "Bea"
+  When I scan "Bea" to "charge"
   Then ? I am on page "tx"
   And ? I see no "theirPhoto"
   And ? I see no "theirLocation"
@@ -50,7 +35,7 @@ Rule: In self-serve mode, communication is directed at the buyer, not the seller
 Scenario: A customer pays in self-serve mode
   Given I am signed in as "Abe/Cit"
   And this "payOk": "self"
-  When I scan "Bea"
+  When I scan "Bea" to "charge"
   Then ? "action" is "Pay"
   And ? "btn-submit" is "Pay"
 
@@ -60,7 +45,7 @@ Scenario: A customer pays in self-serve mode
   Then ? we post this to "transactions":
   | amount  | actorId | otherId | description | created | proof | offline | version |
   | 1234.50 | Abe/Cit | Bea     | food!       | now     | hash  | false   | version |
-  * I wait 1 seconds
+  * I wait .1 seconds
   Then ? I see "transaction-complete"
   And ? "action" is "Paid"
   And ? "other-name" is "Citre"

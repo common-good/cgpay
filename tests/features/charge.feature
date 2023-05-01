@@ -13,7 +13,7 @@ Background:
 Rule: Charges must include an amount and a description
 
 Scenario: A company charges an individual
-  When I scan "Bea"
+  When I scan "Bea" to "charge"
   And I input "1234.50" as "amount"
   And I input "food!" as "description"
   And I click "btn-submit"
@@ -82,7 +82,7 @@ Scenario: An individual charges an individual
 Scenario: A company charges an individual offline
   Given we are offline
   And I run the app
-  When I scan "Bea"
+  When I scan "Bea" to "charge"
   Then ? this alert: "Trust this member or ask for ID"
   When I click "btn1"
   * I wait 1 seconds

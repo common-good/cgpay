@@ -33,6 +33,7 @@
       } else if (er.message == 403) { // forbidden
         showEr('That account is not completely set up. Sign back in at CommonGood.earth to complete it.')
       } else {
+        console.log(er)
         showEr('We could not find an account with that information. Please try again.')
       }
     }
