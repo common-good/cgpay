@@ -15,7 +15,7 @@
   const me = $store.myAccount
   let hdr, qr, alt, btnPay, payOk
 
-  function er(msg) { 
+  function showEr(msg) { 
     ({ m0, m1 } = u.dlg('Alert', msg, 'Close', () => {m0 = false; store.setMsg(null)})); m0=m0; m1=m1
   }
 
@@ -50,11 +50,13 @@
     } catch (er) { showEr(u.qrEr(er)) }
   }
 
+  onMount(async () => {
+    store.setTimeout(null) // stop the timeout timer from interrupting us
     if ($store.frontCamera === null) store.setFrontCamera(!u.isApple() && !u.isAndroid())
     if ($store.intent == 'scanIn') scanIn() // must precede setQr
     store.setQr(null) // no going back to previous customer
-    if (!coPay) store.setTimeout(null) // stop the timeout timer from interrupting us
-    if ($store.erMsg) er($store.erMsg)
+    if ($store.erMsg) showEr($store.erMsg)
+
     payOk = !me.isCo || $store.payOk == 'always' || $store.coPaying
     btnPay = me.isCo ? 'Scan to Pay / Refund / Sell CG Credit' : 'Scan to Pay'
 
