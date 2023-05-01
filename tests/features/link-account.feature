@@ -47,7 +47,7 @@ Scenario: A user with multiple accounts selects an account with all the defaults
   And ? "Citre" is in "account-name"
   When I click "btn-nav"
   Then ? I see "menu-scanIn"
-  But ? I do not see "menu-showToPay"
+  But ? I see no "menu-switch"
   And ? I do not see "menu-switch"
 
 Scenario: A user with multiple accounts selects different options
@@ -64,7 +64,7 @@ Scenario: A user with multiple accounts selects different options
   And ? I am on page "home"
   And ? "Bea Two" is in "account-name"
   When I click "btn-nav"
-  Then ? I do not see "menu-scanIn"
+  Then ? I see no "menu-scanIn"
   And ? I do not see "menu-showToPay"
   But ? I see "menu-switch"
 

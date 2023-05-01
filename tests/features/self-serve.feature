@@ -28,11 +28,11 @@ Scenario: A business account chooses self-serve mode
 
   When I click "btn-nav"
   Then ? I see "menu-selfOff"
-  And ? I do not see "menu-selfOn"
-  And ? I do not see "menu-front"
-  And ? I do not see "menu-rear"
-  And ? I do not see "menu-switch"
-  And ? I do not see "menu-comment"
+  And ? I see no "menu-front"
+  And ? I see no "menu-rear"
+  And ? I see no "menu-switch"
+  And ? I see no "menu-comment"
+  And ? I see no "menu-signout"
   And ? I do not see "menu-signout"
 
 Rule: In self-serve mode, no photo or customer name or location is shown
@@ -42,8 +42,8 @@ Scenario: A customer scans in self-serve mode
   And this "selfServe": "true"
   When I scan "Bea"
   Then ? I am on page "tx"
-  And ? I do not see "theirPhoto"
-  And ? I do not see "theirLocation"
+  And ? I see no "theirPhoto"
+  And ? I see no "theirLocation"
 
 Rule: In self-serve mode, communication is directed at the buyer, not the seller
 
@@ -64,7 +64,7 @@ Scenario: A customer pays in self-serve mode
   Then ? I see "transaction-complete"
   And ? "action" is "Paid"
   And ? "other-name" is "Citre"
-  And ? I do not see "agent"
+  And ? I see no "agent"
   And ? "description" is "food!"
   And ? "amount" is "1,234.50"
   And ? I see "thank-you"

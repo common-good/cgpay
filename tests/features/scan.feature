@@ -64,29 +64,29 @@ Rule: Scanning an invalid card produces an error message
 Scenario: I scan my own card to charge
   When I scan "Bea" to "charge"
   Then ? I am on page "home" 
-  And ? I see this error: "same account as yours"
+  And ? this error: "same account as yours"
 
 Scenario: I scan my own card to pay
   When I scan "Bea" to "pay"
   Then ? I am on page "home" 
-  And ? I see this error: "same account as yours"
+  And ? this error: "same account as yours"
 
 Scenario: I scan a non-employee card to scan in
   Given I am signed in as "Bea/Cit"
   Then ? this "coPaying": "false"
   When I scan "Dee" to "scanIn"
   Then ? I am on page "home" 
-  And ? I see this error: "That is not a QR for this company."
+  And ? this error: "That is not a QR for this company."
 
 Scenario: I scan an invalid or stolen card
   When I scan "Invalid" to "charge"
   Then ? I am on page "home" 
-  Then ? I see this error: "That is not a valid Common Good member QR Code."
+  Then ? this error: "That is not a valid Common Good member QR Code."
 
 Scenario: I scan a QR that is not for Common Good
   When I scan "Other" to "charge"
   Then ? I am on page "home" 
-  Then ? I see this error: "not a valid Common Good QR Code format"
+  Then ? this error: "not a valid Common Good QR Code format"
 
 Rule: Scanning to charge or pay works fine offline
 

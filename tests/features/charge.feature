@@ -24,7 +24,7 @@ Scenario: A company charges an individual
   Then ? I see "transaction-complete"
   And ? "action" is "Charged"
   And ? "other-name" is "Bea Two"
-  And ? I do not see "agent"
+  And ? I see no "agent"
   And ? "description" is "food!"
   And ? "amount" is "1,234.50"
   And ? I see "thank-you"
@@ -35,11 +35,11 @@ Scenario: A company charges an individual
   | 1234.50 | Cit     | Bea  | Cit   | Bea  | Abe  | food! | now     |
 
   When I click "btn-undo"
-  Then ? I see this alert: "Reverse the transaction?"
+  Then ? this alert: "Reverse the transaction?"
   And ? "btn1" is "Yes"
   When I click "btn1"
   * I wait 1 seconds
-  Then ? I see this confirmation: "The transaction has been reversed."
+  Then ? this confirmation: "The transaction has been reversed."
   When I click "btn1"
   Then ? I am on page "home"
   And ? these "txs":
@@ -83,7 +83,7 @@ Scenario: A company charges an individual offline
   Given we are offline
   And I run the app
   When I scan "Bea"
-  Then ? I see this alert: "Trust this member or ask for ID"
+  Then ? this alert: "Trust this member or ask for ID"
   When I click "btn1"
   * I wait 1 seconds
   And I input "234.50" as "amount"
@@ -96,7 +96,7 @@ Scenario: A company charges an individual offline
   Then ? I see "transaction-complete"
   And ? "action" is "Charged"
   And ? "other-name" is "Unidentified Member"
-  And ? I do not see "agent"
+  And ? I see no "agent"
   And ? "description" is "food!"
   And ? "amount" is "234.50"
   And ? I see "thank-you"
@@ -104,11 +104,11 @@ Scenario: A company charges an individual offline
   And ? count "txs" is 1
 
   When I click "btn-undo"
-  Then ? I see this alert: "Reverse the transaction?"
+  Then ? this alert: "Reverse the transaction?"
   And ? "btn1" is "Yes"
   When I click "btn1"
   * I wait 1 seconds
-  Then ? I see this confirmation: "The transaction has been reversed."
+  Then ? this confirmation: "The transaction has been reversed."
   When I click "btn1"
   Then ? I am on page "home"
   And ? these "txs":
