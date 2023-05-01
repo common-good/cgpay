@@ -19,8 +19,8 @@ Rule: The only menu option in self-serve mode is to exit self-serve mode and sig
 
 Scenario: A business account chooses self-serve mode
   Given I am signed in as "Abe/Cit"
+  And this "payOk": "self"
   And I run the app
-  Then ? this "selfServe": "false"
 
   When I click "btn-nav"
   And I click "menu-selfOn"
@@ -39,7 +39,7 @@ Rule: In self-serve mode, no photo or customer name or location is shown
 
 Scenario: A customer scans in self-serve mode
   Given I am signed in as "Abe/Cit"
-  And this "selfServe": "true"
+  And this "payOk": "self"
   When I scan "Bea"
   Then ? I am on page "tx"
   And ? I see no "theirPhoto"
@@ -49,7 +49,7 @@ Rule: In self-serve mode, communication is directed at the buyer, not the seller
 
 Scenario: A customer pays in self-serve mode
   Given I am signed in as "Abe/Cit"
-  And this "selfServe": "true"
+  And this "payOk": "self"
   When I scan "Bea"
   Then ? "action" is "Pay"
   And ? "btn-submit" is "Pay"
@@ -74,16 +74,20 @@ Rule: Exiting self-serve mode signs the user out
 
 Scenario: A vendor (or customer) exits self-serve mode
   Given I am signed in as "Abe/Cit"
-  And this "selfServe": "true"
+  And this "payOk": "self"
   And I run the app
   When I click "btn-nav"
   And I click "menu-selfOff"
   Then ? this "myAccount": "null"
   And ? I am on page "sign-in"
 
-Rule: Individual accounts have no self-serve mode
-  Given I am signed in as "Bea"
-  And I run the app
-  When I click "btn-nav"
-  Then ? I do not see "menu-selfOn"
-  And ? I do not see "menu-selfOn"
+Rule: Only business accounts have self-serve mode
+
+Scenario: A member with multiple accounts has signed in
+  Given these choices:
+  | Bea   | Bea/Cit |
+  When I visit "link-account"
+  Then ? "account-opt-1" is "selected"
+  And ? I see "payOk-radio-self"
+  When I click "account-opt-0"
+  Then ? I see no "payOk-radio-self"

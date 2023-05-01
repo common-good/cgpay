@@ -93,12 +93,13 @@ export const createStore = () => {
     setMsg(v) { setv('erMsg', v) },
     setCorrupt(version) { setv('corrupt', version) }, // pause uploading until a new version is released
     setWifi(yesno) { setv('useWifi', yesno); st.resetNetwork() },
-    setSelfServe(yesno) { setv('selfServe', yesno) },
     setCoPaying(yesno) { setv('coPaying', yesno) },
     setPayOk(v) { setv('payOk', v) },
+    selfServe() { return cache.payOk == 'self' },
 
     setAcctChoices(v) { setv('choices', v); if (v) reconcileDeviceIds(v) },
     setMyAccount(acct) { setv('myAccount', acct ? { ...acct } : null) },
+        st.setPayOk(null)
     linked() { return (cache.myAccount !== null) },
     unlink() { setv('myAccount', null) },
     signOut() { st.unlink(); st.setAcctChoices(null) },

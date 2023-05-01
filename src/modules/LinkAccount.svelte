@@ -17,7 +17,7 @@
   let acctIndex = null
   let payOk = 'scan'
   const choices = $store.choices
-  const payOkOptions = { always:'always', scan:'only if a manager scans in', never:'never' }
+  const payOkOptions = { always:'always', scan:'only if a manager scans in', never:'never', self:'self-serve mode' }
   
   function er(msg) { ({ m0, m1 } = u.dlg('Alert', msg, 'Close', () => m0 = false)); m0=m0; m1=m1 } 
 
@@ -25,11 +25,12 @@
     myAccount = choices && choices[acctIndex]
     store.setMyAccount(myAccount)
     if (lock) store.setAcctChoices(null)
-    store.setPayOk(payOk)
+    store.setPayOk(myAccount.isCo ? payOk : null)
     u.goHome(`This device is now linked to your Common Good account: ${myAccount?.name}.`)
   }
 
   onMount(async () => {
+    store.setMyAccount(null) // clear account preferences
     ready = true
     if (choices?.length) {
       for (let i in choices) acctOpts[i] = choices[i].name

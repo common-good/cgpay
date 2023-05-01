@@ -78,7 +78,7 @@
       </div>
     {/if}
 
-    {#if !self}
+    {#if !store.selfServe()}
       <!--a class="survey" data-testid="lnk-survey" href="{surveyLink}" target="_blank">Take Our User Experience Survey</a-->
     {/if}
     <div class="buttons">

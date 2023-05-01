@@ -31,11 +31,10 @@
   
   const qr = $store.qr
   let tipable = false
-
   let gotTx = false
   let limit = null
   let photo = { alt: 'Customer Profile', blob: null }
-  const pastAction = (pay || $store.selfServe) ? 'Paid' : 'Charged'
+  const pastAction = (pay || store.selfServe()) ? 'Paid' : 'Charged'
 
   // --------------------------------------------
 
@@ -46,7 +45,7 @@
     ;({ m0, m1, m2 } = u.dlg('Alert', msg, 'OK', () => m0 = false)); m0=m0; m1=m1; m2=m2 
   }
 
-  function handleSubmitCharge() { gotTx = true; store.setTimeout(c.txTimeout) } // state success, show undo/tip/done/receipt buttons
+  function handleSubmitCharge() { gotTx = true; if (store.selfServe()) store.setTimeout(c.txTimeout) } // state success, show undo/tip/done/receipt buttons
     
   /**
    * Get the customer's photo from the server
@@ -58,7 +57,7 @@
   }
 
   function profileOffline() {
-    if (!$store.selfServe) showEr('OFFLINE. Trust this member or ask for ID.')
+    if (!store.selfServe()) showEr('OFFLINE. Trust this member or ask for ID.')
     limit = Math.min(c.offlineLimit, limit === null ? c.offlineLimit : limit)
   }
   
@@ -99,7 +98,7 @@
         delete otherAccount.selling
         store.putAcct(card, otherAccount) // store and/or update stored customer account info
         limit = Math.min(otherAccount.limit, c.onlineLimit)
-        if (!$store.selfServe) photo = await getPhoto(query)
+        if (!store.selfServe()) photo = await getPhoto(query)
       }
     } catch (er) {
       if (u.isTimeout(er)) { // internet unavailable; recognize a repeat customer or limit CG's liability
@@ -115,16 +114,16 @@
 </svelte:head>
 
 <section class="page" id="tx">
-  { #if gotTx }
+  {#if gotTx}
     <h1 data-testid="transaction-complete">Transaction Complete</h1>
     <div class='top'>
       <div class='charge-info'>
         <div class='row payee-info'>
           <p><span data-testid="action">{pastAction}</span> to:</p>
           <div class='payee-details'>
-          { #if $store.selfServe }
+          {#if store.selfServe()}
             <p data-testid="other-name">{ $store.myAccount.name }</p>
-          { :else }
+          {:else}
             {#if otherAccount.agent}
               <p data-testid="agent">{ otherAccount.agent }</p>
               <p class='co' data-testid="other-name">{ otherAccount.name }</p>
@@ -146,7 +145,7 @@
       <div class="note" data-testid="thank-you">Thank you for using CGPay<br>for democracy and the common good!</div>
     </div>
     <div class="actions">
-      { #if tipable }<a class="secondary" href='/tip'>Add Tip</a>{ /if }
+      {#if tipable}<a class="secondary" href='/tip'>Add Tip</a>{/if}
       <!-- button>Receipt</button -->
       <button data-testid="btn-undo" on:click={ askUndo } class="tertiary">Undo</button>
       <a class="primary" data-testid="done" href='/home'>Done</a>

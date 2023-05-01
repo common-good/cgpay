@@ -8,6 +8,7 @@ Feature: Timeout
 
 Background:
   * I am signed in as "Abe/Cit"
+  * this "payOk": "self"
   * I charge "Bea" 1.23 for "candy"
 
 Rule: If nothing happens soon after payment confirmation, the app goes home

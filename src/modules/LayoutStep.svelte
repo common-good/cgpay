@@ -34,7 +34,7 @@
     <button on:click={clickLogo}><img src={cgLogo} alt="Common Good Logo" /></button>
     <p data-testid="account-name">{ ($store.myAccount ? $store.myAccount.name : '') + (u.realData() ? '' : ' (DEMO)')}</p>
       <button data-testid="btn-nav" on:click={toggleNav}>
-        { #if !$store.selfServe || u.pageUri() == "home" }
+        { #if $store.payOk != 'self' || u.pageUri() == "home" }
           <NavIcon width={'100%'} height={'100%'} ariaLabel={'menu'} />
         { /if }
       </button>

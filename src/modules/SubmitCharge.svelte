@@ -11,7 +11,7 @@
   export let limit
 
   const pay = $store.intent == 'pay'
-  const action = (pay || $store.selfServe) ? 'Pay' : 'Charge'
+  const action = (pay || store.selfServe()) ? 'Pay' : 'Charge'
   const dispatch = createEventDispatcher()
 
   async function charge() {
@@ -43,7 +43,7 @@
 <section id="submit-charge">
   <h1 data-testid="action">{action}</h1>
   <form on:submit|preventDefault={ charge }>
-    { #if !$store.selfServe }<Profile { otherAccount } {photo} />{ /if }
+    { #if !store.selfServe() }<Profile { otherAccount } {photo} />{ /if }
     <div class="bottom">
       <fieldset>
         <label for="amount">Amount</label>
