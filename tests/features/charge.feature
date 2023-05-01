@@ -95,7 +95,7 @@ Scenario: A company charges an individual offline
   # Offline limit is $250
   Then ? I see "transaction-complete"
   And ? "action" is "Charged"
-  And ? "other-name" is "Unidentified Customer"
+  And ? "other-name" is "Unidentified Member"
   And ? I do not see "agent"
   And ? "description" is "food!"
   And ? "amount" is "234.50"

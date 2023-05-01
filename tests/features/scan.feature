@@ -76,17 +76,17 @@ Scenario: I scan a non-employee card to scan in
   Then ? this "coPaying": "false"
   When I scan "Dee" to "scanIn"
   Then ? I am on page "home" 
-  And ? I see this error: "account is not an authorized agent of Citre"
+  And ? I see this error: "That is not a QR for this company."
 
 Scenario: I scan an invalid or stolen card
   When I scan "Invalid" to "charge"
   Then ? I am on page "home" 
-  Then ? I see this error: "not a valid Common Good card"
+  Then ? I see this error: "That is not a valid Common Good member QR Code."
 
 Scenario: I scan a QR that is not for Common Good
   When I scan "Other" to "charge"
   Then ? I am on page "home" 
-  Then ? I see this error: "not a valid Common Good card format"
+  Then ? I see this error: "not a valid Common Good QR Code format"
 
 Rule: Scanning to charge or pay works fine offline
 

@@ -10,7 +10,7 @@ import c from '#constants.js'
 import cache0 from '#cache.js'
 
 export const createStore = () => {
-  const lostMsg = `Tell the customer "I'm sorry, that card is marked "LOST or STOLEN".`
+  const lostMsg = `Tell the customer "I'm sorry, that QR Code is marked "LOST or STOLEN".`
 
   let cache
   save({ ...cache, ...convert(getst()), version:c.version }) // update store with any changes in defaults (crucial for tests)

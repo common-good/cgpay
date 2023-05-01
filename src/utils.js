@@ -103,10 +103,10 @@ const u = {
     if ((new RegExp(c.qrUrlRegex)).test(qr)) { // like HTTP://6VM.RC4.ME/KDJJ34kjdfKJ4
       acct = parts[5][0] + parts[2] + parts[5].substring(1)
       testing = qr.startsWith(c.testQrStart)
-    } else throw new Error('That is not a valid Common Good card format.')
+    } else throw new Error('That is not a valid Common Good QR Code format.')
 
-    if (testing && u.realData()) throw new Error('That is a CGPay test card and cannot be used in production mode.')
-    if (!testing && !u.realData()) throw new Error('That is a real Common Good card and cannot be used in test mode.')
+    if (testing && u.realData()) throw new Error('That is a CGPay test QR Code and cannot be used in production mode.')
+    if (!testing && !u.realData()) throw new Error('That is a real Common Good QR Code and cannot be used in test mode.')
 
     const agentLen = +agentLens[dig36.indexOf(acct[0])]
     const mainId = u.getMainId(acct)
