@@ -38,7 +38,9 @@
       <!-- <button on:click={GO BACK} class="btn" aria-label="Back">
         <BackIcon width={'100%'} height={'100%'} />
       </button> -->
-    <button on:click={ () => navigateTo('/home') } data-testid="account-name">{ ($store.myAccount ? $store.myAccount.name : '') + (u.realData() ? '' : ' (DEMO)')}</button>
+      <button on:click={ () => navigateTo('/home') } data-testid="account-name">
+        { ($store.myAccount ? $store.myAccount.name : '') + (u.realData() ? '' : ' (DEMO)')}
+      </button>
       <button data-testid="btn-nav" class="btn" aria-label="Menu" on:click={toggleNav}>
         { #if !$store.selfServe || u.pageUri() == 'home' }
           <NavIcon width={'100%'} height={'100%'} />
