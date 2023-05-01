@@ -115,6 +115,12 @@ const u = {
     return { acct: acct0, main: mainId, code: code, hash: u.hash(code) }
   },
   
+  qrEr(er) {
+    if (isNaN(er.message)) return er.message
+    if (er.message == '404') return 'That is not a valid Common Good member QR Code.' // account not found
+    return u.crash(`An unexpected error occurred. Please alert Common Good's support team.`)
+  },
+
   /**
    * Return just the region and acct parts of the QR.
    */

@@ -104,13 +104,7 @@
     } catch (er) {
       if (u.isTimeout(er)) { // internet unavailable; recognize a repeat customer or limit CG's liability
         profileOffline()
-      } else if (isNaN(er.message)) {
-        return u.goEr(er.message)
-      } else if (er.message == '404') { // account not found
-        return u.goEr('That is not a valid Common Good member QR Code.')
-      } else {
-        return u.goEr(u.crash(`An unexpected error occurred. Please alert Common Good's support team.`))
-      }
+      } else return u.goEr(u.qrEr(er)) // handle invalid QR and all other errors
     }
   })
 
