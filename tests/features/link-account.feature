@@ -48,11 +48,9 @@ Scenario: A user with multiple accounts selects an account with all the defaults
   When I click "btn-nav"
   Then ? I see "menu-scanIn"
   But ? I see no "menu-switch"
-  And ? I do not see "menu-switch"
 
-Scenario: A user with multiple accounts selects different options
+Scenario: A user with multiple accounts selects a company with different options
   When I visit "link-account"
-  And I click "account-opt-0"
   And I click "lock-account"
   And I click "payOk-radio-never"
   And I click "btn-link"
@@ -60,12 +58,40 @@ Scenario: A user with multiple accounts selects different options
   Then ? this "payOk": "never"
   And ? these choices:
   | Bea | Bea/Cit |
+  And ? I am signed in as "Bea/Cit"
+  And ? I am on page "home"
+  When I click "btn-nav"
+  Then ? I see no "menu-scanIn"
+  But ? I see "menu-switch"
+
+Scenario: A user with multiple accounts selects a company allowed to pay always
+  When I visit "link-account"
+  And I click "payOk-radio-always"
+  And I click "btn-link"
+  And I wait 1 seconds
+  Then ? this "payOk": "always"
+  And ? this "choices": "null"
+  And ? I am signed in as "Bea/Cit"
+  And ? I am on page "home"
+  When I click "btn-nav"
+  Then ? I see no "menu-scanIn"
+  And ? I see no "menu-switch"
+  But ? I see "btn-pay"
+
+Scenario: A user with multiple accounts selects an individual account
+  When I visit "link-account"
+  And I click "account-opt-0"
+  And I click "lock-account"
+  And I click "btn-link"
+  And I wait 1 seconds
+  Then ? this "payOk": "null"
+  And ? these choices:
+  | Bea | Bea/Cit |
   And ? I am signed in as "Bea"
   And ? I am on page "home"
   And ? "Bea Two" is in "account-name"
   When I click "btn-nav"
   Then ? I see no "menu-scanIn"
-  And ? I do not see "menu-showToPay"
   But ? I see "menu-switch"
 
 Scenario: The user chooses an account offline
