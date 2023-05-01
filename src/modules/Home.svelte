@@ -28,16 +28,18 @@
   function charge(intent = 'charge') { store.setIntent(intent); navigateTo('/scan') }
   function isQrToPay() { return (qr.length == me.qr.length) }
 
-  onMount(async () => {
-    me = $store.myAccount
-    myQr = me.qr
-    isCo = me.isCo
-    self = $store.selfServe
-    coPay = (isCo && $store.coPaying)
-    coChg = (isCo && !coPay)
-    btnPay = self ? 'Or Scan Your Own QR Code to Pay'
-    : isCo ? 'Scan to Pay / Refund / Receive Cash for Credit'
-    : 'Scan a QR Code to Pay'
+  /**
+   * Set the displayed QR to a QR to pay or a QR to be paid
+   * @param toPay: true for a QR to pay, false for a QR to be paid, null to toggle
+   */
+  async function toggleQr(toPay = null) {
+    if (typeof toPay === 'object') {
+      if (!payOk) return
+      toPay = !isQrToPay()
+      if (!toPay && $store.coPay == 'scan') { store.setCoPaying(false); payOk = false; }
+    }
+    ;[qr, hdr, alt] = toPay ? [me.qr, 'Show this code to PAY', 'pay'] : [await receiveQr(), 'Show this code to BE PAID', 'be paid']
+  }
 
   function scanIn() {
     try {
@@ -55,6 +57,13 @@
     if ($store.erMsg) er($store.erMsg)
     payOk = !me.isCo || $store.payOk == 'always' || $store.coPaying
     btnPay = me.isCo ? 'Scan to Pay / Refund / Sell CG Credit' : 'Scan to Pay'
+
+    if (store.selfServe()) {
+      qr = await receiveQr()
+      hdr = '<b>Self-Serve</b><br>Scan this code to pay with Common Good<br>Or press the button below to charge yourself'
+      alt = 'pay'
+    } else toggleQr(!me.isCo)
+
     try {
       const q = {deviceId:me.deviceId, actorId:me.accountId, lastTx:me.lastTx || -1 }
       const query = queryString.stringify(q)
@@ -73,7 +82,9 @@
 <section class="page" id="home">
   <div class="top">
     <h1 data-testid="header">{@html hdr}</h1>
-    <img src="{qr}" data-testid="qr" alt="Scan this QR Code to {alt + ' ' + me?.name}" />
+    <button on:click={toggleQr}>
+      <img src="{qr}" data-testid="qr" alt="Scan this QR Code to {alt + ' ' + me?.name}" />
+    </button>
     <p>CGPay v{c.version}</p>
   </div>
 
@@ -113,6 +124,7 @@
     margin-bottom $s0
     flex-grow 1
     margin-right $s-2
+    visibility visible
 
   .bottom
     width 100%
@@ -126,6 +138,7 @@
     text(lg)
     font-weight 400
     margin-bottom $s2
+    text-align center
 
   img 
     max-width 250px
