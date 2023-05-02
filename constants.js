@@ -9,6 +9,11 @@ const constants = {
   fetchTimeoutMs: 3200,
   networkTimeoutMs: 100,
 
+  showDevStuff: false, // if true, show dev-only features
+  showSelfServe: true, // if true, enable self-serve feature
+  showScanToPay: false, // if true, enable scan-to-pay feature
+  showShowToPay: true, // if true, enable show-to-pay feature
+
   // how long user has, on the current screen (in seconds), before we return automatically to Home
   txTimeout: 10, // Tx page
   doneTimeout: 10, // confirmation page

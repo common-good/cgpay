@@ -57,7 +57,7 @@
     st.setQr(null) // no going back to previous customer
     if ($st.erMsg) showEr($st.erMsg)
 
-    payOk = !me.isCo || $st.payOk == 'always' || $st.coPaying
+    payOk = (!me.isCo || $st.payOk == 'always' || $st.coPaying) && c.showScanToPay
     btnPay = me.isCo ? 'Scan to Pay / Refund / Sell CG Credit' : 'Scan to Pay'
 
     if (st.selfServe()) {
@@ -91,7 +91,7 @@
   </div>
 
   <div class="bottom">
-    {#if u.localMode()}
+    {#if u.localMode() }
       <div class="fakes">
         <button on:click={ () => fake('HTTP://6VM.RC4.ME/KDCA12345a') }>A</button>
         <button on:click={ () => fake('HTTP://6VM.RC4.ME/KDCB12345b') }>B</button>

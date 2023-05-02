@@ -149,7 +149,7 @@ const u = {
   
   now() { return (u.testing()) ? st.inspect().now : u.now0() }, // keep "now" constant in tests
   realData() { return ['production', 'staging'].includes(u.mode()) },
-  localMode() { return (u.mode() == 'local') }, 
+  localMode() { return (u.mode() == 'local' && c.showDevStuff) }, 
   yesno(question, m1, m2) { return u.dlg('Confirm', question, 'Yes, No', m1, m2) },
   confirm(question) { return u.dlg('Alert', question, 'OK', null, null) },
   crash(er) { console.log('crash', er); return typeof er === 'string' ? er : er.message },
