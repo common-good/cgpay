@@ -1,6 +1,6 @@
 <script>
   import u from '#utils.js'
-  import store from '#store.js'
+  import st from'#store.js'
 
   export let currentRoute // else Svelte complains (I don't know why yet)
   export let params // else Svelte complains (I don't know why yet)
@@ -8,8 +8,8 @@
   let text
 
   async function submit() {
-    store.comment(text)
-    u.goHome('Thank you for your feedback! We very much appreciate your participation in creating a Common Good economy.')
+    await st.comment(text)
+    await u.goHome('Thank you for your feedback! We very much appreciate your participation in creating a Common Good economy.')
   }
 </script>
 

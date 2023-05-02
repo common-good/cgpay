@@ -3,7 +3,7 @@
   import { createEventDispatcher } from "svelte"
   import { navigateTo } from 'svelte-router-spa'
   import { focusTrap } from 'svelte-focus-trap'
-  import store from '#store.js'
+  import st from'#store.js'
   import u from '#utils.js'
 
   let nav
@@ -11,35 +11,35 @@
   const dispatch = createEventDispatcher()
   function closeNav() { dispatch('toggleNav', {}) }
 
-  /*function coReceive() { store.setCoPaying(false); navigateTo('/home') }
-  function coPay() { store.setCoPaying(true); navigateTo('/home') }*/
-  function scanIn() { store.setIntent('scanIn'); navigateTo('/scan') }
-  function rearCamera() { store.setFrontCamera(false) }
-  function frontCamera() { store.setFrontCamera(true) }
-  function switchAccount() { store.unlink(); navigateTo('/link-account') }
+  /*function coReceive() { st.setCoPaying(false); navigateTo('/home') }
+  function coPay() { st.setCoPaying(true); navigateTo('/home') }*/
+  function scanIn() { st.setIntent('scanIn'); navigateTo('/scan') }
+  function rearCamera() { st.setFrontCamera(false) }
+  function frontCamera() { st.setFrontCamera(true) }
+  function switchAccount() { st.unlink(); navigateTo('/link-account') }
   function comment() { navigateTo('/comment')}
-  function signOut() { store.signOut(); navigateTo('/') }
+  function signOut() { st.signOut(); navigateTo('/') }
 
-  function wifiOn() { store.setWifi(true) }
-  function wifiOff() { store.setWifi(false) }
-  function clearData() { store.clearData(); navigateTo('/'); navigateTo('/') }
+  function wifiOn() { st.setWifi(true) }
+  function wifiOff() { st.setWifi(false) }
+  function clearData() { st.clearData(); navigateTo('/'); navigateTo('/') }
 
   let menuItems = []
   function item(text, callback, criteria, id) { menuItems.push({text, callback, criteria, id}) }
 
-/*  item('Show Your QR to Receive', coReceive, () => $store.payOk == 'always' && $store.coPaying, 'showToReceive') // for companies
-  item('Show Your QR to Pay', coPay, () => $store.payOk == 'always' && !$store.coPaying && !store.selfServe(), 'showToPay') // for companies*/
-  item('Scan Yourself In to Pay', scanIn, () => u.pageUri() == 'home' && $store.payOk == 'scan' && !$store.coPaying, 'scanIn') // for managers
-  item('Use Rear Camera', rearCamera, () => $store.cameraCount > 1 && $store.frontCamera && !store.selfServe(), 'rear')
-  item('Use Front Camera', frontCamera, () => $store.cameraCount > 1 && !$store.frontCamera && !store.selfServe(), 'front')
-  item('Exit Self Serve (signs out)', signOut, () => u.pageUri() == 'home' && store.selfServe(), 'selfOff')
-  item('Switch Account', switchAccount, () => $store.choices?.length > 1 && u.pageUri() != 'link-account' && !store.selfServe(), 'switch')
-  item('Give Feedback', comment, () => store.linked() && !store.selfServe(), 'comment')
-  item('Sign Out', signOut, () => (store.linked() || u.pageUri() == 'link-account') && !store.selfServe(), 'signout')
+/*  item('Show Your QR to Receive', coReceive, () => $st.payOk == 'always' && $st.coPaying, 'showToReceive') // for companies
+  item('Show Your QR to Pay', coPay, () => $st.payOk == 'always' && !$st.coPaying && !st.selfServe(), 'showToPay') // for companies*/
+  item('Scan Yourself In to Pay', scanIn, () => u.pageUri() == 'home' && $st.payOk == 'scan' && !$st.coPaying, 'scanIn') // for managers
+  item('Use Rear Camera', rearCamera, () => $st.cameraCount > 1 && $st.frontCamera && !st.selfServe(), 'rear')
+  item('Use Front Camera', frontCamera, () => $st.cameraCount > 1 && !$st.frontCamera && !st.selfServe(), 'front')
+  item('Exit Self Serve (signs out)', signOut, () => u.pageUri() == 'home' && st.selfServe(), 'selfOff')
+  item('Switch Account', switchAccount, () => $st.choices?.length > 1 && u.pageUri() != 'link-account' && !st.selfServe(), 'switch')
+  item('Give Feedback', comment, () => st.linked() && !st.selfServe(), 'comment')
+  item('Sign Out', signOut, () => (st.linked() || u.pageUri() == 'link-account') && !st.selfServe(), 'signout')
 
   if (u.localMode()) {
-    item('🌈 Turn Wifi Off', wifiOff, () => $store.useWifi)
-    item('🌈 Turn Wifi On', wifiOn, () => !$store.useWifi)
+    item('🌈 Turn Wifi Off', wifiOff, () => $st.useWifi)
+    item('🌈 Turn Wifi On', wifiOn, () => !$st.useWifi)
     item('🌈 START OVER', clearData, () => true)
   }
 

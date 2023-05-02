@@ -2,7 +2,7 @@
   import { Html5Qrcode } from 'html5-qrcode'
   import { navigateTo } from 'svelte-router-spa'
   import { onMount } from 'svelte'
-  import store from '#store.js'
+  import st from'#store.js'
   import u from '#utils.js'
   import c from '#constants.js'
   import cgLogo from '#modules/assets/cg-logo-300.png?webp'
@@ -13,13 +13,13 @@
   let di = 0 // default to first device
 
   onMount(async () => {
-    if (!$store.intent) u.goEr(u.crash('scan with no intent'))
+    if (!$st.intent) u.goEr(u.crash('scan with no intent'))
     try {
       Html5Qrcode.getCameras().then(devices => {
         if (devices?.length) {
-          store.setCameraCount(devices.length)
+          st.setCameraCount(devices.length)
           if (devices.length > 1) { // choose front or rear camera as appropriate (ignore camera #3+)
-            if (/rear/.test(devices[0].label) ? $store.frontCamera : !$store.frontCamera) di = 1
+            if (/rear/.test(devices[0].label) ? $st.frontCamera : !$st.frontCamera) di = 1
           }
           const cameraId = devices[di].id
           const scanner = new Html5Qrcode('scanner')
@@ -30,8 +30,8 @@
 
             async (decodedText, decodedResult) => { // Handle code
               await scanner.stop()
-              store.setQr(decodedText)
-              navigateTo($store.intent == 'scanIn' ? '/home' : '/tx')
+              st.setQr(decodedText)
+              navigateTo($st.intent == 'scanIn' ? '/home' : '/tx')
             },
             (erMsg) => { } // ignore "parse" errors -- no valid QR yet (keep scanning)
 

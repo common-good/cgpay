@@ -1,6 +1,6 @@
 <script>
   import { navigateTo } from 'svelte-router-spa'
-  import store from '#store.js'
+  import st from'#store.js'
   import u from '#utils.js'
   import c from '#constants.js'
   import cgLogo from '#modules/assets/cg-logo-300.png?webp'
@@ -19,16 +19,16 @@
     statusMsg = 'Finding your account(s)...'
     try {
       const result = await u.postRequest('accounts', credentials)
-      store.setAcctChoices(result.accounts)
+      st.setAcctChoices(result.accounts)
       if (result.accounts.length > 1) {
         navigateTo('/link-account')
       } else {
-        store.setMyAccount(result.accounts[0])
+        st.setMyAccount(result.accounts[0])
         navigateTo('/home')
       }
     } catch (er) {
-      store.resetNetwork()
-      if (u.isTimeout(er) || !$store.online) {
+      st.resetNetwork()
+      if (u.isTimeout(er) || !$st.online) {
         showEr('The server is unavailable. Check your internet connection and try again.')
       } else if (er.message == 403) { // forbidden
         showEr('That account is not completely set up. Sign back in at CommonGood.earth to complete it.')

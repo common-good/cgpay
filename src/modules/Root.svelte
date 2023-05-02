@@ -1,7 +1,7 @@
 <script>
   import { Router, navigateTo } from 'svelte-router-spa'
   import { onMount } from 'svelte'
-  import store from '#store.js'
+  import st from'#store.js'
   import u from '#utils.js'
   import c from '#constants.js'
 
@@ -18,13 +18,13 @@
 
   // Initialization Helpers
 
-  store.fromTester().then() // we must check for tester instructions before doing anything
+  st.fromTester().then() // we must check for tester instructions before doing anything
 
   function timeOut() {
-    store.fromTester().then()
-    store.resetNetwork()
+    st.fromTester().then()
+    st.resetNetwork()
     setTimeout(timeOut, c.networkTimeoutMs)
-    if ($store.timeout && !store.setTimeout()) navigateTo('/home')
+    if ($st.timeout && !st.setTimeout()) navigateTo('/home')
   }
 
   function onlyIf(condition, elseGoTo) { return { guard: condition, redirect: elseGoTo } }
@@ -33,24 +33,24 @@
     return { name: name, component: component, layout: layout, onlyIf: onlyIf(condition, elseGoTo) }
   }
 
-  const needSignin = ( () => u.empty($store.choices) && !store.linked() )
-  const needLink = ( () => !store.linked() )
-  const gotQr = ( () => $store.qr !== null )
+  const needSignin = ( () => u.empty($st.choices) && !st.linked() )
+  const needLink = ( () => !st.linked() )
+  const gotQr = ( () => $st.qr !== null )
 
   const routes = [
     route('/empty', Empty, true, null, LayoutIntro), // for testing
     route('/', AddToHomeScreen, u.addableToHome, '/sign-in', LayoutIntro),
     route('/sign-in', SignIn, needSignin, '/link-account', LayoutIntro),
     route('/link-account', LinkAccount, needLink, '/home'),
-    route('/home', Home, store.linked, '/'),
-    route('/scan', Scan, store.linked, '/'),
+    route('/home', Home, st.linked, '/'),
+    route('/scan', Scan, st.linked, '/'),
     route('/tx', Tx, gotQr, '/'),
-    route('/comment', Comment, store.linked, '/')
+    route('/comment', Comment, st.linked, '/')
   ]
 
   onMount(async () => {
-    addEventListener('offline', () => { store.setOnline(false) })
-    addEventListener('online', () => { store.setOnline(true) })
+    addEventListener('offline', () => { st.setOnline(false) })
+    addEventListener('online', () => { st.setOnline(true) })
     timeOut()
   })
 

@@ -5,7 +5,7 @@
   import Navigation from '#modules/Navigation.svelte'
   import NetworkStatus from '#modules/NetworkStatus.svelte'
   import cgLogo from '#modules/assets/cg-logo-300.png?webp'
-  import store from '#store.js'
+  import st from'#store.js'
   import u from '#utils.js'
 
   /**
@@ -32,9 +32,9 @@
   { /if }
   <header>
     <button on:click={clickLogo}><img src={cgLogo} alt="Common Good Logo" /></button>
-    <p data-testid="account-name">{ ($store.myAccount ? $store.myAccount.name : '') + (u.realData() ? '' : ' (DEMO)')}</p>
+    <p data-testid="account-name">{ ($st.myAccount ? $st.myAccount.name : '') + (u.realData() ? '' : ' (DEMO)')}</p>
       <button data-testid="btn-nav" on:click={toggleNav}>
-        { #if $store.payOk != 'self' || u.pageUri() == "home" }
+        { #if $st.payOk != 'self' || u.pageUri() == "home" }
           <NavIcon width={'100%'} height={'100%'} ariaLabel={'menu'} />
         { /if }
       </button>

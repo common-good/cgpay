@@ -1,7 +1,7 @@
 <script>
   import queryString from 'query-string'
   import { onMount } from 'svelte'
-  import store from '#store.js'
+  import st from'#store.js'
   import u from '#utils.js'
   import SelectX from '#modules/SelectX.svelte'
   import Radios from '#modules/Radios.svelte'
@@ -16,21 +16,21 @@
   let ready = false
   let acctIndex = null
   let payOk = 'scan'
-  const choices = $store.choices
+  const choices = $st.choices
   const payOkOptions = { always:'always', scan:'only if a manager scans in', never:'never', self:'self-serve mode' }
   
   function er(msg) { ({ m0, m1 } = u.dlg('Alert', msg, 'Close', () => m0 = false)); m0=m0; m1=m1 } 
 
   function gotAccount() {
     myAccount = choices && choices[acctIndex]
-    store.setMyAccount(myAccount)
-    if (lock) store.setAcctChoices(null)
-    store.setPayOk(myAccount.isCo ? payOk : null)
+    st.setMyAccount(myAccount)
+    if (lock) st.setAcctChoices(null)
+    st.setPayOk(myAccount.isCo ? payOk : null)
     u.goHome(`This device is now linked to your Common Good account: ${myAccount?.name}.`)
   }
 
   onMount(async () => {
-    store.setMyAccount(null) // clear account preferences
+    st.setMyAccount(null) // clear account preferences
     ready = true
     if (choices?.length) {
       for (let i in choices) acctOpts[i] = choices[i].name

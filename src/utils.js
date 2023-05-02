@@ -1,4 +1,4 @@
-import store from '#store.js'
+import st from'#store.js'
 import c from '#constants.js'
 import queryString from 'query-string'
 import { navigateTo } from 'svelte-router-spa'
@@ -37,7 +37,7 @@ const u = {
    * @throws an AbortError if the fetch times out (identify with isTimeout())
    */
   async timedFetch(url, options = {}, post = false) {
-    if (!store.inspect().online) throw u.er('Offline') // this works for setWifiOff also
+    if (!st.inspect().online) throw u.er('Offline') // this works for setWifiOff also
     if (!post) {
       url += '&version=' + c.version
       const urlRay = url.split('?')
@@ -60,7 +60,7 @@ const u = {
   },
 
   async postRequest(endpoint, v) {
-    store.bump('posts')
+    st.bump('posts')
     v.version = c.version
     await u.tellTester('post', endpoint, { ...v })
     return await u.timedFetch(endpoint, {
@@ -147,14 +147,14 @@ const u = {
     : 'dev'
   }, 
   
-  now() { return (u.testing()) ? store.inspect().now : u.now0() }, // keep "now" constant in tests
+  now() { return (u.testing()) ? st.inspect().now : u.now0() }, // keep "now" constant in tests
   realData() { return ['production', 'staging'].includes(u.mode()) },
   localMode() { return (u.mode() == 'local') }, 
   yesno(question, m1, m2) { return u.dlg('Confirm', question, 'Yes, No', m1, m2) },
   confirm(question) { return u.dlg('Alert', question, 'OK', null, null) },
   crash(er) { console.log('crash', er); return typeof er === 'string' ? er : er.message },
-  goEr(msg) { store.setMsg(msg); navigateTo('/home') },
-  goHome(msg) { store.setMsg(msg); navigateTo('/home') },
+  goEr(msg) { st.setMsg(msg); navigateTo('/home') },
+  goHome(msg) { st.setMsg(msg); navigateTo('/home') },
   isTimeout(er) { return (typeof er === 'object' && (er.name == 'AbortError' || er.name == 'Offline')) },
   pageUri() { return location.href.substring(location.href.lastIndexOf('/') + 1) },
   isApple() { return /iPhone|iPod|iPad/i.test(navigator.userAgent) },
@@ -171,7 +171,7 @@ const u = {
   },
 
   addableToHome() { 
-    if (store.inspect().sawAdd) return false
+    if (st.inspect().sawAdd) return false
     return (u.isApple() && u.isSafari()) || (u.isAndroid() && u.isChrome())
   },
 
@@ -196,7 +196,7 @@ const u = {
   */
 
   /* for POST auth in HTTP header (any advantage?)
-          'authorization': `Bearer ${ $store.deviceId }`,
+          'authorization': `Bearer ${ $st.deviceId }`,
           'Accept': 'application/json',
           'Content-type': 'application/json',
           body: JSON.stringify(tx)

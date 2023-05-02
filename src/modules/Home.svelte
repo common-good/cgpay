@@ -1,10 +1,10 @@
 <script>
   import { onMount } from 'svelte'
-  import store from '#store.js'
+  import st from'#store.js'
   import u from '#utils.js'
   import c from '#constants.js'
   import Modal from '#modules/Modal.svelte'; let m0, m1, m2
-//  import cgLogo from '#modules/assets/cg-logo-300.png?webp'
+  import cgLogo from '#modules/assets/cg-logo-300.png?webp'
   import { navigateTo } from 'svelte-router-spa'
   import queryString from 'query-string'
 
@@ -12,20 +12,20 @@
   export let params // else Svelte complains (I don't know why yet)
 
   const surveyLink = 'https://forms.gle/M8Hv1W2oSgw2yQzS7'
-  const me = $store.myAccount
+  const me = $st.myAccount
   let hdr, qr, alt, btnPay, payOk
 
   function showEr(msg) { 
-    ({ m0, m1 } = u.dlg('Alert', msg, 'Close', () => {m0 = false; store.setMsg(null)})); m0=m0; m1=m1
+    ({ m0, m1 } = u.dlg('Alert', msg, 'Close', () => {m0 = false; st.setMsg(null)})); m0=m0; m1=m1
   }
 
   async function receiveQr() { return await u.generateQr(u.makeQrUrl(u.getMainId(me.accountId))) }
-  function fake(code) { store.setQr(code); store.setIntent('charge'); navigateTo('/tx') }
+  function fake(code) { st.setQr(code); st.setIntent('charge'); navigateTo('/tx') }
   function pay() {
-    if ($store.payOk == 'scan') { payOk = false; store.setCoPaying(false) }
-    charge(store.selfServe() ? 'charge' : 'pay')
+    if ($st.payOk == 'scan') { payOk = false; st.setCoPaying(false) }
+    charge(st.selfServe() ? 'charge' : 'pay')
   }
-  function charge(intent = 'charge') { store.setIntent(intent); navigateTo('/scan') }
+  function charge(intent = 'charge') { st.setIntent(intent); navigateTo('/scan') }
   function isQrToPay() { return (qr.length == me.qr.length) }
 
   /**
@@ -36,31 +36,31 @@
     if (typeof toPay === 'object') {
       if (!payOk) return
       toPay = !isQrToPay()
-      if (!toPay && $store.coPay == 'scan') { store.setCoPaying(false); payOk = false; }
+      if (!toPay && $st.coPay == 'scan') { st.setCoPaying(false); payOk = false; }
     }
     ;[qr, hdr, alt] = toPay ? [me.qr, 'Show this code to PAY', 'pay'] : [await receiveQr(), 'Show this code to BE PAID', 'be paid']
   }
 
   function scanIn() {
     try {
-      const card = u.qrParse($store.qr) // does not return if format is bad
-      const mainId = u.getMainId($store.myAccount.accountId)
+      const card = u.qrParse($st.qr) // does not return if format is bad
+      const mainId = u.getMainId($st.myAccount.accountId)
       if (card.main != mainId) throw new Error('That is not a QR for this company.')
-      store.setCoPaying(true)
+      st.setCoPaying(true)
     } catch (er) { showEr(u.qrEr(er)) }
   }
 
   onMount(async () => {
-    store.setTimeout(null) // stop the timeout timer from interrupting us
-    if ($store.frontCamera === null) store.setFrontCamera(!u.isApple() && !u.isAndroid())
-    if ($store.intent == 'scanIn') scanIn() // must precede setQr
-    store.setQr(null) // no going back to previous customer
-    if ($store.erMsg) showEr($store.erMsg)
+    st.setTimeout(null) // stop the timeout timer from interrupting us
+    if ($st.frontCamera === null) st.setFrontCamera(!u.isApple() && !u.isAndroid())
+    if ($st.intent == 'scanIn') scanIn() // must precede setQr
+    st.setQr(null) // no going back to previous customer
+    if ($st.erMsg) showEr($st.erMsg)
 
-    payOk = !me.isCo || $store.payOk == 'always' || $store.coPaying
+    payOk = !me.isCo || $st.payOk == 'always' || $st.coPaying
     btnPay = me.isCo ? 'Scan to Pay / Refund / Sell CG Credit' : 'Scan to Pay'
 
-    if (store.selfServe()) {
+    if (st.selfServe()) {
       qr = await receiveQr()
       hdr = '<b>Self-Serve</b><br>Scan this code to pay with Common Good<br>Or press the button below to charge yourself'
       alt = 'pay'
@@ -103,7 +103,7 @@
       </div>
     {/if}
 
-    {#if !store.selfServe()}
+    {#if !st.selfServe()}
       <!--a class="survey" data-testid="lnk-survey" href="{surveyLink}" target="_blank">Take Our User Experience Survey</a-->
     {/if}
     <div class="buttons">

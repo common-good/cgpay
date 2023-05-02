@@ -1,5 +1,5 @@
 <script>
-  import store from '#store.js'
+  import st from'#store.js'
   import u from '#utils.js'
   import c from '#constants.js'
   import { onMount } from 'svelte'
@@ -11,7 +11,7 @@
 // import { encrypt, createMessage, readKey } from 'openpgp'
 // Example with curl: curl -d "actorId=G6VM03&amount=1234.98&created=1672959981&description=test%20food&deviceId=GrfaVyHkxnTf4cxsyIEjkWyNdK0wUoDK153r2LIBoFocvw73T&offline=false&otherId=H6VM0G0NyCBBlUF1qWNZ2k&proof=d0e4eaeb4e9c1dc9d80bef9eeb3ad1342fd24997156cb57575479bd3ac19d00b" -X POST -H "Content-type: application/x-www-form-urlencoded" 'https://demo.commongood.earth/api/transactions'
   
-  const pay = $store.intent == 'pay'
+  const pay = $st.intent == 'pay'
   let otherAccount = {
     agent: '',
     name: '',
@@ -20,27 +20,27 @@
   
   let tx = {
     amount: null,
-    description: (!pay && $store.myAccount.selling) ? $store.myAccount.selling[0] : null,
-    deviceId: $store.myAccount.deviceId,
-    actorId: u.noCardCode($store.myAccount.accountId),
+    description: (!pay && $st.myAccount.selling) ? $st.myAccount.selling[0] : null,
+    deviceId: $st.myAccount.deviceId,
+    actorId: u.noCardCode($st.myAccount.accountId),
     otherId: null,
     created: null,
     proof: null,
     offline: false,
   }
   
-  const qr = $store.qr
+  const qr = $st.qr
   let tipable = false
   let gotTx = false
   let limit = null
   let photo = { alt: 'Customer Profile', blob: null }
-  const pastAction = (pay || store.selfServe()) ? 'Paid' : 'Charged'
+  const pastAction = (pay || st.selfServe()) ? 'Paid' : 'Charged'
 
   // --------------------------------------------
 
   function askUndo() {
     ;({ m0, m1, m2 } = u.yesno('Reverse the transaction?', Undo, () => m0 = false)); m0=m0; m1=m1; m2=m2
-    store.setTimeout(null)
+    st.setTimeout(null)
   }
   function showEr(msg0) {
     let msg = typeof msg0 == 'object' ? msg0.detail : msg0 // receive string or dispatch from SubmitCharge
@@ -48,7 +48,7 @@
     ;({ m0, m1, m2 } = u.dlg('Alert', msg, 'OK', () => m0 = false)); m0=m0; m1=m1; m2=m2 
   }
 
-  function handleSubmitCharge() { gotTx = true; if (store.selfServe()) store.setTimeout(c.txTimeout) } // state success, show undo/tip/done/receipt buttons
+  function handleSubmitCharge() { gotTx = true; if (st.selfServe()) st.setTimeout(c.txTimeout) } // state success, show undo/tip/done/receipt buttons
     
   /**
    * Get the customer's photo from the server
@@ -64,19 +64,19 @@
   }
 
   function profileOffline() {
-    if (!store.selfServe()) showEr('OFFLINE. Trust this member or ask for ID.')
+    if (!st.selfServe()) showEr('OFFLINE. Trust this member or ask for ID.')
     limit = Math.min(c.offlineLimit, limit === null ? c.offlineLimit : limit)
   }
   
   /**
    * Undo the transaction.
-   * To avoid timing issues with store.flushTxs(), queue the reversed transaction,
+   * To avoid timing issues with st.flushTxs(), queue the reversed transaction,
    * then delete both transactions at once.
    */
   function Undo() {
     tx.amount = -tx.amount
-    store.enqTx(tx)
-    // NO! (could lose the undo) store.deleteTxPair() 
+    st.enqTx(tx)
+    // NO! (could lose the undo) st.deleteTxPair() 
     u.goHome('The transaction has been reversed.')
   }
 
@@ -84,15 +84,15 @@
     try {
       if (qr === null) return navigateTo('/home') // pressed back button from Home page
       const card = u.qrParse(qr) // does not return if format is bad
-      const mainId = u.getMainId($store.myAccount.accountId)
+      const mainId = u.getMainId($st.myAccount.accountId)
       if (card.main == mainId) throw new Error('That QR is for the same account as yours.')
-      const acctInfo = store.getAcct(card) // retrieve and/or update stored customer account info
+      const acctInfo = st.getAcct(card) // retrieve and/or update stored customer account info
       if (acctInfo) otherAccount = { ...otherAccount, ...acctInfo }
     
       tx.otherId = card.acct
       tx.code = card.code // store this temporarily, to create proof once we get the amount
       
-      if (!$store.online) {
+      if (!$st.online) {
         profileOffline()
       } else  {
         const q = {deviceId: tx.deviceId, actorId: tx.actorId, otherId: tx.otherId + tx.code}
@@ -100,12 +100,12 @@
         const { result } = await u.timedFetch(`identity?${ query }`)
         const { selling } = result
         if (selling.length) tx.description = selling[0]
-        store.setMyAccount({ ...$store.myAccount, selling: selling })
+        st.setMyAccount({ ...$st.myAccount, selling: selling })
         otherAccount = { ...otherAccount, ...result, lastTx:u.now() } // lastTx date lets us jettison old customers to save storage
         delete otherAccount.selling
-        store.putAcct(card, otherAccount) // store and/or update stored customer account info
+        st.putAcct(card, otherAccount) // store and/or update stored customer account info
         limit = Math.min(otherAccount.limit, c.onlineLimit)
-        if (!store.selfServe()) photo = await getPhoto(query)
+        if (!st.selfServe()) photo = await getPhoto(query)
       }
     } catch (er) {
       if (u.isTimeout(er)) { // internet unavailable; recognize a repeat customer or limit CG's liability
@@ -128,8 +128,8 @@
         <div class='row payee-info'>
           <p><span data-testid="action">{pastAction}</span> to:</p>
           <div class='payee-details'>
-          {#if store.selfServe()}
-            <p data-testid="other-name">{ $store.myAccount.name }</p>
+          {#if st.selfServe()}
+            <p data-testid="other-name">{ $st.myAccount.name }</p>
           {:else}
             {#if otherAccount.agent}
               <p data-testid="agent">{ otherAccount.agent }</p>

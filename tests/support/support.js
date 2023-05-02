@@ -55,7 +55,7 @@ const t = {
    * @param string op: the operation to be performed by the tester (notified/requested by the app)
    * @param string k: key to store in w or localStore
    * @param {*} v: value operation details
-   * @returns an array of key/value pairs waiting for the app to store (see t.putv() and store.fromTester())
+   * @returns an array of key/value pairs waiting for the app to store (see t.putv() and st.fromTester())
    */
   async appPipe(op = null, k = null, v = null) {
     if (op == 'store') {

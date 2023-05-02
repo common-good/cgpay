@@ -181,7 +181,7 @@ export const createStore = () => {
 
     enqTx(tx) { tx.offline = true; enQ('txs', { ...tx }) },
     async flushTxs() { await flushQ('txs', 'transactions') },
-    deqTx() { deQ('txs') }, // just for testing (in store.spec.js)
+    deqTx() { deQ('txs') }, // just for testing (in st.spec.js)
     comment(text) { enQ('comments', { deviceId:cache.myAccount.deviceId, actorId:cache.myAccount.accountId, created:u.now(), text:text }) },
     async flushComments() { await flushQ('comments', 'comments') },
     async flushAll() {

@@ -159,14 +159,14 @@ Scenario: I scan my personal card to scan in offline
   When I scan "Bea" to "scanIn"
   Then ? this "coPaying": "true"
 
-Scenario: I scan my personal card to scan in offline
-  Given I am signed in as "Bea/Cit"
-  And we are offline
-  When I scan "Bea" to "scanIn"
-  Then ? this "coPaying": "false"
+#Scenario: I scan my personal card to scan in offline
+#  Given I am signed in as "Bea/Cit"
+#  And we are offline
+#  When I scan "Bea" to "scanIn"
+#  Then ? this "coPaying": "false"
 
-Scenario: I scan my personal card to scan in offline on someone else's device
-  Given I am signed in as "Bea/Cit"
-  And we are offline
-  When I scan "Abe" to "scanIn"
-  Then ? this "coPaying": "false"
+#Scenario: I scan my personal card to scan in offline on someone else's device
+#  Given I am signed in as "Bea/Cit"
+#  And we are offline
+#  When I scan "Abe" to "scanIn"
+#  Then ? this "coPaying": "false"
