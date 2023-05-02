@@ -66,7 +66,7 @@
             <label><input type="checkbox" data-testid="lock-account" name="lock-account" 
               bind:checked={lock} class={ lock ? 'checked' : '' }/> Require sign-in to change account</label>
           {/if}
-          {#if c.showSelfServe && !c.showScanToPay}
+          {#if c.showSelfServe && !c.showScanToPay && acctIndex > 0}
             <label><input type="checkbox" data-testid="self-serve" name="self-serve" 
               bind:checked={selfServe} class={ selfServe ? 'checked' : '' }/> Self-serve mode</label>
           {/if}

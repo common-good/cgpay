@@ -83,11 +83,19 @@
 
 <section class="page" id="home">
   <div class="top">
-    <h1 data-testid="header">{@html hdr}</h1>
-    <button on:click={toggleQr}>
-      <img src="{qr}" data-testid="qr" alt="Scan this QR Code to {alt + ' ' + me?.name}" />
-    </button>
-    <p>CGPay v{c.version}</p>
+    {#if c.showShowToPay || !me.isCo}
+      <h1 data-testid="header">{@html hdr}</h1>
+      <button on:click={toggleQr}>
+        <img src="{qr}" data-testid="qr" alt="Scan this QR Code to {alt + ' ' + me?.name}" />
+      </button>
+      <p>CGPay v{c.version}</p>
+    {:else}
+      <h1>Ready to Charge Someone</h1>
+      <div class='watermark'>
+        <img class='logo' src= { cgLogo } alt='Common Good Logo' />
+        <p>CGPay v{c.version}</p>
+      </div>
+    { /if }
   </div>
 
   <div class="bottom">
