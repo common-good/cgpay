@@ -22,12 +22,12 @@
   function toggleNav() { isNavOpen = !isNavOpen }
   function goHome() { u.go('home') }
 
-  onMount(() => {
-    viewHeight = window?.visualViewport?.height
-  })
+  const setViewportHeight = () => {
+    viewHeight = window.visualViewport.height
+  }
 </script>
 
-
+<svelte:window on:load={setViewportHeight}/>
 
 <div class="layout-step" style="height: {viewHeight}px">
   { #if isNavOpen }
