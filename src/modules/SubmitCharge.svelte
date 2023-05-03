@@ -58,7 +58,7 @@
 
 <style lang="stylus">
   h1 
-   margin-bottom $s1
+   margin-bottom $s0
 
   form
     height 100%

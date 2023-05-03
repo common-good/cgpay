@@ -150,7 +150,7 @@
   h1
     text(lg)
     font-weight 400
-    margin-bottom $s2
+    margin-bottom $s0
     text-align center
 
   img 
