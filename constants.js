@@ -11,8 +11,8 @@ const constants = {
 
   showDevStuff: false, // if true, enable dev-only features
   showSelfServe: true, // if true, enable self-serve feature
-  showScanToPay: true, // if true, enable scan-to-pay feature
-  showShowToPay: true, // if true, enable show-to-pay feature
+  showScanToPay: false, // if true, enable scan-to-pay feature
+  showShowToPay: false, // if true, enable show-to-pay feature
 
   // how long user has, on the current screen (in seconds), before we return automatically to Home
   txTimeout: 10, // Tx page

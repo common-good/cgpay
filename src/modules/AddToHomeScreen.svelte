@@ -1,5 +1,4 @@
 <script>
-  import { navigateTo } from 'svelte-router-spa'
   import cgLogo from '#modules/assets/cg-logo-300.png?webp'
   import st from'#store.js'
   import AndroidInstructions from '#modules/AndroidInstructions.svelte'
@@ -9,11 +8,11 @@
 
   async function skip() {
     await st.setSawAdd()
-    navigateTo('/sign-in')
+    u.go('sign-in')
   }
 
   onMount(async () => {
-    if (!u.addableToHome()) navigateTo('/sign-in')
+    if (!u.addableToHome()) u.go('sign-in')
   })
 </script>
 

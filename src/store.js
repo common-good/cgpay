@@ -52,8 +52,10 @@ export const createStore = () => {
 
   function setst(newS) { update(s => { return save(newS) } )}
   function setv(k, v, fromTest = false) { update(s => { s[k] = v; return save(s) }); tSetV(k, v, fromTest); return v }
+//  function setkv(k, k2, v, fromTest = false) { ('k', k, 'k2', k2, 'v', v, 'showHdr', cache.showHdr); cache[k][k2] = v; setv(k, k2, fromTest); return v }
   function enQ(k, v) { st.bump('enQ'); cache[k].push(v); return setv(k, cache[k]) }
-  function deQ(k) { st.bump('deQ'); cache[k].shift(); return setv(k, cache[k]) } // this is actually FIFO (shift) not LIFO (pop)
+  function pop(k) { st.bump('pop'); const res = cache[k].pop(); setv(k, cache[k]); return res }
+  function deQ(k) { st.bump('deQ'); const res = cache[k].shift(); setv(k, cache[k]); return res } // this is actually FIFO (shift) not LIFO (pop)
   function tSetV(k, v, fromTest) { if (u.testing() && !fromTest) u.tellTester('store', k, v).then() }
 
   let doing = false // true if we are handling a list of things the tester has told us (the app) to do
@@ -118,6 +120,14 @@ export const createStore = () => {
     setCoPaying(yesno) { setv('coPaying', yesno) },
     setPayOk(v) { setv('payOk', v) },
     selfServe() { return cache.payOk == 'self' },
+    setTrail(page = 'back', clear = false) {
+      if (!page) page = 'home' // handle root url showing home page
+      if (clear || u.atHome(page)) setv('trail', []) // always clear when going home
+      if (page == 'back') return pop('trail')
+      if (!cache.trail.includes(page)) enQ('trail', page)
+    },
+    setLeft(what) { setv('hdrLeft', what) },
+    setRight(what) { setv('hdrRight', what) },
 
     setAcctChoices(v) {
       setv('choices', v)

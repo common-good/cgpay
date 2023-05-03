@@ -219,6 +219,7 @@ const t = {
     const sel = t.sel('input-' + id) 
     await w.page.click(sel, { clickCount: 3 }) // select field so that typing replaces it
     await w.page.type(sel, isNaN(text) ? text : JSON.stringify(text))
+    await t.waitACycle() // needed sometimes between inputs
     const newValue = await w.page.$eval(sel, el => el.value)
     t.test(newValue, text)
   },
@@ -226,6 +227,14 @@ const t = {
   async scan(who, why) {
     await t.putv('qr', t.adjust(who, 'qr'))
     await t.putv('intent', why)
+    const trail = await t.getv('trail')
+
+    trail.push('scan') // we can't actually u.go anywhere from the scan page in testing, so these 5 lines fake it
+    await t.putv('trail', trail)
+    await t.putv('hdrLeft', 'back')
+    await t.putv('hdrRight', (await t.getv('payOk')) == 'self' ? null : 'nav')
+    await t.waitACycle()
+
     await t.visit(why == 'scanIn' ? 'home' : 'tx')
   },
 
@@ -375,7 +384,7 @@ async mockFetch(url, options = {}) {
     t.test(got, want, null, mode)
   },
 
-  async dontSee(testId) { assert.isNull(await t.element(testId), "shouldn't see" + testId) },
+  async dontSee(testId) { assert.isNull(await t.element(testId), "shouldn't see " + testId) },
 
   async countIs(list, count) {
     const ray = await t.getv(list)

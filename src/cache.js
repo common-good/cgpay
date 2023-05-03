@@ -76,6 +76,9 @@ const cache = {
   erMsg: null, // error message to display on Home page
   online: null, // true if the device is connected to the Internet
   coPaying: false, // true if a company account is toggled to pay, refund, or sell CG credit (vs charge) - times out
+  trail: [], // breadcrumbs to inform back button (see u.canGoBack and u.goBack)
+  hdrLeft: 'logo', // what to show (if anything) at left side of the header
+  hdrRight: 'nav', // what to show (if anything) at right side of the header
 
   // for testing
   posts: 0, // operation counters for calls to u.postRequest, enQ, and deQ

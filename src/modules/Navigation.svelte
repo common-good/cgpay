@@ -1,7 +1,6 @@
 <script>
   import CloseIcon from "svelte-material-icons/Close.svelte"
   import { createEventDispatcher } from "svelte"
-  import { navigateTo } from 'svelte-router-spa'
   import { focusTrap } from 'svelte-focus-trap'
   import st from'#store.js'
   import u from '#utils.js'
@@ -11,18 +10,18 @@
   const dispatch = createEventDispatcher()
   function closeNav() { dispatch('toggleNav', {}) }
 
-  /*function coReceive() { st.setCoPaying(false); navigateTo('/home') }
-  function coPay() { st.setCoPaying(true); navigateTo('/home') }*/
-  function scanIn() { st.setIntent('scanIn'); navigateTo('/scan') }
+  /*function coReceive() { st.setCoPaying(false); u.go('home') }
+  function coPay() { st.setCoPaying(true); u.go('home') }*/
+  function scanIn() { st.setIntent('scanIn'); u.go('scan') }
   function rearCamera() { st.setFrontCamera(false) }
   function frontCamera() { st.setFrontCamera(true) }
-  function switchAccount() { st.unlink(); navigateTo('/link-account') }
-  function comment() { navigateTo('/comment')}
-  function signOut() { st.signOut(); navigateTo('/') }
+  function switchAccount() { st.unlink(); u.go('link-account') }
+  function comment() { u.go('comment')}
+  function signOut() { st.signOut(); u.go('') }
 
   function wifiOn() { st.setWifi(true) }
   function wifiOff() { st.setWifi(false) }
-  function clearData() { st.clearData(); navigateTo('/'); navigateTo('/') }
+  function clearData() { st.clearData(); u.go(''); u.go('') }
 
   let menuItems = []
   function item(text, callback, criteria, id) { menuItems.push({text, callback, criteria, id}) }

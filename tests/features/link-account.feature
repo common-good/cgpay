@@ -32,51 +32,53 @@ Scenario: A user with multiple accounts visits the link-account page
   And ? "account-opt-1" is "Citre"
   And ? "account-opt-1" is "selected"
   And ? "lock-account" is "checked"
-  And ? "payOk-radio-always" is not "checked"
-  And ? "payOk-radio-scan" is "checked"
-  And ? "payOk-radio-never" is not "checked"
+  And ? "self-serve" is not "checked"
+
+#  And ? "payOk-radio-always" is not "checked"
+#  And ? "payOk-radio-scan" is "checked"
+#  And ? "payOk-radio-never" is not "checked"
 
 Scenario: A user with multiple accounts selects an account with all the defaults
   When I visit "link-account"
   And I click "btn-link"
-  Then ? this "payOk": "scan"
+#  Then ? this "payOk": "scan"
   And ? this "choices": "null"
   And ? I am signed in as "Bea/Cit"
   And ? this confirmation: "now linked to your Common Good account: Citre"
   And ? I am on page "home"
   And ? "Citre" is in "account-name"
   When I click "btn-nav"
-  Then ? I see "menu-scanIn"
+#  Then ? I see "menu-scanIn"
   But ? I see no "menu-switch"
 
 Scenario: A user with multiple accounts selects a company with different options
   When I visit "link-account"
   And I click "lock-account"
-  And I click "payOk-radio-never"
+#  And I click "payOk-radio-never"
   And I click "btn-link"
   And I wait 1 seconds
-  Then ? this "payOk": "never"
+#  Then ? this "payOk": "never"
   And ? these choices:
   | Bea | Bea/Cit |
   And ? I am signed in as "Bea/Cit"
   And ? I am on page "home"
   When I click "btn-nav"
-  Then ? I see no "menu-scanIn"
+#  Then ? I see no "menu-scanIn"
   But ? I see "menu-switch"
 
 Scenario: A user with multiple accounts selects a company allowed to pay always
   When I visit "link-account"
-  And I click "payOk-radio-always"
+#  And I click "payOk-radio-always"
   And I click "btn-link"
   And I wait 1 seconds
-  Then ? this "payOk": "always"
+#  Then ? this "payOk": "always"
   And ? this "choices": "null"
   And ? I am signed in as "Bea/Cit"
   And ? I am on page "home"
   When I click "btn-nav"
-  Then ? I see no "menu-scanIn"
+#  Then ? I see no "menu-scanIn"
   And ? I see no "menu-switch"
-  But ? I see "btn-pay"
+#  But ? I see "btn-pay"
 
 Scenario: A user with multiple accounts selects an individual account
   When I visit "link-account"
@@ -91,7 +93,7 @@ Scenario: A user with multiple accounts selects an individual account
   And ? I am on page "home"
   And ? "Bea Two" is in "account-name"
   When I click "btn-nav"
-  Then ? I see no "menu-scanIn"
+#  Then ? I see no "menu-scanIn"
   But ? I see "menu-switch"
 
 Scenario: The user chooses an account offline

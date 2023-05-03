@@ -34,6 +34,7 @@
   }
 
   onMount(async () => {
+    st.setLeft('logo')
     st.setMyAccount(null) // clear account preferences
     ready = true
     if (choices?.length) {

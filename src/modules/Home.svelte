@@ -5,7 +5,6 @@
   import c from '#constants.js'
   import Modal from '#modules/Modal.svelte'; let m0, m1, m2
   import cgLogo from '#modules/assets/cg-logo-300.png?webp'
-  import { navigateTo } from 'svelte-router-spa'
   import queryString from 'query-string'
 
   export let currentRoute // else Svelte complains (I don't know why yet)
@@ -20,12 +19,12 @@
   }
 
   async function receiveQr() { return await u.generateQr(u.makeQrUrl(u.getMainId(me.accountId))) }
-  function fake(code) { st.setQr(code); st.setIntent('charge'); navigateTo('/tx') }
+  function fake(code) { st.setQr(code); st.setIntent('charge'); u.go('tx') }
   function pay() {
     if ($st.payOk == 'scan') { payOk = false; st.setCoPaying(false) }
     charge(st.selfServe() ? 'charge' : 'pay')
   }
-  function charge(intent = 'charge') { st.setIntent(intent); navigateTo('/scan') }
+  function charge(intent = 'charge') { st.setIntent(intent); u.go('scan') }
   function isQrToPay() { return (qr.length == me.qr.length) }
 
   /**
@@ -39,6 +38,7 @@
       if (!toPay && $st.coPay == 'scan') { st.setCoPaying(false); payOk = false; }
     }
     ;[qr, hdr, alt] = toPay ? [me.qr, 'Show this code to PAY', 'pay'] : [await receiveQr(), 'Show this code to BE PAID', 'be paid']
+    if (!c.showToPay) hdr = payOk ? 'Ready to Charge or Pay' : 'Ready to Charge Someone'
   }
 
   function scanIn() {
@@ -52,6 +52,9 @@
 
   onMount(async () => {
     st.setTimeout(null) // stop the timeout timer from interrupting us
+    st.setTrail(null, true)
+    st.setLeft('logo')
+    st.setRight('nav')    
     if ($st.frontCamera === null) st.setFrontCamera(!u.isApple() && !u.isAndroid())
     if ($st.intent == 'scanIn') scanIn() // must precede setQr
     st.setQr(null) // no going back to previous customer
@@ -63,6 +66,7 @@
     if (st.selfServe()) {
       qr = await receiveQr()
       hdr = '<b>Self-Serve</b><br>Scan this code to pay with Common Good<br>Or press the button below to charge yourself'
+      if (!c.showToPay) hdr = '<b>Self-Serve</b><br><br>Press the button below to scan your Common Good QR Code'
       alt = 'pay'
     } else toggleQr(!me.isCo)
 
@@ -83,14 +87,13 @@
 
 <section class="page" id="home">
   <div class="top">
+    <h1 data-testid="header">{@html hdr}</h1>
     {#if c.showShowToPay || !me.isCo}
-      <h1 data-testid="header">{@html hdr}</h1>
       <button on:click={toggleQr}>
         <img src="{qr}" data-testid="qr" alt="Scan this QR Code to {alt + ' ' + me?.name}" />
       </button>
       <p>CGPay v{c.version}</p>
     {:else}
-      <h1>Ready to Charge Someone</h1>
       <div class='watermark'>
         <img class='logo' src= { cgLogo } alt='Common Good Logo' />
         <p>CGPay v{c.version}</p>

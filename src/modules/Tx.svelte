@@ -3,7 +3,6 @@
   import u from '#utils.js'
   import c from '#constants.js'
   import { onMount } from 'svelte'
-  import { navigateTo } from 'svelte-router-spa'
   import queryString from 'query-string'
   import SubmitCharge from '#modules/SubmitCharge.svelte'
   import Modal from '#modules/Modal.svelte'; let m0, m1, m2
@@ -48,7 +47,11 @@
     ;({ m0, m1, m2 } = u.dlg('Alert', msg, 'OK', () => m0 = false)); m0=m0; m1=m1; m2=m2 
   }
 
-  function handleSubmitCharge() { gotTx = true; if (st.selfServe()) st.setTimeout(c.txTimeout) } // state success, show undo/tip/done/receipt buttons
+  function handleSubmitCharge() {
+    u.noBack()
+    gotTx = true
+    if (st.selfServe()) st.setTimeout(c.txTimeout)
+  } // state success, show undo/tip/done/receipt buttons
     
   /**
    * Get the customer's photo from the server
@@ -82,7 +85,7 @@
 
   onMount(async () => {
     try {
-      if (qr === null) return navigateTo('/home') // pressed back button from Home page
+      if (qr === null) return u.go('home') // pressed back button from Home page
       const card = u.qrParse(qr) // does not return if format is bad
       const mainId = u.getMainId($st.myAccount.accountId)
       if (card.main == mainId) throw new Error('That QR is for the same account as yours.')

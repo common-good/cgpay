@@ -153,12 +153,21 @@ const u = {
   yesno(question, m1, m2) { return u.dlg('Confirm', question, 'Yes, No', m1, m2) },
   confirm(question) { return u.dlg('Alert', question, 'OK', null, null) },
   crash(er) { console.log('crash', er); return typeof er === 'string' ? er : er.message },
-  goEr(msg) { st.setMsg(msg); navigateTo('/home') },
-  goHome(msg) { st.setMsg(msg); navigateTo('/home') },
+  goEr(msg) { st.setMsg(msg); u.go('home') },
+  goHome(msg) { st.setMsg(msg); u.go('home') },
+  atHome(page = '') { return (page ? page : u.pageUri()) == 'home' },
   isTimeout(er) { return (typeof er === 'object' && (er.name == 'AbortError' || er.name == 'Offline')) },
   pageUri() { return location.href.substring(location.href.lastIndexOf('/') + 1) },
   isApple() { return /iPhone|iPod|iPad/i.test(navigator.userAgent) },
   isAndroid() { return !u.isApple() && /Android/i.test(navigator.userAgent) },
+  go(page, setTrail = true) { 
+    if (setTrail) st.setTrail(u.pageUri())
+    st.setLeft(u.atHome(page) ? 'logo' : 'back')
+    st.setRight(!st.selfServe() || u.atHome(page) ? 'nav' : null)
+    navigateTo('/' + page)
+  },
+  goBack() { u.go(st.setTrail(), false) },
+  noBack() { st.setTrail('', true); st.setLeft('logo'); st.setRight(null) },
 
   isSafari() {
     const ua = navigator.userAgent

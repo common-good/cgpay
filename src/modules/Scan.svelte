@@ -1,10 +1,8 @@
 <script>
   import { Html5Qrcode } from 'html5-qrcode'
-  import { navigateTo } from 'svelte-router-spa'
   import { onMount } from 'svelte'
   import st from'#store.js'
   import u from '#utils.js'
-  import c from '#constants.js'
   import cgLogo from '#modules/assets/cg-logo-300.png?webp'
 
   // --------------------------------------------
@@ -31,7 +29,7 @@
             async (decodedText, decodedResult) => { // Handle code
               await scanner.stop()
               st.setQr(decodedText)
-              navigateTo($st.intent == 'scanIn' ? '/home' : '/tx')
+              u.go($st.intent == 'scanIn' ? 'home' : 'tx')
             },
             (erMsg) => { } // ignore "parse" errors -- no valid QR yet (keep scanning)
 
@@ -65,7 +63,6 @@
     {/if}
       <div id='scanner'></div> 
   </div>
-  <a href="/home">Cancel</a>
 </section>
 
 <style lang='stylus'>

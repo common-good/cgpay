@@ -2,6 +2,7 @@
   import { Route, navigateTo } from 'svelte-router-spa'
   import { onMount } from 'svelte'
   import NavIcon from "svelte-material-icons/Menu.svelte"
+  import BackIcon from "svelte-material-icons/ChevronLeft.svelte"
   import Navigation from '#modules/Navigation.svelte'
   import NetworkStatus from '#modules/NetworkStatus.svelte'
   import cgLogo from '#modules/assets/cg-logo-300.png?webp'
@@ -19,25 +20,29 @@
   let isNavOpen
 
   function toggleNav() { isNavOpen = !isNavOpen }
-  function clickLogo() { navigateTo('/home') }
+  function goHome() { u.go('home') }
 
   onMount(() => {
     viewHeight = window?.visualViewport?.height
   })
 </script>
 
+
+
 <div class="layout-step" style="height: {viewHeight}px">
   { #if isNavOpen }
     <Navigation on:toggleNav={toggleNav}/>
   { /if }
   <header>
-    <button on:click={clickLogo}><img src={cgLogo} alt="Common Good Logo" /></button>
-    <p data-testid="account-name">{ ($st.myAccount ? $st.myAccount.name : '') + (u.realData() ? '' : ' (DEMO)')}</p>
-      <button data-testid="btn-nav" on:click={toggleNav}>
-        { #if $st.payOk != 'self' || u.pageUri() == "home" }
-          <NavIcon width={'100%'} height={'100%'} ariaLabel={'menu'} />
-        { /if }
-      </button>
+    {#if $st.hdrLeft == 'back'}
+      <button on:click={u.goBack} class="btn" data-testid="btn-back" aria-label="Back"><BackIcon width={'100%'} height={'100%'} /></button>
+    {:else if $st.hdrLeft == 'logo'}
+      <img src={ cgLogo } alt='Common Good Logo' />
+    {/if}
+    <button on:click={goHome} data-testid="account-name">{ ($st.myAccount ? $st.myAccount.name : '') + (u.realData() ? '' : ' (DEMO)')}</button>
+    { #if $st.hdrRight == 'nav' }
+      <button data-testid="btn-nav" class="btn" aria-label="Menu" on:click={toggleNav}><NavIcon width={'100%'} height={'100%'} /></button>
+    { /if}
   </header>
   { #key currentRoute }<NetworkStatus/>{ /key }
   <div class="content">
@@ -45,8 +50,8 @@
   </div>
 </div>
 
-<style lang="stylus">
-  button
+<style lang='stylus'>
+  img, .btn
     height 48px
     width 48px
 

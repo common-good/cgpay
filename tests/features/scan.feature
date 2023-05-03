@@ -112,15 +112,15 @@ Scenario: I scan an individual's QR online, then again offline
 
 Rule: A manager can scan in to pay
 
-Scenario: I scan my employee card to scan in
-  Given I am signed in as "Bea/Cit"
-  Then ? this "coPaying": "false"
-  When I scan "Bea/Cit" to "scanIn"
-  Then ? I am on page "home" 
-  And ? this "coPaying": "true"
-  And ? I see "btn-pay"
-  And ? I see "qr"
-  And ? "Show this code to BE PAID" is in "header"
+#Scenario: I scan my employee card to scan in
+#  Given I am signed in as "Bea/Cit"
+#  Then ? this "coPaying": "false"
+#  When I scan "Bea/Cit" to "scanIn"
+#  Then ? I am on page "home" 
+#  And ? this "coPaying": "true"
+#  And ? I see "btn-pay"
+#  And ? I see "qr"
+#  And ? "Show this code to BE PAID" is in "header"
 
 Scenario: I scan another employee card to scan in
   Given I am signed in as "Bea/Cit"

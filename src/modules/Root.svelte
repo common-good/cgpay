@@ -24,7 +24,7 @@
     st.fromTester().then()
     st.resetNetwork()
     setTimeout(timeOut, c.networkTimeoutMs)
-    if ($st.timeout && !st.setTimeout()) navigateTo('/home')
+    if ($st.timeout && !st.setTimeout()) u.go('home')
   }
 
   function onlyIf(condition, elseGoTo) { return { guard: condition, redirect: elseGoTo } }

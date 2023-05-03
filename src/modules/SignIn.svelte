@@ -1,5 +1,4 @@
 <script>
-  import { navigateTo } from 'svelte-router-spa'
   import st from'#store.js'
   import u from '#utils.js'
   import c from '#constants.js'
@@ -21,10 +20,10 @@
       const result = await u.postRequest('accounts', credentials)
       st.setAcctChoices(result.accounts)
       if (result.accounts.length > 1) {
-        navigateTo('/link-account')
+        u.go('link-account')
       } else {
         st.setMyAccount(result.accounts[0])
-        navigateTo('/home')
+        u.go('home')
       }
     } catch (er) {
       st.resetNetwork()

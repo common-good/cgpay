@@ -16,7 +16,7 @@ Scenario: An individual shows their QR code
 Scenario: A vendor shows their QR code
   Given I am signed in as "Abe/Cit"
   When I run the app
-  Then ? I see "qr"
+#  Then ? I see "qr"
 
 Scenario: A user shows their QR code offline
   Given I am signed in as "Bea"

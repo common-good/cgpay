@@ -18,7 +18,7 @@ Scenario: Nothing happens soon after payment confirmation
   Then ? I am on page "home"
 
 Rule: If something happens soon after payment confirmation, the app does not time signOut
-@this
+
 Scenario: The user clicks Undo
   Given I wait 0.5 seconds
   When I click "btn-undo"
