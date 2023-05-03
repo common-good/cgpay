@@ -73,7 +73,6 @@
     flex-direction column
     align-items center
     justify-content space-between
-    padding-bottom 800px
 
   button
     cgButton()
