@@ -31,6 +31,7 @@ export const createStore = () => {
   function convert(s) {
     if (u.empty(s) || c.version == s.version) return s
     if (u.empty(s.version)) { // v4.0.0 has no stored version number
+      s.deviceIds = cache0.deviceIds
       if (s.choices) [s.choices, s.deviceIds] = reconcileDeviceIds(s.choices)
       if (s.myAccount) s.deviceIds[s.myAccount.accountId] = s.myAccount.deviceId
     }
