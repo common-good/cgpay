@@ -58,21 +58,19 @@
       <div class="top">
         <p>Select a Common Good account to link to CGPay on this device.</p>
         <form>
-          <SelectX class="select" name="account" label={'Select an account'} options={acctOpts} size={size} selected={acctIndex} required="required" />
-          <div class="form-lower">
-            {#if acctIndex > 0 && c.showScanToPay}
-              <p>Allow payments from this account:</p>
-              <Radios name="payOk" options={payOkOptions} bind:value={payOk} required="required" />
-            {/if}
-            {#if size > 0}
-              <label><input type="checkbox" data-testid="lock-account" name="lock-account" 
-                bind:checked={lock} class={ lock ? 'checked' : '' }/> Require sign-in to change account</label>
-            {/if}
-            {#if c.showSelfServe && !c.showScanToPay && acctIndex > 0}
-              <label><input type="checkbox" data-testid="self-serve" name="self-serve" 
-                bind:checked={selfServe} class={ selfServe ? 'checked' : '' }/> Self-serve mode</label>
-            {/if}
-          </div>
+          <SelectX name="account" label={'Select an account'} options={acctOpts} size={size} bind:value={acctIndex} required="required" />
+          {#if acctIndex > 0 && c.showScanToPay}
+            <p>Allow payments from this account:</p>
+            <Radios name="payOk" options={payOkOptions} bind:value={payOk} required="required" />
+          {/if}
+          {#if size > 0}
+            <label><input type="checkbox" data-testid="lock-account" name="lock-account" 
+              bind:checked={lock} class={ lock ? 'checked' : '' }/> Require sign-in to change account</label>
+          {/if}
+          {#if c.showSelfServe && !c.showScanToPay && acctIndex > 0}
+            <label><input type="checkbox" data-testid="self-serve" name="self-serve" 
+              bind:checked={selfServe} class={ selfServe ? 'checked' : '' }/> Self-serve mode</label>
+          {/if}
         </form>
       </div>
       <button type="submit" data-testid="btn-link" on:click={gotAccount} disabled={ acctIndex === null }>Link Account</button>
