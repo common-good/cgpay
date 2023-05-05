@@ -55,7 +55,7 @@ const t = {
    * @param string op: the operation to be performed by the tester (notified/requested by the app)
    * @param string k: key to store in w or localStore
    * @param {*} v: value operation details
-   * @returns an array of key/value pairs waiting for the app to store (see t.putv() and store.fromTester())
+   * @returns an array of key/value pairs waiting for the app to store (see t.putv() and st.fromTester())
    */
   async appPipe(op = null, k = null, v = null) {
     if (op == 'store') {
@@ -131,6 +131,7 @@ const t = {
                           : k == 'actorId' ? me.accountId
                           : k == 'otherId' ? me.accountId
                           : k == 'cardCode' ? me.cardCode
+                          : k == 'deviceId' ? me.deviceId
                           : k == 'qr' ? c.testQrStart + me.accountId.charAt(0) + me.accountId.substring(4) + me.cardCode
                           : v 
     return v
@@ -218,11 +219,24 @@ const t = {
     const sel = t.sel('input-' + id) 
     await w.page.click(sel, { clickCount: 3 }) // select field so that typing replaces it
     await w.page.type(sel, isNaN(text) ? text : JSON.stringify(text))
+    await t.waitACycle() // needed sometimes between inputs
     const newValue = await w.page.$eval(sel, el => el.value)
     t.test(newValue, text)
   },
 
-  async scan(who) { await t.putv('qr', t.adjust(who, 'qr')); await t.visit('charge') },
+  async scan(who, why) {
+    await t.putv('qr', t.adjust(who, 'qr'))
+    await t.putv('intent', why)
+    const trail = await t.getv('trail')
+
+    trail.push('scan') // we can't actually u.go anywhere from the scan page in testing, so these 5 lines fake it
+    await t.putv('trail', trail)
+    await t.putv('hdrLeft', 'back')
+    await t.putv('hdrRight', (await t.getv('payOk')) == 'self' ? null : 'nav')
+    await t.waitACycle()
+
+    await t.visit(why == 'scanIn' ? 'home' : 'tx')
+  },
 
   async tx(who, amount, description) {
     await t.scan(who)
@@ -357,16 +371,20 @@ async mockFetch(url, options = {}) {
   async see(testId) {
     const el = await t.element(testId)
     assert.isNotNull(el)
-    return el // this is required (I don't know why)
+    return el
   },
 
   async seeIs(testId, want, mode = 'exact') {
-    const gotEl = await t.see(testId)
-    const got = await gotEl.evaluate(el => el.textContent)
+    const el0 = await t.see(testId)
+    if (u.in(want, 'selected checked')) { // Svelte doesn't use selected and checked so we simulate it with class
+      const has = (await (await el0.getProperty('className')).jsonValue()).split(' ').includes(want)
+      return assert.isTrue(mode === false ? !has : has)
+    }
+    const got = await el0.evaluate(el => el.textContent)
     t.test(got, want, null, mode)
   },
 
-  async dontSee(testId) { assert.isNull(await t.element(testId), "shouldn't see" + testId) },
+  async dontSee(testId) { assert.isNull(await t.element(testId), "shouldn't see " + testId) },
 
   async countIs(list, count) {
     const ray = await t.getv(list)

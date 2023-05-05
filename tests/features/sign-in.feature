@@ -43,4 +43,4 @@ Scenario: A user tries to sign in offline
   And I input "a" as "identifier"
   And I input "k" as "password"
   And I click "btn-signin"
-  Then ? I see this error: "Check your internet connection"
+  Then ? this error: "Check your internet connection"

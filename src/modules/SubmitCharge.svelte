@@ -1,7 +1,7 @@
 <script>
   import { createEventDispatcher } from 'svelte'
   import Profile from '#modules/Profile.svelte'
-  import store from '#store.js'
+  import st from'#store.js'
   import u from '#utils.js'
   // https://github.com/canutin/svelte-currency-input
 
@@ -10,18 +10,19 @@
   export let tx
   export let limit
 
-  const action = $store.selfServe ? 'Pay' : 'Charge'
+  const pay = $st.intent == 'pay'
+  const action = (pay || st.selfServe()) ? 'Pay' : 'Charge'
   const dispatch = createEventDispatcher()
 
   async function charge() {
     if (!tx.proof) { // unless retrying
       tx.created = u.now() // Unix timestamp
-      tx.amount = (+tx.amount).toFixed(2)
+      tx.amount = (pay ? -tx.amount : +tx.amount).toFixed(2)
       tx.proof = u.hash(tx.actorId + tx.amount + tx.otherId + tx.code + tx.created)
       delete tx.code
       tx.offline = false
     }
-    store.setMyAccount({ ...$store.myAccount, lastTx:tx.created })
+    st.setMyAccount({ ...$st.myAccount, lastTx:tx.created })
 
     try {
       const res = await u.postRequest('transactions', tx)
@@ -31,8 +32,8 @@
         throw new Error('Program issue: request syntax error')
       } else {
         console.log('saving tx for upload later:',tx)
-        store.enqTx(tx)                                                                                                         
-        if (!otherAccount.name) otherAccount.name = 'Unidentified Customer'
+        st.enqTx(tx)                                                                                                         
+        if (!otherAccount.name) otherAccount.name = 'Unidentified Member'
         dispatch('complete') // update display
       }
     }
@@ -42,7 +43,7 @@
 <section id="submit-charge">
   <h1 data-testid="action">{action}</h1>
   <form on:submit|preventDefault={ charge }>
-    { #if !$store.selfServe }<Profile { otherAccount } {photo} />{ /if }
+    { #if !st.selfServe() }<Profile { otherAccount } {photo} />{ /if }
     <div class="bottom">
       <fieldset>
         <label for="amount">Amount</label>
@@ -57,7 +58,7 @@
 
 <style lang="stylus">
   h1 
-   margin-bottom $s1
+   margin-bottom $s0
 
   form
     height 100%
@@ -72,7 +73,6 @@
     flex-direction column
     align-items center
     justify-content space-between
-    padding-bottom 800px
 
   button
     cgButton()

@@ -42,6 +42,7 @@
     "b64-to-blob": "^1.2.19",
     "buffer": "^6.0.3",
     "js-sha256": "^0.9.0",
+    "qrcode": "^1.5.1",
     "svelte-material-icons": "^3.0.4",
     "svelte-select": "^4.3.1"
   }
