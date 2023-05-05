@@ -1,4 +1,4 @@
-import LayoutStep from '#modules/LayoutStep.svelte'
+import LayoutStep from '#modules/Layout.svelte'
 
 // --------------------------------------------
 

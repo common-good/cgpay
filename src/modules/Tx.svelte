@@ -36,12 +36,12 @@
   let photo = { alt: 'Customer Profile', blob: null }
   const pastAction = (pay || st.selfServe()) ? 'Paid' : 'Charged'
 
-	u.undo.subscribe(askUndo) // receive notification of Back click (see LayoutStep.svelte)
+	u.undo.subscribe(askUndo) // receive notification of Back click (see Layout.svelte)
 
   function goHome() { u.go('home') }
 
   function askUndo() {
-    if (!gotTx) return // LayoutStep.svelte updates u.undo upon arrival. Ignore.
+    if (!gotTx) return // Layout.svelte updates u.undo upon arrival. Ignore.
     st.setTimeout(null)
     ;({ m0, m1, m2 } = u.yesno('Reverse the transaction?', 
       () => { m0 = false; st.undoTx(); u.goHome('The transaction has been reversed.') },

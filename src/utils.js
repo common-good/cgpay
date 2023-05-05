@@ -13,7 +13,7 @@ const mainLens = '.12.13.22.23.32.33.34.44.45' // region and acct lens without a
 
 const u = {
   ...u0, // incorporate all function from utils0.js
-  undo: null, // notify subscribers every time the Back button is clicked when it means "undo" (see LayoutStep.svelte)
+  undo: null, // notify subscribers every time the Back button is clicked when it means "undo" (see Layout.svelte)
 
   api() { return u.realData() ? c.apis.real : c.apis.test }, 
 

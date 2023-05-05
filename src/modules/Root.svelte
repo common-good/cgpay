@@ -14,7 +14,7 @@
   import SignIn from '#modules/SignIn.svelte'
   import Comment from '#modules/Comment.svelte'
   import LayoutIntro from '#modules/LayoutIntro.svelte'
-  import LayoutStep from '#modules/LayoutStep.svelte'
+  import LayoutStep from '#modules/Layout.svelte'
 
   // Initialization Helpers
 
