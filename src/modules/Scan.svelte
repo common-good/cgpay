@@ -70,7 +70,7 @@
     cgButtonSecondary()
 
   h1
-    margin-bottom $s2
+    margin-bottom $s0
 
   section
     display flex
