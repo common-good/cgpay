@@ -12,7 +12,7 @@
 
   const surveyLink = 'https://forms.gle/M8Hv1W2oSgw2yQzS7'
   const me = $st.myAccount
-  let hdr, qr, alt, btnPay, payOk
+  let hdr, qr, alt, btnPay, btnChg, payOk
 
   function showEr(msg) { 
     ({ m0, m1 } = u.dlg('Alert', msg, 'Close', () => {m0 = false; st.setMsg(null)})); m0=m0; m1=m1
@@ -22,7 +22,7 @@
   function fake(code) { st.setQr(code); st.setIntent('charge'); u.go('tx') }
   function pay() {
     if ($st.payOk == 'scan') { payOk = false; st.setCoPaying(false) }
-    charge(st.selfServe() ? 'charge' : 'pay')
+    charge('pay')
   }
   function charge(intent = 'charge') { st.setIntent(intent); u.go('scan') }
   function isQrToPay() { return (qr.length == me.qr.length) }
@@ -62,6 +62,7 @@
 
     payOk = (!me.isCo || $st.payOk == 'always' || $st.coPaying) && c.showScanToPay
     btnPay = me.isCo ? 'Scan to Pay / Refund / Sell CG Credit' : 'Scan to Pay'
+    btnChg = st.selfServe() ? 'Scan to Pay' : 'Scan to Charge'
 
     if (st.selfServe()) {
       qr = await receiveQr()
@@ -121,7 +122,7 @@
       {#if payOk }
         <button class="scan pay" data-testid="btn-pay" on:click={pay}>{btnPay}</button>
       {/if}
-      <button class="scan charge" data-testid="btn-charge" on:click={charge}>Scan to Charge</button>
+      <button class="scan charge" data-testid="btn-charge" on:click={charge}>{btnChg}</button>
     </div>
   </div>
 </section>
