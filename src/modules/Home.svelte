@@ -54,7 +54,6 @@
     st.setTimeout(null) // stop the timeout timer from interrupting us
     st.setTrail(null, true)
     st.setLeft('logo')
-    st.setRight('nav')    
     if ($st.frontCamera === null) st.setFrontCamera(!u.isApple() && !u.isAndroid())
     if ($st.intent == 'scanIn') scanIn() // must precede setQr
     st.setQr(null) // no going back to previous customer

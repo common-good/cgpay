@@ -11,7 +11,6 @@
 
   /**
    * Layout the standard page.
-   * In self-serve mode, the menu is available only on the home page.
    */
 
   export let currentRoute
@@ -40,9 +39,7 @@
       <img src={ cgLogo } alt='Common Good Logo' />
     {/if}
     <button on:click={goHome} data-testid="account-name">{ ($st.myAccount ? $st.myAccount.name : '') + (u.realData() ? '' : ' (DEMO)')}</button>
-    { #if $st.hdrRight == 'nav' }
-      <button data-testid="btn-nav" class="btn" aria-label="Menu" on:click={toggleNav}><NavIcon width={'100%'} height={'100%'} /></button>
-    { /if}
+    <button data-testid="btn-nav" class="btn" aria-label="Menu" on:click={toggleNav}><NavIcon width={'100%'} height={'100%'} /></button>
   </header>
   { #key currentRoute }<NetworkStatus/>{ /key }
   <div class="content">

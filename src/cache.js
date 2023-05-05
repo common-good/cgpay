@@ -58,7 +58,7 @@ const cache = {
   selfServe: false, // true for self-serve mode
   payOk: 'always', // payments from this device are permitted: always, scan, or never - default for companies is scan (self-scan-in required, to pay)
 
-  choices: null, // accounts that user has permission to use in the app
+  choices: null, // accounts the user has permission to use in the app
   txs: [], // transactions waiting to be uploaded
   comments: [], // comments waiting to be uploaded
 
@@ -78,13 +78,13 @@ const cache = {
   coPaying: false, // true if a company account is toggled to pay, refund, or sell CG credit (vs charge) - times out
   trail: [], // breadcrumbs to inform back button (see u.canGoBack and u.goBack)
   hdrLeft: 'logo', // what to show (if anything) at left side of the header
-  hdrRight: 'nav', // what to show (if anything) at right side of the header
+  pending: false, // true if a tx or comment is awaiting confirmation before upload
 
   // for testing
   posts: 0, // operation counters for calls to u.postRequest, enQ, and deQ
   enQ: 0,
   deQ: 0,
-  flushOk: false, // true if the tester is ready for queued transactions and comments to be uploaded to the server 
+  flushOk: false, // true if the tester is ready for queued txs/comments to be uploaded (keep separate from noUploads)
   now: null, // a stable timestamp (in seconds) for each Scenario
 }
 

@@ -163,11 +163,9 @@ const u = {
   go(page, setTrail = true) { 
     if (setTrail) st.setTrail(u.pageUri())
     st.setLeft(u.atHome(page) ? 'logo' : 'back')
-    st.setRight(!st.selfServe() || u.atHome(page) ? 'nav' : null)
     navigateTo('/' + page)
   },
   goBack() { u.go(st.setTrail(), false) },
-  noBack() { st.setTrail('', true); st.setLeft('logo'); st.setRight(null) },
 
   isSafari() {
     const ua = navigator.userAgent
