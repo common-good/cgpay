@@ -152,7 +152,7 @@
           <p>$ <span data-testid="amount">{ u.withCommas(tx.amount) }</span></p>
         </div>
       </div>
-      <div class="note" data-testid="thank-you">Thank you for using CGPay<br>for democracy and the common good!</div>
+      <div class="note" data-testid="thank-you">Thank you for using CGPay for democracy and the common good!</div>
     </div>
     <div class="actions">
       {#if tipable}<a class="secondary" href='/tip'>Add Tip</a>{/if}
@@ -173,12 +173,13 @@
     margin-bottom $s1
 
   section
-    height 100%
+    height calc(100vh + 300px)
     width 100%
     display flex
     flex-direction column
     align-items center
     justify-content space-between
+    padding-bottom 400px
 
   .charge-info
     width 95%
@@ -188,6 +189,7 @@
     text-align center
     border-top dashed 1px
     padding-top $s0
+    width 95%
 
   .row
     display flex
