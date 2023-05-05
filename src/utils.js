@@ -13,6 +13,7 @@ const mainLens = '.12.13.22.23.32.33.34.44.45' // region and acct lens without a
 
 const u = {
   ...u0, // incorporate all function from utils0.js
+  undo: null, // notify subscribers every time the Back button is clicked when it means "undo" (see LayoutStep.svelte)
 
   api() { return u.realData() ? c.apis.real : c.apis.test }, 
 
@@ -39,7 +40,7 @@ const u = {
   async timedFetch(url, options = {}, post = false) {
     if (!st.inspect().online) throw u.er('Offline') // this works for setWifiOff also
     if (!post) {
-      url += '&version=' + c.version
+      if (!url.includes('version=')) url += '&version=' + c.version
       const urlRay = url.split('?')
       await u.tellTester('get', urlRay[0], urlRay[1].split('&'))
     }
@@ -61,7 +62,7 @@ const u = {
 
   async postRequest(endpoint, v) {
     st.bump('posts')
-    v.version = c.version
+    if (!v.version) v.version = c.version
     await u.tellTester('post', endpoint, { ...v })
     return await u.timedFetch(endpoint, {
       method: 'POST',
@@ -161,6 +162,7 @@ const u = {
   isApple() { return /iPhone|iPod|iPad/i.test(navigator.userAgent) },
   isAndroid() { return !u.isApple() && /Android/i.test(navigator.userAgent) },
   go(page, setTrail = true) { 
+    st.setPending(false) // once you leave the tx confirmation page, the tx is assumed complete
     if (setTrail) st.setTrail(u.pageUri())
     st.setLeft(u.atHome(page) ? 'logo' : 'back')
     navigateTo('/' + page)

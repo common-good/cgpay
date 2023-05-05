@@ -17,11 +17,11 @@ Scenario: A company charges an individual
   And I input "1234.50" as "amount"
   And I input "food!" as "description"
   And I click "btn-submit"
-  Then ? we post this to "transactions":
-  | amount  | actorId | otherId | description | created | proof | offline | version |
-  | 1234.50 | Abe/Cit | Bea     | food!       | now     | hash  | false   | version |
-  * I wait 1 seconds
   Then ? I see "transaction-complete"
+  And these "txs":
+  | deviceId | amount   | actorId | otherId | description | created | proof | offline | version |
+  | devC     | 1234.50  | Abe/Cit | Bea     | food!       | now     | hash  | true    | version |
+  And ? this "pending": "true"
   And ? "action" is "Charged"
   And ? "other-name" is "Bea Two"
   And ? I see no "agent"
@@ -29,16 +29,34 @@ Scenario: A company charges an individual
   And ? "amount" is "1,234.50"
   And ? I see "thank-you"
   And ? I see "btn-undo"
-  And ? count "txs" is 0
+  And ? I see "btn-done"
+  
+  When I click "btn-done"
+  Then ? I am on page "home"
+  And ? this "pending": "false"
+  * we wait for uploads
   And ? these server "txs":
   | amt     | actorId | uid1 | uid2  | agt1 | agt2 | for2  | created | 
   | 1234.50 | Cit     | Bea  | Cit   | Bea  | Abe  | food! | now     |
 
+Scenario: A company charges an individual then undoes the transaction-*
+  # abbreviated syntax for first 4 steps
+  When I charge "Bea" 1234.50 for "food!"
+  Then ? I see "transaction-complete"
+  And these "txs":
+  | deviceId | amount   | actorId | otherId | description | created | proof | offline | version |
+  | devC     | 1234.50  | Abe/Cit | Bea     | food!       | now     | hash  | true    | version |
+
   When I click "btn-undo"
-  Then ? this alert: "Reverse the transaction?"
+  Then ? I am on page "tx"
+  And ? this alert: "Reverse the transaction?"
+  And ? this "pending": "true"
   And ? "btn1" is "Yes"
-  When I click "btn1"
-  * I wait 1 seconds
+  And ? "btn2" is "No"
+  When I click "btn2"
+  Then ? I am on page "tx"
+  And ? I see "btn-undo"
+  And ? this "pending": "true"
   
   When I click "btn-back"
   Then ? I am on page "tx"
@@ -50,27 +68,20 @@ Scenario: A company charges an individual
   Then ? I am on page "tx"
   And ? I see "btn-undo"
   And ? this "pending": "true"
+
+  When I click "btn-undo"
+  And I click "btn1"
   Then ? this confirmation: "The transaction has been reversed."
-  When I click "btn1"
-  Then ? I am on page "home"
-  And ? these "txs":
-  | amount   | actorId | otherId | description | created | offline | version |
-  | -1234.50 | Abe/Cit | Bea     | food!       | now     | true    | version |
+  And ? this "pending": "false"
+  And ? count "txs" is 0
+  And ? I am on page "home"
   * we wait for uploads
   Then ? count "txs" is 0
-  And ? these server "txs":
-  | amt      | actorId | uid1 | uid2  | agt1 | agt2 | for2  | created | 
-  | 1234.50  | Cit     | Bea  | Cit   | Bea  | Abe  | food! | now     |
-  | -1234.50 | Cit     | Bea  | Cit   | Bea  | Abe  | food! | ?       |
 
 Scenario: A company charges a company
-# abbreviated syntax for first 4 steps
   When I charge "Flo/Gis" 1234.50 for "food!"
-  Then ? we post this to "transactions":
-  | amount  | actorId | otherId | description | created | proof | offline | version |
-  | 1234.50 | Abe/Cit | Flo/Gis | food!       | now     | hash  | false   | version |
-  * I wait 1 seconds
   Then ? I see "transaction-complete"
+  And ? this "pending": "true"
   And ? "action" is "Charged"
   And ? "other-name" is "Gisette"
   And ? "agent" is "Flo Six"
@@ -78,16 +89,12 @@ Scenario: A company charges a company
   And ? "amount" is "1,234.50"
   And ? I see "thank-you"
   And ? I see "btn-undo"
-  And ? count "txs" is 0
 
 Scenario: An individual charges an individual
   Given I am signed in as "Abe"
   When I charge "Bea" 1234.50 for "food!"
-  Then ? we post this to "transactions":
-  | amount  | actorId | otherId | description | created | proof | offline | version |
-  | 1234.50 | Abe     | Bea     | food!       | now     | hash  | false   | version |
-  * I wait 1 seconds
   Then ? I see "transaction-complete"
+  And ? this "pending": "true"
   And ? "action" is "Charged"
 
 Scenario: A company charges an individual offline
@@ -96,13 +103,13 @@ Scenario: A company charges an individual offline
   When I scan "Bea" to "charge"
   Then ? this alert: "Trust this member or ask for ID"
   When I click "btn1"
-  * I wait 1 seconds
+  * I wait .2 seconds
   And I input "234.50" as "amount"
   And I input "food!" as "description"
   And I click "btn-submit"
   Then ? these "txs":
-  | amount | actorId | otherId | description | created | offline | version |
-  | 234.50 | Abe/Cit | Bea     | food!       | now     | true    | version |
+  | deviceId | amount | actorId | otherId | description | created | offline | version |
+  | devC     | 234.50 | Abe/Cit | Bea     | food!       | now     | true    | version |
   # Offline limit is $250
   Then ? I see "transaction-complete"
   And ? "action" is "Charged"
@@ -118,19 +125,6 @@ Scenario: A company charges an individual offline
   Then ? this alert: "Reverse the transaction?"
   And ? "btn1" is "Yes"
   When I click "btn1"
-  * I wait 1 seconds
-  Then ? this confirmation: "The transaction has been reversed."
-  When I click "btn1"
   Then ? I am on page "home"
-  And ? these "txs":
-  | amount  | actorId | otherId | description | created | offline | version |
-  | 234.50  | Abe/Cit | Bea     | food!       | now     | true    | version |
-  | -234.50 | Abe/Cit | Bea     | food!       | now     | true    | version |
-  And ? count "txs" is 2
-
-  When we are online
-  * we wait for uploads
-  Then ? count "txs" is 0
-  And ? these server "txs":
-  | amt     | actorId | uid1 | uid2  | agt1 | agt2 | for2  | created | 
-  | -234.50 | Cit     | Bea  | Cit   | Bea  | Abe  | food! | ?       |
+  Then ? this confirmation: "The transaction has been reversed."
+  And ? count "txs" is 0

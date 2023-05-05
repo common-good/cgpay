@@ -19,7 +19,7 @@ Scenario: The network goes offline and status is visible
   Then ? I see "network-offline"
 
 Rule: When we're back online we upload any stored transactions and/or comments
-
+@this
 Scenario: We reconnect to the internet with cached transactions
   Given these "txs":
   | deviceId | amount   | actorId | otherId | description | created | proof | offline | version |
@@ -27,7 +27,11 @@ Scenario: We reconnect to the internet with cached transactions
   | devC     | -1234.50 | Abe/Cit | Bea     | food!       | now     | hash  | true    | version |
   When we are online
   And we wait for uploads
-  Then ? count "txs" is 0
+  Then ? we post this to "transactions":
+  # tests just the most recent post
+  | deviceId | amount   | actorId | otherId | description | created | proof | offline | version |
+  | devC     | -1234.50 | Abe/Cit | Bea     | food!       | now     | hash  | true    | version |
+  And ? count "txs" is 0
   And ? these server "txs":
   | amt      | actorId | uid1 | uid2  | agt1 | agt2 | for2  | created | 
   | 1234.50  | Cit     | Bea  | Cit   | Bea  | Abe  | food! | now     |

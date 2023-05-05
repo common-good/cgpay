@@ -128,7 +128,7 @@ export const createStore = () => {
       if (!cache.trail.includes(page)) enQ('trail', page)
     },
     setLeft(what) { setv('hdrLeft', what) },
-    setRight(what) { setv('hdrRight', what) },
+    setPending(yesno) { setv('pending', yesno) },
 
     setAcctChoices(v) {
       setv('choices', v)
@@ -193,9 +193,11 @@ export const createStore = () => {
     enqTx(tx) { tx.offline = true; enQ('txs', { ...tx }) },
     async flushTxs() { await flushQ('txs', 'transactions') },
     deqTx() { deQ('txs') }, // just for testing (in st.spec.js)
+    undoTx() { pop('txs'); st.setPending(false) },
     comment(text) { enQ('comments', { deviceId:cache.myAccount.deviceId, actorId:cache.myAccount.accountId, created:u.now(), text:text }) },
     async flushComments() { await flushQ('comments', 'comments') },
     async flushAll() {
+      if (cache.pending) return
       if (u.testing() && !cache.flushOk) return
       if (u.empty(cache.txs) && u.empty(cache.comments)) return
       await st.flushTxs()

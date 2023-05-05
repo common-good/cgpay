@@ -26,6 +26,7 @@
     created: null,
     proof: null,
     offline: false,
+    version: c.version,
   }
   
   const qr = $st.qr
@@ -37,10 +38,18 @@
 
 	u.undo.subscribe(askUndo) // receive notification of Back click (see LayoutStep.svelte)
 
+  function goHome() { u.go('home') }
+
   function askUndo() {
-    ;({ m0, m1, m2 } = u.yesno('Reverse the transaction?', Undo, () => m0 = false)); m0=m0; m1=m1; m2=m2
+    if (!gotTx) return // LayoutStep.svelte updates u.undo upon arrival. Ignore.
     st.setTimeout(null)
+    ;({ m0, m1, m2 } = u.yesno('Reverse the transaction?', 
+      () => { m0 = false; st.undoTx(); u.goHome('The transaction has been reversed.') },
+      () => { m0 = false; if (st.selfServe()) st.setTimeout(c.txTimeout)
+    }))
+    m0=m0; m1=m1; m2=m2
   }
+
   function showEr(msg0) {
     let msg = typeof msg0 == 'object' ? msg0.detail : msg0 // receive string or dispatch from SubmitCharge
     msg = msg; // this needs to be responsive
@@ -48,7 +57,7 @@
   }
 
   function handleSubmitCharge() {
-    u.noBack()
+    st.setTrail('', true) // no going back from here
     gotTx = true
     if (st.selfServe()) st.setTimeout(c.txTimeout)
   } // state success, show undo/tip/done/receipt buttons
@@ -69,18 +78,6 @@
   function profileOffline() {
     if (!st.selfServe()) showEr('OFFLINE. Trust this member or ask for ID.')
     limit = Math.min(c.offlineLimit, limit === null ? c.offlineLimit : limit)
-  }
-  
-  /**
-   * Undo the transaction.
-   * To avoid timing issues with st.flushTxs(), queue the reversed transaction,
-   * then delete both transactions at once.
-   */
-  function Undo() {
-    tx.amount = -tx.amount
-    st.enqTx(tx)
-    // NO! (could lose the undo) st.deleteTxPair() 
-    u.goHome('The transaction has been reversed.')
   }
 
   onMount(async () => {
@@ -157,8 +154,8 @@
     <div class="actions">
       {#if tipable}<a class="secondary" href='/tip'>Add Tip</a>{/if}
       <!-- button>Receipt</button -->
-      <button data-testid="btn-undo" on:click={ askUndo } class="tertiary">Undo</button>
-      <a class="primary" data-testid="done" href='/home'>Done</a>
+      <button data-testid="btn-undo" on:click={askUndo} class="tertiary">Undo</button>
+      <a class="primary" data-testid="btn-done" on:click={goHome}>Done</a>
     </div>
 
   { :else }

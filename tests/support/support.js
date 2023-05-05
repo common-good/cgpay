@@ -186,7 +186,7 @@ const t = {
   async element(testId) { await t.waitForApp(); return await w.page.$(t.sel(testId)) },
   sel(testId) { return `[data-testid="${testId}"]` },
   isTimeField(k) { return u.in(k, 'created') },
-  async waitACycle() { return w.page.waitForTimeout(c.networkTimeoutMs + 1) },
+  async waitACycle(n = 1) { return w.page.waitForTimeout(n * c.networkTimeoutMs + 1) },
   
   // MAKE / DO
 
@@ -219,7 +219,7 @@ const t = {
     const sel = t.sel('input-' + id) 
     await w.page.click(sel, { clickCount: 3 }) // select field so that typing replaces it
     await w.page.type(sel, isNaN(text) ? text : JSON.stringify(text))
-    await t.waitACycle() // needed sometimes between inputs
+    await t.waitACycle(2) // needed sometimes between inputs
     const newValue = await w.page.$eval(sel, el => el.value)
     t.test(newValue, text)
   },
@@ -232,13 +232,13 @@ const t = {
     trail.push('scan') // we can't actually u.go anywhere from the scan page in testing, so these 5 lines fake it
     await t.putv('trail', trail)
     await t.putv('hdrLeft', 'back')
-    await t.putv('hdrRight', (await t.getv('payOk')) == 'self' ? null : 'nav')
     await t.waitACycle()
 
     await t.visit(why == 'scanIn' ? 'home' : 'tx')
   },
 
   async tx(who, amount, description) {
+    await t.visit('home') // sometimes needed
     await t.scan(who)
     await t.input('amount', amount)
     await t.input('description', description)
@@ -319,6 +319,12 @@ async mockFetch(url, options = {}) {
     }
   },
 
+  /**
+   * Test just the most recent post or get to the given endpoint
+   * @param {*} endpoint 
+   * @param {*} rows 
+   * @param {*} method 
+   */
   async posted(endpoint, rows, method) {
     await t.waitACycle()
     assert.isNotNull(w[method][endpoint], `expected a "${method}" request to endpoint "${endpoint}"`)
