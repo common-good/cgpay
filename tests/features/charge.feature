@@ -39,6 +39,17 @@ Scenario: A company charges an individual
   And ? "btn1" is "Yes"
   When I click "btn1"
   * I wait 1 seconds
+  
+  When I click "btn-back"
+  Then ? I am on page "tx"
+  And ? this alert: "Reverse the transaction?"
+  And ? this "pending": "true"
+  And ? "btn1" is "Yes"
+  And ? "btn2" is "No"
+  When I click "btn2"
+  Then ? I am on page "tx"
+  And ? I see "btn-undo"
+  And ? this "pending": "true"
   Then ? this confirmation: "The transaction has been reversed."
   When I click "btn1"
   Then ? I am on page "home"

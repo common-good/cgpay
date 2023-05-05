@@ -35,7 +35,7 @@
   let photo = { alt: 'Customer Profile', blob: null }
   const pastAction = (pay || st.selfServe()) ? 'Paid' : 'Charged'
 
-  // --------------------------------------------
+	u.undo.subscribe(askUndo) // receive notification of Back click (see LayoutStep.svelte)
 
   function askUndo() {
     ;({ m0, m1, m2 } = u.yesno('Reverse the transaction?', Undo, () => m0 = false)); m0=m0; m1=m1; m2=m2

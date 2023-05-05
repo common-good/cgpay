@@ -1,6 +1,6 @@
 <script>
-  import { Route, navigateTo } from 'svelte-router-spa'
-  import { onMount } from 'svelte'
+  import { Route } from 'svelte-router-spa'
+  import { writable } from 'svelte/store'
   import NavIcon from "svelte-material-icons/Menu.svelte"
   import BackIcon from "svelte-material-icons/ChevronLeft.svelte"
   import Navigation from '#modules/Navigation.svelte'
@@ -20,10 +20,10 @@
 
   function toggleNav() { isNavOpen = !isNavOpen }
   function goHome() { u.go('home') }
+  function setViewportHeight() { viewHeight = window.visualViewport.height }
+  function goBack() { if (u.pageUri() == 'tx' && $st.pending) u.undo.update(n => n + 1); else u.goBack() }
 
-  const setViewportHeight = () => {
-    viewHeight = window.visualViewport.height
-  }
+  u.undo = writable(0)
 </script>
 
 <svelte:window on:load={setViewportHeight}/>
@@ -34,7 +34,7 @@
   { /if }
   <header>
     {#if $st.hdrLeft == 'back'}
-      <button on:click={u.goBack} class="btn" data-testid="btn-back" aria-label="Back"><BackIcon width={'100%'} height={'100%'} /></button>
+      <button on:click={goBack} class="btn" data-testid="btn-back" aria-label="Back"><BackIcon width={'100%'} height={'100%'} /></button>
     {:else if $st.hdrLeft == 'logo'}
       <img src={ cgLogo } alt='Common Good Logo' />
     {/if}
