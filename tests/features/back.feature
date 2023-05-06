@@ -28,22 +28,28 @@ Scenario: On home page
   Then ? I see no "btn-back"
   But ? I see "btn-nav"
 
-Rule: No button on transaction completed page gives an error message
+Rule: Back button on transaction completed page means undo
 
-Scenario: A user completes a transaction
+Scenario: A user completes a transaction and goes back
   Given I am signed in as "Bea"
   And I charge "Abe" 12.34 for "lunch"
-  And I wait 1 seconds
-  Then ? I see no "btn-back"
-  And ? I see no "btn-nav"
+  Then ? I see "btn-back"
+  And ? I see "btn-nav"
 
-Scenario: A user clicks Undo
+  When I click "btn-back"
+  Then ? this confirmation: "Reverse the transaction?"
+
+Scenario: A user comments after completing a transaction
   Given I am signed in as "Bea"
   And I charge "Abe" 12.34 for "lunch"
-  And I wait 1 seconds
-  And I click "btn-undo"
-  Then ? I see no "btn-back"
-  And ? I see no "btn-nav"
+  Then ? this "pending": "true"
+
+  When I click "btn-nav"
+  And I click "menu-comment"
+  Then ? this "pending": "false"
+
+  When I click "btn-back"
+  Then ? I am on page "home"
 
 Rule: Everywhere else clicking the back button sends you to the previous page in a workable state
 
@@ -94,7 +100,7 @@ Scenario: On comments page from tx page
   Then ? I am on page "scan"
   When I click "btn-back"
   Then ? I am on page "home"
-@this
+
 Scenario: On comments page from tx page back and forth
   Given I am signed in as "Bea"
   And I scan "Abe" to "charge"
