@@ -69,8 +69,11 @@ Scenario: A company charges an individual then undoes the transaction-*
   And ? I see "btn-undo"
   And ? this "pending": "true"
 
+  * I wait 1 seconds
   When I click "btn-undo"
+  And I wait 1 seconds
   And I click "btn1"
+  And I wait 1 seconds
   Then ? this confirmation: "The transaction has been reversed."
   And ? this "pending": "false"
   And ? count "txs" is 0

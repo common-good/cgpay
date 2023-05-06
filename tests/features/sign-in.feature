@@ -39,8 +39,9 @@ Rule: We give an error message if the user tries to sign in offline
 Scenario: A user tries to sign in offline
   Given we are offline
   When I run the app
-  And I wait 2 seconds
+  And I wait 1 seconds
   And I input "a" as "identifier"
   And I input "k" as "password"
   And I click "btn-signin"
+  And I wait 2 seconds
   Then ? this error: "Check your internet connection"
