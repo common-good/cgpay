@@ -1,18 +1,12 @@
 <script>
   import st from'#store.js'
   import u from '#utils.js'
-  import c from '#constants.js'
   import cgLogo from '#modules/assets/cg-logo-300.png?webp'
-  import Modal from '#modules/Modal.svelte'; let m0, m1
 
   const credentials = {}
   let statusMsg = ''
 
-  function showEr(msg) { 
-    ;({ m0, m1 } = u.dlg('Alert', msg, 'Close', () => m0 = false)); m0=m0; m1=m1
-//    console.log('showEr: ', msg)
-    statusMsg = ''
-  }
+  function showEr(msg) { u.alert(msg); statusMsg = '' }
 
   async function signIn() {
     statusMsg = 'Finding your account(s)...'
@@ -63,8 +57,6 @@
     </form>
   </div>
 </section>
-
-<Modal m0={m0} on:m1={m1} />
 
 <style lang='stylus'>
   a

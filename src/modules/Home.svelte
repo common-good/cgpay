@@ -3,7 +3,6 @@
   import st from'#store.js'
   import u from '#utils.js'
   import c from '#constants.js'
-  import Modal from '#modules/Modal.svelte'; let m0, m1, m2
   import cgLogo from '#modules/assets/cg-logo-300.png?webp'
   import queryString from 'query-string'
 
@@ -14,9 +13,7 @@
   const me = $st.myAccount
   let hdr, qr, alt, btnPay, btnChg, payOk
 
-  function showEr(msg) { 
-    ({ m0, m1 } = u.dlg('Alert', msg, 'Close', () => {m0 = false; st.setMsg(null)})); m0=m0; m1=m1
-  }
+  function showEr(msg) { u.alert(msg, () => { u.hide(); st.setMsg(null) }) }
 
   async function receiveQr() { return await u.generateQr(u.makeQrUrl(u.getMainId(me.accountId))) }
   function fake(code) { st.setQr(code); st.setIntent('charge'); u.go('tx') }
@@ -78,8 +75,6 @@
   })
 
 </script>
-
-<Modal m0={m0} on:m1={m1} on:m2={m2} />
 
 <svelte:head>
   <title>CGPay - Home</title>

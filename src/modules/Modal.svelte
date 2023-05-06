@@ -2,12 +2,12 @@
   import { createEventDispatcher, onDestroy, onMount } from 'svelte'
   import { focusTrap } from 'svelte-focus-trap'
   import { fade } from 'svelte/transition';
+  import st from '#store.js'
 
-  export let m0
   let modal
   let show, title, text, labels, lab1, lab2, zot
 
-$:  ([show, title, text, labels] = m0 ? m0 : [false, '', '', '']); // semi-colon here is required
+$:  ([show, title, text, labels] = $st.modal ? $st.modal : [false, '', '', '']); // semi-colon here is required
 $:  [lab1, lab2, zot] = (labels + ', ').split(', ')
 
   const dispatch = createEventDispatcher()
@@ -23,13 +23,13 @@ $:  [lab1, lab2, zot] = (labels + ', ').split(', ')
   <div class="modal-background" on:click={() => {show = false}}></div>
 
   <div class="modal" role="dialog" aria-modal="true" bind:this={modal} use:focusTrap in:fade out:fade>
-    <h1 data-testid="messageTitle">{ title }</h1>
+    <h1 data-testid="messageTitle">{title}</h1>
     <div class="content">
-      <p data-testid="messageText">{ text }</p>
+      <p data-testid="messageText">{text}</p>
       <div class="buttons">
-        <button class="primary" data-testid="btn1" on:click={ () => dispatch('m1') }>{ lab1 }</button>
+        <button class="primary" data-testid="btn1" on:click={$st.m1}>{lab1}</button>
         {#if lab2}
-          <button class="secondary" data-testid="btn2" on:click={ () => dispatch('m2') }>{ lab2 }</button>
+          <button class="secondary" data-testid="btn2" on:click={$st.m2}>{lab2}</button>
         {/if}
       </div>
     </div>

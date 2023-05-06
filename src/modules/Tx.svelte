@@ -5,7 +5,6 @@
   import { onMount } from 'svelte'
   import queryString from 'query-string'
   import SubmitCharge from '#modules/SubmitCharge.svelte'
-  import Modal from '#modules/Modal.svelte'; let m0, m1, m2
 
 // import { encrypt, createMessage, readKey } from 'openpgp'
 // Example with curl: curl -d "actorId=G6VM03&amount=1234.98&created=1672959981&description=test%20food&deviceId=GrfaVyHkxnTf4cxsyIEjkWyNdK0wUoDK153r2LIBoFocvw73T&offline=false&otherId=H6VM0G0NyCBBlUF1qWNZ2k&proof=d0e4eaeb4e9c1dc9d80bef9eeb3ad1342fd24997156cb57575479bd3ac19d00b" -X POST -H "Content-type: application/x-www-form-urlencoded" 'https://demo.commongood.earth/api/transactions'
@@ -43,17 +42,16 @@
   function askUndo() {
     if (!gotTx) return // Layout.svelte updates u.undo upon arrival. Ignore.
     st.setTimeout(null)
-    ;({ m0, m1, m2 } = u.yesno('Reverse the transaction?', 
-      () => { m0 = false; st.undoTx(); u.goHome('The transaction has been reversed.') },
-      () => { m0 = false; if (st.selfServe()) st.setTimeout(c.txTimeout)
-    }))
-    m0=m0; m1=m1; m2=m2
+    u.yesno('Reverse the transaction?', 
+      () => { u.hide(); st.undoTx(); u.goHome('The transaction has been reversed.') },
+      () => { u.hide(); if (st.selfServe()) st.setTimeout(c.txTimeout)
+    })
   }
 
   function showEr(msg0) {
     let msg = typeof msg0 == 'object' ? msg0.detail : msg0 // receive string or dispatch from SubmitCharge
-    msg = msg; // this needs to be responsive
-    ;({ m0, m1, m2 } = u.dlg('Alert', msg, 'OK', () => m0 = false)); m0=m0; m1=m1; m2=m2 
+    msg = msg // this needs to be responsive
+    u.alert(msg)
   }
 
   function handleSubmitCharge() {
@@ -162,8 +160,6 @@
     <SubmitCharge {otherAccount} {photo} {tx} {limit} on:error={showEr} on:complete={handleSubmitCharge} />
   { /if }
 </section>
-
-<Modal m0={m0} on:m1={m1} on:m2={m2} />
 
 <style lang='stylus'>
   h1 

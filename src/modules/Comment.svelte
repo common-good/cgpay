@@ -1,21 +1,14 @@
 <script>
   import u from '#utils.js'
   import st from'#store.js'
-  import Modal from '#modules/Modal.svelte'; let m0, m1, m2
 
   export let currentRoute // else Svelte complains (I don't know why yet)
   export let params // else Svelte complains (I don't know why yet)
   const msg = 'Thank you for your feedback! We very much appreciate your participation in creating a Common Good economy.'
-
   let text
 
-  async function submit() {
-    await st.comment(text)
-    ;({ m0, m1 } = u.dlg('Alert', msg, 'Close', () => {m0=false; u.goBack()})); m0=m0; m1=m1
-  }
+  async function submit() { await st.comment(text); u.alert(msg, u.goBack) }
 </script>
-
-<Modal m0={m0} on:m1={m1} on:m2={m2} />
 
 <svelte:head>
   <title>CGPay - Comments and Suggestions</title>

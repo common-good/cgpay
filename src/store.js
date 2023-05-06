@@ -129,6 +129,7 @@ export const createStore = () => {
     },
     setLeft(what) { setv('hdrLeft', what) },
     setPending(yesno) { setv('pending', yesno) },
+    setModal(modal, m1 = null, m2 = null) { setv('modal', modal); setv('m1', m1); setv('m2', m2) },
 
     setAcctChoices(v) {
       setv('choices', v)

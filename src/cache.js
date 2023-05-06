@@ -79,6 +79,9 @@ const cache = {
   trail: [], // breadcrumbs to inform back button (see u.canGoBack and u.goBack)
   hdrLeft: 'logo', // what to show (if anything) at left side of the header
   pending: false, // true if a tx or comment is awaiting confirmation before upload
+  modal: false, // modal dialog data (set false to hide the modal dialog)
+  m1: null, // callback for modal button #1
+  m2: null, // callback for modal button #2
 
   // for testing
   posts: 0, // operation counters for calls to u.postRequest, enQ, and deQ
