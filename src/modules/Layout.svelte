@@ -44,7 +44,7 @@
   </header>
   { #key currentRoute }<NetworkStatus/>{ /key }
   <div class="content">
-    <Modal />
+    <Modal/>
     <Route { currentRoute }/>
   </div>
 </div>
