@@ -3,7 +3,6 @@
   import u from '#utils.js'
   import c from '#constants.js'
   import { onMount } from 'svelte'
-  import queryString from 'query-string'
   import SubmitCharge from '#modules/SubmitCharge.svelte'
 
 // import { encrypt, createMessage, readKey } from 'openpgp'
@@ -62,13 +61,13 @@
     
   /**
    * Get the customer's photo from the server
-   * @param query: query data for photoId endpoint
+   * @param info: data for photoId endpoint
    */
-  async function getPhoto(query) {
+  async function getPhoto(info) {
     let blob = null
     if (!pay) {
-      const { result } = await u.timedFetch(`idPhoto?${ query }`, { type:'blob' })
-      blob = URL.createObjectURL(result)
+      const res = await u.postRequest('idPhoto', info, { type:'blob' })
+      blob = URL.createObjectURL(res)
     }
     return { alt:'photo of the other party', blob:blob }
   }
@@ -93,17 +92,16 @@
       if (!$st.online) {
         profileOffline()
       } else  {
-        const q = {deviceId: tx.deviceId, actorId: tx.actorId, otherId: tx.otherId + tx.code}
-        const query = queryString.stringify(q)
-        const { result } = await u.timedFetch(`identity?${ query }`)
-        const { selling } = result
+        const info = {deviceId: tx.deviceId, actorId: tx.actorId, otherId: tx.otherId + tx.code}
+        const res = await u.postRequest('identity', info)
+        const { selling } = res
         if (selling.length) tx.description = selling[0]
         st.setMyAccount({ ...$st.myAccount, selling: selling })
-        otherAccount = { ...otherAccount, ...result, lastTx:u.now() } // lastTx date lets us jettison old customers to save storage
+        otherAccount = { ...otherAccount, ...res, lastTx:u.now() } // lastTx date lets us jettison old customers to save storage
         delete otherAccount.selling
         st.putAcct(card, otherAccount) // store and/or update stored customer account info
         limit = Math.min(otherAccount.limit, c.onlineLimit)
-        if (!st.selfServe()) photo = await getPhoto(query)
+        if (!st.selfServe()) photo = await getPhoto(info)
       }
     } catch (er) {
       if (u.isTimeout(er)) { // internet unavailable; recognize a repeat customer or limit CG's liability

@@ -4,7 +4,6 @@
   import u from '#utils.js'
   import c from '#constants.js'
   import cgLogo from '#modules/assets/cg-logo-300.png?webp'
-  import queryString from 'query-string'
 
   export let currentRoute // else Svelte complains (I don't know why yet)
   export let params // else Svelte complains (I don't know why yet)
@@ -68,9 +67,8 @@
     } else toggleQr(!me.isCo)
 
     try {
-      const q = {deviceId:me.deviceId, actorId:me.accountId, lastTx:me.lastTx || -1 }
-      const query = queryString.stringify(q)
-      const { result } = await u.timedFetch(`latest?${ query }`)
+      const info = {deviceId:me.deviceId, actorId:me.accountId, lastTx:me.lastTx || -1 }
+      const res = await u.postRequest('latest', info)
     } catch (er) { if (!u.isTimeout(er)) console.log('latest er', er) }
   })
 
