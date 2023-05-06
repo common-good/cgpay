@@ -19,7 +19,7 @@ Scenario: The network goes offline and status is visible
   Then ? I see "network-offline"
 
 Rule: When we're back online we upload any stored transactions and/or comments
-@this
+
 Scenario: We reconnect to the internet with cached transactions
   Given these "txs":
   | deviceId | amount   | actorId | otherId | description | created | proof | offline | version |
