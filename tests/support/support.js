@@ -10,14 +10,28 @@ const baseUrl = 'http://localhost:' + c.port + '/'
 const t = {
   // Constants
   ONE: true, // parameter for these()
-  SERVER: 'server', // parameter for these()
 
   // UTILITY FUNCTIONS
 
   getst(key = c.storeKey) { return JSON.parse(localStorage.getItem(key)) }, // for debugging
   async snap(picName = 'snap') { await w.page.screenshot({ path:picName + '.png' }) }, // screen capture
   async wait(secs) { await w.page.waitForTimeout(secs * 1000) },
-  mapServerField(field) { return field == 'actorId' ? 'actorUid' : field }, // disambiguate server's from app's actorId field
+
+  /**
+   * Translate app's table and field names to server's
+   * @param string field: table or field name 
+   * @param string table: table name, if relevant
+   * @returns the translated field name
+   */
+  mapToServer(field, table = null) {
+    // table names
+    return field == 'accounts' ? 'users'
+
+    // field names
+    : field == 'actorId' ? (table == 'txs' ? 'actorUid' : 'uid')
+    : field == 'creditLine' ? 'floor'
+    : field
+  },
 
   async whatPage() { 
     const el = await w.page.$('.page')
@@ -78,9 +92,9 @@ const t = {
    * For an array of n arrays, the first element being the keys (from a Gherkin multi-value field), return an array of n-1 objects.
    * @param {*} rows: a list of field names and one or more data records
    * @param bool one: if true, return just the first/only record
-   * @param bool serverField: if true, the rows represent data expected from the server
+   * @param bool serverTable: if specified, the rows represent data expected from (or sent to) the server
    */
-  these({ rawTable:rows }, one = null, serverField = null ) {
+  these({ rawTable:rows }, one = false, serverTable = null ) {
     if (rows.length === 1) return [ t.adjust(rows[0][0]) ]
     if (one) assert.equal(rows.length, 2)
     let ray = [] // the resulting array of objects
@@ -93,7 +107,7 @@ const t = {
         k = rows[0][coli]
         obo[k] = rows[rowi + 1][coli] // remember original value of this cell
         if (k == 'proof') w.proofRow = { ...ray[rowi], amount:obo.amount.replace('-', ''), cardCode:t.adjust(obo.otherId, 'cardCode') } // save this for calculating the wanted proof value in adjust
-        ray[rowi][k] = t.adjust(obo[k], serverField ? t.mapServerField(k) : k)
+        ray[rowi][k] = t.adjust(obo[k], serverTable ? t.mapToServer(k, serverTable) : k)
       }
     }
     return u.clone(one ? ray[0] : ray)
@@ -128,6 +142,7 @@ const t = {
     if (me != null) return  (k == 'account') ? me
                           : u.in(k, 'actorUid uid1 uid2 agt1 agt2') ? w.uid(v)
                           : k == 'myAccount' ? u.just('name isCo accountId deviceId selling', me)
+                          : k == ('id' && v.includes('/')) ? v.split('/')[1] // without agent
                           : k == 'actorId' ? me.accountId
                           : k == 'otherId' ? me.accountId
                           : k == 'cardCode' ? me.cardCode
@@ -205,6 +220,18 @@ const t = {
    */
   async setThis(k, v, one = false) {
     await t.putv(k, t.adjust(typeof v === 'string' ? v : t.these(v, one), k))
+  },
+
+  /**
+   * Set record values on the server
+   * @param string table: app's name for the server table to update
+   * @param {*} rows: a list of tables/record IDs/field values to set on the server
+   */
+  async setServer(table, rows) {
+    const serverTable = t.mapToServer(table)
+    const ray = t.these(rows, false, serverTable)
+    if ('floor' in ray[0]) for (let i in ray) ray[i].floor = -ray[i].floor // translation from "creditLine" changes sign
+    await t.postToTestEndpoint('update', { table:serverTable, keyedValues:[...ray] })
   },
 
   async setUA(browser, sys) {
@@ -308,7 +335,7 @@ async mockFetch(url, options = {}) {
   },
 
   async testServer(table, rows) {
-    const want = t.these(rows, false, t.SERVER)
+    const want = t.these(rows, false, table)
     let msg, kvs, i
     const got = await t.postToTestEndpoint('rows', { fieldList:'*', table:table })
     for (let rowi in want) {
@@ -381,13 +408,15 @@ async mockFetch(url, options = {}) {
     return el
   },
 
-  async seeIs(testId, want, mode = 'exact') {
-    const el0 = await t.see(testId)
+  async is(testId, want, mode = 'exact') {
+    const prefix = testId.split('-')[0]
+    const el = await t.see(testId)
     if (u.in(want, 'selected checked')) { // Svelte doesn't use selected and checked so we simulate it with class
-      const has = (await (await el0.getProperty('className')).jsonValue()).split(' ').includes(want)
+      const has = (await (await el.getProperty('className')).jsonValue()).split(' ').includes(want)
       return assert.isTrue(mode === false ? !has : has)
     }
-    const got = await el0.evaluate(el => el.textContent)
+    let got = await el.evaluate(el0 => el0.textContent)
+    if (prefix == 'input') got = await (await el.getProperty('value')).jsonValue()
     t.test(got, want, null, mode)
   },
 
