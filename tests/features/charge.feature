@@ -131,3 +131,48 @@ Scenario: A company charges an individual offline
   Then ? I am on page "home"
   Then ? this confirmation: "The transaction has been reversed."
   And ? count "txs" is 0
+
+Scenario: A cashier enters too many decimal places (to be rounded up)
+  Given I am signed in as "Abe/Cit"
+  When I charge "Bea" 1.235 for "food!"
+  Then ? this alert: "The amount has been rounded to two decimal places. Make sure this is what you intended and try again."
+  And ? I am on page "tx"
+  And ? "input-amount" is "1.24"
+  And ? count "txs" is 0
+
+Scenario: A cashier enters too many decimal places (to be rounded down)
+  Given I am signed in as "Abe/Cit"
+  When I charge "Bea" 1.234 for "food!"
+  Then ? this alert: "The amount has been rounded to two decimal places. Make sure this is what you intended and try again."
+  And ? I am on page "tx"
+  And ? "input-amount" is "1.23"
+  And ? count "txs" is 0
+@this
+Scenario: A buyer has no balance and no credit
+  Given these server "accounts" values:
+  | id  | balance | creditLine |
+  | Dee | -23     | 0          |
+  And I am signed in as "Abe/Cit"
+  When I scan "Dee" to "charge"
+  Then ? this alert: "This account has no remaining funds"
+  And ? I am on page "home"
+
+Scenario: A buyer a balance, but not enough
+  Given these server "accounts" values:
+  | id  | balance | creditLine |
+  | Dee | 23      | 4          |
+  And I am signed in as "Abe/Cit"
+  When I charge "Dee" 30.00 for "food!"
+  Then ? this alert: "This transaction is limited to $"
+  And ? I am on page "tx"
+  And ? count "txs" is 0
+
+Scenario: A buyer has plenty, but tries to pay more than the app allows
+  Given these server "accounts" values:
+  | id  | balance | creditLine |
+  | Dee | 9999    | 9999       |
+  And I am signed in as "Abe/Cit"
+  When I charge "Dee" 30.00 for "food!"
+  Then ? this alert: "CGPay transactions are limited to $"
+  And ? I am on page "tx"
+  And ? count "txs" is 0

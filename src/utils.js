@@ -20,6 +20,7 @@ const u = {
   dlg(title, text, labels, m1 = u.hide, m2 = null) {
     const m0 = [true, title, text, labels]
     st.setModal(m0, m1, m2)
+    return false // helpful for displaying error messages (eg return alert('bad input'))
   },
 
   /**
@@ -153,7 +154,7 @@ const u = {
   realData() { return ['production', 'staging'].includes(u.mode()) },
   localMode() { return (u.mode() == 'local' && c.showDevStuff) }, 
   yesno(question, m1, m2) { u.dlg('Confirm', question, 'Yes, No', m1, m2) },
-  alert(question, m1 = u.hide) { u.dlg('Alert', question, 'OK', m1) },
+  alert(question, m1 = u.hide) { return u.dlg('Alert', question, 'OK', m1) },
   hide() { st.setModal(false) },
   crash(er) { console.log('crash', er); return typeof er === 'string' ? er : er.message },
   goEr(msg) { st.setMsg(msg); u.go('home') },

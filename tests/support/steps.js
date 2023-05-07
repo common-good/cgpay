@@ -11,6 +11,7 @@ Given('this {string}: {string}', async function (k, v) { await t.setThis(k, v) }
 Given('these {string}:', async function (k, rows) { await t.setThis(k, rows) })
 Given('these accounts:', async function (rows) { await t.theseAccts('accts', rows, true) })
 Given('these choices:', async function (rows) { await t.theseAccts('choices', rows, true) })
+Given('these server {string} values:', async function (table, rows) { await t.setServer(table, rows) })
 Given('we are offline', async function () { await t.putv('online', false) }) // w.page.setOfflineMode(true) prevents all w.page.goto!
 Given('we are online', async function () { await t.putv('online', true) })
 
