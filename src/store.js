@@ -196,6 +196,7 @@ export const createStore = () => {
     deqTx() { deQ('txs') }, // just for testing (in st.spec.js)
     undoTx() { pop('txs'); st.setPending(false) },
     comment(text) { enQ('comments', { deviceId:cache.myAccount.deviceId, actorId:cache.myAccount.accountId, created:u.now(), text:text }) },
+    tellDev(text) { st.comment(`[dev] ${new Date().toLocaleTimeString('en-us')} page=${u.pageUri()}: ${text}`) },
     async flushComments() { await flushQ('comments', 'comments') },
     async flushAll() {
       if (cache.pending) return
