@@ -3,9 +3,7 @@
   import u from '#utils.js'
   import c from '#constants.js'
   import { onMount } from 'svelte'
-  import queryString from 'query-string'
   import SubmitCharge from '#modules/SubmitCharge.svelte'
-  import Modal from '#modules/Modal.svelte'; let m0, m1, m2
 
 // import { encrypt, createMessage, readKey } from 'openpgp'
 // Example with curl: curl -d "actorId=G6VM03&amount=1234.98&created=1672959981&description=test%20food&deviceId=GrfaVyHkxnTf4cxsyIEjkWyNdK0wUoDK153r2LIBoFocvw73T&offline=false&otherId=H6VM0G0NyCBBlUF1qWNZ2k&proof=d0e4eaeb4e9c1dc9d80bef9eeb3ad1342fd24997156cb57575479bd3ac19d00b" -X POST -H "Content-type: application/x-www-form-urlencoded" 'https://demo.commongood.earth/api/transactions'
@@ -15,6 +13,7 @@
     agent: '',
     name: '',
     location: '',
+    limit: c.offlineLimit,
   }
   
   let tx = {
@@ -26,62 +25,48 @@
     created: null,
     proof: null,
     offline: false,
+    version: c.version,
   }
   
   const qr = $st.qr
   let tipable = false
   let gotTx = false
-  let limit = null
   let photo = { alt: 'Customer Profile', blob: null }
   const pastAction = (pay || st.selfServe()) ? 'Paid' : 'Charged'
 
-  // --------------------------------------------
+	u.undo.subscribe(askUndo) // receive notification of Back click (see Layout.svelte)
+
+  function goHome() { u.go('home') }
 
   function askUndo() {
-    ;({ m0, m1, m2 } = u.yesno('Reverse the transaction?', Undo, () => m0 = false)); m0=m0; m1=m1; m2=m2
+    if (!gotTx) return // Layout.svelte updates u.undo upon arrival. Ignore.
     st.setTimeout(null)
-  }
-  function showEr(msg0) {
-    let msg = typeof msg0 == 'object' ? msg0.detail : msg0 // receive string or dispatch from SubmitCharge
-    msg = msg; // this needs to be responsive
-    ;({ m0, m1, m2 } = u.dlg('Alert', msg, 'OK', () => m0 = false)); m0=m0; m1=m1; m2=m2 
+    u.yesno('Reverse the transaction?', 
+      () => { u.hide(); st.undoTx(); u.goHome('The transaction has been reversed.') },
+      () => { u.hide(); if (st.selfServe()) st.setTimeout(c.txTimeout)
+    })
   }
 
   function handleSubmitCharge() {
-    u.noBack()
+    st.setTrail('', true) // no going back from here
     gotTx = true
     if (st.selfServe()) st.setTimeout(c.txTimeout)
   } // state success, show undo/tip/done/receipt buttons
     
   /**
    * Get the customer's photo from the server
-   * @param query: query data for photoId endpoint
+   * @param info: data for photoId endpoint
    */
-  async function getPhoto(query) {
+  async function getPhoto(info) {
     let blob = null
     if (!pay) {
-      const { result } = await u.timedFetch(`idPhoto?${ query }`, { type:'blob' })
-      blob = URL.createObjectURL(result)
+      const res = await u.postRequest('idPhoto', info, { type:'blob' })
+      blob = URL.createObjectURL(res)
     }
     return { alt:'photo of the other party', blob:blob }
   }
 
-  function profileOffline() {
-    if (!st.selfServe()) showEr('OFFLINE. Trust this member or ask for ID.')
-    limit = Math.min(c.offlineLimit, limit === null ? c.offlineLimit : limit)
-  }
-  
-  /**
-   * Undo the transaction.
-   * To avoid timing issues with st.flushTxs(), queue the reversed transaction,
-   * then delete both transactions at once.
-   */
-  function Undo() {
-    tx.amount = -tx.amount
-    st.enqTx(tx)
-    // NO! (could lose the undo) st.deleteTxPair() 
-    u.goHome('The transaction has been reversed.')
-  }
+  function profileOffline() { if (!st.selfServe()) u.alert('OFFLINE. Trust this member or ask for ID.') }
 
   onMount(async () => {
     try {
@@ -98,17 +83,16 @@
       if (!$st.online) {
         profileOffline()
       } else  {
-        const q = {deviceId: tx.deviceId, actorId: tx.actorId, otherId: tx.otherId + tx.code}
-        const query = queryString.stringify(q)
-        const { result } = await u.timedFetch(`identity?${ query }`)
-        const { selling } = result
+        const info = {deviceId: tx.deviceId, actorId: tx.actorId, otherId: tx.otherId + tx.code}
+        const res = await u.postRequest('identity', info)
+        const { selling } = res
         if (selling.length) tx.description = selling[0]
         st.setMyAccount({ ...$st.myAccount, selling: selling })
-        otherAccount = { ...otherAccount, ...result, lastTx:u.now() } // lastTx date lets us jettison old customers to save storage
+        otherAccount = { ...otherAccount, ...res, lastTx:u.now() } // lastTx date lets us jettison old customers to save storage
         delete otherAccount.selling
         st.putAcct(card, otherAccount) // store and/or update stored customer account info
-        limit = Math.min(otherAccount.limit, c.onlineLimit)
-        if (!st.selfServe()) photo = await getPhoto(query)
+        if (otherAccount.limit <= 0) u.goEr('This account has no remaining funds, so a transaction is not possible at this time.')
+        if (!st.selfServe()) photo = await getPhoto(info)
       }
     } catch (er) {
       if (u.isTimeout(er)) { // internet unavailable; recognize a repeat customer or limit CG's liability
@@ -157,16 +141,14 @@
     <div class="actions">
       {#if tipable}<a class="secondary" href='/tip'>Add Tip</a>{/if}
       <!-- button>Receipt</button -->
-      <button data-testid="btn-undo" on:click={ askUndo } class="tertiary">Undo</button>
-      <a class="primary" data-testid="done" href='/home'>Done</a>
+      <button data-testid="btn-undo" on:click={askUndo} class="tertiary">Undo</button>
+      <a class="primary" data-testid="btn-done" on:click={goHome}>Done</a>
     </div>
 
   { :else }
-    <SubmitCharge {otherAccount} {photo} {tx} {limit} on:error={showEr} on:complete={handleSubmitCharge} />
+    <SubmitCharge {otherAccount} {photo} {tx} on:complete={handleSubmitCharge} />
   { /if }
 </section>
-
-<Modal m0={m0} on:m1={m1} on:m2={m2} />
 
 <style lang='stylus'>
   h1 

@@ -11,6 +11,7 @@ Given('this {string}: {string}', async function (k, v) { await t.setThis(k, v) }
 Given('these {string}:', async function (k, rows) { await t.setThis(k, rows) })
 Given('these accounts:', async function (rows) { await t.theseAccts('accts', rows, true) })
 Given('these choices:', async function (rows) { await t.theseAccts('choices', rows, true) })
+Given('these server {string} values:', async function (table, rows) { await t.setServer(table, rows) })
 Given('we are offline', async function () { await t.putv('online', false) }) // w.page.setOfflineMode(true) prevents all w.page.goto!
 Given('we are online', async function () { await t.putv('online', true) })
 
@@ -34,12 +35,12 @@ Then('? count {string} is {int}', async function (list, count) { await t.countIs
 Then('? I am on page {string}', async function (page) { await t.onPage(page) })
 Then('? I see {string}', async function (testId) { await t.see(testId) })
 Then('? I see no {string}', async function (testId) { await t.dontSee(testId) })
-Then('? {string} is {string}', async function (testId, want) { await t.seeIs(testId, want) })
-Then('? {string} is not {string}', async function (testId, want) { await t.seeIs(testId, want, false) })
-Then('? {string} is in {string}', async function (want, testId) { await t.seeIs(testId, want, 'part') })
-Then('? this error: {string}', async function (msg) { await t.seeIs('messageText', msg, 'part') }) // eventually handle differently: error/alert/confirmation
-Then('? this confirmation: {string}', async function (msg) { await t.seeIs('messageText', msg, 'part') })
-Then('? this alert: {string}', async function (msg) { await t.seeIs('messageText', msg, 'part') })
+Then('? {string} is {string}', async function (testId, want) { await t.is(testId, want) })
+Then('? {string} is not {string}', async function (testId, want) { await t.is(testId, want, false) })
+Then('? {string} is in {string}', async function (want, testId) { await t.is(testId, want, 'part') })
+Then('? this error: {string}', async function (msg) { await t.is('messageText', msg, 'part') }) // eventually handle differently: error/alert/confirmation
+Then('? this confirmation: {string}', async function (msg) { await t.is('messageText', msg, 'part') })
+Then('? this alert: {string}', async function (msg) { await t.is('messageText', msg, 'part') })
 Then('? we post this to {string}:', async function (endpoint, rows) { await t.posted(endpoint, rows, 'post') })
 Then('? we request this from {string}:', async function (endpoint, rows) { await t.posted(endpoint, rows, 'get') })
 
