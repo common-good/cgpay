@@ -7,6 +7,10 @@
   },
   "private": true,
   "type": "module",
+  "browserslist": [
+    "defaults and supports es6-module",
+    "maintained node versions"
+  ],
   "scripts": {
     "build": "mode=production vite build",
     "dev": "mode=dev vite dev",
@@ -20,6 +24,7 @@
     "@cucumber/cucumber": "^9.0.0",
     "@sveltejs/vite-plugin-svelte": "^2.0.2",
     "@testing-library/svelte": "^3.2.1",
+    "@vitejs/plugin-legacy": "^4.0.3",
     "canvas": "^2.11.0",
     "chai": "^4.3.7",
     "fkill": "^8.1.0",
@@ -28,11 +33,12 @@
     "puppeteer": "^19.7.5",
     "query-string": "^7.1.1",
     "stylus": "^0.55.0",
-    "svelte": "^3.55.1",
+    "svelte": "^3.59.0",
     "svelte-focus-trap": "^1.2.0",
     "svelte-inline-svg": "^1.2.0",
     "svelte-preprocess": "^4.10.7",
     "svelte-router-spa": "^6.0.3",
+    "terser": "^5.17.2",
     "vite": "^4.1.0",
     "vite-imagetools": "^4.0.8",
     "vite-plugin-pwa": "^0.14.4",
