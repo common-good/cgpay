@@ -12,7 +12,6 @@
     statusMsg = 'Finding your account(s)...'
     try {
       const res = await u.postRequest('accounts', credentials)
-      console.log('res', res)
       st.setAcctChoices(res.accounts)
       if (res.accounts.length > 1) {
         u.go('link-account')

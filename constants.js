@@ -4,8 +4,8 @@ const constants = {
   qrUrlRegex: '^HTTP://[0-9A-Za-z]{1,4}\.RC[24]\.ME/[0-9A-Z]{2,5}[0-9A-Za-z]{0,25}$', // like HTTP://6VM.RC4.ME/KDJJ34kjdfKJ4
   testQrStart: 'HTTP://6VM.RC4.ME/', // is a test QR if it starts with this string
   port: 3000,
-  onlineLimit: 10000,
-  offlineLimit: 250,
+  onlineLimit: 10000, // the most any account can be charged on the app
+  offlineLimit: 250, // how much an account can be charged without knowing its credit limit
   fetchTimeoutMs: 3200,
   networkTimeoutMs: 100,
 

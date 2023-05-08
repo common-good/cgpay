@@ -13,6 +13,7 @@
     agent: '',
     name: '',
     location: '',
+    limit: c.offlineLimit,
   }
   
   let tx = {
@@ -30,7 +31,6 @@
   const qr = $st.qr
   let tipable = false
   let gotTx = false
-  let limit = null
   let photo = { alt: 'Customer Profile', blob: null }
   const pastAction = (pay || st.selfServe()) ? 'Paid' : 'Charged'
 
@@ -45,12 +45,6 @@
       () => { u.hide(); st.undoTx(); u.goHome('The transaction has been reversed.') },
       () => { u.hide(); if (st.selfServe()) st.setTimeout(c.txTimeout)
     })
-  }
-
-  function showEr(msg0) {
-    let msg = typeof msg0 == 'object' ? msg0.detail : msg0 // receive string or dispatch from SubmitCharge
-    msg = msg // this needs to be responsive
-    u.alert(msg)
   }
 
   function handleSubmitCharge() {
@@ -72,10 +66,7 @@
     return { alt:'photo of the other party', blob:blob }
   }
 
-  function profileOffline() {
-    if (!st.selfServe()) showEr('OFFLINE. Trust this member or ask for ID.')
-    limit = Math.min(c.offlineLimit, limit === null ? c.offlineLimit : limit)
-  }
+  function profileOffline() { if (!st.selfServe()) u.alert('OFFLINE. Trust this member or ask for ID.') }
 
   onMount(async () => {
     try {
@@ -100,7 +91,7 @@
         otherAccount = { ...otherAccount, ...res, lastTx:u.now() } // lastTx date lets us jettison old customers to save storage
         delete otherAccount.selling
         st.putAcct(card, otherAccount) // store and/or update stored customer account info
-        limit = Math.min(otherAccount.limit, c.onlineLimit)
+        if (otherAccount.limit <= 0) u.goEr('This account has no remaining funds, so a transaction is not possible at this time.')
         if (!st.selfServe()) photo = await getPhoto(info)
       }
     } catch (er) {
@@ -155,7 +146,7 @@
     </div>
 
   { :else }
-    <SubmitCharge {otherAccount} {photo} {tx} {limit} on:error={showEr} on:complete={handleSubmitCharge} />
+    <SubmitCharge {otherAccount} {photo} {tx} on:complete={handleSubmitCharge} />
   { /if }
 </section>
 
