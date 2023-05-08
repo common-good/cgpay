@@ -14,6 +14,7 @@
     if (!$st.intent) u.goEr(u.crash('scan with no intent'))
     try {
       Html5Qrcode.getCameras().then(devices => {
+        console.log('DEVICES: ', devices)
         if (devices?.length) {
           st.setCameraCount(devices.length)
           if (devices.length > 1) { // choose front or rear camera as appropriate (ignore camera #3+)
@@ -21,6 +22,7 @@
           }
           const cameraId = devices[di].id
           const scanner = new Html5Qrcode('scanner')
+          console.log('scanner: ', scanner)
 
           scanner.start(
             cameraId, 
