@@ -240,6 +240,7 @@ const t = {
   async tx(who, amount, description) {
     await t.visit('home') // sometimes needed
     await t.scan(who)
+    await t.waitACycle()
     await t.input('amount', amount)
     await t.input('description', description)
     await w.page.click(t.sel('btn-submit'))

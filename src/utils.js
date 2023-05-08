@@ -60,7 +60,7 @@ const u = {
     return res
   },
 
-  async postRequest(endpoint, v) {
+  async postRequest(endpoint, v, options) {
     st.bump('posts')
     if (!v.version) v.version = c.version
     await u.tellTester('post', endpoint, { ...v })
@@ -69,7 +69,8 @@ const u = {
       headers: { 'Content-type':'application/x-www-form-urlencoded' },
       mode: 'cors',
       cache: 'default',
-      body: queryString.stringify(v)
+      body: queryString.stringify(v),
+      ...options,
     }, true)
   },
 
