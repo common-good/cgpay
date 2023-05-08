@@ -8,7 +8,7 @@
   export let currentRoute // else Svelte complains (I don't know why yet)
   export let params // else Svelte complains (I don't know why yet)
 
-  const surveyLink = 'https://forms.gle/M8Hv1W2oSgw2yQzS7'
+  const surveyLink = 'https://forms.gle/HKb5V4DueYt1W13v6'
   const me = $st.myAccount
   let hdr, qr, alt, btnPay, btnChg, payOk
 
@@ -107,8 +107,8 @@
       </div>
     {/if}
 
-    {#if !st.selfServe()}
-      <!--a class="survey" data-testid="lnk-survey" href="{surveyLink}" target="_blank">Take Our User Experience Survey</a-->
+    {#if me.isCo && !st.selfServe()}
+      <a class="survey" data-testid="lnk-survey" href="{surveyLink}" target="_blank">Take Our User Survey</a>
     {/if}
     <div class="buttons">
       {#if payOk }
@@ -157,10 +157,7 @@
     justify-content space-between
 
   .survey
-    padding 0 $s-1
-    color $c-blue
-    text-decoration underline
-    text-underline-offset 5px
+    cgButtonTertiary()
 
   .pay
     cgButtonSecondary()
