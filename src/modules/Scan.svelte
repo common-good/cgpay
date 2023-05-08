@@ -9,6 +9,7 @@
 
   let isLoading = true
   let di = 0 // default to first device
+  //st.tellDev('here we are at the top of the page')
 
   onMount(async () => {
     if (!$st.intent) u.goEr(u.crash('scan with no intent'))
