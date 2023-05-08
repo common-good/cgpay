@@ -28,10 +28,11 @@
 
 /*  item('Show Your QR to Receive', coReceive, () => $st.payOk == 'always' && $st.coPaying, 'showToReceive') // for companies
   item('Show Your QR to Pay', coPay, () => $st.payOk == 'always' && !$st.coPaying && !st.selfServe(), 'showToPay') // for companies*/
-  item('Scan Yourself In to Pay', scanIn, () => u.pageUri() == 'home' && $st.payOk == 'scan' && !$st.coPaying, 'scanIn') // for managers
+  item('Go Home', () => u.go('home'), () => !u.atHome(), 'home')
+  item('Scan Yourself In to Pay', scanIn, () => u.atHome() && $st.payOk == 'scan' && !$st.coPaying, 'scanIn') // for managers
   item('Use Rear Camera', rearCamera, () => $st.cameraCount > 1 && $st.frontCamera && !st.selfServe(), 'rear')
   item('Use Front Camera', frontCamera, () => $st.cameraCount > 1 && !$st.frontCamera && !st.selfServe(), 'front')
-  item('Exit Self Serve (signs out)', signOut, () => u.pageUri() == 'home' && st.selfServe(), 'selfOff')
+  item('Exit Self Serve (signs out)', signOut, () => u.atHome() && st.selfServe(), 'selfOff')
   item('Switch Account', switchAccount, () => $st.choices?.length > 1 && u.pageUri() != 'link-account' && !st.selfServe(), 'switch')
   item('Give Feedback', comment, () => st.linked() && !st.selfServe(), 'comment')
   item('Sign Out', signOut, () => (st.linked() || u.pageUri() == 'link-account') && !st.selfServe(), 'signout')

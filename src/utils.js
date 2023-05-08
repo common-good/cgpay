@@ -13,12 +13,13 @@ const mainLens = '.12.13.22.23.32.33.34.44.45' // region and acct lens without a
 
 const u = {
   ...u0, // incorporate all function from utils0.js
+  undo: null, // notify subscribers every time the Back button is clicked when it means "undo" (see Layout.svelte)
 
   api() { return u.realData() ? c.apis.real : c.apis.test }, 
 
-  dlg(title, text, labels, m1, m2) {
+  dlg(title, text, labels, m1 = u.hide, m2 = null) {
     const m0 = [true, title, text, labels]
-    return { m0, m1, m2 }
+    st.setModal(m0, m1, m2)
   },
 
   /**
@@ -39,7 +40,7 @@ const u = {
   async timedFetch(url, options = {}, post = false) {
     if (!st.inspect().online) throw u.er('Offline') // this works for setWifiOff also
     if (!post) {
-      url += '&version=' + c.version
+      if (!url.includes('version=')) url += '&version=' + c.version
       const urlRay = url.split('?')
       await u.tellTester('get', urlRay[0], urlRay[1].split('&'))
     }
@@ -61,7 +62,7 @@ const u = {
 
   async postRequest(endpoint, v) {
     st.bump('posts')
-    v.version = c.version
+    if (!v.version) v.version = c.version
     await u.tellTester('post', endpoint, { ...v })
     return await u.timedFetch(endpoint, {
       method: 'POST',
@@ -150,8 +151,9 @@ const u = {
   now() { return (u.testing()) ? st.inspect().now : u.now0() }, // keep "now" constant in tests
   realData() { return ['production', 'staging'].includes(u.mode()) },
   localMode() { return (u.mode() == 'local' && c.showDevStuff) }, 
-  yesno(question, m1, m2) { return u.dlg('Confirm', question, 'Yes, No', m1, m2) },
-  confirm(question) { return u.dlg('Alert', question, 'OK', null, null) },
+  yesno(question, m1, m2) { u.dlg('Confirm', question, 'Yes, No', m1, m2) },
+  alert(question, m1 = u.hide) { u.dlg('Alert', question, 'OK', m1) },
+  hide() { st.setModal(false) },
   crash(er) { console.log('crash', er); return typeof er === 'string' ? er : er.message },
   goEr(msg) { st.setMsg(msg); u.go('home') },
   goHome(msg) { st.setMsg(msg); u.go('home') },
@@ -162,12 +164,12 @@ const u = {
   isAndroid() { return !u.isApple() && /Android/i.test(navigator.userAgent) },
   go(page, setTrail = true) { 
     if (setTrail) st.setTrail(u.pageUri())
+    if (st.inspect().pending) st.setTrail('')
+    st.setPending(false) // once you leave the tx confirmation page, the tx is assumed complete
     st.setLeft(u.atHome(page) ? 'logo' : 'back')
-    st.setRight(!st.selfServe() || u.atHome(page) ? 'nav' : null)
     navigateTo('/' + page)
   },
-  goBack() { u.go(st.setTrail(), false) },
-  noBack() { st.setTrail('', true); st.setLeft('logo'); st.setRight(null) },
+  goBack() { u.hide(); u.go(st.setTrail(), false) },
 
   isSafari() {
     const ua = navigator.userAgent

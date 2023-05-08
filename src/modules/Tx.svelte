@@ -5,7 +5,6 @@
   import { onMount } from 'svelte'
   import queryString from 'query-string'
   import SubmitCharge from '#modules/SubmitCharge.svelte'
-  import Modal from '#modules/Modal.svelte'; let m0, m1, m2
 
 // import { encrypt, createMessage, readKey } from 'openpgp'
 // Example with curl: curl -d "actorId=G6VM03&amount=1234.98&created=1672959981&description=test%20food&deviceId=GrfaVyHkxnTf4cxsyIEjkWyNdK0wUoDK153r2LIBoFocvw73T&offline=false&otherId=H6VM0G0NyCBBlUF1qWNZ2k&proof=d0e4eaeb4e9c1dc9d80bef9eeb3ad1342fd24997156cb57575479bd3ac19d00b" -X POST -H "Content-type: application/x-www-form-urlencoded" 'https://demo.commongood.earth/api/transactions'
@@ -26,6 +25,7 @@
     created: null,
     proof: null,
     offline: false,
+    version: c.version,
   }
   
   const qr = $st.qr
@@ -35,20 +35,27 @@
   let photo = { alt: 'Customer Profile', blob: null }
   const pastAction = (pay || st.selfServe()) ? 'Paid' : 'Charged'
 
-  // --------------------------------------------
+	u.undo.subscribe(askUndo) // receive notification of Back click (see Layout.svelte)
+
+  function goHome() { u.go('home') }
 
   function askUndo() {
-    ;({ m0, m1, m2 } = u.yesno('Reverse the transaction?', Undo, () => m0 = false)); m0=m0; m1=m1; m2=m2
+    if (!gotTx) return // Layout.svelte updates u.undo upon arrival. Ignore.
     st.setTimeout(null)
+    u.yesno('Reverse the transaction?', 
+      () => { u.hide(); st.undoTx(); u.goHome('The transaction has been reversed.') },
+      () => { u.hide(); if (st.selfServe()) st.setTimeout(c.txTimeout)
+    })
   }
+
   function showEr(msg0) {
     let msg = typeof msg0 == 'object' ? msg0.detail : msg0 // receive string or dispatch from SubmitCharge
-    msg = msg; // this needs to be responsive
-    ;({ m0, m1, m2 } = u.dlg('Alert', msg, 'OK', () => m0 = false)); m0=m0; m1=m1; m2=m2 
+    msg = msg // this needs to be responsive
+    u.alert(msg)
   }
 
   function handleSubmitCharge() {
-    u.noBack()
+    st.setTrail('', true) // no going back from here
     gotTx = true
     if (st.selfServe()) st.setTimeout(c.txTimeout)
   } // state success, show undo/tip/done/receipt buttons
@@ -69,18 +76,6 @@
   function profileOffline() {
     if (!st.selfServe()) showEr('OFFLINE. Trust this member or ask for ID.')
     limit = Math.min(c.offlineLimit, limit === null ? c.offlineLimit : limit)
-  }
-  
-  /**
-   * Undo the transaction.
-   * To avoid timing issues with st.flushTxs(), queue the reversed transaction,
-   * then delete both transactions at once.
-   */
-  function Undo() {
-    tx.amount = -tx.amount
-    st.enqTx(tx)
-    // NO! (could lose the undo) st.deleteTxPair() 
-    u.goHome('The transaction has been reversed.')
   }
 
   onMount(async () => {
@@ -157,16 +152,14 @@
     <div class="actions">
       {#if tipable}<a class="secondary" href='/tip'>Add Tip</a>{/if}
       <!-- button>Receipt</button -->
-      <button data-testid="btn-undo" on:click={ askUndo } class="tertiary">Undo</button>
-      <a class="primary" data-testid="done" href='/home'>Done</a>
+      <button data-testid="btn-undo" on:click={askUndo} class="tertiary">Undo</button>
+      <a class="primary" data-testid="btn-done" on:click={goHome}>Done</a>
     </div>
 
   { :else }
     <SubmitCharge {otherAccount} {photo} {tx} {limit} on:error={showEr} on:complete={handleSubmitCharge} />
   { /if }
 </section>
-
-<Modal m0={m0} on:m1={m1} on:m2={m2} />
 
 <style lang='stylus'>
   h1 

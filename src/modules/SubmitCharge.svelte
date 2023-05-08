@@ -24,19 +24,23 @@
     }
     st.setMyAccount({ ...$st.myAccount, lastTx:tx.created })
 
-    try {
+    st.setPending(true) // give the user a chance to undo (or add a tip)
+    st.enqTx(tx)                                                                                                         
+    if (!otherAccount.name) otherAccount.name = 'Unidentified Member'
+    dispatch('complete') // update display
+
+    /* try {
       const res = await u.postRequest('transactions', tx)
       if (res.ok) dispatch('complete'); else dispatch('error', res.message) // update display
     } catch (er) { // except for syntax errors, queue it and treat it as success
       if (er == 400) { // syntax error
         throw new Error('Program issue: request syntax error')
       } else {
-        console.log('saving tx for upload later:',tx)
         st.enqTx(tx)                                                                                                         
         if (!otherAccount.name) otherAccount.name = 'Unidentified Member'
         dispatch('complete') // update display
       }
-    }
+    } */
   }
 </script>
 

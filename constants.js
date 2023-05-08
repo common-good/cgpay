@@ -9,7 +9,7 @@ const constants = {
   fetchTimeoutMs: 3200,
   networkTimeoutMs: 100,
 
-  showDevStuff: false, // if true, enable dev-only features
+  showDevStuff: true, // if true, enable dev-only features
   showSelfServe: true, // if true, enable self-serve feature
   showScanToPay: false, // if true, enable scan-to-pay feature
   showShowToPay: false, // if true, enable show-to-pay feature

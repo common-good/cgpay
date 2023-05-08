@@ -10,14 +10,16 @@ Background:
   * I am signed in as "Abe/Cit"
   * this "payOk": "self"
   * I charge "Bea" 1.23 for "candy"
+  * ? this "pending": "true"
 
 Rule: If nothing happens soon after payment confirmation, the app goes home
 
 Scenario: Nothing happens soon after payment confirmation
   Given I wait 2 seconds
   Then ? I am on page "home"
+  And ? this "pending": "false"
 
-Rule: If something happens soon after payment confirmation, the app does not time signOut
+Rule: If something happens soon after payment confirmation, the app does not timeout
 
 Scenario: The user clicks Undo
   Given I wait 0.5 seconds
@@ -25,10 +27,13 @@ Scenario: The user clicks Undo
   Then ? I see "btn1"
   When I wait 2 seconds
   Then ? I see "btn1"
+  And ? this "pending": "true"
 
 Scenario: The user starts another transaction right away
   Given I wait 0.5 seconds
-  And I click "done"
+  And I click "btn-done"
+  Then ? this "pending": "false"
+
   When I click "btn-charge"
   And I wait 2 seconds
   Then ? I am on page "scan"

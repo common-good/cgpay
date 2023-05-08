@@ -3,7 +3,6 @@
   import st from'#store.js'
   import u from '#utils.js'
   import c from '#constants.js'
-  import Modal from '#modules/Modal.svelte'; let m0, m1, m2
   import cgLogo from '#modules/assets/cg-logo-300.png?webp'
   import queryString from 'query-string'
 
@@ -12,17 +11,15 @@
 
   const surveyLink = 'https://forms.gle/M8Hv1W2oSgw2yQzS7'
   const me = $st.myAccount
-  let hdr, qr, alt, btnPay, payOk
+  let hdr, qr, alt, btnPay, btnChg, payOk
 
-  function showEr(msg) { 
-    ({ m0, m1 } = u.dlg('Alert', msg, 'Close', () => {m0 = false; st.setMsg(null)})); m0=m0; m1=m1
-  }
+  function showEr(msg) { u.alert(msg, () => { u.hide(); st.setMsg(null) }) }
 
   async function receiveQr() { return await u.generateQr(u.makeQrUrl(u.getMainId(me.accountId))) }
   function fake(code) { st.setQr(code); st.setIntent('charge'); u.go('tx') }
   function pay() {
     if ($st.payOk == 'scan') { payOk = false; st.setCoPaying(false) }
-    charge(st.selfServe() ? 'charge' : 'pay')
+    charge('pay')
   }
   function charge(intent = 'charge') { st.setIntent(intent); u.go('scan') }
   function isQrToPay() { return (qr.length == me.qr.length) }
@@ -54,7 +51,6 @@
     st.setTimeout(null) // stop the timeout timer from interrupting us
     st.setTrail(null, true)
     st.setLeft('logo')
-    st.setRight('nav')    
     if ($st.frontCamera === null) st.setFrontCamera(!u.isApple() && !u.isAndroid())
     if ($st.intent == 'scanIn') scanIn() // must precede setQr
     st.setQr(null) // no going back to previous customer
@@ -62,6 +58,7 @@
 
     payOk = (!me.isCo || $st.payOk == 'always' || $st.coPaying) && c.showScanToPay
     btnPay = me.isCo ? 'Scan to Pay / Refund / Sell CG Credit' : 'Scan to Pay'
+    btnChg = st.selfServe() ? 'Scan to Pay' : 'Scan to Charge'
 
     if (st.selfServe()) {
       qr = await receiveQr()
@@ -78,8 +75,6 @@
   })
 
 </script>
-
-<Modal m0={m0} on:m1={m1} on:m2={m2} />
 
 <svelte:head>
   <title>CGPay - Home</title>
@@ -121,7 +116,7 @@
       {#if payOk }
         <button class="scan pay" data-testid="btn-pay" on:click={pay}>{btnPay}</button>
       {/if}
-      <button class="scan charge" data-testid="btn-charge" on:click={charge}>Scan to Charge</button>
+      <button class="scan charge" data-testid="btn-charge" on:click={charge}>{btnChg}</button>
     </div>
   </div>
 </section>

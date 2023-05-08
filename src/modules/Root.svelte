@@ -14,7 +14,7 @@
   import SignIn from '#modules/SignIn.svelte'
   import Comment from '#modules/Comment.svelte'
   import LayoutIntro from '#modules/LayoutIntro.svelte'
-  import LayoutStep from '#modules/LayoutStep.svelte'
+  import Layout from '#modules/Layout.svelte'
 
   // Initialization Helpers
 
@@ -29,7 +29,7 @@
 
   function onlyIf(condition, elseGoTo) { return { guard: condition, redirect: elseGoTo } }
 
-  function route(name, component, condition, elseGoTo, layout = LayoutStep) {
+  function route(name, component, condition, elseGoTo, layout = Layout) {
     return { name: name, component: component, layout: layout, onlyIf: onlyIf(condition, elseGoTo) }
   }
 
