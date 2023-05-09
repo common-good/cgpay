@@ -9,7 +9,6 @@
 
   let isLoading = true
   let di = 0 // default to first device
-  //st.tellDev('here we are at the top of the page')
 
   onMount(async () => {
     if (!$st.intent) u.goEr(u.crash('scan with no intent'))
@@ -37,9 +36,11 @@
           ).then((res) => {
             isLoading = false
           }).catch((er) => { // Handle scan error
+            st.tellDev('Camera Error: ', er.message, 'devices: ', devices)
             u.goEr(er.message)
           })
         } else {
+          st.tellDev('Camera Error, devices: ', devices)
           u.goEr('No camera is available.')
         }
       })
