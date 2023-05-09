@@ -16,8 +16,6 @@
   import LayoutIntro from '#modules/LayoutIntro.svelte'
   import Layout from '#modules/Layout.svelte'
 
-  // Initialization Helpers
-
   st.fromTester().then() // we must check for tester instructions before doing anything
 
   function timeOut() {
