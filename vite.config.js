@@ -1,8 +1,9 @@
+import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import { imagetools } from 'vite-imagetools'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
+import legacy from '@vitejs/plugin-legacy'
 import pwaConfig from './vite.pwa.config.js'
-import { defineConfig } from 'vite'
 import c from './constants.js'
 
 const root = process.cwd()
@@ -12,7 +13,12 @@ export default defineConfig({
   define: { // global literals (wrap non-numeric values in js())
   },
 
-  plugins: [imagetools(), svelte(), VitePWA(pwaConfig)],
+  plugins: [
+    imagetools(),
+    svelte(),
+    VitePWA(pwaConfig),
+    legacy({ targets:['defaults'] }),
+  ],
 
   resolve: { // note: aliases are not available in tests or style imports
     alias: {
