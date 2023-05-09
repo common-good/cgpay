@@ -6,7 +6,7 @@
   import Navigation from '#modules/Navigation.svelte'
   import NetworkStatus from '#modules/NetworkStatus.svelte'
   import Modal from '#modules/Modal.svelte'
-  import cgLogo from '#modules/assets/cg-logo-300.png?webp'
+  import cgLogo from '#modules/assets/cg-logo-300-noR.png?webp'
   import st from'#store.js'
   import u from '#utils.js'
 
