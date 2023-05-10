@@ -10,7 +10,7 @@
 
   const surveyLink = 'https://forms.gle/M8Hv1W2oSgw2yQzS7'
   const me = $st.myAccount
-  let hdr, qr, alt, btnPay, btnChg, payOk
+  let hdr, qr, btnPay, btnChg, payOk
 
   function showEr(msg) { u.alert(msg, () => { u.hide(); st.setMsg(null) }) }
 
@@ -23,19 +23,19 @@
   function charge(intent = 'charge') { st.setIntent(intent); u.go('scan') }
   function isQrToPay() { return (qr.length == me.qr.length) }
 
-  /**
-   * Set the displayed QR to a QR to pay or a QR to be paid
-   * @param toPay: true for a QR to pay, false for a QR to be paid, null to toggle
-   */
-  async function toggleQr(toPay = null) {
-    if (typeof toPay === 'object') {
-      if (!payOk) return
-      toPay = !isQrToPay()
-      if (!toPay && $st.coPay == 'scan') { st.setCoPaying(false); payOk = false; }
-    }
-    ;[qr, hdr, alt] = toPay ? [me.qr, 'Show this code to PAY', 'pay'] : [await receiveQr(), 'Show this code to BE PAID', 'be paid']
-    if (!c.showToPay) hdr = payOk ? 'Ready to Charge or Pay' : 'Ready to Charge Someone'
-  }
+  // /**
+  //  * Set the displayed QR to a QR to pay or a QR to be paid
+  //  * @param toPay: true for a QR to pay, false for a QR to be paid, null to toggle
+  //  */
+  // async function toggleQr(toPay = null) {
+  //   if (typeof toPay === 'object') {
+  //     if (!payOk) return
+  //     toPay = !isQrToPay()
+  //     if (!toPay && $st.coPay == 'scan') { st.setCoPaying(false); payOk = false; }
+  //   }
+  //   [qr, hdr, alt] = toPay ? [me.qr, 'Show this code to Pay', 'pay'] : [await receiveQr(), 'Show this code to BE PAID', 'be paid']
+  //   if (!c.showToPay) hdr = payOk ? 'Ready to Charge or Pay' : 'Ready to Charge Someone'
+  // }
 
   function scanIn() {
     try {
@@ -59,12 +59,16 @@
     btnPay = me.isCo ? 'Scan to Pay / Refund / Sell CG Credit' : 'Scan to Pay'
     btnChg = st.selfServe() ? 'Scan to Pay' : 'Scan to Charge'
 
-    if (st.selfServe()) {
+    if (!me.isCo) {
+      qr = me.qr
+      hdr = 'Show this code to pay'
+    } else if (st.selfServe()) {
       qr = await receiveQr()
       hdr = '<b>Self-Serve</b><br>Scan this code to pay with Common Good<br>Or press the button below to charge yourself'
       if (!c.showToPay) hdr = '<b>Self-Serve</b><br><br>Press the button below to scan your Common Good QR Code'
-      alt = 'pay'
-    } else toggleQr(!me.isCo)
+    } else {
+      hdr = 'Ready to charge someone'
+    }
 
     try {
       const info = {deviceId:me.deviceId, actorId:me.accountId, lastTx:me.lastTx || -1 }
@@ -81,10 +85,8 @@
 <section class="page" id="home">
   <div class="top">
     <h1 data-testid="header">{@html hdr}</h1>
-    {#if c.showShowToPay || !me.isCo}
-      <button on:click={toggleQr}>
-        <img src="{qr}" data-testid="qr" alt="Scan this QR Code to {alt + ' ' + me?.name}" />
-      </button>
+    {#if !me.isCo}
+      <img src="{qr}" data-testid="qr" alt="Show this code to pay" />
       <p>CGPay v{c.version}</p>
     {:else}
       <div class='watermark'>
