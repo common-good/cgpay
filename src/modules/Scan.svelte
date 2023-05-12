@@ -3,7 +3,7 @@
   import { onMount } from 'svelte'
   import st from'#store.js'
   import u from '#utils.js'
-  import cgLogo from '#modules/assets/cg-logo-300.png?webp'
+  import cgLogo from '#modules/assets/cg-logo-300-noR.png?webp'
 
   // --------------------------------------------
 

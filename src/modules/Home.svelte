@@ -3,7 +3,7 @@
   import st from'#store.js'
   import u from '#utils.js'
   import c from '#constants.js'
-  import cgLogo from '#modules/assets/cg-logo-300.png?webp'
+  import cgLogo from '#modules/assets/cg-logo-300-noR.png?webp'
 
   export let currentRoute // else Svelte complains (I don't know why yet)
   export let params // else Svelte complains (I don't know why yet)
