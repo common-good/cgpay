@@ -34,7 +34,7 @@
       if (!toPay && $st.coPay == 'scan') { st.setCoPaying(false); payOk = false; }
     }
     ;[qr, hdr, alt] = toPay ? [me.qr, 'Show this code to PAY', 'pay'] : [await receiveQr(), 'Show this code to BE PAID', 'be paid']
-    if (!c.showToPay) hdr = payOk ? 'Ready to Charge or Pay' : 'Ready to Charge Someone'
+    if (me.isCo && !c.showToPay) hdr = payOk ? 'Ready to Charge or Pay' : 'Ready to Charge Someone'
   }
 
   function scanIn() {
