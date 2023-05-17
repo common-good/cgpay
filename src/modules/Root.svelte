@@ -9,6 +9,7 @@
   import AddToHomeScreen from '#modules/AddToHomeScreen.svelte'
   import Home from '#modules/Home.svelte'
   import Tx from '#modules/Tx.svelte'
+  import TxDetails from '#modules/TxDetails.svelte'
   import LinkAccount from '#modules/LinkAccount.svelte'
   import Scan from '#modules/Scan.svelte'
   import SignIn from '#modules/SignIn.svelte'
@@ -42,7 +43,8 @@
     route('/link-account', LinkAccount, needLink, '/home'),
     route('/home', Home, st.linked, '/'),
     route('/scan', Scan, st.linked, '/'),
-    route('/tx', Tx, gotQr, '/'),
+    route('/tx', Tx),
+    route('/tx-details', TxDetails, gotQr, '/'),
     route('/comment', Comment, st.linked, '/')
   ]
 

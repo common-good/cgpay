@@ -4,6 +4,7 @@
   import u from '#utils.js'
   import c from '#constants.js'
   import cgLogo from '#modules/assets/cg-logo-300-noR.png?webp'
+  import Dashboard from './Dashboard.svelte';
 
   export let currentRoute // else Svelte complains (I don't know why yet)
   export let params // else Svelte complains (I don't know why yet)
@@ -15,13 +16,15 @@
   function showEr(msg) { u.alert(msg, () => { u.hide(); st.setMsg(null) }) }
 
   async function receiveQr() { return await u.generateQr(u.makeQrUrl(u.getMainId(me.accountId))) }
-  function fake(code) { st.setQr(code); st.setIntent('charge'); u.go('tx') }
-  function pay() {
+  function fake(code) { st.setQr(code); st.setIntent('charge'); u.go('tx-details') }
+  function handleClick(intent) {
     if ($st.payOk == 'scan') { payOk = false; st.setCoPaying(false) }
-    charge('pay')
+
+    st.setIntent(intent)
+
+    const nextPage = me.isCo ? 'scan' : 'tx';
+    u.go(nextPage)
   }
-  function charge(intent = 'charge') { st.setIntent(intent); u.go('scan') }
-  function isQrToPay() { return (qr.length == me.qr.length) }
 
   /**
    * Set the displayed QR to a QR to pay or a QR to be paid
@@ -30,10 +33,10 @@
   async function toggleQr(toPay = null) {
     if (typeof toPay === 'object') {
       if (!payOk) return
-      toPay = !isQrToPay()
+      toPay = qr.length !== me.qr.length
       if (!toPay && $st.coPay == 'scan') { st.setCoPaying(false); payOk = false; }
     }
-    ;[qr, hdr, alt] = toPay ? [me.qr, 'Show this code to PAY', 'pay'] : [await receiveQr(), 'Show this code to BE PAID', 'be paid']
+    ;[qr, hdr, alt] = toPay ? [me.qr, 'Show this code to Pay', 'pay'] : [await receiveQr(), 'Show this code to Be Paid', 'be paid']
     if (me.isCo && !c.showToPay) hdr = payOk ? 'Ready to Charge or Pay' : 'Ready to Charge Someone'
   }
 
@@ -55,9 +58,16 @@
     st.setQr(null) // no going back to previous customer
     if ($st.erMsg) showEr($st.erMsg)
 
-    payOk = (!me.isCo || $st.payOk == 'always' || $st.coPaying) && c.showScanToPay
-    btnPay = me.isCo ? 'Scan to Pay / Refund / Sell CG Credit' : 'Scan to Pay'
-    btnChg = st.selfServe() ? 'Scan to Pay' : 'Scan to Charge'
+    payOk = !me.isCo || ($st.payOk == 'always' || $st.coPaying) && c.showScanToPay
+    btnPay = me.isCo ? 'Scan to Pay / Refund / Sell CG Credit' : 'Pay'
+    switch (me.isCo) {
+      case true:
+        btnChg = st.selfServe() ? 'Scan to Pay' : 'Scan to Charge'
+        break
+      case false:
+        btnChg = 'Charge'
+        break
+    }
 
     if (st.selfServe()) {
       qr = await receiveQr()
@@ -80,41 +90,43 @@
 
 <section class="page" id="home">
   <div class="top">
-    <h1 data-testid="header">{@html hdr}</h1>
-    {#if c.showShowToPay || !me.isCo}
-      <button on:click={toggleQr}>
-        <img src="{qr}" data-testid="qr" alt="Scan this QR Code to {alt + ' ' + me?.name}" />
-      </button>
-      <p>CGPay v{c.version}</p>
+    {#if !me.isCo} 
+    <Dashboard />
     {:else}
-      <div class='watermark'>
-        <img class='logo' src= { cgLogo } alt='Common Good Logo' />
+    <h1 data-testid="header">{@html hdr}</h1>
+      {#if c.showShowToPay}
+        <button on:click={toggleQr}>
+          <img src="{qr}" data-testid="qr" alt="Scan this QR Code to {alt + ' ' + me?.name}" />
+        </button>
         <p>CGPay v{c.version}</p>
-      </div>
-    { /if }
-  </div>
-
-  <div class="bottom">
-    {#if u.localMode() }
-      <div class="fakes">
-        <button on:click={ () => fake('HTTP://6VM.RC4.ME/KDCA12345a') }>A</button>
-        <button on:click={ () => fake('HTTP://6VM.RC4.ME/KDCB12345b') }>B</button>
-        <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDCC098765a') }>C:A</button>
-        <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDCC198765b') }>C:B</button>
-        <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDCG098765f') }>G:F</button>
-        <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDCG398765f') }>Bad</button>
-        <button on:click={ () => fake('garbage') }>Worse</button>
-      </div>
+      {:else}
+        <div class='watermark'>
+          <img class='logo' src= { cgLogo } alt='Common Good Logo' />
+          <p>CGPay v{c.version}</p>
+        </div>
+      { /if }
     {/if}
-
-    {#if me.isCo && !st.selfServe()}
-      <a class="survey" data-testid="lnk-survey" href="{surveyLink}" target="_blank">Take Our User Survey</a>
-    {/if}
-    <div class="buttons">
-      {#if payOk }
-        <button class="scan pay" data-testid="btn-pay" on:click={pay}>{btnPay}</button>
+    <div class="bottom">
+      {#if u.localMode() }
+        <div class="fakes">
+          <button on:click={ () => fake('HTTP://6VM.RC4.ME/KDCA12345a') }>A</button>
+          <button on:click={ () => fake('HTTP://6VM.RC4.ME/KDCB12345b') }>B</button>
+          <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDCC098765a') }>C:A</button>
+          <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDCC198765b') }>C:B</button>
+          <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDCG098765f') }>G:F</button>
+          <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDCG398765f') }>Bad</button>
+          <button on:click={ () => fake('garbage') }>Worse</button>
+        </div>
       {/if}
-      <button class="scan charge" data-testid="btn-charge" on:click={charge}>{btnChg}</button>
+      {#if me.isCo && !st.selfServe()}
+        <a class="survey" data-testid="lnk-survey" href="{surveyLink}" target="_blank">Take Our User Survey</a>
+      {/if}
+      <div class="buttons">
+        {#if payOk }
+          <button class="pay" data-testid="btn-pay" on:click={() => handleClick('pay')}>{btnPay}</button>
+        {/if}
+        <button class="charge" data-testid="btn-charge" on:click={() => handleClick('charge')}>{btnChg}</button>
+      </div>
     </div>
   </div>
 </section>
@@ -123,6 +135,14 @@
   .fakes, .buttons
     display flex
     justify-content space-between
+    margin-top $s0
+
+  button
+    cgButton()
+    width 100%
+
+  .pay
+    margin-right $s-1
 
   .fakes button
     cgButtonSecondary()
@@ -159,15 +179,6 @@
   .survey
     cgButtonTertiary()
 
-  .pay
-    cgButtonSecondary()
-    margin-top $s0
-    margin-right $s-2
-
-  .charge
-    cgButton()
-    margin-top $s0
-  
   .top
     width 100%
     height 100%
