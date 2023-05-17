@@ -48,24 +48,24 @@ Scenario: A company charges an individual then undoes the transaction-*
   | devC     | 1234.50  | Abe/Cit | Bea     | food!       | now     | hash  | true    | version |
 
   When I click "btn-undo"
-  Then ? I am on page "tx"
+  Then ? I am on page "tx-details"
   And ? this alert: "Reverse the transaction?"
   And ? this "pending": "true"
   And ? "btn1" is "Yes"
   And ? "btn2" is "No"
   When I click "btn2"
-  Then ? I am on page "tx"
+  Then ? I am on page "tx-details"
   And ? I see "btn-undo"
   And ? this "pending": "true"
   
   When I click "btn-back"
-  Then ? I am on page "tx"
+  Then ? I am on page "tx-details"
   And ? this alert: "Reverse the transaction?"
   And ? this "pending": "true"
   And ? "btn1" is "Yes"
   And ? "btn2" is "No"
   When I click "btn2"
-  Then ? I am on page "tx"
+  Then ? I am on page "tx-details"
   And ? I see "btn-undo"
   And ? this "pending": "true"
 
@@ -136,7 +136,7 @@ Scenario: A cashier enters too many decimal places (to be rounded up)
   Given I am signed in as "Abe/Cit"
   When I charge "Bea" 1.235 for "food!"
   Then ? this alert: "The amount has been rounded to two decimal places. Make sure this is what you intended and try again."
-  And ? I am on page "tx"
+  And ? I am on page "tx-details"
   And ? "input-amount" is "1.24"
   And ? count "txs" is 0
 
@@ -144,7 +144,7 @@ Scenario: A cashier enters too many decimal places (to be rounded down)
   Given I am signed in as "Abe/Cit"
   When I charge "Bea" 1.234 for "food!"
   Then ? this alert: "The amount has been rounded to two decimal places. Make sure this is what you intended and try again."
-  And ? I am on page "tx"
+  And ? I am on page "tx-details"
   And ? "input-amount" is "1.23"
   And ? count "txs" is 0
 @this
@@ -164,7 +164,7 @@ Scenario: A buyer a balance, but not enough
   And I am signed in as "Abe/Cit"
   When I charge "Dee" 30.00 for "food!"
   Then ? this alert: "This transaction is limited to $"
-  And ? I am on page "tx"
+  And ? I am on page "tx-details"
   And ? count "txs" is 0
 
 Scenario: A buyer has plenty, but tries to pay more than the app allows
@@ -174,5 +174,5 @@ Scenario: A buyer has plenty, but tries to pay more than the app allows
   And I am signed in as "Abe/Cit"
   When I charge "Dee" 30.00 for "food!"
   Then ? this alert: "CGPay transactions are limited to $"
-  And ? I am on page "tx"
+  And ? I am on page "tx-details"
   And ? count "txs" is 0

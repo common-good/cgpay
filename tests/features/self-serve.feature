@@ -26,7 +26,7 @@ Scenario: A customer scans in self-serve mode
   Given I am signed in as "Abe/Cit"
   And this "payOk": "self"
   When I scan "Bea" to "charge"
-  Then ? I am on page "tx"
+  Then ? I am on page "tx-details"
   And ? I see no "theirPhoto"
   And ? I see no "theirLocation"
 

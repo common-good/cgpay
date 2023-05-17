@@ -107,7 +107,7 @@
   <title>CGPay - Transact</title>
 </svelte:head>
 
-<section class="page" id="tx">
+<section class="page" id="tx-details">
   {#if gotTx}
     <h1 data-testid="transaction-complete">Transaction Complete</h1>
     <div class='top'>

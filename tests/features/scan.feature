@@ -30,7 +30,7 @@ Rule: Personal accounts can scan an individual or company card
 
 Scenario: I scan an individual's QR
   When I scan "Abe" to "charge"
-  Then ? I am on page "tx"
+  Then ? I am on page "tx-details"
   And ? I am on page "charge-profile"
   And ? I see "theirPhoto"
   And ? "theirName" is "Abe One"
@@ -38,7 +38,7 @@ Scenario: I scan an individual's QR
 
 Scenario: I scan a company agent's QR
   When I scan "Abe/Cit" to "charge"
-  Then ? I am on page "tx"
+  Then ? I am on page "tx-details"
   And ? I am on page "charge-profile"
   And ? I see "theirPhoto"
   And ? "theirAgent" is "Abe One"
@@ -50,7 +50,7 @@ Rule: Company accounts can scan an individual or company card
 Scenario: A company scans an individual's QR
   Given I am signed in as "Bea/Cit"
   When I scan "Abe" to "charge"
-  Then ? I am on page "tx"
+  Then ? I am on page "tx-details"
   And ? I am on page "charge-profile"
   And ? I see "theirPhoto"
   And ? "theirName" is "Abe One"
@@ -92,7 +92,7 @@ Rule: Scanning to charge or pay works fine offline
 Scenario: I scan an individual's QR offline
   Given we are offline
   When I scan "Abe" to "charge"
-  Then ? I am on page "tx"
+  Then ? I am on page "tx-details"
   And ? I am on page "charge-profile"
   And ? "theirName" is not "Abe One"
   And ? I see "network-offline"
