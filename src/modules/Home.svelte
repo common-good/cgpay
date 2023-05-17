@@ -106,27 +106,27 @@
         </div>
       { /if }
     {/if}
-    <div class="bottom">
-      {#if u.localMode() }
-        <div class="fakes">
-          <button on:click={ () => fake('HTTP://6VM.RC4.ME/KDCA12345a') }>A</button>
-          <button on:click={ () => fake('HTTP://6VM.RC4.ME/KDCB12345b') }>B</button>
-          <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDCC098765a') }>C:A</button>
-          <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDCC198765b') }>C:B</button>
-          <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDCG098765f') }>G:F</button>
-          <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDCG398765f') }>Bad</button>
-          <button on:click={ () => fake('garbage') }>Worse</button>
-        </div>
-      {/if}
-      {#if me.isCo && !st.selfServe()}
-        <a class="survey" data-testid="lnk-survey" href="{surveyLink}" target="_blank">Take Our User Survey</a>
-      {/if}
-      <div class="buttons">
-        {#if payOk }
-          <button class="pay" data-testid="btn-pay" on:click={() => handleClick('pay')}>{btnPay}</button>
-        {/if}
-        <button class="charge" data-testid="btn-charge" on:click={() => handleClick('charge')}>{btnChg}</button>
+  </div>
+  <div class="bottom">
+    {#if u.localMode() }
+      <div class="fakes">
+        <button on:click={ () => fake('HTTP://6VM.RC4.ME/KDCA12345a') }>A</button>
+        <button on:click={ () => fake('HTTP://6VM.RC4.ME/KDCB12345b') }>B</button>
+        <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDCC098765a') }>C:A</button>
+        <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDCC198765b') }>C:B</button>
+        <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDCG098765f') }>G:F</button>
+        <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDCG398765f') }>Bad</button>
+        <button on:click={ () => fake('garbage') }>Worse</button>
       </div>
+    {/if}
+    {#if me.isCo && !st.selfServe()}
+      <a class="survey" data-testid="lnk-survey" href="{surveyLink}" target="_blank">Take Our User Survey</a>
+    {/if}
+    <div class="buttons">
+      {#if payOk }
+        <button class="pay" data-testid="btn-pay" on:click={() => handleClick('pay')}>{btnPay}</button>
+      {/if}
+      <button class="charge" data-testid="btn-charge" on:click={() => handleClick('charge')}>{btnChg}</button>
     </div>
   </div>
 </section>
