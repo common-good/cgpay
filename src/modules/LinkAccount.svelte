@@ -50,7 +50,7 @@
 </svelte:head>
 
 <section class="page" id="link-account">
-  <h1>Link Account</h1>
+  <h1 class="page-title">Link Account</h1>
   {#if ready}
     <div class="select-account">
       <div class="top">
@@ -81,13 +81,6 @@
 </section>
 
 <style lang='stylus'>
-  section
-    display flex
-    flex-direction column
-    align-items center
-    width 100%
-    height 100%
-
   .loading
     height 100%
     display flex
@@ -97,9 +90,6 @@
 
   button
     cgButton()
-
-  h1 
-    margin-bottom $s1
 
   p
     margin-bottom $s1
@@ -119,7 +109,4 @@
     flex-direction column
     justify-content space-between
     height 100%
-
-  .top
-    padding 0 $s0
 </style>

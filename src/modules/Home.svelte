@@ -11,7 +11,7 @@
 
   const surveyLink = 'https://forms.gle/HKb5V4DueYt1W13v6'
   const me = $st.myAccount
-  let hdr, qr, alt, btnPay, btnChg, payOk
+  let hdr, qr, btnPay, btnChg, payOk
 
   function showEr(msg) { u.alert(msg, () => { u.hide(); st.setMsg(null) }) }
 
@@ -33,11 +33,11 @@
   async function toggleQr(toPay = null) {
     if (typeof toPay === 'object') {
       if (!payOk) return
-      toPay = qr.length !== me.qr.length
+      toPay = !isQrToPay()
       if (!toPay && $st.coPay == 'scan') { st.setCoPaying(false); payOk = false; }
     }
-    ;[qr, hdr, alt] = toPay ? [me.qr, 'Show this code to Pay', 'pay'] : [await receiveQr(), 'Show this code to Be Paid', 'be paid']
-    if (me.isCo && !c.showToPay) hdr = payOk ? 'Ready to Charge or Pay' : 'Ready to Charge Someone'
+    ;[qr, hdr, alt] = toPay ? [me.qr, 'Show this code to PAY', 'pay'] : [await receiveQr(), 'Show this code to BE PAID', 'be paid']
+    if (!c.showToPay) hdr = payOk ? 'Ready to Charge or Pay' : 'Ready to Charge Someone'
   }
 
   function scanIn() {
@@ -69,12 +69,16 @@
         break
     }
 
-    if (st.selfServe()) {
+    if (!me.isCo) {
+      qr = me.qr
+      hdr = 'Show this code to pay'
+    } else if (st.selfServe()) {
       qr = await receiveQr()
       hdr = '<b>Self-Serve</b><br>Scan this code to pay with Common Good<br>Or press the button below to charge yourself'
       if (!c.showToPay) hdr = '<b>Self-Serve</b><br><br>Press the button below to scan your Common Good QR Code'
-      alt = 'pay'
-    } else toggleQr(!me.isCo)
+    } else {
+      hdr = 'Ready to charge someone'
+    }
 
     try {
       const info = {deviceId:me.deviceId, actorId:me.accountId, lastTx:me.lastTx || -1 }
@@ -93,8 +97,8 @@
     {#if !me.isCo} 
     <Dashboard />
     {:else}
-    <h1 data-testid="header">{@html hdr}</h1>
-      {#if c.showShowToPay}
+    <h1 class="page-title" data-testid="header">{@html hdr}</h1>
+      {#if c.showShowToPay || !me.isCo}
         <button on:click={toggleQr}>
           <img src="{qr}" data-testid="qr" alt="Scan this QR Code to {alt + ' ' + me?.name}" />
         </button>
@@ -105,11 +109,11 @@
           <p>CGPay v{c.version}</p>
         </div>
       { /if }
-    {/if}
+    { /if }
   </div>
   <div class="bottom">
     {#if u.localMode() }
-      <div class="fakes">
+      <div class="actions fakes">
         <button on:click={ () => fake('HTTP://6VM.RC4.ME/KDCA12345a') }>A</button>
         <button on:click={ () => fake('HTTP://6VM.RC4.ME/KDCB12345b') }>B</button>
         <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDCC098765a') }>C:A</button>
@@ -122,7 +126,7 @@
     {#if me.isCo && !st.selfServe()}
       <a class="survey" data-testid="lnk-survey" href="{surveyLink}" target="_blank">Take Our User Survey</a>
     {/if}
-    <div class="buttons">
+    <div class="actions">
       {#if payOk }
         <button class="pay" data-testid="btn-pay" on:click={() => handleClick('pay')}>{btnPay}</button>
       {/if}
@@ -132,11 +136,6 @@
 </section>
 
 <style lang="stylus">
-  .fakes, .buttons
-    display flex
-    justify-content space-between
-    margin-top $s0
-
   button
     cgButton()
     width 100%
@@ -152,39 +151,15 @@
     margin-right $s-2
     visibility visible
 
-  .bottom
-    width 100%
-    text-align center
-
   .update p
     text-align center
     margin-bottom $s1
 
-  h1
-    text(lg)
-    font-weight 400
-    margin-bottom $s0
-    text-align center
-
   img 
     max-width 250px
 
-  section
-    height 100%
-    display flex
-    flex-direction column
-    align-items center
-    justify-content space-between
-
   .survey
     cgButtonTertiary()
-
-  .top
-    width 100%
-    height 100%
-    display flex
-    flex-direction column
-    align-items center
 
   .watermark
     opacity 0.5
