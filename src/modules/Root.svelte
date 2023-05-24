@@ -40,7 +40,7 @@
     route('/empty', Empty, true, null, LayoutIntro), // for testing
     route('/', AddToHomeScreen, u.addableToHome, '/sign-in', LayoutIntro),
     route('/sign-in', SignIn, needSignin, '/link-account', LayoutIntro),
-    route('/link-account', LinkAccount, needLink, '/home'),
+    route('/link-account', LinkAccount, needLink, '/home', LayoutIntro),
     route('/home', Home, st.linked, '/'),
     route('/scan', Scan, st.linked, '/'),
     route('/tx', Tx),

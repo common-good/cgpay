@@ -21,6 +21,7 @@
   if (!c.showSelfServe) delete payOkOptions.self
   
   function er(msg) { u.alert(msg) } 
+  function signOut() { st.signOut(); u.go('') }
 
   function gotAccount() {
     myAccount = choices && choices[acctIndex]
@@ -49,8 +50,9 @@
   <title>CGPay - Link Account</title>
 </svelte:head>
 
-<section class="page" id="link-account">
-  <h1 class="page-title">Link Account</h1>
+<!-- <Navigation /> -->
+<section class="card" id="link-account">
+  <h1>Link Account</h1>
   {#if ready}
     <div class="select-account">
       <div class="top">
@@ -71,7 +73,8 @@
           {/if}
         </form>
       </div>
-      <button type="submit" data-testid="btn-link" on:click={gotAccount} disabled={ acctIndex === null }>Link Account</button>
+      <button class="tertiary" on:click={signOut}>Sign Out</button>
+      <button class="primary" type="submit" data-testid="btn-link" on:click={gotAccount} disabled={ acctIndex === null }>Link Account</button>
     </div>
   {:else}
     <div class="loading">
@@ -88,8 +91,9 @@
     font-style italic
     margin-bottom $s5
 
-  button
-    cgButton()
+  h1
+    text xl
+    margin-bottom $s1
 
   p
     margin-bottom $s1
@@ -101,6 +105,16 @@
     letter-spacing 0.005rem
     margin-bottom 1rem
 
+  .card
+    height 100%
+    display flex
+    flex-direction column
+    align-items center
+    background $c-white
+    box-shadow: 2px 2px 4px $c-gray-dark
+    border-radius: 2%
+    padding $s5 $s-2 $s-2
+
   .form-lower 
     margin-top $s2
 
@@ -109,4 +123,10 @@
     flex-direction column
     justify-content space-between
     height 100%
+
+  .tertiary
+    margin-bottom $s-1
+
+  .top
+    padding 0 $s0
 </style>
