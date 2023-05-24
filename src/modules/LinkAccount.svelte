@@ -59,7 +59,7 @@
         <p>Select a Common Good account to link to CGPay on this device.</p>
         <form>
           <SelectX name="account" label={'Select an account'} options={acctOpts} size={size} bind:value={acctIndex} required="required" />
-          {#if acctIndex > 0 && c.showScanToPay}
+          {#if acctIndex > 0 && c.showScanToPayBiz}
             <p>Allow payments from this account:</p>
             <Radios name="payOk" options={payOkOptions} bind:value={payOk} required="required" />
           {/if}

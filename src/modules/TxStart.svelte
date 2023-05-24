@@ -74,7 +74,7 @@
     } else toggleQr(!me.isCo)
 
     const intent = $st.intent
-    const qr = intent === 'pay' ? $st.myAccount?.qr : null
+    qr = intent === 'pay' ? $st.myAccount?.qr : null
     const qrAction = `Show this code to ${intent === 'pay' ? intent : 'be paid'}`
   })
 

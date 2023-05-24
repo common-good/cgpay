@@ -11,6 +11,7 @@ const constants = {
 
   showDevStuff: true, // if true, enable dev-only features
   showScanToPay: true, // if true, enable scan-to-pay feature
+  showScanToPayBiz: false,
   showShowToPay: true, // if true, enable show-to-pay feature
 
   // how long user has, on the current screen (in seconds), before we return automatically to Home
