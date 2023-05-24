@@ -47,12 +47,6 @@
     if ($st.erMsg) showEr($st.erMsg)
 
     payOk = (!me.isCo || $st.payOk == 'always' || $st.coPaying) && c.showScanToPay
-
-    try {
-      const info = {deviceId:me.deviceId, actorId:me.accountId, lastTx:me.lastTx || -1 }
-      const res = await u.postRequest('latest', info)
-      console.log('latest', res)
-    } catch (er) { if (!u.isTimeout(er)) console.log('latest er', er) }
   })
 
 </script>
