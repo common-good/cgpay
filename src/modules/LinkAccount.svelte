@@ -27,6 +27,7 @@
     if (lock) st.setAcctChoices(null)
     st.setPayOk(myAccount.isCo ? payOk : null)
     if (selfServe) st.setPayOk('self') // only if not c.showScanToPay
+    st.setShowDash(!myAccount.isCo)
     u.goHome(`This device is now linked to your Common Good account: ${myAccount?.name}.`)
   }
 
