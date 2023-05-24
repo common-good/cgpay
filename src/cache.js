@@ -57,6 +57,8 @@ const cache = {
   useWifi: true, // true to use wifi whenever possible (false if developer or test framework has disabled wifi)
   selfServe: false, // true for self-serve mode
   payOk: 'always', // payments from this device are permitted: always, scan, or never - default for companies is scan (self-scan-in required, to pay)
+  showDash: null, // true to show dashboard (balance, recent txs, ...) on home page (set when linking account)
+  // maybe eventually store some settings (like showDash) in choices or deviceIds so they persist when user changes account
 
   choices: null, // accounts the user has permission to use in the app
   txs: [], // transactions waiting to be uploaded

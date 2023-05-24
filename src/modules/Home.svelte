@@ -11,34 +11,23 @@
 
   const surveyLink = 'https://forms.gle/HKb5V4DueYt1W13v6'
   const me = $st.myAccount
-  let hdr, qr, btnPay, btnChg, payOk
+  const chgBtnText = st.selfServe() ? 'Pay' : 'Charge'
+  let payOk
+  let hdr = st.selfServe() ? 'Self Serve'
+  : $st.showDash ? 'Dashboard'
+  : 'Home'
+
+  let balance = ''
+  let recents = []
 
   function showEr(msg) { u.alert(msg, () => { u.hide(); st.setMsg(null) }) }
 
-  async function receiveQr() { return await u.generateQr(u.makeQrUrl(u.getMainId(me.accountId))) }
-  function fake(code) { st.setQr(code); st.setIntent('charge'); u.go('tx-details') }
-  function handleClick(intent) {
-    if ($st.payOk == 'scan') { payOk = false; st.setCoPaying(false) }
-
-    st.setIntent(intent)
-
-    const nextPage = me.isCo ? 'scan' : 'tx';
-    u.go(nextPage)
+  function pay() {
+    if ($st.payOk == 'scan') { payOk = false; st.setCoPaying(false) } // scan-in is for just one payment
+    tx('pay')
   }
-
-  /**
-   * Set the displayed QR to a QR to pay or a QR to be paid
-   * @param toPay: true for a QR to pay, false for a QR to be paid, null to toggle
-   */
-  async function toggleQr(toPay = null) {
-    if (typeof toPay === 'object') {
-      if (!payOk) return
-      toPay = !isQrToPay()
-      if (!toPay && $st.coPay == 'scan') { st.setCoPaying(false); payOk = false; }
-    }
-    ;[qr, hdr, alt] = toPay ? [me.qr, 'Show this code to PAY', 'pay'] : [await receiveQr(), 'Show this code to BE PAID', 'be paid']
-    if (!c.showToPay) hdr = payOk ? 'Ready to Charge or Pay' : 'Ready to Charge Someone'
-  }
+  function charge() { tx('charge') }
+  function tx(intent) { st.setIntent(intent); u.go($st.onlyScan ? 'scan' : 'startTx') }
 
   function scanIn() {
     try {
@@ -58,32 +47,7 @@
     st.setQr(null) // no going back to previous customer
     if ($st.erMsg) showEr($st.erMsg)
 
-    payOk = !me.isCo || ($st.payOk == 'always' || $st.coPaying) && c.showScanToPay
-    btnPay = me.isCo ? 'Scan to Pay / Refund / Sell CG Credit' : 'Pay'
-    switch (me.isCo) {
-      case true:
-        btnChg = st.selfServe() ? 'Scan to Pay' : 'Scan to Charge'
-        break
-      case false:
-        btnChg = 'Charge'
-        break
-    }
-
-    if (!me.isCo) {
-      qr = me.qr
-      hdr = 'Show this code to pay'
-    } else if (st.selfServe()) {
-      qr = await receiveQr()
-      hdr = '<b>Self-Serve</b><br>Scan this code to pay with Common Good<br>Or press the button below to charge yourself'
-      if (!c.showToPay) hdr = '<b>Self-Serve</b><br><br>Press the button below to scan your Common Good QR Code'
-    } else {
-      hdr = 'Ready to charge someone'
-    }
-
-    try {
-      const info = {deviceId:me.deviceId, actorId:me.accountId, lastTx:me.lastTx || -1 }
-      const res = await u.postRequest('latest', info)
-    } catch (er) { if (!u.isTimeout(er)) console.log('latest er', er) }
+    payOk = (!me.isCo || $st.payOk == 'always' || $st.coPaying) && c.showScanToPay && !st.selfServe()
   })
 
 </script>
@@ -94,43 +58,27 @@
 
 <section class="page" id="home">
   <div class="top">
-    {#if !me.isCo} 
-    <Dashboard />
-    {:else}
-    <h1 class="page-title" data-testid="header">{@html hdr}</h1>
-      {#if c.showShowToPay || !me.isCo}
-        <button on:click={toggleQr}>
-          <img src="{qr}" data-testid="qr" alt="Scan this QR Code to {alt + ' ' + me?.name}" />
-        </button>
+    <h1 data-testid="header">{hdr}</h1>
+    {#if st.selfServe() || !$st.showDash }
+      <!--p><b></b><br>Scan this code to pay with Common Good<br>Or press the button below to charge yourself</p-->
+      <p>Press the button below to scan your Common Good QR Code</p>
+      <div class='watermark'>
+        <img class='logo' src= {cgLogo} alt='Common Good Logo' />
         <p>CGPay v{c.version}</p>
-      {:else}
-        <div class='watermark'>
-          <img class='logo' src= { cgLogo } alt='Common Good Logo' />
-          <p>CGPay v{c.version}</p>
-        </div>
-      { /if }
-    { /if }
+      </div>
+    {:else}
+      <Dashboard />
+    {/if}
   </div>
   <div class="bottom">
-    {#if u.localMode() }
-      <div class="actions fakes">
-        <button on:click={ () => fake('HTTP://6VM.RC4.ME/KDCA12345a') }>A</button>
-        <button on:click={ () => fake('HTTP://6VM.RC4.ME/KDCB12345b') }>B</button>
-        <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDCC098765a') }>C:A</button>
-        <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDCC198765b') }>C:B</button>
-        <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDCG098765f') }>G:F</button>
-        <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDCG398765f') }>Bad</button>
-        <button on:click={ () => fake('garbage') }>Worse</button>
-      </div>
-    {/if}
     {#if me.isCo && !st.selfServe()}
       <a class="survey" data-testid="lnk-survey" href="{surveyLink}" target="_blank">Take Our User Survey</a>
     {/if}
     <div class="actions">
       {#if payOk }
-        <button class="pay" data-testid="btn-pay" on:click={() => handleClick('pay')}>{btnPay}</button>
+        <button class="pay" data-testid="btn-pay" on:click={pay}>Pay</button>
       {/if}
-      <button class="charge" data-testid="btn-charge" on:click={() => handleClick('charge')}>{btnChg}</button>
+      <button class="charge" data-testid="btn-charge" on:click={charge}>{chgBtnText}</button>
     </div>
   </div>
 </section>
