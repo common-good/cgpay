@@ -55,7 +55,7 @@
 
 <section class="page" id="scan">
   <div class='top'>
-    <h1>Scan QR Code</h1>
+    <h1 class="page-title">Scan QR Code</h1>
     {#if isLoading}
       <div class='loading'>
         <img class='logo' src= { cgLogo } alt="Common Good logo" />
@@ -67,19 +67,6 @@
 </section>
 
 <style lang='stylus'>
-  a
-    cgButtonSecondary()
-
-  h1
-    margin-bottom $s0
-
-  section
-    display flex
-    flex-direction column
-    justify-content space-between
-    align-items center
-    height 100%
-
   .loading
     font-style italic
     height 250px
