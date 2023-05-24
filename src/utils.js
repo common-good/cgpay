@@ -151,6 +151,7 @@ const u = {
   }, 
   
   now() { return (u.testing()) ? st.inspect().now : u.now0() }, // keep "now" constant in tests
+  fmtDate(dt) { return new Date(dt).toLocaleDateString('en-us', { year:'numeric', month:'numeric', day:'numeric'}) }
   realData() { return ['production', 'staging'].includes(u.mode()) },
   localMode() { return (u.mode() == 'local' && c.showDevStuff) }, 
   yesno(question, m1, m2) { u.dlg('Confirm', question, 'Yes, No', m1, m2) },
