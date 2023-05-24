@@ -11,8 +11,9 @@
 
   const surveyLink = 'https://forms.gle/HKb5V4DueYt1W13v6'
   const me = $st.myAccount
+  const chgBtnText = st.selfServe() ? 'Pay' : 'Charge'
   let payOk
-  let hdr = $st.selfServe() ? 'Self Serve'
+  let hdr = st.selfServe() ? 'Self Serve'
   : $st.showDash ? 'Dashboard'
   : 'Home'
 
@@ -46,7 +47,7 @@
     st.setQr(null) // no going back to previous customer
     if ($st.erMsg) showEr($st.erMsg)
 
-    payOk = (!me.isCo || $st.payOk == 'always' || $st.coPaying) && c.showScanToPay
+    payOk = (!me.isCo || $st.payOk == 'always' || $st.coPaying) && c.showScanToPay && !st.selfServe()
   })
 
 </script>
@@ -77,7 +78,7 @@
       {#if payOk }
         <button class="pay" data-testid="btn-pay" on:click={pay}>Pay</button>
       {/if}
-      <button class="charge" data-testid="btn-charge" on:click={charge}>Charge</button>
+      <button class="charge" data-testid="btn-charge" on:click={charge}>{chgBtnText}</button>
     </div>
   </div>
 </section>

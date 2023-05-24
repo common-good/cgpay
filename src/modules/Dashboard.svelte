@@ -1,10 +1,12 @@
 <script>
   import st from'#store.js'
+  import u from'#utils.js'
   import { onMount } from 'svelte'
   console.log($st.myAccount)
 
   let info = {}
-  let txs = {}
+  let txs = []
+  const me = $st.myAccount
 
   onMount(async () => {
     try {
@@ -23,6 +25,6 @@
   <p>Balance: ${info.balance}</p>
   <h2>Recent Transactions: {#if !txs.length}(none){/if}</h2>
   {#each txs as tx}
-    <p>{tx.created}: {tx.who}${tx.amount} (#{tx.id})</p>
+    <p>{u.fmtDate(tx.created)}: {tx.who}${tx.amount} (#{tx.id})</p>
   {/each}
 </section>
