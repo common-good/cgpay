@@ -41,10 +41,10 @@
  *      avgBalance: the account’s average balance over the past 6 months
  *      trustRatio: ratio of the account’s trust rating to the average trust rating of all individual accounts (zero for company accounts)
  *      since: Unix timestamp of when the account was activated
+ *      lastTx: Unixtime (in ms) of the last transaction with this account created on this device
  * 
  *    myAccount: information about the account associated with the device
  *      accountId, name, qr, isCo, and selling as in the choices array described above
- *      lastTx: Unixtime (in ms) of the last transaction known to this device (null if none)
  */
 
 const cache = {
@@ -57,9 +57,13 @@ const cache = {
   useWifi: true, // true to use wifi whenever possible (false if developer or test framework has disabled wifi)
   selfServe: false, // true for self-serve mode
   payOk: 'always', // payments from this device are permitted: always, scan, or never - default for companies is scan (self-scan-in required, to pay)
+  allowType: false, // allow type-to-pay and type-to-charge (should default true)
+  allowShow: false, // all show-to-pay and show-to-charge
+  showDash: null, // true to show dashboard (balance, recent txs, ...) on home page (set when linking account)
+  balance: 'unknown', // last known balance
 
   choices: null, // accounts the user has permission to use in the app
-  txs: [], // transactions waiting to be uploaded
+  recentTxs: [], // list of current account's most recent transactions  txs: [], // transactions waiting to be uploaded
   comments: [], // comments waiting to be uploaded
 
   deviceIds: {}, // list of deviceIds keyed by accountId

@@ -1,55 +1,31 @@
 <script>
   import st from'#store.js'
   import u from'#utils.js'
+  import c from '#constants.js'
   import { onMount } from 'svelte'
 
-  let info = {}
-  let txs = [
-    {
-      name: 'Maria Manager',
-      descripton: 'burrito',
-      amount: '-10.00',
-      pending: true,
-      created: '5/25/23',
-      id: 1234
-    },
-    {
-      name: 'Susan Shopper',
-      descripton: 'rent',
-      amount: '1000.00',
-      pending: false,
-      created: '5/25/23',
-      id: 1234
-    },
-    {
-      name: 'Corner Store',
-      descripton: 'groceries',
-      amount: '-100.00',
-      pending: false,
-      created: '5/25/23',
-      id: 1234
-    }
-  ]
-  let pending = txs.reduce((total, tx) => tx.pending ? total + 1 : total + 0
-  , 0);
   const me = $st.myAccount
+  let info = {}
+  let txs = $st.recentTxs
+  let balance = $st.balance
+  let pending = txs.reduce((total, tx) => tx.pending ? total + 1 : total + 0, 0)
 
   onMount(async () => {
     try {
-      const params = {deviceId:me.deviceId, actorId:me.accountId, lastTx:me.lastTx || -1 }
+      const params = {deviceId:me.deviceId, actorId:me.accountId, count:c.recentTxMax }
       info = await u.postRequest('info', params)
-      console.log('info', info)
-//      balance, surtxs: {}, txs: [{xid, amount, accountId, name, description, created}, …]}
-//  where surtxs: {amount, portion, crumbs, roundup}
-
-    } catch (er) { if (!u.isTimeout(er)) console.log('info er', er) }
+      st.setBalance(balance = info.balance)
+      st.setRecentTxs(txs = info.txs)
+      //      balance, surtxs: {}, txs: [{xid, amount, accountId, name, description, created}, …]}
+      //  where surtxs: {amount, portion, crumbs, roundup}
+    } catch (er) { console.log('info er', er) }
   })
 
 </script>
 <section id="dashboard">
   <p class="acct">Account: {$st.myAccount?.accountId}</p>
   <div class="balance">
-    <p>Balance: <span>${info.balance}</span></p>
+    <p>Balance: <span>${balance}</span></p>
   </div>
   <a class="link pending" href="/pending">You have {pending} Pending Transaction{pending == 1 ? '' : 's'}</a>
   <div class="txs">
@@ -58,8 +34,8 @@
       {#each txs as tx}
         <li>
           <div class="row">
-            <div class><span>{tx.pending ? 'Pending' : u.fmtDate(tx.created)}</div>
-            <div class="rgt">${tx.amount}</div>
+            <div class><span>{tx.pending ? 'Pending' : u.fmtDate(1000 * tx.created)}</div>
+            <div class="rgt">${u.withCommas(tx.amount)}</div>
           </div>
           <div class="row">
             <div class>{tx.name}</div>

@@ -5,7 +5,8 @@
    * - show a QR
    * - type the person's identifier
    * - scan the person's QR
-  */
+   * Expect $st.intent to be "pay" or "charge"
+   */
   import { onMount } from 'svelte'
   import st from'#store.js'
   import u from '#utils.js'
@@ -16,16 +17,25 @@
   export let currentRoute // else Svelte complains (I don't know why yet)
   export let params // else Svelte complains (I don't know why yet)
 
+  const me = $st.myAccount
+  const paying = ($st.intent == 'pay')
+  let hdr = paying ? 'Pay' : 'Charge / Request Payment'
+  let qr, btnPay, btnChg, payOk
+  let qrAction
+
   const intent = $st.intent
-  let qr = intent === 'pay' ? $st.myAccount?.qr : null;
-  const qrAction = `Show this code to ${intent === 'pay' ? intent : 'charge someone'}`
+
 
   const handleClick = () => { u.go('scan') }
+  function scan() { u.go('scan') }
 
   async function receiveQr() { return await u.generateQr(u.makeQrUrl(u.getMainId($st.myAccount.accountId))) }
 
   onMount(async () => {
     if (intent === 'charge') qr = await receiveQr()
+    if ($st.allowShow) [qr, qrAction] = paying ? [me.qr, 'pay'] : [await receiveQr(), 'be paid']
+    payOk = (!me.isCo || $st.payOk == 'always' || $st.coPaying) && c.showScanToPay
+    btnPay = me.isCo ? 'Pay / Refund / Sell CG Credit' : 'Pay'
   })
 
 </script>
@@ -36,16 +46,17 @@
 
 <section class="page" id="tx-start">
   <div class="top">
-    <h1 class="page-title">{intent}</h1>
-    <p>{qrAction}</p>
+    <h1 class="page-title">Show this code to {qrAction}</h1>
     <img src="{qr}" data-testid="qr" alt={qrAction} />
   </div>
   <div class="bottom">
-    <button on:click={handleClick} class="primary">
+    <ScanFake intent={$st.intent}/>
+    <button class="scan" data-testid="btn-scan" on:click={scan}>
       <span class="icon">
         <QrIcon size="1.5rem" />
       </span>
-      Scan to {intent}</button>
+      Scan to {paying ? btnPay : 'Charge'}
+    </button>
   </div>
 </section>
 

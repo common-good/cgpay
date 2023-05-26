@@ -4,7 +4,8 @@
   import u from '#utils.js'
   import c from '#constants.js'
   import cgLogo from '#modules/assets/cg-logo-300-noR.png?webp'
-  import Dashboard from './Dashboard.svelte';
+  import Dashboard from './Dashboard.svelte'
+  import ScanFake from './ScanFake.svelte'
 
   export let currentRoute // else Svelte complains (I don't know why yet)
   export let params // else Svelte complains (I don't know why yet)
@@ -12,26 +13,33 @@
   const surveyLink = 'https://forms.gle/HKb5V4DueYt1W13v6'
   const me = $st.myAccount
   let payOk
-  let hdr = st.selfServe() ? 'Self Serve' : 'Home'
+  let hdr = st.selfServe() ? 'Self Serve'
+  : $st.showDash ? 'Dashboard'
+  : $st.payOk ? 'Home'
+  : 'Ready to Charge Someone'
 
   function showEr(msg) { u.alert(msg, () => { u.hide(); st.setMsg(null) }) }
 
   function fake(code) { st.setQr(code); st.setIntent('charge'); u.go('tx') }
 
-  const chgBtnText = () => {
+/*  const chgBtnText = () => {
     if (me.isCo && st.selfServe()) return 'Scan to Pay'
     if (me.isCo) return 'Scan to Charge'
     else return 'Charge'
-  }
+  } */
+
+  const hasTxOptions = ($st.allowShow || $st.allowType)
+  const payBtnText = hasTxOptions ? 'Pay' : 'Scan to Pay'
+  const chgBtnText = st.selfServe() ? 'Scan to Pay' 
+  : hasTxOptions ? 'Charge'
+  : 'Scan to Charge'
 
   function pay() {
     if ($st.payOk == 'scan') { payOk = false; st.setCoPaying(false) } // scan-in is for just one payment
     tx('pay')
   }
   function charge() { tx('charge') }
-  function tx(intent) { 
-    st.setIntent(intent); 
-    u.go(me.isCo ? 'scan' : 'tx-start') }
+  function tx(intent) { st.setIntent(intent); u.go(hasTxOptions ? 'tx-start' : 'scan') }
 
   function scanIn() {
     try {
@@ -102,16 +110,9 @@
     {/if}
   </div>
   <div class="bottom">
-    {#if u.localMode() }
-      <div class="fakes">
-        <button on:click={ () => fake('HTTP://6VM.RC4.ME/KDCA12345a') }>A</button>
-        <button on:click={ () => fake('HTTP://6VM.RC4.ME/KDCB12345b') }>B</button>
-        <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDCC098765a') }>C:A</button>
-        <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDCC198765b') }>C:B</button>
-        <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDCG098765f') }>G:F</button>
-        <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDCG398765f') }>Bad</button>
-        <button on:click={ () => fake('garbage') }>Worse</button>
-      </div>
+    {#if u.localMode() && !hasTxOptions}
+      {#if payOk}<ScanFake intent="pay"/>{/if}
+      <ScanFake intent="charge"/>
     {/if}
 
     {#if me.isCo && !st.selfServe()}
@@ -119,9 +120,9 @@
     {/if}
     <div class="actions">
       {#if payOk }
-        <button class="pay" data-testid="btn-pay" on:click={pay}>Pay</button>
+        <button class="pay" data-testid="btn-pay" on:click={pay}>{payBtnText}</button>
       {/if}
-      <button class="charge" data-testid="btn-charge" on:click={charge}>{chgBtnText()}</button>
+      <button class="charge" data-testid="btn-charge" on:click={charge}>{chgBtnText}</button>
     </div>
   </div>
 </section>

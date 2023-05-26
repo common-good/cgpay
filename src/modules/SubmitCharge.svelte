@@ -34,8 +34,7 @@
       delete tx.code
       tx.offline = false
     }
-    st.setMyAccount({ ...$st.myAccount, lastTx:tx.created })
-
+    st.setRecentTxs(tx)
     st.setPending(true) // give the user a chance to undo (or add a tip)
     st.enqTx(tx)                                                                                                         
     if (!otherAccount.name) otherAccount.name = 'Unidentified Member'

@@ -34,7 +34,7 @@
 
   const needSignin = ( () => u.empty($st.choices) && !st.linked() )
   const needLink = ( () => !st.linked() )
-  const gotQr = ( () => $st.qr !== null )
+  const gotIntent = ( () => $st.intent !== null )
 
   const routes = [
     route('/empty', Empty, true, null, LayoutIntro), // for testing
@@ -43,8 +43,8 @@
     route('/link-account', LinkAccount, needLink, '/home', LayoutIntro),
     route('/home', Home, st.linked, '/'),
     route('/scan', Scan, st.linked, '/'),
-    route('/tx', Tx),
-    route('/tx-start', TxStart),
+    route('/tx', Tx, gotIntent, '/'),
+    route('/tx-start', TxStart, gotIntent, '/'),
     route('/comment', Comment, st.linked, '/')
   ]
 
