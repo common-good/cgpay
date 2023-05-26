@@ -154,7 +154,7 @@ export const createStore = () => {
     setSawAdd() { setv('sawAdd', u.now()) },
     setCameraCount(n) { setv('cameraCount', n) },
     setFrontCamera(yesno) { setv('frontCamera', yesno) },
-    setShowDash(yesno) { setv('showDash', yesno) },
+
 
     resetNetwork() { if (cache.useWifi) st.setOnline(navigator.onLine) },
     setOnline(yesno) { // handling this in store helps with testing

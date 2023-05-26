@@ -44,7 +44,7 @@
 </script>
 
 <section id="submit-charge">
-  <h1 data-testid="action">{action}</h1>
+  <h1 class="page-title" data-testid="action">{action}</h1>
   <form on:submit|preventDefault={charge}>
     { #if !st.selfServe() }<Profile {otherAccount} {photo} />{ /if }
     <div class="bottom">
@@ -60,9 +60,6 @@
 </section>
 
 <style lang="stylus">
-  h1 
-   margin-bottom $s0
-
   form
     height 100%
     display flex

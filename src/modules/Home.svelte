@@ -11,23 +11,27 @@
 
   const surveyLink = 'https://forms.gle/HKb5V4DueYt1W13v6'
   const me = $st.myAccount
-  const chgBtnText = st.selfServe() ? 'Pay' : 'Charge'
   let payOk
-  let hdr = st.selfServe() ? 'Self Serve'
-  : $st.showDash ? 'Dashboard'
-  : 'Home'
-
-  let balance = ''
-  let recents = []
+  let hdr = st.selfServe() ? 'Self Serve' : 'Home'
 
   function showEr(msg) { u.alert(msg, () => { u.hide(); st.setMsg(null) }) }
+
+  function fake(code) { st.setQr(code); st.setIntent('charge'); u.go('tx') }
+
+  const chgBtnText = () => {
+    if (me.isCo && st.selfServe()) return 'Scan to Pay'
+    if (me.isCo) return 'Scan to Charge'
+    else return 'Charge'
+  }
 
   function pay() {
     if ($st.payOk == 'scan') { payOk = false; st.setCoPaying(false) } // scan-in is for just one payment
     tx('pay')
   }
   function charge() { tx('charge') }
-  function tx(intent) { st.setIntent(intent); u.go($st.onlyScan ? 'scan' : 'startTx') }
+  function tx(intent) { 
+    st.setIntent(intent); 
+    u.go(me.isCo ? 'scan' : 'tx-start') }
 
   function scanIn() {
     try {
@@ -37,6 +41,22 @@
       st.setCoPaying(true)
     } catch (er) { showEr(u.qrEr(er)) }
   }
+
+  // let hdr, qr, alt, btnPay, btnChg, payOk 
+  // function isQrToPay() { return (qr.length == me.qr.length) }
+  // /**
+  //  * Set the displayed QR to a QR to pay or a QR to be paid
+  //  * @param toPay: true for a QR to pay, false for a QR to be paid, null to toggle
+  //  */
+  // async function toggleQr(toPay = null) {
+  //   if (typeof toPay === 'object') {
+  //     if (!payOk) return
+  //     toPay = !isQrToPay()
+  //     if (!toPay && $st.coPay == 'scan') { st.setCoPaying(false); payOk = false; }
+  //   }
+  //   ;[qr, hdr, alt] = toPay ? [me.qr, 'Show this code to PAY', 'pay'] : [await receiveQr(), 'Show this code to BE PAID', 'be paid']
+  //   if (me.isCo && !c.showToPay) hdr = payOk ? 'Ready to Charge or Pay' : 'Ready to Charge Someone'
+  // }
 
   onMount(async () => {
     st.setTimeout(null) // stop the timeout timer from interrupting us
@@ -48,8 +68,18 @@
     if ($st.erMsg) showEr($st.erMsg)
 
     payOk = (!me.isCo || $st.payOk == 'always' || $st.coPaying) && c.showScanToPay && !st.selfServe()
-  })
 
+    // if (st.selfServe()) {
+    //   qr = await receiveQr()
+    //   hdr = '<b>Self-Serve</b><br>Scan this code to pay with Common Good<br>Or press the button below to charge yourself'
+    //   if (!c.showToPay) hdr = '<b>Self-Serve</b><br><br>Press the button below to scan your Common Good QR Code'
+    //   alt = 'pay'
+    // } else toggleQr(!me.isCo)
+
+    // const intent = $st.intent
+    // qr = intent === 'pay' ? $st.myAccount?.qr : null
+    // const qrAction = `Show this code to ${intent === 'pay' ? intent : 'be paid'}`
+  })
 </script>
 
 <svelte:head>
@@ -58,10 +88,11 @@
 
 <section class="page" id="home">
   <div class="top">
-    <h1 data-testid="header">{hdr}</h1>
-    {#if st.selfServe() || !$st.showDash }
-      <!--p><b></b><br>Scan this code to pay with Common Good<br>Or press the button below to charge yourself</p-->
-      <p>Press the button below to scan your Common Good QR Code</p>
+    { #if me.isCo }
+      <h1 class="page-title" data-testid="header">{hdr}</h1>
+      { #if st.selfServe()}
+        <p>Press the button below to scan your <br />Common Good QR Code</p>
+      {/if}
       <div class='watermark'>
         <img class='logo' src= {cgLogo} alt='Common Good Logo' />
         <p>CGPay v{c.version}</p>
@@ -71,6 +102,18 @@
     {/if}
   </div>
   <div class="bottom">
+    {#if u.localMode() }
+      <div class="fakes">
+        <button on:click={ () => fake('HTTP://6VM.RC4.ME/KDCA12345a') }>A</button>
+        <button on:click={ () => fake('HTTP://6VM.RC4.ME/KDCB12345b') }>B</button>
+        <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDCC098765a') }>C:A</button>
+        <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDCC198765b') }>C:B</button>
+        <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDCG098765f') }>G:F</button>
+        <button on:click={ () => fake('HTTP://6VM.RC4.ME/LDCG398765f') }>Bad</button>
+        <button on:click={ () => fake('garbage') }>Worse</button>
+      </div>
+    {/if}
+
     {#if me.isCo && !st.selfServe()}
       <a class="survey" data-testid="lnk-survey" href="{surveyLink}" target="_blank">Take Our User Survey</a>
     {/if}
@@ -78,7 +121,7 @@
       {#if payOk }
         <button class="pay" data-testid="btn-pay" on:click={pay}>Pay</button>
       {/if}
-      <button class="charge" data-testid="btn-charge" on:click={charge}>{chgBtnText}</button>
+      <button class="charge" data-testid="btn-charge" on:click={charge}>{chgBtnText()}</button>
     </div>
   </div>
 </section>
@@ -91,17 +134,18 @@
   .pay
     margin-right $s-1
 
-  .fakes button
-    cgButtonSecondary()
-    padding 5px
-    margin-bottom $s0
-    flex-grow 1
-    margin-right $s-2
-    visibility visible
+  .fakes 
+    display flex
+    button
+      cgButtonSecondary()
+      padding 5px
+      margin-bottom $s0
+      flex-grow 1
+      margin-right $s-2
+      visibility visible
 
-  .update p
+  p
     text-align center
-    margin-bottom $s1
 
   img 
     max-width 250px

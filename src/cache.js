@@ -57,8 +57,6 @@ const cache = {
   useWifi: true, // true to use wifi whenever possible (false if developer or test framework has disabled wifi)
   selfServe: false, // true for self-serve mode
   payOk: 'always', // payments from this device are permitted: always, scan, or never - default for companies is scan (self-scan-in required, to pay)
-  showDash: null, // true to show dashboard (balance, recent txs, ...) on home page (set when linking account)
-  // maybe eventually store some settings (like showDash) in choices or deviceIds so they persist when user changes account
 
   choices: null, // accounts the user has permission to use in the app
   txs: [], // transactions waiting to be uploaded
@@ -73,7 +71,6 @@ const cache = {
   token: null, // session token (a stand-in for the deviceId in GET requests)
   timeout: null, // milliseconds before inactivity timeout (for return to Home Page)
   qr: null, // (blob) a scanned QR url
-  intent: null, // what to do on the next page: scanIn, pay, or charge
   msg: null, // an informational message to display on the Home Page (not yet used)
   erMsg: null, // error message to display on Home page
   online: null, // true if the device is connected to the Internet

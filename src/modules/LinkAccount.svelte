@@ -17,7 +17,7 @@
   let acctIndex = null
   let payOk = c.showScanToPay ? 'scan' : 'never'
   const choices = $st.choices
-  const payOkOptions = { always:'always', scan:'only if a manager scans in', never:'never', self:'self-serve mode' }
+  const payOkOptions = { always:'always', scan:'only if a manager scans in', never:'never' }
   
   function er(msg) { u.alert(msg) } 
   function signOut() { st.signOut(); u.go('') }
@@ -28,7 +28,6 @@
     if (lock) st.setAcctChoices(null)
     st.setPayOk(myAccount.isCo ? payOk : null)
     if (selfServe) st.setPayOk('self') // only if not c.showScanToPay
-    st.setShowDash(!myAccount.isCo)
     u.goHome(`This device is now linked to your Common Good account: ${myAccount?.name}.`)
   }
 
@@ -67,7 +66,7 @@
             <label><input type="checkbox" data-testid="lock-account" name="lock-account" 
               bind:checked={lock} class={ lock ? 'checked' : '' }/> Require sign-in to change account</label>
           {/if}
-          {#if !c.showScanToPay && acctIndex > 0}
+          {#if acctIndex > 0}
             <label><input type="checkbox" data-testid="self-serve" name="self-serve" 
               bind:checked={selfServe} class={ selfServe ? 'checked' : '' }/> Self-serve mode</label>
           {/if}

@@ -44,7 +44,7 @@
     route('/home', Home, st.linked, '/'),
     route('/scan', Scan, st.linked, '/'),
     route('/tx', Tx),
-    route('/tx-start', TxStart, gotQr, '/'),
+    route('/tx-start', TxStart),
     route('/comment', Comment, st.linked, '/')
   ]
 
