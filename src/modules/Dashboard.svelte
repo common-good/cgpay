@@ -58,11 +58,12 @@
 <style lang='stylus'>
   .pending
     display block
-    margin-bottom $s2
+    text-align center
+    margin-bottom $s0
 
   h2
     text-align center
-    margin-bottom $s0
+    margin-bottom 0
 
   li
     border-top solid 1px
@@ -78,12 +79,14 @@
   .acct
     text-align center
     margin-bottom $s0
+    display none
 
   .balance
+    text-align center
     margin-bottom $s-1
     span
-      text(3xl)
-      font-weight 500
+      text(2xl)
+      font-weight normal
 
   .row
     width 100%
