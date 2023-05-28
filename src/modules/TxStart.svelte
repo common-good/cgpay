@@ -13,6 +13,7 @@
   import c from '#constants.js'
   import cgLogo from '#modules/assets/cg-logo-300-noR.png?webp'
   import QrIcon from "svelte-material-icons/QrcodeScan.svelte"
+  import ScanFake from './ScanFake.svelte'
 
   export let currentRoute // else Svelte complains (I don't know why yet)
   export let params // else Svelte complains (I don't know why yet)
