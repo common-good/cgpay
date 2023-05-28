@@ -10,28 +10,35 @@
   let balance = $st.balance
   let pending = txs.reduce((total, tx) => tx.pending ? total + 1 : total + 0, 0)
 
-  onMount(async () => {
+  async function getInfo() {
     try {
       const params = {deviceId:me.deviceId, actorId:me.accountId, count:c.recentTxMax }
       info = await u.postRequest('info', params)
       st.setBalance(balance = info.balance)
       st.setRecentTxs(txs = info.txs)
+      st.setGotInfo(true)
       //      balance, surtxs: {}, txs: [{xid, amount, accountId, name, description, created}, …]}
       //  where surtxs: {amount, portion, crumbs, roundup}
     } catch (er) { console.log('info er', er) }
+  }
+
+  onMount(async () => {
+    if (!$st.gotInfo) getInfo()
   })
 
 </script>
 <section id="dashboard">
   <p class="acct">Account: {$st.myAccount?.accountId}</p>
-  <div class="balance">
-    <p>Balance: <span>${balance}</span></p>
-  </div>
-  <a class="link pending" href="/pending">You have {pending} Pending Transaction{pending == 1 ? '' : 's'}</a>
+  <div class="balance">Balance: <span>${balance}</span></div>
   <div class="txs">
     <h2>Recent Transactions {#if !txs.length}(none){/if}</h2>
+    {#if pending}
+      <a class="link pending" href="/pending">{pending} pending</a>
+    {:else}
+      <div class="pending">Zero pending</div>
+    {/if}
     <ul>
-      {#each txs as tx}
+      {#key $st.recentTxs}{#each txs as tx}
         <li>
           <div class="row">
             <div class><span>{tx.pending ? 'Pending' : u.fmtDate(1000 * tx.created)}</div>
@@ -39,9 +46,10 @@
           </div>
           <div class="row">
             <div class>{tx.name}</div>
-            <div class="rgt">{tx.descripton}</div>
+            <div class="rgt">{tx.description}</div>
           </div>
-      {/each}
+        </li>
+      {/each}{/key}
     </ul>
     <a class="link" href="/txs">View Full Transaction History</a>
   </div>

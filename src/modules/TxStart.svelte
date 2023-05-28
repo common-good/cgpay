@@ -25,14 +25,10 @@
 
   const intent = $st.intent
 
-
-  const handleClick = () => { u.go('scan') }
   function scan() { u.go('scan') }
-
   async function receiveQr() { return await u.generateQr(u.makeQrUrl(u.getMainId($st.myAccount.accountId))) }
 
   onMount(async () => {
-    if (intent === 'charge') qr = await receiveQr()
     if ($st.allowShow) [qr, qrAction] = paying ? [me.qr, 'pay'] : [await receiveQr(), 'be paid']
     payOk = (!me.isCo || $st.payOk == 'always' || $st.coPaying) && c.showScanToPay
     btnPay = me.isCo ? 'Pay / Refund / Sell CG Credit' : 'Pay'

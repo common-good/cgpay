@@ -12,6 +12,8 @@
  *      isCo: true if the account is a company account
  *      selling: a list (array) of items for sale
  * 
+ *    recentTxs: list of current account's most recent transactions (just name, amount, created, description, and xid)
+ * 
  *    txs: transaction objects waiting to be uploaded to the server, each comprising:
  *      deviceId: a unique ID for the device associated with the actorId account
  *      amount: dollars to transfer from actorId to otherId (signed)
@@ -30,7 +32,6 @@
  *      text: the comment
  * 
  * OBJECTS
- *    corrupt: version number when a transaction or comment upload fails inexplicably
  *    accts: an array of accounts the device has transacted with, keyed by the account ID without cardCode, each with:
  *      hash: SHA256 hash of cardCode
  *      name: name of the account
@@ -48,9 +49,10 @@
  */
 
 const cache = {
-  persist: 'version deviceId sawAdd cameraCount frontCamera useWifi selfServe payOk choices txs comments deviceIds corrupt accts myAccount',
+  persist: 'version deviceId sawAdd cameraCount frontCamera useWifi selfServe payOk allowType allowShow showDash balance choices recentTxs txs comments deviceIds corrupt accts myAccount',
 
   version: null, // latest app version that touched this data
+  corrupt: null, // timestamp that cached data got corrupted
   sawAdd: null, // time user pressed Continue on the Add-to-home-screen page
   cameraCount: 0, // number of cameras in the device - set this when scanning for the first time
   frontCamera: null, // true to use front camera instead of rear (default false iff mobile) - set this in Root.svelte (can't be defaulted from tests)
@@ -61,13 +63,14 @@ const cache = {
   allowShow: false, // all show-to-pay and show-to-charge
   showDash: null, // true to show dashboard (balance, recent txs, ...) on home page (set when linking account)
   balance: 'unknown', // last known balance
+  // maybe eventually store some settings (like balance and showDash) in choices or deviceIds so they persist when user changes account
 
   choices: null, // accounts the user has permission to use in the app
-  recentTxs: [], // list of current account's most recent transactions  txs: [], // transactions waiting to be uploaded
+  recentTxs: [], // list of current account's most recent transactions
+  txs: [], // transactions waiting to be uploaded
   comments: [], // comments waiting to be uploaded
 
   deviceIds: {}, // list of deviceIds keyed by accountId
-  corrupt: null, // timestamp that cached data got corrupted
   accts: {}, // keyed list of accounts that user has transacted with (or tried to)
   myAccount: null, // information about user's account, signed in
 
@@ -85,6 +88,7 @@ const cache = {
   modal: false, // modal dialog data (set false to hide the modal dialog)
   m1: null, // callback for modal button #1
   m2: null, // callback for modal button #2
+  gotInfo: false, // true if we got transaction info from the server (set false to get it again)
 
   // for testing
   posts: 0, // operation counters for calls to u.postRequest, enQ, and deQ

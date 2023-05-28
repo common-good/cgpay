@@ -12,6 +12,9 @@
 
   const surveyLink = 'https://forms.gle/HKb5V4DueYt1W13v6'
   const me = $st.myAccount
+  const hasTxOptions = ($st.allowShow || $st.allowType)
+  const payBtnText = hasTxOptions ? 'Pay' : 'Scan to Pay'
+  const chgBtnText = st.selfServe() ? 'Pay' : (hasTxOptions ? 'Charge' : 'Scan to Charge')
   let payOk
   let hdr = st.selfServe() ? 'Self Serve'
   : $st.showDash ? 'Dashboard'
@@ -27,12 +30,6 @@
     if (me.isCo) return 'Scan to Charge'
     else return 'Charge'
   } */
-
-  const hasTxOptions = ($st.allowShow || $st.allowType)
-  const payBtnText = hasTxOptions ? 'Pay' : 'Scan to Pay'
-  const chgBtnText = st.selfServe() ? 'Scan to Pay' 
-  : hasTxOptions ? 'Charge'
-  : 'Scan to Charge'
 
   function pay() {
     if ($st.payOk == 'scan') { payOk = false; st.setCoPaying(false) } // scan-in is for just one payment
@@ -106,7 +103,7 @@
         <p>CGPay v{c.version}</p>
       </div>
     {:else}
-      <Dashboard />
+      {#key $st.recentTxs}<Dashboard />{/key}
     {/if}
   </div>
   <div class="bottom">

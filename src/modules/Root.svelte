@@ -8,8 +8,8 @@
   import Empty from '#modules/_Empty.svelte' // for testing
   import AddToHomeScreen from '#modules/AddToHomeScreen.svelte'
   import Home from '#modules/Home.svelte'
-  import Tx from '#modules/Tx.svelte'
   import TxStart from '#modules/TxStart.svelte'
+  import Tx from '#modules/Tx.svelte'
   import LinkAccount from '#modules/LinkAccount.svelte'
   import Scan from '#modules/Scan.svelte'
   import SignIn from '#modules/SignIn.svelte'

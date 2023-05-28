@@ -34,9 +34,9 @@
       delete tx.code
       tx.offline = false
     }
-    st.setRecentTxs(tx)
     st.setPending(true) // give the user a chance to undo (or add a tip)
-    st.enqTx(tx)                                                                                                         
+    st.enqTx(tx)   
+    st.setRecentTxs(tx)
     if (!otherAccount.name) otherAccount.name = 'Unidentified Member'
     dispatch('complete') // update display
   }
