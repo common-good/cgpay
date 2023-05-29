@@ -22,6 +22,7 @@
   : 'Ready to Charge Someone'
 
   function showEr(msg) { u.alert(msg, () => { u.hide(); st.setMsg(null) }) }
+  function fmtVersion(n) { n = n.toString(); return n.substring(0, 1) + '.' + n.substring(2, 3) + '.' + n.substring(3, 4) }
 
   function fake(code) { st.setQr(code); st.setIntent('charge'); u.go('tx') }
 
@@ -100,7 +101,7 @@
       {/if}
       <div class='watermark'>
         <img class='logo' src= {cgLogo} alt='Common Good Logo' />
-        <p>CGPay v{c.version}</p>
+        <p>CGPay v{fmtVersion(c.version)}</p>
       </div>
     {:else}
       {#key $st.recentTxs}<Dashboard />{/key}

@@ -51,7 +51,7 @@
 const cache = {
   persist: 'version deviceId sawAdd cameraCount frontCamera useWifi selfServe payOk allowType allowShow showDash balance choices recentTxs txs comments deviceIds corrupt accts myAccount',
 
-  version: null, // latest app version that touched this data
+  version: null, // latest app version that touched this data (an integer with two digits representing each segment of x.y.z)
   corrupt: null, // timestamp that cached data got corrupted
   sawAdd: null, // time user pressed Continue on the Add-to-home-screen page
   cameraCount: 0, // number of cameras in the device - set this when scanning for the first time
