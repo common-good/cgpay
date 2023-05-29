@@ -32,7 +32,7 @@
   let tipable = false
   let gotTx = false
   let photo = { alt: 'Customer Profile', blob: null }
-  const pastAction = (pay || st.selfServe()) ? 'Paid' : 'Charged'
+  const pastAction = (pay || $st.selfServe) ? 'Paid' : 'Charged'
 
 	u.undo.subscribe(askUndo) // receive notification of Back click (see Layout.svelte)
 
@@ -43,14 +43,14 @@
     st.setTimeout(null)
     u.yesno('Reverse the transaction?', 
       () => { u.hide(); st.undoTx(); u.goHome('The transaction has been reversed.') },
-      () => { u.hide(); if (st.selfServe()) st.setTimeout(c.txTimeout)
+      () => { u.hide(); if ($st.selfServe) st.setTimeout(c.txTimeout)
     })
   }
 
   function handleSubmitCharge() {
     st.setTrail('', true) // no going back from here
     gotTx = true
-    if (st.selfServe()) st.setTimeout(c.txTimeout)
+    if ($st.selfServe) st.setTimeout(c.txTimeout)
   } // state success, show undo/tip/done/receipt buttons
     
   /**
@@ -66,7 +66,7 @@
     return { alt:'photo of the other party', blob:blob }
   }
 
-  function profileOffline() { if (!st.selfServe()) u.alert('OFFLINE. Trust this member or ask for ID.') }
+  function profileOffline() { if (!$st.selfServe) u.alert('OFFLINE. Trust this member or ask for ID.') }
 
   onMount(async () => {
     if (qr === null) return u.go('home') // pressed back button from Home page
@@ -93,7 +93,7 @@
         delete otherAccount.selling
         st.putAcct(card, otherAccount) // store and/or update stored customer account info
         if (otherAccount.limit <= 0) u.goEr('This account has no remaining funds, so a transaction is not possible at this time.')
-        if (!st.selfServe()) photo = await getPhoto(info)
+        if (!$st.selfServe) photo = await getPhoto(info)
       }
     } catch (er) {
       if (u.isTimeout(er)) { // internet unavailable; recognize a repeat customer or limit CG's liability
@@ -116,7 +116,7 @@
         <div class='row payee-info'>
           <p><span data-testid="action">{pastAction}</span> to:</p>
           <div class='payee-details'>
-          {#if st.selfServe()}
+          {#if $st.selfServe}
             <p data-testid="other-name">{ $st.myAccount.name }</p>
           {:else}
             {#if otherAccount.agent}

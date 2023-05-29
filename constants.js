@@ -11,8 +11,6 @@ const constants = {
   recentTxMax: 50, // maximum number of recent transactions to store
 
   showDevStuff: true, // if true, enable dev-only features
-  showScanToPay: true, // if true, enable scan-to-pay feature for individual users
-  showScanToPayBiz: true, // if true, enable scan-to-pay and scan-to-signin for vendors
 
   // how long user has, on the current screen (in seconds), before we return automatically to Home
   txTimeout: 10, // Tx page

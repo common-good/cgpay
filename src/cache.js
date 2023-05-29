@@ -49,7 +49,7 @@
  */
 
 const cache = {
-  persist: 'version deviceId sawAdd cameraCount frontCamera useWifi selfServe payOk allowType allowShow showDash balance choices recentTxs txs comments deviceIds corrupt accts myAccount',
+  persist: 'version deviceId sawAdd cameraCount frontCamera useWifi locked selfServe payOk allowType allowShow showDash balance choices recentTxs txs comments deviceIds corrupt accts myAccount',
 
   version: null, // latest app version that touched this data (an integer with two digits representing each segment of x.y.z)
   corrupt: null, // timestamp that cached data got corrupted
@@ -57,6 +57,7 @@ const cache = {
   cameraCount: 0, // number of cameras in the device - set this when scanning for the first time
   frontCamera: null, // true to use front camera instead of rear (default false iff mobile) - set this in Root.svelte (can't be defaulted from tests)
   useWifi: true, // true to use wifi whenever possible (false if developer or test framework has disabled wifi)
+  locked: false, // require sign-in to change accounts or settings
   selfServe: false, // true for self-serve mode
   payOk: 'always', // payments from this device are permitted: always, scan, or never - default for companies is scan (self-scan-in required, to pay)
   allowType: false, // allow type-to-pay and type-to-charge (should default true)

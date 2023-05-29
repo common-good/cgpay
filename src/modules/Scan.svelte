@@ -13,7 +13,7 @@
 
   switch($st.intent) {
     case 'charge':
-      action = st.selfServe() ? 'Pay' : 'Charge'
+      action = $st.selfServe ? 'Pay' : 'Charge'
       break
     case 'scanIn':
       action = "Scan In"

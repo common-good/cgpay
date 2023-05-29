@@ -14,9 +14,9 @@
   const me = $st.myAccount
   const hasTxOptions = ($st.allowShow || $st.allowType)
   const payBtnText = hasTxOptions ? 'Pay' : 'Scan to Pay'
-  const chgBtnText = st.selfServe() ? 'Pay' : (hasTxOptions ? 'Charge' : 'Scan to Charge')
+  const chgBtnText = $st.selfServe ? 'Pay' : (hasTxOptions ? 'Charge' : 'Scan to Charge')
   let payOk
-  let hdr = st.selfServe() ? 'Self Serve'
+  let hdr = $st.selfServe ? 'Self Serve'
   : $st.showDash ? 'Dashboard'
   : $st.payOk ? 'Home'
   : 'Ready to Charge Someone'
@@ -27,7 +27,7 @@
   function fake(code) { st.setQr(code); st.setIntent('charge'); u.go('tx') }
 
 /*  const chgBtnText = () => {
-    if (me.isCo && st.selfServe()) return 'Scan to Pay'
+    if (me.isCo && $st.selfServe) return 'Scan to Pay'
     if (me.isCo) return 'Scan to Charge'
     else return 'Charge'
   } */
@@ -73,9 +73,9 @@
     st.setQr(null) // no going back to previous customer
     if ($st.erMsg) showEr($st.erMsg)
 
-    payOk = (!me.isCo || $st.payOk == 'always' || $st.coPaying) && c.showScanToPay && !st.selfServe()
+    payOk = (!me.isCo || $st.payOk == 'always' || $st.coPaying) && c.showScanToPay && !$st.selfServe
 
-    // if (st.selfServe()) {
+    // if ($st.selfServe) {
     //   qr = await receiveQr()
     //   hdr = '<b>Self-Serve</b><br>Scan this code to pay with Common Good<br>Or press the button below to charge yourself'
     //   if (!c.showToPay) hdr = '<b>Self-Serve</b><br><br>Press the button below to scan your Common Good QR Code'
@@ -96,7 +96,7 @@
   <div class="top">
     { #if me.isCo }
       <h1 class="page-title" data-testid="header">{hdr}</h1>
-      { #if st.selfServe()}
+      { #if $st.selfServe}
         <p>Press the button below to scan your <br />Common Good QR Code</p>
       {/if}
       <div class='watermark'>
@@ -113,7 +113,7 @@
       <ScanFake intent="charge"/>
     {/if}
 
-    {#if me.isCo && !st.selfServe()}
+    {#if me.isCo && !$st.selfServe}
       <a class="survey" data-testid="lnk-survey" href="{surveyLink}" target="_blank">Take Our User Survey</a>
     {/if}
     <div class="actions">
