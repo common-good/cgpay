@@ -28,7 +28,6 @@
 
 </script>
 <section id="dashboard">
-  <p class="acct">Account: {$st.myAccount?.accountId}</p>
   <div class="balance">Balance: <span>${balance}</span></div>
   <div class="txs">
     <h2>Recent Transactions {#if !txs.length}(none){/if}</h2>
@@ -58,12 +57,11 @@
 <style lang='stylus'>
   .pending
     display block
-    text-align center
     margin-bottom $s0
 
   h2
     text-align center
-    margin-bottom 0
+    margin-bottom $s0
 
   li
     border-top solid 1px
@@ -75,18 +73,9 @@
 
   ul
     margin-bottom $s1
-    
-  .acct
-    text-align center
-    margin-bottom $s0
-    display none
 
   .balance
-    text-align center
-    margin-bottom $s-1
-    span
-      text(2xl)
-      font-weight normal
+    margin-bottom $s1
 
   .row
     width 100%

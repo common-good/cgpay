@@ -55,23 +55,18 @@
     width 48px
 
   header
-    position fixed
-    left 0
-    right 0
     display flex
     align-items center
     justify-content space-between
-    /* margin-bottom $s-4 */
+    margin-bottom $s-4
     padding $s-2
     background $c-blue-light
     box-shadow 0 1px 4px $c-gray
     z-index 1
 
   .content
-    margin-top: 64px /* same as header height */
     height 100%
     padding $s-1
-    padding-top $s2
 
   .layout-step
     height 100%
