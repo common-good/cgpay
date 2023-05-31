@@ -34,6 +34,8 @@ export const createStore = () => {
       s.deviceIds = cache0.deviceIds
       if (s.choices) [s.choices, s.deviceIds] = reconcileDeviceIds(s.choices)
       if (s.myAccount) s.deviceIds[s.myAccount.accountId] = s.myAccount.deviceId
+    } else if (s.version == '4.1.0') {
+      s.selfServe = (s.payOk == 'self')
     }
   
     return s
@@ -121,7 +123,6 @@ export const createStore = () => {
     setWifi(yesno) { setv('useWifi', yesno); st.resetNetwork() },
     setCoPaying(yesno) { setv('coPaying', yesno) },
     setPayOk(v) { setv('payOk', v) },
-    selfServe() { return cache.payOk == 'self' },
     setTrail(page = 'back', clear = false) {
       if (!page) page = 'home' // handle root url showing home page
       if (clear || u.atHome(page)) setv('trail', []) // always clear when going home
@@ -150,15 +151,22 @@ export const createStore = () => {
     },
     linked() { return (cache.myAccount !== null) },
     unlink() { setv('myAccount', null) },
-    signOut() { st.unlink(); st.setAcctChoices(null) },
+    signOut() { 
+      st.setSelf(false)
+      st.unlink()
+      st.setAcctChoices(null) 
+    },
     clearData() { if (!u.realData()) setst({ ...cache0 }) },
 
     setSawAdd() { setv('sawAdd', u.now()) },
     setCameraCount(n) { setv('cameraCount', n) },
     setFrontCamera(yesno) { setv('frontCamera', yesno) },
     setShowDash(yesno) { setv('showDash', yesno) },
+    setAllowType(yesno) { setv('allowType', yesno) },
+    setAllowShow(yesno) { setv('allowShow', yesno) },
     setBalance(n) { setv('balance', n) },
-
+    setLocked(yesno) { setv('locked', yesno) },
+    setSelf(yesno) { setv('selfServe', yesno) },
 
     resetNetwork() { if (cache.useWifi) st.setOnline(navigator.onLine) },
     setOnline(yesno) { // handling this in store helps with testing

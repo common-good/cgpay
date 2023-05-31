@@ -1,5 +1,5 @@
 <script>
-  import { Router, navigateTo } from 'svelte-router-spa'
+  import { Router } from 'svelte-router-spa'
   import { onMount } from 'svelte'
   import st from'#store.js'
   import u from '#utils.js'
@@ -14,6 +14,7 @@
   import Scan from '#modules/Scan.svelte'
   import SignIn from '#modules/SignIn.svelte'
   import Comment from '#modules/Comment.svelte'
+  import Settings from '#modules/Settings.svelte'
   import LayoutIntro from '#modules/LayoutIntro.svelte'
   import Layout from '#modules/Layout.svelte'
 
@@ -45,7 +46,8 @@
     route('/scan', Scan, st.linked, '/'),
     route('/tx', Tx, gotIntent, '/'),
     route('/tx-start', TxStart, gotIntent, '/'),
-    route('/comment', Comment, st.linked, '/')
+    route('/comment', Comment, st.linked, '/'),
+    route('/settings', Settings, () => !u.empty($st.choices), '/' ),
   ]
 
   onMount(async () => {

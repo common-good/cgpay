@@ -11,7 +11,7 @@
   export let tx
 
   const pay = $st.intent == 'pay'
-  const action = (pay || st.selfServe()) ? 'Pay' : 'Charge'
+  const action = (pay || $st.selfServe) ? 'Pay' : 'Charge'
   const dispatch = createEventDispatcher()
 
   function validateAmount() {
@@ -45,7 +45,7 @@
 <section id="submit-charge">
   <h1 class="page-title" data-testid="action">{action}</h1>
   <form on:submit|preventDefault={charge}>
-    { #if !st.selfServe() }<Profile {otherAccount} {photo} />{ /if }
+    { #if !$st.selfServe }<Profile {otherAccount} {photo} />{ /if }
     <div class="bottom">
       <fieldset>
         <label for="amount">Amount</label>

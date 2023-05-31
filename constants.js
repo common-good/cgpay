@@ -1,5 +1,5 @@
 const constants = {
-  version: '4.1.0',
+  version: 40200, // 4.2.0
   storeKey: 'cgpay',
   qrUrlRegex: '^HTTP://[0-9A-Za-z]{1,4}\.RC[24]\.ME/[0-9A-Z]{2,5}[0-9A-Za-z]{0,25}$', // like HTTP://6VM.RC4.ME/KDJJ34kjdfKJ4
   testQrStart: 'HTTP://6VM.RC4.ME/', // is a test QR if it starts with this string
@@ -11,8 +11,6 @@ const constants = {
   recentTxMax: 50, // maximum number of recent transactions to store
 
   showDevStuff: true, // if true, enable dev-only features
-  showScanToPay: true, // if true, enable scan-to-pay feature for individual users
-  showScanToPayBiz: true, // if true, enable scan-to-pay and scan-to-signin for vendors
 
   // how long user has, on the current screen (in seconds), before we return automatically to Home
   txTimeout: 10, // Tx page

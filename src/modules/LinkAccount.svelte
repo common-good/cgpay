@@ -9,13 +9,11 @@
   let acctOpts = []
   let size = 4 // number of choices to show without scrolling (fails on Android)
   let lock = true
-  let selfServe = false // used only if not c.showScanToPay
+  let selfServe = false
   let myAccount
   let ready = false
   let acctIndex = null
-  let payOk = c.showScanToPay ? 'scan' : 'never'
   const choices = $st.choices
-  const payOkOptions = { always:'always', scan:'only if a manager scans in', never:'never' }
   
   function er(msg) { u.alert(msg) } 
   function signOut() { st.signOut(); u.go('') }
@@ -23,10 +21,11 @@
   function gotAccount() {
     myAccount = choices && choices[acctIndex]
     st.setMyAccount(myAccount)
-    if (lock) st.setAcctChoices(null)
-    st.setPayOk(myAccount.isCo ? payOk : null)
-    if (selfServe) st.setPayOk('self') // only if not c.showScanToPay
     st.setShowDash(!myAccount.isCo)
+    if (lock) st.setAcctChoices(null)
+    st.setPayOk(myAccount.isCo ? 'never' : true)
+    if (selfServe) st.setSelf(true)
+    st.setAllowShow(!myAccount.isCo)
     u.goHome(`This device is now linked to your Common Good account: ${myAccount?.name}.`)
   }
 
@@ -57,10 +56,6 @@
         <p>Select a Common Good account to link to CGPay on this device.</p>
         <form>
           <SelectX name="account" label={'Select an account'} options={acctOpts} size={size} bind:value={acctIndex} required="required" />
-          {#if acctIndex > 0 && c.showScanToPayBiz}
-            <p>Allow payments from this account:</p>
-            <Radios name="payOk" options={payOkOptions} bind:value={payOk} required="required" />
-          {/if}
           {#if size > 0}
             <label><input type="checkbox" data-testid="lock-account" name="lock-account" 
               bind:checked={lock} class={ lock ? 'checked' : '' }/> Require sign-in to change account</label>
