@@ -56,6 +56,7 @@ export const createStore = () => {
 //  function setkv(k, k2, v, fromTest = false) { ('k', k, 'k2', k2, 'v', v, 'showHdr', cache.showHdr); cache[k][k2] = v; setv(k, k2, fromTest); return v }
   function enQ(k, v) { st.bump('enQ'); cache[k].push(v); return setv(k, cache[k]) }
   function pop(k) { st.bump('pop'); const res = cache[k].pop(); setv(k, cache[k]); return res }
+  function ins(k, v) { st.bump('ins'); const res = cache[k].unshift(v); setv(k, cache[k]); return res } // insert
   function deQ(k) { st.bump('deQ'); const res = cache[k].shift(); setv(k, cache[k]); return res } // this is actually FIFO (shift) not LIFO (pop)
   function tSetV(k, v, fromTest) { if (u.testing() && !fromTest) u.tellTester('store', k, v).then() }
 
@@ -130,6 +131,7 @@ export const createStore = () => {
     setLeft(what) { setv('hdrLeft', what) },
     setPending(yesno) { setv('pending', yesno) },
     setModal(modal, m1 = null, m2 = null) { setv('modal', modal); setv('m1', m1); setv('m2', m2) },
+    setGotInfo(yesno) { setv('gotInfo', yesno) },
 
     setAcctChoices(v) {
       setv('choices', v)
@@ -155,6 +157,8 @@ export const createStore = () => {
     setCameraCount(n) { setv('cameraCount', n) },
     setFrontCamera(yesno) { setv('frontCamera', yesno) },
     setShowDash(yesno) { setv('showDash', yesno) },
+    setBalance(n) { setv('balance', n) },
+
 
     resetNetwork() { if (cache.useWifi) st.setOnline(navigator.onLine) },
     setOnline(yesno) { // handling this in store helps with testing
@@ -192,6 +196,11 @@ export const createStore = () => {
       return acct
     },
 
+    setRecentTxs(tx = null) {
+      if (Array.isArray(tx)) return setv('recentTxs', tx) // replace list with results of info endpoint
+      ins('recentTxs', { ...tx }) // insert just one transaction (processed by this device just now)
+      while (cache.recentTxs.length > c.recentTxMax) pop('recentTxs')
+    },
     enqTx(tx) { tx.offline = true; enQ('txs', { ...tx }) },
     async flushTxs() { await flushQ('txs', 'transactions') },
     deqTx() { deQ('txs') }, // just for testing (in st.spec.js)

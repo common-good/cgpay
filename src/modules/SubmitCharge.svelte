@@ -34,17 +34,16 @@
       delete tx.code
       tx.offline = false
     }
-    st.setMyAccount({ ...$st.myAccount, lastTx:tx.created })
-
     st.setPending(true) // give the user a chance to undo (or add a tip)
-    st.enqTx(tx)                                                                                                         
+    st.enqTx(tx)   
+    st.setRecentTxs(tx)
     if (!otherAccount.name) otherAccount.name = 'Unidentified Member'
     dispatch('complete') // update display
   }
 </script>
 
 <section id="submit-charge">
-  <h1 data-testid="action">{action}</h1>
+  <h1 class="page-title" data-testid="action">{action}</h1>
   <form on:submit|preventDefault={charge}>
     { #if !st.selfServe() }<Profile {otherAccount} {photo} />{ /if }
     <div class="bottom">
@@ -60,9 +59,6 @@
 </section>
 
 <style lang="stylus">
-  h1 
-   margin-bottom $s0
-
   form
     height 100%
     display flex

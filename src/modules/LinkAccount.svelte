@@ -6,8 +6,6 @@
   import SelectX from '#modules/SelectX.svelte'
   import Radios from '#modules/Radios.svelte'
 
-  // --------------------------------------------
-
   let acctOpts = []
   let size = 4 // number of choices to show without scrolling (fails on Android)
   let lock = true
@@ -17,9 +15,10 @@
   let acctIndex = null
   let payOk = c.showScanToPay ? 'scan' : 'never'
   const choices = $st.choices
-  const payOkOptions = { always:'always', scan:'only if a manager scans in', never:'never', self:'self-serve mode' }
+  const payOkOptions = { always:'always', scan:'only if a manager scans in', never:'never' }
   
   function er(msg) { u.alert(msg) } 
+  function signOut() { st.signOut(); u.go('') }
 
   function gotAccount() {
     myAccount = choices && choices[acctIndex]
@@ -49,7 +48,8 @@
   <title>CGPay - Link Account</title>
 </svelte:head>
 
-<section class="page" id="link-account">
+<!-- <Navigation /> -->
+<section class="card" id="link-account">
   <h1>Link Account</h1>
   {#if ready}
     <div class="select-account">
@@ -57,7 +57,7 @@
         <p>Select a Common Good account to link to CGPay on this device.</p>
         <form>
           <SelectX name="account" label={'Select an account'} options={acctOpts} size={size} bind:value={acctIndex} required="required" />
-          {#if acctIndex > 0 && c.showScanToPay}
+          {#if acctIndex > 0 && c.showScanToPayBiz}
             <p>Allow payments from this account:</p>
             <Radios name="payOk" options={payOkOptions} bind:value={payOk} required="required" />
           {/if}
@@ -65,13 +65,14 @@
             <label><input type="checkbox" data-testid="lock-account" name="lock-account" 
               bind:checked={lock} class={ lock ? 'checked' : '' }/> Require sign-in to change account</label>
           {/if}
-          {#if !c.showScanToPay && acctIndex > 0}
+          {#if acctIndex > 0}
             <label><input type="checkbox" data-testid="self-serve" name="self-serve" 
               bind:checked={selfServe} class={ selfServe ? 'checked' : '' }/> Self-serve mode</label>
           {/if}
         </form>
       </div>
-      <button type="submit" data-testid="btn-link" on:click={gotAccount} disabled={ acctIndex === null }>Link Account</button>
+      <button class="tertiary" on:click={signOut}>Sign Out</button>
+      <button class="primary" type="submit" data-testid="btn-link" on:click={gotAccount} disabled={ acctIndex === null }>Link Account</button>
     </div>
   {:else}
     <div class="loading">
@@ -81,13 +82,6 @@
 </section>
 
 <style lang='stylus'>
-  section
-    display flex
-    flex-direction column
-    align-items center
-    width 100%
-    height 100%
-
   .loading
     height 100%
     display flex
@@ -95,10 +89,8 @@
     font-style italic
     margin-bottom $s5
 
-  button
-    cgButton()
-
-  h1 
+  h1
+    text xl
     margin-bottom $s1
 
   p
@@ -111,6 +103,16 @@
     letter-spacing 0.005rem
     margin-bottom 1rem
 
+  .card
+    height 100%
+    display flex
+    flex-direction column
+    align-items center
+    background $c-white
+    box-shadow: 2px 2px 4px $c-gray-dark
+    border-radius: 2%
+    padding $s5 $s-2 $s-2
+
   .form-lower 
     margin-top $s2
 
@@ -119,6 +121,9 @@
     flex-direction column
     justify-content space-between
     height 100%
+
+  .tertiary
+    margin-bottom $s-1
 
   .top
     padding 0 $s0

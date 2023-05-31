@@ -1,4 +1,5 @@
 @import './app.support.styl'
+@import './layout.styl'
 
 // --------------------------------------------
 
@@ -20,6 +21,16 @@ html, body, main
 main
   overflow-x hidden
 
+button
+  &.primary
+    cgButton()
+  
+  &.secondary
+    cgButtonSecondary()
+
+  &.tertiary
+    cgButtonTertiary()
+
 h1
   text(2xl)
   font-weight 600
@@ -30,6 +41,9 @@ h2
 
 form
   width 100%
+
+  fieldset
+    text-align left
 
   label
     text(sm)
@@ -61,6 +75,12 @@ p
   font-weight 400
   letter-spacing 0.005rem
   margin 0
+
+.link
+  color $c-blue
+  text-decoration underline
+  &:hover, &:focus
+    text-decoration none
 
 .visuallyhidden
 	border 0

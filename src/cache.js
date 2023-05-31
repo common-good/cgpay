@@ -12,6 +12,8 @@
  *      isCo: true if the account is a company account
  *      selling: a list (array) of items for sale
  * 
+ *    recentTxs: list of current account's most recent transactions (just name, amount, created, description, and xid)
+ * 
  *    txs: transaction objects waiting to be uploaded to the server, each comprising:
  *      deviceId: a unique ID for the device associated with the actorId account
  *      amount: dollars to transfer from actorId to otherId (signed)
@@ -30,7 +32,6 @@
  *      text: the comment
  * 
  * OBJECTS
- *    corrupt: version number when a transaction or comment upload fails inexplicably
  *    accts: an array of accounts the device has transacted with, keyed by the account ID without cardCode, each with:
  *      hash: SHA256 hash of cardCode
  *      name: name of the account
@@ -41,31 +42,35 @@
  *      avgBalance: the account’s average balance over the past 6 months
  *      trustRatio: ratio of the account’s trust rating to the average trust rating of all individual accounts (zero for company accounts)
  *      since: Unix timestamp of when the account was activated
+ *      lastTx: Unixtime (in ms) of the last transaction with this account created on this device
  * 
  *    myAccount: information about the account associated with the device
  *      accountId, name, qr, isCo, and selling as in the choices array described above
- *      lastTx: Unixtime (in ms) of the last transaction known to this device (null if none)
  */
 
 const cache = {
-  persist: 'version deviceId sawAdd cameraCount frontCamera useWifi selfServe payOk choices txs comments deviceIds corrupt accts myAccount',
+  persist: 'version deviceId sawAdd cameraCount frontCamera useWifi selfServe payOk allowType allowShow showDash balance choices recentTxs txs comments deviceIds corrupt accts myAccount',
 
   version: null, // latest app version that touched this data
+  corrupt: null, // timestamp that cached data got corrupted
   sawAdd: null, // time user pressed Continue on the Add-to-home-screen page
   cameraCount: 0, // number of cameras in the device - set this when scanning for the first time
   frontCamera: null, // true to use front camera instead of rear (default false iff mobile) - set this in Root.svelte (can't be defaulted from tests)
   useWifi: true, // true to use wifi whenever possible (false if developer or test framework has disabled wifi)
   selfServe: false, // true for self-serve mode
   payOk: 'always', // payments from this device are permitted: always, scan, or never - default for companies is scan (self-scan-in required, to pay)
+  allowType: false, // allow type-to-pay and type-to-charge (should default true)
+  allowShow: false, // all show-to-pay and show-to-charge
   showDash: null, // true to show dashboard (balance, recent txs, ...) on home page (set when linking account)
-  // maybe eventually store some settings (like showDash) in choices or deviceIds so they persist when user changes account
+  balance: 'unknown', // last known balance
+  // maybe eventually store some settings (like balance and showDash) in choices or deviceIds so they persist when user changes account
 
   choices: null, // accounts the user has permission to use in the app
+  recentTxs: [], // list of current account's most recent transactions
   txs: [], // transactions waiting to be uploaded
   comments: [], // comments waiting to be uploaded
 
   deviceIds: {}, // list of deviceIds keyed by accountId
-  corrupt: null, // timestamp that cached data got corrupted
   accts: {}, // keyed list of accounts that user has transacted with (or tried to)
   myAccount: null, // information about user's account, signed in
 
@@ -73,7 +78,6 @@ const cache = {
   token: null, // session token (a stand-in for the deviceId in GET requests)
   timeout: null, // milliseconds before inactivity timeout (for return to Home Page)
   qr: null, // (blob) a scanned QR url
-  intent: null, // what to do on the next page: scanIn, pay, or charge
   msg: null, // an informational message to display on the Home Page (not yet used)
   erMsg: null, // error message to display on Home page
   online: null, // true if the device is connected to the Internet
@@ -84,6 +88,7 @@ const cache = {
   modal: false, // modal dialog data (set false to hide the modal dialog)
   m1: null, // callback for modal button #1
   m2: null, // callback for modal button #2
+  gotInfo: false, // true if we got transaction info from the server (set false to get it again)
 
   // for testing
   posts: 0, // operation counters for calls to u.postRequest, enQ, and deQ

@@ -8,8 +8,8 @@
   import Empty from '#modules/_Empty.svelte' // for testing
   import AddToHomeScreen from '#modules/AddToHomeScreen.svelte'
   import Home from '#modules/Home.svelte'
+  import TxStart from '#modules/TxStart.svelte'
   import Tx from '#modules/Tx.svelte'
-  import TxDetails from '#modules/TxDetails.svelte'
   import LinkAccount from '#modules/LinkAccount.svelte'
   import Scan from '#modules/Scan.svelte'
   import SignIn from '#modules/SignIn.svelte'
@@ -34,17 +34,17 @@
 
   const needSignin = ( () => u.empty($st.choices) && !st.linked() )
   const needLink = ( () => !st.linked() )
-  const gotQr = ( () => $st.qr !== null )
+  const gotIntent = ( () => $st.intent !== null )
 
   const routes = [
     route('/empty', Empty, true, null, LayoutIntro), // for testing
     route('/', AddToHomeScreen, u.addableToHome, '/sign-in', LayoutIntro),
     route('/sign-in', SignIn, needSignin, '/link-account', LayoutIntro),
-    route('/link-account', LinkAccount, needLink, '/home'),
+    route('/link-account', LinkAccount, needLink, '/home', LayoutIntro),
     route('/home', Home, st.linked, '/'),
     route('/scan', Scan, st.linked, '/'),
-    route('/tx', Tx),
-    route('/tx-details', TxDetails, gotQr, '/'),
+    route('/tx', Tx, gotIntent, '/'),
+    route('/tx-start', TxStart, gotIntent, '/'),
     route('/comment', Comment, st.linked, '/')
   ]
 

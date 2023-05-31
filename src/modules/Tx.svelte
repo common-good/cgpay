@@ -69,8 +69,9 @@
   function profileOffline() { if (!st.selfServe()) u.alert('OFFLINE. Trust this member or ask for ID.') }
 
   onMount(async () => {
+    if (qr === null) return u.go('home') // pressed back button from Home page
+    st.setCoPaying(false)
     try {
-      if (qr === null) return u.go('home') // pressed back button from Home page
       const card = u.qrParse(qr) // does not return if format is bad
       const mainId = u.getMainId($st.myAccount.accountId)
       if (card.main == mainId) throw new Error('That QR is for the same account as yours.')

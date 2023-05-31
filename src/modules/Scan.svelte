@@ -9,7 +9,18 @@
 
   let isLoading = true
   let di = 0 // default to first device
-  //st.tellDev('here we are at the top of the page')
+  let action = ''
+
+  switch($st.intent) {
+    case 'charge':
+      action = st.selfServe() ? 'Pay' : 'Charge'
+      break
+    case 'scanIn':
+      action = "Scan In"
+      break
+    default:
+      action = $st.intent
+  }
 
   onMount(async () => {
     if (!$st.intent) u.goEr(u.crash('scan with no intent'))
@@ -55,7 +66,7 @@
 
 <section class="page" id="scan">
   <div class='top'>
-    <h1>Scan QR Code</h1>
+    <h1 class="page-title">Scan to {action}</h1>
     {#if isLoading}
       <div class='loading'>
         <img class='logo' src= { cgLogo } alt="Common Good logo" />
@@ -67,19 +78,9 @@
 </section>
 
 <style lang='stylus'>
-  a
-    cgButtonSecondary()
-
   h1
-    margin-bottom $s0
-
-  section
-    display flex
-    flex-direction column
-    justify-content space-between
-    align-items center
-    height 100%
-
+    text-transform capitalize
+    
   .loading
     font-style italic
     height 250px
