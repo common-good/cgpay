@@ -48,7 +48,7 @@
   </div>
   <div class="bottom">
     <ScanFake intent={$st.intent}/>
-    <button class="scan" data-testid="btn-scan" on:click={scan}>
+    <button class="primary" data-testid="btn-scan" on:click={scan}>
       <span class="icon">
         <QrIcon size="1.5rem" />
       </span>

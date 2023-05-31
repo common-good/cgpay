@@ -94,9 +94,9 @@
 
 <section class="page" id="home">
   <div class="top">
+    <h1 class="page-title" data-testid="header">{hdr}</h1>
     { #if me.isCo }
-      <h1 class="page-title" data-testid="header">{hdr}</h1>
-      { #if $st.selfServe}
+      { #if st.selfServe}
         <p>Press the button below to scan your <br />Common Good QR Code</p>
       {/if}
       <div class='watermark'>
@@ -112,7 +112,6 @@
       {#if payOk}<ScanFake intent="pay"/>{/if}
       <ScanFake intent="charge"/>
     {/if}
-
     {#if me.isCo && !$st.selfServe}
       <a class="survey" data-testid="lnk-survey" href="{surveyLink}" target="_blank">Take Our User Survey</a>
     {/if}
