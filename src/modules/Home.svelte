@@ -73,7 +73,7 @@
     st.setQr(null) // no going back to previous customer
     if ($st.erMsg) showEr($st.erMsg)
 
-    payOk = (!me.isCo || $st.payOk == 'always' || $st.coPaying) && c.showScanToPay && !$st.selfServe
+    payOk = (!me.isCo || $st.payOk == 'always' || $st.coPaying) && !$st.selfServe
 
     // if ($st.selfServe) {
     //   qr = await receiveQr()

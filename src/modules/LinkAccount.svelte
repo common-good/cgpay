@@ -20,7 +20,9 @@
     myAccount = choices && choices[acctIndex]
     st.setMyAccount(myAccount)
     st.setShowDash(!myAccount.isCo)
-    st.setPayOk(myAccount.isCo ? payOk : null)
+    st.setPayOk(myAccount.isCo ? 'never' : true)
+    st.setLocked(myAccount.isCo)
+    st.setAllowShow(!myAccount.isCo)
     u.goHome(`This device is now linked to your Common Good account: ${myAccount?.name}.`)
   }
 
