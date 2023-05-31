@@ -8,6 +8,8 @@
 
   let acctOpts = []
   let size = 4 // number of choices to show without scrolling (fails on Android)
+  let lock = true
+  let selfServe = false
   let myAccount
   let ready = false
   let acctIndex = null
@@ -20,8 +22,9 @@
     myAccount = choices && choices[acctIndex]
     st.setMyAccount(myAccount)
     st.setShowDash(!myAccount.isCo)
+    if (lock) st.setAcctChoices(null)
     st.setPayOk(myAccount.isCo ? 'never' : true)
-    st.setLocked(myAccount.isCo)
+    if (selfServe) st.setSelf(true)
     st.setAllowShow(!myAccount.isCo)
     u.goHome(`This device is now linked to your Common Good account: ${myAccount?.name}.`)
   }
@@ -53,9 +56,17 @@
         <p>Select a Common Good account to link to CGPay on this device.</p>
         <form>
           <SelectX name="account" label={'Select an account'} options={acctOpts} size={size} bind:value={acctIndex} required="required" />
+          {#if size > 0}
+            <label><input type="checkbox" data-testid="lock-account" name="lock-account" 
+              bind:checked={lock} class={ lock ? 'checked' : '' }/> Require sign-in to change account</label>
+          {/if}
+          {#if acctIndex > 0}
+            <label><input type="checkbox" data-testid="self-serve" name="self-serve" 
+              bind:checked={selfServe} class={ selfServe ? 'checked' : '' }/> Self-serve mode</label>
+          {/if}
         </form>
       </div>
-      <!--button class="tertiary" on:click={signOut}>Sign Out</button-->
+      <button class="tertiary" on:click={signOut}>Sign Out</button>
       <button class="primary" type="submit" data-testid="btn-link" on:click={gotAccount} disabled={ acctIndex === null }>Link Account</button>
     </div>
   {:else}

@@ -59,6 +59,7 @@ const cache = {
   cameraCount: 0, // number of cameras in the device - set this when scanning for the first time
 
   // persistent parameters that can be changed by user in Settings
+  showSettings: false,
   frontCamera: null, // true to use front camera instead of rear (default false iff mobile) - set this in Root.svelte (can't be defaulted from tests)
   locked: false, // require sign-in to change accounts or settings
   selfServe: false, // true for self-serve mode

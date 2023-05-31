@@ -33,9 +33,9 @@
   item('Use Rear Camera', rearCamera, () => $st.cameraCount > 1 && $st.frontCamera, 'rear')
   item('Use Front Camera', frontCamera, () => $st.cameraCount > 1 && !$st.frontCamera, 'front')
   item('Exit Self Serve (signs out)', signOut, () => u.atHome() && $st.selfServe, 'selfOff')
-  item('Switch Account', switchAccount, () => !$st.locked && u.pageUri() != 'link-account', 'switch')
+  item('Switch Account', switchAccount, () => $st.choices?.length > 1 && u.pageUri() != 'link-account' && !st.selfServe, 'switch')
   item('Give Feedback', comment, () => st.linked(), 'comment')
-  item('Settings', () => u.go('settings'), () => st.linked() && !$st.locked, 'settings')
+  item('Settings', () => u.go('settings'), () => $st.showSettings, 'settings')
   item('Sign Out', signOut, () => (st.linked() || u.pageUri() == 'link-account'), 'signout')
 
   if (u.localMode()) {

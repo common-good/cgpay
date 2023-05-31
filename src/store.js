@@ -151,7 +151,11 @@ export const createStore = () => {
     },
     linked() { return (cache.myAccount !== null) },
     unlink() { setv('myAccount', null) },
-    signOut() { st.unlink(); st.setAcctChoices(null) },
+    signOut() { 
+      st.setSelf(false)
+      st.unlink()
+      st.setAcctChoices(null) 
+    },
     clearData() { if (!u.realData()) setst({ ...cache0 }) },
 
     setSawAdd() { setv('sawAdd', u.now()) },
