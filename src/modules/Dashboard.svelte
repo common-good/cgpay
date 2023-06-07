@@ -45,7 +45,7 @@
         <li>
           <div class="row">
             <div class><span>{tx.pending ? 'Pending' : u.fmtDate(1000 * tx.created)}</div>
-            <div class="rgt">${u.withCommas(tx.amount)}</div>
+            <div class="rgt amt { tx.amount.startsWith('-') ? 'neg' : 'pos'}">${u.withCommas(tx.amount)}</div>
           </div>
           <div class="row">
             <div class>{tx.name}</div>
@@ -91,4 +91,13 @@
 
   .rgt
     text-align right
+
+  .amt
+    font-weight 500
+
+  .pos
+    color $c-green-dark
+
+  .neg
+    color $c-red
 </style>
