@@ -63,10 +63,14 @@
     background $c-blue-light
     box-shadow 0 1px 4px $c-gray
     z-index 1
+    position fixed
+    width 100%
+    max-width 820px
 
   .content
     height 100%
     padding $s-1
+    margin-top 64px
 
   .layout-step
     height 100%

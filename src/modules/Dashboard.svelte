@@ -7,6 +7,7 @@
   const me = $st.myAccount
   let info = {}
   let txs = $st.recentTxs
+  let minTxs = $st.recentTxs.slice(0, c.recentTxMin)
   let balance = $st.balance
   let pending = txs.reduce((total, tx) => tx.pending ? total + 1 : total + 0, 0)
 
@@ -30,18 +31,21 @@
 <section id="dashboard">
   <div class="balance">Balance: <span>${balance}</span></div>
   <div class="txs">
-    <h2>Recent Transactions {#if !txs.length}(none){/if}</h2>
+    <h2>Recent Transactions</h2>
     {#if pending}
       <a class="link pending" href="/pending">{pending} pending</a>
     {:else}
       <div class="pending">Zero pending</div>
     {/if}
+    {#if !txs.length}
+    <p>No transactions yet.</p>
+    {:else}
     <ul>
-      {#key $st.recentTxs}{#each txs as tx}
+      {#key $st.recentTxs}{#each minTxs as tx}
         <li>
           <div class="row">
             <div class><span>{tx.pending ? 'Pending' : u.fmtDate(1000 * tx.created)}</div>
-            <div class="rgt">${u.withCommas(tx.amount)}</div>
+            <div class="rgt amt { tx.amount.startsWith('-') ? 'neg' : 'pos'}">${u.withCommas(tx.amount)}</div>
           </div>
           <div class="row">
             <div class>{tx.name}</div>
@@ -50,7 +54,8 @@
         </li>
       {/each}{/key}
     </ul>
-    <a class="link" href="/txs">View Full Transaction History</a>
+    <a class="link" href="/txs">View More Transactions</a>
+    {/if}
   </div>
 </section>
 
@@ -86,4 +91,13 @@
 
   .rgt
     text-align right
+
+  .amt
+    font-weight 500
+
+  .pos
+    color $c-green-dark
+
+  .neg
+    color $c-red
 </style>
