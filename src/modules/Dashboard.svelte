@@ -4,7 +4,7 @@
   import c from '#constants.js'
   import { onMount } from 'svelte'
 
-  const me = $st.myAccount
+  const me = $st.me
   let info = {}
   let txs = $st.recentTxs
   let balance = $st.balance

@@ -44,12 +44,12 @@
  *      since: Unix timestamp of when the account was activated
  *      lastTx: Unixtime (in ms) of the last transaction with this account created on this device
  * 
- *    myAccount: information about the account associated with the device
+ *    me: information about the account associated with the device
  *      accountId, name, qr, isCo, and selling as in the choices array described above
  */
 
 const cache = {
-  persist: 'version deviceId sawAdd cameraCount frontCamera locked selfServe payOk allowType allowShow showDash balance choices recentTxs txs comments confirms deviceIds corrupt accts myAccount',
+  persist: 'version sawAdd cameraCount frontCamera locked selfServe payOk allowType allowShow showDash balance choices recentTxs txs comments confirms deviceIds corrupt accts me',
 
   version: null, // latest app version that touched this data (an integer with two digits representing each segment of x.y.z)
   corrupt: null, // timestamp that cached data got corrupted
@@ -76,7 +76,7 @@ const cache = {
 
   deviceIds: {}, // list of deviceIds keyed by accountId
   accts: {}, // keyed list of accounts that user has transacted with (or tried to)
-  myAccount: null, // information about user's account, signed in
+  me: null, // information about user's account, signed in
 
   // transient data (not stored in local storage)
   token: null, // session token (a stand-in for the deviceId in GET requests)

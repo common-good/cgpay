@@ -36,6 +36,7 @@ export const createStore = () => {
       if (s.myAccount) s.deviceIds[s.myAccount.accountId] = s.myAccount.deviceId
     } else if (s.version == '4.1.0') {
       s.selfServe = (s.payOk == 'self')
+      s.me = { ...s.myAccount }; delete s.myAccount
     }
   
     return s
@@ -143,7 +144,7 @@ export const createStore = () => {
         setv('deviceIds', ids)
       }
     },
-    setMyAccount(acct) {
+    setMe(acct) { setv('me', { ...acct } ) }, // null is not allowed (instead see clearSettings)
       setv('myAccount', acct ? { ...acct } : null)
       if (acct === null) { // LinkAccount calls this with null to clear any preferences (Tx calls to add info)
         st.setPayOk(null)
@@ -215,9 +216,9 @@ export const createStore = () => {
     async flushTxs() { await flushQ('txs', 'transactions') },
     deqTx() { deQ('txs') }, // just for testing (in st.spec.js)
     undoTx() { pop('txs'); st.setPending(false) },
-    comment(text) { enQ('comments', { deviceId:cache.myAccount.deviceId, actorId:cache.myAccount.accountId, created:u.now(), text:text }) },
+    comment(text) { enQ('comments', { deviceId:cache.me.deviceId, actorId:cache.me.accountId, created:u.now(), text:text }) },
     txConfirm(yesno, m) {
-      enQ('confirms', { deviceId:cache.myAccount.deviceId, actorId:cache.myAccount.accountId, yesno:yesno ? 1 : 0, id:m.note, whyNot:'' })
+      enQ('confirms', { deviceId:cache.me.deviceId, actorId:cache.me.accountId, yesno:yesno ? 1 : 0, id:m.note, whyNot:'' })
       u.hide()
     },
 

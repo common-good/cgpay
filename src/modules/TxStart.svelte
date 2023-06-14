@@ -18,7 +18,7 @@
   export let currentRoute // else Svelte complains (I don't know why yet)
   export let params // else Svelte complains (I don't know why yet)
 
-  const me = $st.myAccount
+  const me = $st.me
   const paying = ($st.intent == 'pay')
   let hdr = paying ? 'Pay' : 'Charge / Request Payment'
   let qr, btnPay, btnChg, payOk
@@ -27,7 +27,7 @@
   const intent = $st.intent
 
   function scan() { u.go('scan') }
-  async function receiveQr() { return await u.generateQr(u.makeQrUrl(u.getMainId($st.myAccount.accountId))) }
+  async function receiveQr() { return await u.generateQr(u.makeQrUrl(u.getMainId($st.me.accountId))) }
 
   onMount(async () => {
     if ($st.allowShow) [qr, qrAction] = paying ? [me.qr, 'pay'] : [await receiveQr(), 'be paid']

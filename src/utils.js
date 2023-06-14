@@ -213,7 +213,7 @@ const u = {
   */
 
   /* for POST auth in HTTP header (any advantage?)
-          'authorization': `Bearer ${ u.st().myAccount.deviceId }`,
+          'authorization': `Bearer ${ u.st().me.deviceId }`,
           'Accept': 'application/json',
           'Content-type': 'application/json',
           body: JSON.stringify(tx)

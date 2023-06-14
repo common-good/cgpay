@@ -26,7 +26,7 @@
   function goBack() { if (u.pageUri() == 'tx' && $st.pending) u.undo.update(n => n + 1); else u.goBack() }
 
   function socket() {
-    if ($st.myAccount.isCo) return // only for individual accounts for now
+    if ($st.me.isCo) return // only for individual accounts for now
     if ($st.socket) try {
       $st.socket.close() // for now, reopen every time
     } catch (er) {}
@@ -36,7 +36,7 @@
     try {
       socket = new WebSocket(u.socket()) // socket.readyState has status
       socket.onopen = () => {
-        const msg = JSON.stringify({ op:'connect', actorId:$st.myAccount.accountId, deviceId:$st.myAccount.deviceId })
+        const msg = JSON.stringify({ op:'connect', actorId:$st.me.accountId, deviceId:$st.me.deviceId })
         try {
           socket.send(msg)
         } catch (er) { console.log('socket error', er) }
@@ -70,7 +70,7 @@
     {:else if $st.hdrLeft == 'logo'}
       <img src={ cgLogo } alt='Common Good Logo' />
     {/if}
-    <button on:click={goHome} data-testid="account-name">{ ($st.myAccount ? $st.myAccount.name : '') + (u.realData() ? '' : ' (DEMO)')}</button>
+    <button on:click={goHome} data-testid="account-name">{ ($st.me ? $st.me.name : '') + (u.realData() ? '' : ' (DEMO)')}</button>
     <button data-testid="btn-nav" class="btn" aria-label="Menu" on:click={toggleNav}><NavIcon width={'100%'} height={'100%'} /></button>
   </header>
   { #key currentRoute }<NetworkStatus/>{ /key }

@@ -18,7 +18,7 @@
   <div class='top'>
     <h1 class="page-title">Settings</h1>
 
-    {#if $st.myAccount.isCo}
+    {#if $st.me.isCo}
     <p>Allow payments from this account:</p>
     <Radios name="payOk" options={payOkOptions} bind:value={payOk} on:click={setPayOk} required="required" />
     {/if}

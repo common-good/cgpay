@@ -18,9 +18,9 @@
   
   let tx = {
     amount: null,
-    description: (!pay && $st.myAccount.selling) ? $st.myAccount.selling[0] : null,
-    deviceId: $st.myAccount.deviceId,
-    actorId: u.noCardCode($st.myAccount.accountId),
+    description: (!pay && $st.me.selling) ? $st.me.selling[0] : null,
+    deviceId: $st.me.deviceId,
+    actorId: u.noCardCode($st.me.accountId),
     otherId: null,
     created: null,
     proof: null,
@@ -73,7 +73,7 @@
     st.setCoPaying(false)
     try {
       const card = u.qrParse(qr) // does not return if format is bad
-      const mainId = u.getMainId($st.myAccount.accountId)
+      const mainId = u.getMainId($st.me.accountId)
       if (card.main == mainId) throw new Error('That QR is for the same account as yours.')
       const acctInfo = st.getAcct(card) // retrieve and/or update stored customer account info
       if (acctInfo) otherAccount = { ...otherAccount, ...acctInfo }
@@ -88,7 +88,7 @@
         const res = await u.postRequest('identity', info)
         const { selling } = res
         if (selling.length) tx.description = selling[0]
-        st.setMyAccount({ ...$st.myAccount, selling: selling })
+        st.setMe({ ...$st.me, selling: selling })
         otherAccount = { ...otherAccount, ...res, lastTx:u.now() } // lastTx date lets us jettison old customers to save storage
         delete otherAccount.selling
         st.putAcct(card, otherAccount) // store and/or update stored customer account info
@@ -117,7 +117,7 @@
           <p><span data-testid="action">{pastAction}</span> to:</p>
           <div class='payee-details'>
           {#if $st.selfServe}
-            <p data-testid="other-name">{ $st.myAccount.name }</p>
+            <p data-testid="other-name">{ $st.me.name }</p>
           {:else}
             {#if otherAccount.agent}
               <p data-testid="agent">{ otherAccount.agent }</p>

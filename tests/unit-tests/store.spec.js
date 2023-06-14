@@ -38,10 +38,10 @@ describe('store', () => {
   })
 
 
-  describe('.myAccount', () => {
+  describe('.me', () => {
     it('is accessible', () => {
       const store = createStore()
-      expect(st.inspect().myAccount).toEqual(null)
+      expect(st.inspect().me).toEqual(null)
     })
 
     describe('.setAcctChoices()', () => {
@@ -62,7 +62,7 @@ describe('store', () => {
       describe('when there is a linked account', () => {
         it('is true', () => {
           setupLocalStorage({
-            myAccount: {name: 'bar'}
+            me: {name: 'bar'}
           })
           const store = createStore()
           expect(st.linked()).toEqual(true)
@@ -72,7 +72,7 @@ describe('store', () => {
       describe('when there is not a linked business', () => {
         it('is false', () => {
           setupLocalStorage({
-            myAccount: null
+            me: null
           })
 
           const store = createStore()
@@ -81,13 +81,13 @@ describe('store', () => {
       })
     })
 
-    describe('.setMyAccount()', () => {
+    describe('.setMe()', () => {
       it('links the given account', () => {
         const store = createStore()
-        st.setMyAccount({name: 'Biz'})
+        st.setMe({name: 'Biz'})
 
-        expect(stored().myAccount.name).toEqual('Biz')
-        expect(st.inspect().myAccount.name).toEqual('Biz')
+        expect(stored().me.name).toEqual('Biz')
+        expect(st.inspect().me.name).toEqual('Biz')
       })
     })
   })
