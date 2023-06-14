@@ -49,12 +49,11 @@
  */
 
 const cache = {
-  persist: 'version deviceId sawAdd cameraCount frontCamera useWifi locked selfServe payOk allowType allowShow showDash balance choices recentTxs txs comments deviceIds corrupt accts myAccount',
+  persist: 'version deviceId sawAdd cameraCount frontCamera locked selfServe payOk allowType allowShow showDash balance choices recentTxs txs comments confirms deviceIds corrupt accts myAccount',
 
   version: null, // latest app version that touched this data (an integer with two digits representing each segment of x.y.z)
   corrupt: null, // timestamp that cached data got corrupted
   sawAdd: null, // time user pressed Continue on the Add-to-home-screen page
-  useWifi: true, // true to use wifi whenever possible (false if developer or test framework has disabled wifi)
   balance: 'unknown', // last known balance
   cameraCount: 0, // number of cameras in the device - set this when scanning for the first time
 
@@ -73,6 +72,7 @@ const cache = {
   recentTxs: [], // list of current account's most recent transactions
   txs: [], // transactions waiting to be uploaded
   comments: [], // comments waiting to be uploaded
+  confirms: [], // transaction confirmations/denials waiting to be uploaded
 
   deviceIds: {}, // list of deviceIds keyed by accountId
   accts: {}, // keyed list of accounts that user has transacted with (or tried to)
@@ -95,6 +95,7 @@ const cache = {
   gotInfo: false, // true if we got transaction info from the server (set false to get it again)
 
   // for testing
+  useWifi: true, // true to use wifi whenever possible (false if developer or test framework has disabled wifi)
   posts: 0, // operation counters for calls to u.postRequest, enQ, and deQ
   enQ: 0,
   deQ: 0,

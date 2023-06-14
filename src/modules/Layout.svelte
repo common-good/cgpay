@@ -9,6 +9,7 @@
   import cgLogo from '#modules/assets/cg-logo-300-noR.png?webp'
   import st from'#store.js'
   import u from '#utils.js'
+  import c from '#constants.js'
 
   /**
    * Layout the standard page.
@@ -24,7 +25,37 @@
   function setViewportHeight() { viewHeight = window.visualViewport.height }
   function goBack() { if (u.pageUri() == 'tx' && $st.pending) u.undo.update(n => n + 1); else u.goBack() }
 
+  function socket() {
+    if ($st.myAccount.isCo) return // only for individual accounts for now
+    if ($st.socket) try {
+      $st.socket.close() // for now, reopen every time
+    } catch (er) {}
+
+    if (!('WebSocket' in window)) return null
+    let socket
+    try {
+      socket = new WebSocket(u.socket()) // socket.readyState has status
+      socket.onopen = () => {
+        const msg = JSON.stringify({ op:'connect', actorId:$st.myAccount.accountId, deviceId:$st.myAccount.deviceId })
+        try {
+          socket.send(msg)
+        } catch (er) { console.log('socket error', er) }
+      }
+      socket.onclose = () => {}			
+      socket.onmessage = (msg) => {
+        const m = JSON.parse(msg.data) // get message, action, and note
+
+        if (m.action == 'request') {
+          u.yesno(m.message, () => st.txConfirm(true, m), () => st.txConfirm(false, m))
+        } else u.alert(m.message)
+      }
+    } catch(er) { console.log('socket error', er); return null }
+
+    return socket
+  }
+
   u.undo = writable(0)
+  if (!$st.socket || true) st.setSocket(socket())
 </script>
 
 <svelte:window on:load={setViewportHeight}/>
