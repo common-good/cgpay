@@ -50,6 +50,7 @@
 
 const cache = {
   persist: 'version sawAdd cameraCount frontCamera locked selfServe payOk allowType allowShow showDash balance choices recentTxs txs comments confirms deviceIds corrupt accts me',
+  reset: 'balance showSettings locked selfServe payOk allowType allowShow showDash balance recentTxs me token timeout qr msg erMsg coPaying hdrLeft pending modal gotInfo',
 
   version: null, // latest app version that touched this data (an integer with two digits representing each segment of x.y.z)
   corrupt: null, // timestamp that cached data got corrupted
@@ -80,6 +81,7 @@ const cache = {
 
   // transient data (not stored in local storage)
   token: null, // session token (a stand-in for the deviceId in GET requests)
+  socket: null, // webSocket connection
   timeout: null, // milliseconds before inactivity timeout (for return to Home Page)
   qr: null, // (blob) a scanned QR url
   msg: null, // an informational message to display on the Home Page (not yet used)

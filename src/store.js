@@ -30,11 +30,11 @@ export const createStore = () => {
   
   function convert(s) {
     if (u.empty(s) || c.version == s.version) return s
-    if (u.empty(s.version)) { // v4.0.0 has no stored version number
+    if (u.empty(s.version)) { // v4.0.0 (rel A) has no stored version number
       s.deviceIds = cache0.deviceIds
       if (s.choices) [s.choices, s.deviceIds] = reconcileDeviceIds(s.choices)
       if (s.myAccount) s.deviceIds[s.myAccount.accountId] = s.myAccount.deviceId
-    } else if (s.version == '4.1.0') {
+    } else if (s.version == '4.1.0') { // rel B
       s.selfServe = (s.payOk == 'self')
       s.me = { ...s.myAccount }; delete s.myAccount
     }
@@ -145,19 +145,9 @@ export const createStore = () => {
       }
     },
     setMe(acct) { setv('me', { ...acct } ) }, // null is not allowed (instead see clearSettings)
-      setv('myAccount', acct ? { ...acct } : null)
-      if (acct === null) { // LinkAccount calls this with null to clear any preferences (Tx calls to add info)
-        st.setPayOk(null)
-        st.setCoPaying(false)
-      }
-    },
-    linked() { return (cache.myAccount !== null) },
-    unlink() { setv('myAccount', null) },
-    signOut() { 
-      st.setSelf(false)
-      st.unlink()
-      st.setAcctChoices(null) 
-    },
+    linked() { return (cache.me !== null) },
+    clearSettings() { for (let k in { ...cache0 }) if (cache0.reset.split(' ').includes(k)) setv(k, cache0[k]) }, // called by LinkAccount
+    signOut() { st.clearSettings(); st.setAcctChoices(null) },
     clearData() { if (!u.realData()) setst({ ...cache0 }) },
 
     setSawAdd() { setv('sawAdd', u.now()) },

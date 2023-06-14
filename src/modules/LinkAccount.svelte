@@ -30,8 +30,7 @@
   }
 
   onMount(async () => {
-    st.setLeft('logo')
-    st.setMyAccount(null) // clear account preferences
+    st.clearSettings() // clear account and preferences
     ready = true
     if (choices?.length) {
       for (let i in choices) acctOpts[i] = choices[i].name

@@ -34,14 +34,14 @@
   }
 
   const needSignin = ( () => u.empty($st.choices) && !st.linked() )
-  const needLink = ( () => !st.linked() )
+  const hasChoices = ( () => !u.empty($st.choices) )
   const gotIntent = ( () => $st.intent !== null )
 
   const routes = [
     route('/empty', Empty, true, null, LayoutIntro), // for testing
     route('/', AddToHomeScreen, u.addableToHome, '/sign-in', LayoutIntro),
     route('/sign-in', SignIn, needSignin, '/link-account', LayoutIntro),
-    route('/link-account', LinkAccount, needLink, '/home', LayoutIntro),
+    route('/link-account', LinkAccount, hasChoices, '/home', LayoutIntro),
     route('/home', Home, st.linked, '/'),
     route('/scan', Scan, st.linked, '/'),
     route('/tx', Tx, gotIntent, '/'),
