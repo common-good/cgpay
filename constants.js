@@ -8,7 +8,8 @@ const constants = {
   offlineLimit: 250, // how much an account can be charged without knowing its credit limit
   fetchTimeoutMs: 3200,
   networkTimeoutMs: 100,
-  recentTxMax: 3, // maximum number of recent transactions to store
+  recentTxMax: 20, // maximum number of recent transactions to store
+  recentTxMin: 3, // number of recent txs to show on dashboard
 
   showDevStuff: true, // if true, enable dev-only features
 

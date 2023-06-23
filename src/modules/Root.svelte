@@ -10,6 +10,7 @@
   import Home from '#modules/Home.svelte'
   import TxStart from '#modules/TxStart.svelte'
   import Tx from '#modules/Tx.svelte'
+  import Txs from '#modules/Txs.svelte'
   import LinkAccount from '#modules/LinkAccount.svelte'
   import Scan from '#modules/Scan.svelte'
   import SignIn from '#modules/SignIn.svelte'
@@ -46,6 +47,7 @@
     route('/scan', Scan, st.linked, '/'),
     route('/tx', Tx, gotIntent, '/'),
     route('/tx-start', TxStart, gotIntent, '/'),
+    route('txs', Txs),
     route('/comment', Comment, st.linked, '/'),
     route('/settings', Settings, () => !u.empty($st.choices), '/' ),
   ]
