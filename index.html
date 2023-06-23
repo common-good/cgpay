@@ -1,36 +1,36 @@
 <!doctype html>
-
 <html lang='en'>
   <head>
     <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name='description' content='Collect payments with Common Good.' />
     <meta name='viewport' content='width=device-width, initial-scale=1' />
+    <script src="/ancient.js"></script>
 
-    <link
-      rel='apple-touch-icon'
-      href='/icons/Assets.xcassets/AppIcon.appiconset/196.png'
-    />
+    <link rel='apple-touch-icon' href='/icons/Assets.xcassets/AppIcon.appiconset/196.png' />
     <link rel='icon' href='/icons/android/mipmap-hdpi/ic_launcher.png' />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
-    <link rel='stylesheet' href='/preflight.css' />
-
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/preflight.css" />
     <!-- Manifest is injected by VitePWA. -->
   </head>
 
-   <!-- Google tag (gtag.js) -->
-   <script async src="https://www.googletagmanager.com/gtag/js?id=G-T84TZ71RWG"></script>
-   <script>
-     window.dataLayer = window.dataLayer || [];
-     function gtag(){dataLayer.push(arguments);}
-     gtag('js', new Date());
-
-     gtag('config', 'G-T84TZ71RWG');
-   </script>
-
   <body>
+    <noscript>
+      <center><br><br><br><br><br>
+        <h1>You need to enable Javascript</h1><br>
+        <p>to use the CGPay app</p>
+      </center>
+    </noscript>
     <main></main>
-    <script type='module' src='/src/app.js'></script>
+    <script type="module" src="/src/app.js"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-T84TZ71RWG"></script>
+    <script>
+      window.dataLayer = window.dataLayer || []
+      function gtag() { dataLayer.push(arguments) } // requires the Google tag (gtag) script above
+      gtag('js', new Date())
+      gtag('config', 'G-T84TZ71RWG')
+    </script>
   </body>
 </html>

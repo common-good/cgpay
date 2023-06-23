@@ -5,7 +5,7 @@ export default (page) => {
     },
 
     async visit() {
-      await page.goto('/charge')
+      await page.goto('/tx')
     },
 
     async with({ amount, description }) {

@@ -1,19 +1,18 @@
 <script>
-  import { navigateTo } from 'svelte-router-spa'
   import cgLogo from '#modules/assets/cg-logo-300.png?webp'
-  import store from '#store.js'
+  import st from'#store.js'
   import AndroidInstructions from '#modules/AndroidInstructions.svelte'
   import AppleInstructions from '#modules/AppleInstructions.svelte'
   import { onMount } from 'svelte'
   import u from '#utils.js'
 
-  function skip() {
-    store.setSawAdd()
-    navigateTo('/sign-in')
+  async function skip() {
+    await st.setSawAdd()
+    u.go('sign-in')
   }
 
   onMount(async () => {
-    if (!u.addableToHome()) navigateTo('/sign-in')
+    if (!u.addableToHome()) u.go('sign-in')
   })
 </script>
 

@@ -1,16 +1,14 @@
 <script>
-  import { createEventDispatcher, onDestroy, onMount } from 'svelte'
+  import { onDestroy } from 'svelte'
   import { focusTrap } from 'svelte-focus-trap'
   import { fade } from 'svelte/transition';
+  import st from '#store.js'
+  import u from '#utils.js'
 
-  export let m0
-  let modal
   let show, title, text, labels, lab1, lab2, zot
 
-$:  ([show, title, text, labels] = m0 ? m0 : [false, '', '', '']); // semi-colon here is required
-$:  [lab1, lab2, zot] = (labels + ', ').split(', ')
-
-  const dispatch = createEventDispatcher()
+$:[show, title, text, labels] = $st.modal ? $st.modal : [false, '', '', '']
+$:[lab1, lab2, zot] = u.ray(labels + ', ')
 
   const previously_focused = typeof document !== 'undefined' && document.activeElement
   if (previously_focused) {
@@ -22,14 +20,14 @@ $:  [lab1, lab2, zot] = (labels + ', ').split(', ')
 { #if show }
   <div class="modal-background" on:click={() => {show = false}}></div>
 
-  <div class="modal" role="dialog" aria-modal="true" bind:this={modal} use:focusTrap in:fade out:fade>
-    <h1 data-testid="messageTitle">{ title }</h1>
+  <div class="modal" role="dialog" aria-modal="true" use:focusTrap in:fade out:fade>
+    <h1 data-testid="messageTitle">{title}</h1>
     <div class="content">
-      <p data-testid="messageText">{ text }</p>
+      <p data-testid="messageText">{text}</p>
       <div class="buttons">
-        <button class="primary" data-testid="btn1" on:click={ () => dispatch('m1') }>{ lab1 }</button>
+        <button class="primary" data-testid="btn1" on:click={$st.m1}>{lab1}</button>
         {#if lab2}
-          <button class="secondary" data-testid="btn2" on:click={ () => dispatch('m2') }>{ lab2 }</button>
+          <button class="secondary" data-testid="btn2" on:click={$st.m2}>{lab2}</button>
         {/if}
       </div>
     </div>
@@ -60,14 +58,15 @@ $:  [lab1, lab2, zot] = (labels + ', ').split(', ')
 
   .modal
     position absolute
-    left 50%
-    top 50%
-    width calc(100vw - 4em)
-    max-width 32em
-    max-height calc(100vh - 4em)
+    left 0
+    right 0
+    top 144px
+    margin 0 auto
+    width calc(100vw - 3rem)
+    max-width 512px
+    max-height calc(100vh - 3rem)
     overflow auto
-    transform translate(-50%,-50%)
-    border-radius 1em
+    border-radius $s0
     background white
     z-index: 1
 

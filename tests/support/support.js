@@ -3,16 +3,35 @@ import c from '../../constants.js'
 import u from '../../utils0.js'
 import cache from '../../src/cache.js'
 import w from './world.js'
+import queryString from 'query-string'
 
 const baseUrl = 'http://localhost:' + c.port + '/'
 
 const t = {
+  // Constants
+  ONE: true, // parameter for these()
 
   // UTILITY FUNCTIONS
 
   getst(key = c.storeKey) { return JSON.parse(localStorage.getItem(key)) }, // for debugging
-  async pic(picName = 'pic') { await w.page.screenshot({ path:picName + '.png' }) }, // screen capture
+  async snap(picName = 'snap') { await w.page.screenshot({ path:picName + '.png' }) }, // screen capture
   async wait(secs) { await w.page.waitForTimeout(secs * 1000) },
+
+  /**
+   * Translate app's table and field names to server's
+   * @param string field: table or field name 
+   * @param string table: table name, if relevant
+   * @returns the translated field name
+   */
+  mapToServer(field, table = null) {
+    // table names
+    return field == 'accounts' ? 'users'
+
+    // field names
+    : field == 'actorId' ? (table == 'txs' ? 'actorUid' : 'uid')
+    : field == 'creditLine' ? 'floor'
+    : field
+  },
 
   async whatPage() { 
     const el = await w.page.$('.page')
@@ -24,58 +43,71 @@ const t = {
     }
   },
 
-  /**
-   * Get all stored values (the storage state)
-   * @returns {*} st: an object containing all the app's stored values
-   */
-  async getStore(key = c.storeKey) {
-    const localStorage = await w.page.evaluate(() =>  Object.assign({}, window.localStorage))
-    return JSON.parse(localStorage[key])
-  },
-
+  /* UNUSED, but keep this arround (we may need it)
   async putStore(st, key = c.storeKey) {
     if (u.empty(st)) st = {}
+    w.store = st
     st = JSON.stringify(st)
     await w.page.evaluate((k, v) => { localStorage.setItem(k, v) }, key, st)
-    await w.page.waitForTimeout(c.networkTimeoutMs +1) // give the network timeout function time to reload the store
+    await t.waitACycle() // give the network timeout function time to reload the store
   },
+  */
 
-  async getv(k) {
-    const st = await t.getStore()
-    return st ? st[k] : null
-  },
+  async getv(k) { await t.waitForApp(); return w.store[k] },
 
   async putv(k, v) {
-    let st = await t.getStore()
-    if (u.empty(st)) st = { ...cache }
-    st['fromTester'][k] = st[k] = v
-    if (k == 'online') st['fromTester']['useWifi'] = st['useWifi'] = v // these values go together for faking online/offline
-    await t.putStore(st)
-    w.tellApp = true
+    await t.waitForApp()
+    if (u.empty(w.store)) w.store = { ...cache }
+    w.tellApp.push({ k:k, v:v }); w.store[k] = v
+    if (k == 'online') { w.tellApp.push({ k:'useWifi', v:v}); w.store.useWifi = v } // these values go together for faking online/offline
+    await t.waitACycle() // give app time to ask
   },
 
   /**
-   * This function is exposed to the app by the "page.exposeFunction" function in BeforeAll() (see in hooks.js).
-   * @returns true if there is data waiting for the app to store (see t.putv() and store.fromTester())
+   * This function is exposed to the app by the "page.exposeFunction" function in Before() in hooks.js).
+   * It is used for communication (one way at a time) between this testing framework and the app using u.tellTester()
+   * @param string op: the operation to be performed by the tester (notified/requested by the app)
+   * @param string k: key to store in w or localStore
+   * @param {*} v: value operation details
+   * @returns an array of key/value pairs waiting for the app to store (see t.putv() and st.fromTester())
    */
-  async tellApp() {
-    const res = w.tellApp
-    w.tellApp = false
-    return res
+  async appPipe(op = null, k = null, v = null) {
+    if (op == 'store') {
+      w.store[k] = v
+    } else if (op == 'post' || op == 'get') {
+      w[op][k] = v
+    } else if (op == 'done') { // app has finished handling our instructions, so stop waitForApp()
+      w.tellApp = []
+    } else if (op == 'tellme') {
+      if (u.empty(w.tellApp)) return null
+      const res = u.clone(w.tellApp)
+      w.tellApp = null // prevent most steps until this step is done
+      return res
+    } else assert.fail('invalid appPipe op: ' + op)
   },
-  
+
+  async waitForApp() { while(w.tellApp === null) await t.waitACycle() }, // wait for app to handle instructions before going on to next step
+
   /**
    * For an array of n arrays, the first element being the keys (from a Gherkin multi-value field), return an array of n-1 objects.
+   * @param {*} rows: a list of field names and one or more data records
+   * @param bool one: if true, return just the first/only record
+   * @param bool serverTable: if specified, the rows represent data expected from (or sent to) the server
    */
-  these: ({ rawTable:rows }, one ) => {
-//    console.log('rows:', rows)
+  these({ rawTable:rows }, one = false, serverTable = null ) {
+    if (rows.length === 1) return [ t.adjust(rows[0][0]) ]
     if (one) assert.equal(rows.length, 2)
     let ray = [] // the resulting array of objects
+    let obo  // original object before adjustments (current row)
+    let k // current field name
     
-    for (let rowi = 1; rowi < rows.length; rowi++) {
-      ray[rowi - 1] = {}
+    for (let rowi = 0; rowi < rows.length - 1; rowi++) {
+      ray[rowi] = {}; obo = {} // don't combine these
       for (let coli in rows[0]) {
-        ray[rowi - 1][rows[0][coli]] = t.adjust(rows[rowi][coli], rows[0][coli])
+        k = rows[0][coli]
+        obo[k] = rows[rowi + 1][coli] // remember original value of this cell
+        if (k == 'proof') w.proofRow = { ...ray[rowi], amount:obo.amount.replace('-', ''), cardCode:t.adjust(obo.otherId, 'cardCode') } // save this for calculating the wanted proof value in adjust
+        ray[rowi][k] = t.adjust(obo[k], serverTable ? t.mapToServer(k, serverTable) : k)
       }
     }
     return u.clone(one ? ray[0] : ray)
@@ -86,25 +118,37 @@ const t = {
    * @param string v: value to adjust
    * @param string k: field name (to inform the adjustment)
    */
-  adjust: (v, k) => {
-//    console.log('adjust', v, k)
-    const v0 = typeof v === 'string' ? v.substring(0, 1) : ''
-    if (v == null) return null
-    if (v == 'now') return u.now()
+  adjust(v, k) {
+    const v0 = typeof v === 'string' ? v.charAt(0) : ''
+
+    if (v === null) return null
     if (v == 'null') return null
     if (v == 'true') return true
     if (v == 'false') return false
+    if (v == 'now') return w.now
+    if (v == 'version') return c.version
     if (v0 == '!') return '!' + t.adjust(v.substring(1), k)
     if (v0 == '[' || v0 == '{') return u.parseObjString(v)
     if (v == 'other') return 'garbage' // this even works for k='qr'
 
-    const me = w.accounts[v]
+    if (k == 'proof' && v == 'hash') {
+      const proof = 'actorId/amount/otherId/cardCode/created'.split('/')
+      let res = ''
+      for (let fld of proof) res += w.proofRow[fld] // the individual fields in proof are tested separately
+      return u.hash(res)
+    }
+
+    const me = u.clone(w.accounts[v])
     if (me != null) return  (k == 'account') ? me
-                            : (k == 'myAccount' ? u.just('name isCo accountId deviceId selling', me)
-                            : (k == 'actorId' ? me.accountId
-                            : (k == 'otherId' ? me.accountId + me.cardCode
-                            : (k == 'qr' ? c.testQrStart + me.accountId.substring(0, 1) + me.accountId.substring(4) + me.cardCode
-                            : v ))))
+                          : u.in(k, 'actorUid uid1 uid2 agt1 agt2') ? w.uid(v)
+                          : k == 'myAccount' ? u.just('name isCo accountId deviceId selling', me)
+                          : k == ('id' && v.includes('/')) ? v.split('/')[1] // without agent
+                          : k == 'actorId' ? me.accountId
+                          : k == 'otherId' ? me.accountId
+                          : k == 'cardCode' ? me.cardCode
+                          : k == 'deviceId' ? me.deviceId
+                          : k == 'qr' ? c.testQrStart + me.accountId.charAt(0) + me.accountId.substring(4) + me.cardCode
+                          : v 
     return v
   },
 
@@ -114,57 +158,57 @@ const t = {
    * @param {*} got 
    * @param {*} want: what is wanted (recurses if want is an object)
    * @param string field: name of field being tested (to inform substitutions)
-   * @param string mode: exact (default), false (exact not), part, shallow, or <n (meaning got and want are less than n apart) 
+   * @param string mode: exact (default), false (exact not), part, or <n (meaning got and want are less than n apart) 
    */
-  test: (got, want, field = null, mode = null) => {
-    const msg = `got: ~${JSON.stringify(got)}~ wanted: ~${JSON.stringify(want)}~`
-    if (typeof want === 'object' && !u.empty(want)) {
+  test(got, want, field = null, mode = null) {
+    if (typeof want === 'string' && '{['.includes(want.charAt(0)) && want !== '') want = u.parseObjString(want)
+    const msg = `got: \`${JSON.stringify(got)}\` wanted: \`${JSON.stringify(want)}\` mode: \`${mode}\``
+
+    if (typeof want === 'object') {
       assert.equal(typeof got, 'object', msg) // do this before empty test
-      assert.isTrue(!u.empty(got), 'should not be empty - ' + msg) // don't use assert.isNotEmpty here
-      if (Array.isArray(want)) { // array
+      if (u.empty(want)) {
+        assert.deepStrictEqual(got, want, msg)
+      } else if (Array.isArray(want)) { // array
         assert.isTrue(Array.isArray(got), msg)
         assert.equal(got.length, want.length, msg)
         for (let i in want) t.test(got[i], want[i], i, mode)
       } else { // object
         if (field == 'myAccount') want = { ...want, deviceId:'?', qr:'?' }
-//        if (field == 'myAccount') console.log('myAccount got', got, 'want', want)
-        let modei
-        for (let i of Object.keys(want)) {
-          modei = u.empty(mode) ? (t.isTimeField(i) ? '<' + w.timeSlop : null) : mode
-          t.test(got[i], want[i], i, modei)
-        }
+        for (let i of Object.keys(want)) t.test(got[i], want[i], i, u.empty(mode) ? null : mode)
       }
       return
     }
 
     if (want == '?') return // anything is acceptable
-    if (typeof want === 'string' && want.substring(0, 1) == '!') return test(got, want.substring(1), field, false)
+    if (typeof want === 'string' && want.charAt(0) == '!') return test(got, want.substring(1), field, false)
 
-    if (mode == 'shallow') mode = 'exact'; else want = t.adjust(want, field)
+    want = t.adjust(want, field)
     const [jGot, jWant] = [JSON.stringify(got), JSON.stringify(want)]
 
     if (mode === false) {
       assert.notEqual(jGot, jWant, msg + ' - NOT')
-    } else if (mode == 'exact' || mode == null) {
-//      console.log('got', got, 'want', want)
-      assert.isTrue(got == want || JSON.stringify(got) == JSON.stringify(want), msg) // has to work for [] and {} (don't use assert.equal)
+    } else if (mode == 'exact' || mode === null) {
+      if (!isNaN(got)) got = +got
+      if (!isNaN(want)) want = +want
+      assert.equal(got, want, msg)
     } else if (mode == 'part') {
       assert.include(got, want, msg)
-    } else if (mode.substring(0, 1) == '<') {
+    } else if (mode.charAt(0) == '<') {
       assert.isBelow(Math.abs(got - want), +mode.substring(1), msg)
     } else assert.fail('bad mode:' + mode)
   },
 
-  async element(testId) { return await w.page.$(t.sel(testId)) },
+  async element(testId) { await t.waitForApp(); return await w.page.$(t.sel(testId)) },
   sel(testId) { return `[data-testid="${testId}"]` },
-  isTimeField(k) { return 'created'.split(' ').includes(k) },
+  isTimeField(k) { return u.in(k, 'created') },
+  async waitACycle(n = 1) { return w.page.waitForTimeout(n * c.networkTimeoutMs + 1) },
   
   // MAKE / DO
 
   async visit(target, wait = 'networkidle0') { 
+    await t.waitForApp()
     const options = wait ? { waitUntil:wait } : {} // load, domcontentloaded, networkidle0, or networkidle2
     await w.page.goto(baseUrl + target, options)
-    await t.pic('visited')
   },
 
   /**
@@ -174,24 +218,103 @@ const t = {
    *               for an array, first row is a list of field names, subsequent rows are the field values
    * @param bool one: true to store just the first record rather than an array of records
    */
-  setThis: async (k, v, one = false) => {
-    if (typeof v === 'object') v = t.these(v, one)
-    await t.putv(k, t.adjust(v, k))
-//    console.log('after setThis k:', k, v, one)
+  async setThis(k, v, one = false) {
+    await t.putv(k, t.adjust(typeof v === 'string' ? v : t.these(v, one), k))
   },
 
-  setUA: async (browser, sys) => {
+  /**
+   * Set record values on the server
+   * @param string table: app's name for the server table to update
+   * @param {*} rows: a list of tables/record IDs/field values to set on the server
+   */
+  async setServer(table, rows) {
+    const serverTable = t.mapToServer(table)
+    const ray = t.these(rows, false, serverTable)
+    if ('floor' in ray[0]) for (let i in ray) ray[i].floor = -ray[i].floor // translation from "creditLine" changes sign
+    await t.postToTestEndpoint('update', { table:serverTable, keyedValues:[...ray] })
+  },
+
+  async setUA(browser, sys) {
     let agent = ''
     if (sys == 'Apple' && browser == 'Safari') agent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) FxiOS/36.0  Mobile/15E148 Safari/605.1.15'
     if (sys == 'Android' && browser == 'Chrome') agent = 'Mozilla/5.0 (Linux; Android 11; SM-T227U Build/RP1A.200720.012; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/87.0.4280.141 Safari/537.36'
     await w.page.setUserAgent(agent)
   },
 
-  input: async (id, text) => { 
-    await w.page.type(t.sel('input-' + id), text)
-    const newValue = await w.page.$eval(t.sel('input-' + id), el => el.value)
+  async input(id, text) {
+    await t.waitForApp()
+    const sel = t.sel('input-' + id) 
+    await w.page.click(sel, { clickCount: 3 }) // select field so that typing replaces it
+    await w.page.type(sel, isNaN(text) ? text : JSON.stringify(text))
+    await t.waitACycle(2) // needed sometimes between inputs
+    const newValue = await w.page.$eval(sel, el => el.value)
     t.test(newValue, text)
   },
+
+  async scan(who, why) {
+    await t.putv('qr', t.adjust(who, 'qr'))
+    await t.putv('intent', why)
+    const trail = await t.getv('trail')
+
+    trail.push('scan') // we can't actually u.go anywhere from the scan page in testing, so these 5 lines fake it
+    await t.putv('trail', trail)
+    await t.putv('hdrLeft', 'back')
+    await t.waitACycle()
+
+    await t.visit(why == 'scanIn' ? 'home' : 'tx')
+  },
+
+  async tx(who, amount, description) {
+    await t.visit('home') // sometimes needed
+    await t.scan(who)
+    await t.waitACycle()
+    await t.input('amount', amount)
+    await t.input('description', description)
+    await w.page.click(t.sel('btn-submit'))
+  },
+
+/**
+ * Post to the "test" endpoint.
+ * @param string op: the specific operation
+ * @param {*} args: parameters to that operation
+ * @returns a JSON object just like other POST endpoints
+ */
+async postToTestEndpoint(op, args = null) {
+  const options = {
+    method: 'POST',
+    body: queryString.stringify({ version:c.version, op:op, ...args }),
+    headers: { 'Content-type':'application/x-www-form-urlencoded' },
+  }
+  try { // initialize API for tests (must happen before initializing store)
+    return await t.mockFetch(c.apis.test + 'test', options)
+  } catch (er) { console.log(`error posting to test endpoint "${c.apis.test}test" with options ${options}`, er) }  
+},
+
+/**
+ * Mock fetches or use the "test" endpoint (see postToTestEndpoint). Interface matches JS fetch interface.
+ * NOTE: Making API calls when this function was called as a mock fetch did not work (no connection to internet?)
+ * @param string url 
+ * @param {*} options 
+ * @returns the result
+ */
+async mockFetch(url, options = {}) {
+  options = { ...options, mode:'cors', postData:options.body }
+  for (let k of u.ray('signal body')) delete options[k]
+
+  await w.fetcher.setRequestInterception(true)
+  await w.fetcher.once('request', async (interceptedRequest ) => {
+    try {
+      interceptedRequest.continue(options)
+    } catch (er) { console.log('Error while intercepting request', er) }
+  })
+  let res
+  try {
+    res = await w.fetcher.goto(url)
+    if (res.ok()) res = await res.json()
+  } catch (er) { console.log(`Error while mock fetching "${url}" with options ${options}`, er)}
+  await w.fetcher.setRequestInterception(false)
+  return res
+},
 
   // TEST
 
@@ -202,14 +325,39 @@ const t = {
    *                   first row is a list of field names, subsequent rows are the field values
    * @param bool one: true to test just the first record rather than an array of records
    */
-  testThese: async (k, multi, one = false) => {
-//    console.log('in testThese k:', k, 'multi:', multi, 'one:', one, 'store(k):', await t.getv(k))
+  async testThese(k, multi, one = false) {
     t.test(await t.getv(k), t.these(multi, one))
   },
 
-  testThis: async (k, v) => {
-    if (typeof v === 'object') return t.testThese(k, v, true)
+  async testThis(k, v) {
+    if (typeof v === 'object') return t.testThese(k, v, t.ONE)
     t.test(await t.getv(k), v, k)
+  },
+
+  async testServer(table, rows) {
+    const want = t.these(rows, false, table)
+    let msg, kvs, i
+    const got = await t.postToTestEndpoint('rows', { fieldList:'*', table:table })
+    for (let rowi in want) {
+      kvs = table == 'txs' ? { amt:want[rowi].amt, for2:want[rowi].for2 } : { none:0 }
+      msg = `want server ${table} row (${rowi}) with ` + JSON.stringify(kvs)
+      i = u.findByValue(got, kvs)
+      assert.isNotNull(i, msg)
+      t.test(got[i], want[rowi])
+    }
+  },
+
+  /**
+   * Test just the most recent post or get to the given endpoint
+   * @param {*} endpoint 
+   * @param {*} rows 
+   * @param {*} method 
+   */
+  async posted(endpoint, rows, method) {
+    await t.waitACycle()
+    assert.isNotNull(w[method][endpoint], `expected a "${method}" request to endpoint "${endpoint}"`)
+    t.test({ ...w[method][endpoint] }, t.these(rows, t.ONE) )
+    delete w[method][endpoint]
   },
 
   /**
@@ -219,59 +367,71 @@ const t = {
    * @param {*} row: a single row/list of account identifiers
    * @param bool set: true if setting the value
    */
-  theseAccts: async (field, { rawTable:row }, set = false) => {
-    row = row[0]
-    let accts = await t.getv(field)
-    if (set && !accts) accts = field == 'accts' ? {} : []
-    if (!set) assert.isNotNull(accts, `missing ${field} array in store`) // accts has no length, so it might have extra accounts, which is fine
-    let me, name, agent
-    for (let i in row) {
-      me = w.accounts[row[i]]
-      if (me == null) me = row[i]
-//      console.log('stored', field, 'i',i,'rowi',row[i],'choice',accts[i])
+  async theseAccts(field, { rawTable:row }, set = false) {
+    let got, me, name, agent
+    let want = row[0]
+    let make = field == 'accts' ? {} : []
+
+    if (!set) {
+       got = await t.getv(field)
+      assert.isNotNull(got, `missing ${field} array in store`) // accts has no length, so it might have extra accounts, which is fine
+    }
+
+    for (let i in want) {
+      me = w.accounts[want[i]]
+      if (me === null) me = u.parseObjString(want[i])
       if (field == 'accts') {
-        ;([agent, name] = row[i].includes('/') ? row[i].split('/') : ['', me.name])
+        ;([agent, name] = want[i].includes('/') ? want[i].split('/') : ['', me.name])
         if (set) {
-          accts[me.accountId] = { hash:u.hash(me.cardCode), agent:agent, name:name, location:me.location, limit:200, creditLine:9999 }
-        } else t.test(u.just('agent name', accts[me.accountId]), { agent:agent, name:name }, null, 'shallow')
+          make[me.accountId] = { hash:u.hash(me.cardCode), agent:agent, name:name, location:me.location, limit:200, creditLine:9999 }
+        } else t.test(u.just('agent name', got[me.accountId]), { agent:agent, name:name }, field)
       } else { // choices
         if (set) {
-          accts.push(u.just('name accountId deviceId qr isCo selling', me))
-        } else t.test(u.just('name accountId isCo selling', accts[i]), u.just('name accountId isCo selling', me), null, 'shallow')
+          make.push(u.just('name accountId deviceId qr isCo selling', me))
+        } else t.test(u.just('name accountId isCo selling', got[i]), u.just('name accountId isCo selling', me), field)
       }
     }
-    if (set) await t.putv(field, accts)
+    if (set) await t.putv(field, make) // make is an object or array
   },
 
-  onPage: async (id) => {
+  async onPage(id) {
     const el = await w.page.$(`#${id}`)
-    if (el == null) {
+    if (el === null) {
       const here = await t.whatPage()
       assert.isNotNull(el, `page "${id}" not found. You are on page "${here}"`)
     }
   },
 
-  see: async (testId) => {
+  async see(testId) {
     const el = await t.element(testId)
     assert.isNotNull(el)
-    return el // this is required (I don't know why)
+    return el
   },
 
-  seeIs: async (testId, want, mode = 'exact') => {
-    const gotEl = await t.see(testId)
-    const got = await gotEl.evaluate(el => el.textContent)
+  async is(testId, want, mode = 'exact') {
+    const prefix = testId.split('-')[0]
+    const el = await t.see(testId)
+    if (u.in(want, 'selected checked')) { // Svelte doesn't use selected and checked so we simulate it with class
+      const has = (await (await el.getProperty('className')).jsonValue()).split(' ').includes(want)
+      return assert.isTrue(mode === false ? !has : has)
+    }
+    let got = await el.evaluate(el0 => el0.textContent)
+    if (prefix == 'input') got = await (await el.getProperty('value')).jsonValue()
     t.test(got, want, null, mode)
   },
 
-  dontSee: async (testId) => { assert.isNull(await t.element(testId), "shouldn't see" + testId) },
+  async dontSee(testId) { assert.isNull(await t.element(testId), "shouldn't see " + testId) },
 
-  signedInAs: async (who, set = false) => {
+  async countIs(list, count) {
+    const ray = await t.getv(list)
+    assert.equal(ray.length, count, `want list ${list} count=${count}`)
+  },
+
+  async signedInAs(who, set = false) {
     const me = w.accounts[who]
-//    if (set) console.log('signedinas', { ...u.just('name isCo accountId deviceId selling', me), qr:'qr' + me.name.substring(0, 1) })
-//    if (!set) console.log('?signedinas', u.just('name isCo accountId selling', await t.getv('myAccount')), u.just('name isCo accountId selling', me))
-    if (set) await t.putv('myAccount', { ...u.just('name isCo accountId deviceId selling', me), qr:'qr' + me.name.substring(0, 1) })
-    if (!set) t.test(u.just('name isCo accountId selling', await t.getv('myAccount')), u.just('name isCo accountId selling', me), 'myAccount', 'shallow')
-  }
+    if (set) await t.putv('myAccount', { ...u.just('name isCo accountId deviceId selling', me), qr:'qr' + me.name.charAt(0) })
+    if (!set) t.test(u.just('name isCo accountId selling', await t.getv('myAccount')), u.just('name isCo accountId selling', me), 'myAccount')
+  },
 
 }
 

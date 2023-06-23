@@ -1,38 +1,44 @@
 <script>
-  import queryString from 'query-string'
   import { onMount } from 'svelte'
-  import store from '#store.js'
+  import st from'#store.js'
   import u from '#utils.js'
-  import SelectAccount from '#modules/SelectAccount.svelte'
-  import Modal from '#modules/Modal.svelte'; let m0, m1, m2
+  import c from '#constants.js'
+  import SelectX from '#modules/SelectX.svelte'
+  import Radios from '#modules/Radios.svelte'
 
   // --------------------------------------------
 
-  let accountOptions = []
+  let acctOpts = []
   let size = 4 // number of choices to show without scrolling (fails on Android)
-
+  let lock = true
+  let selfServe = false // used only if c.showSelfServe and not c.showScanToPay
   let myAccount
   let ready = false
-  const accounts = $store.choices
+  let acctIndex = null
+  let payOk = c.showScanToPay ? 'scan' : 'never'
+  const choices = $st.choices
+  const payOkOptions = { always:'always', scan:'only if a manager scans in', never:'never', self:'self-serve mode' }
+  if (!c.showSelfServe) delete payOkOptions.self
   
-  // --------------------------------------------
+  function er(msg) { u.alert(msg) } 
 
-  function er(msg) { ({ m0, m1 } = u.dlg('Alert', msg, 'Close', () => m0 = false)); m0=m0; m1=m1 } 
-
-  function gotAccount(ev) {
-    myAccount = accounts && accounts[ev.detail.acct]
-    store.setMyAccount(myAccount)
-    if (ev.detail.lock) store.setAcctChoices(null)
+  function gotAccount() {
+    myAccount = choices && choices[acctIndex]
+    st.setMyAccount(myAccount)
+    if (lock) st.setAcctChoices(null)
+    st.setPayOk(myAccount.isCo ? payOk : null)
+    if (selfServe) st.setPayOk('self') // only if c.showSelfServe and not c.showScanToPay
     u.goHome(`This device is now linked to your Common Good account: ${myAccount?.name}.`)
   }
 
   onMount(async () => {
+    st.setLeft('logo')
+    st.setMyAccount(null) // clear account preferences
     ready = true
-    if (accounts?.length) {
-      for (let i = 0; i < accounts.length; i++) {
-        accountOptions[i] = {id: i, name: accounts[i].name}
-      }
-      size = Math.min(size, accounts.length + 1)
+    if (choices?.length) {
+      for (let i in choices) acctOpts[i] = choices[i].name
+      size = Math.min(size, acctOpts.length)
+      acctIndex = Math.min(size, 1) // default to first managed account, if any, else individual's own
     } else {
       er('Your account is not yet active. Sign in at CommonGood.earth to finish opening your account.')
     }
@@ -45,23 +51,40 @@
 
 <section class="page" id="link-account">
   <h1>Link Account</h1>
-  { #if ready }
-    <SelectAccount { accountOptions } { size } on:complete={ gotAccount } />
-  { :else }
+  {#if ready}
+    <div class="select-account">
+      <div class="top">
+        <p>Select a Common Good account to link to CGPay on this device.</p>
+        <form>
+          <SelectX name="account" label={'Select an account'} options={acctOpts} size={size} bind:value={acctIndex} required="required" />
+          {#if acctIndex > 0 && c.showScanToPay}
+            <p>Allow payments from this account:</p>
+            <Radios name="payOk" options={payOkOptions} bind:value={payOk} required="required" />
+          {/if}
+          {#if size > 0}
+            <label><input type="checkbox" data-testid="lock-account" name="lock-account" 
+              bind:checked={lock} class={ lock ? 'checked' : '' }/> Require sign-in to change account</label>
+          {/if}
+          {#if c.showSelfServe && !c.showScanToPay && acctIndex > 0}
+            <label><input type="checkbox" data-testid="self-serve" name="self-serve" 
+              bind:checked={selfServe} class={ selfServe ? 'checked' : '' }/> Self-serve mode</label>
+          {/if}
+        </form>
+      </div>
+      <button type="submit" data-testid="btn-link" on:click={gotAccount} disabled={ acctIndex === null }>Link Account</button>
+    </div>
+  {:else}
     <div class="loading">
       <p>Loading your accounts...</p>
     </div>
-  { /if }
+  {/if}
 </section>
-
-<Modal m0={m0} on:m1={m1} on:m2={m2} />
 
 <style lang='stylus'>
   section
     display flex
     flex-direction column
     align-items center
-    justify-content space-between
     width 100%
     height 100%
 
@@ -71,4 +94,32 @@
     align-items center
     font-style italic
     margin-bottom $s5
+
+  button
+    cgButton()
+
+  h1 
+    margin-bottom $s1
+
+  p
+    margin-bottom $s1
+
+  label
+    text(md)
+    display flex
+    align-items center
+    letter-spacing 0.005rem
+    margin-bottom 1rem
+
+  .form-lower 
+    margin-top $s2
+
+  .select-account
+    display flex
+    flex-direction column
+    justify-content space-between
+    height 100%
+
+  .top
+    padding 0 $s0
 </style>

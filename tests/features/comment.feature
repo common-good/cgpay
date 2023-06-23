@@ -14,12 +14,13 @@ Scenario: I can access a Comments & Suggestions link from the navigation
 
 Scenario: I can submit feedback and receive a confirmation message that it was received
   When I visit "comment"
+  Then ? I am on page "comment"
   And I input "wow! ❤️" as "comment"
   And I click "submit-comment"
   Then ? these "comments":
   | actorId | created | deviceId | text    |
   | Bea     | now     | devB     | wow! ❤️ |
-  And ? I see this confirmation: "Thank you"
+  And ? this confirmation: "Thank you"
 
 Scenario: I can submit feedback offline
   Given we are offline
@@ -33,4 +34,4 @@ Scenario: I can submit feedback offline
   Then ? these "comments":
   | actorId | created | deviceId | text    |
   | Bea     | now     | devB     | wow! ❤️ |
-  And ? I see this confirmation: "Thank you"
+  And ? this confirmation: "Thank you"
