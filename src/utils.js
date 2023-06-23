@@ -152,6 +152,22 @@ const u = {
     : 'dev'
   }, 
   
+  /**
+   * Get financial information from the server for the current account.
+   */
+  async getInfo() {
+    const me = u.st().me
+    try {
+      const params = {deviceId:me.deviceId, actorId:me.accountId, count:c.recentTxMax }
+      const info = await u.postRequest('info', params)
+      st.setBalance(info.balance)
+      st.setRecentTxs(info.txs)
+      st.setGotInfo(true)
+      //      balance, surtxs: {}, txs: [{xid, amount, accountId, name, description, created}, …]}
+      //  where surtxs: {amount, portion, crumbs, roundup}
+    } catch (er) { console.log('info er', er) }
+  },
+
   st() { return st.inspect() },
   tx9() { return st().txs[st().txs.length - 1] },
   now() { return (u.testing()) ? u.st().now : u.now0() }, // keep "now" constant in tests

@@ -47,7 +47,10 @@
 
         if (m.action == 'request') {
           u.yesno(m.message, () => st.txConfirm(true, m), () => st.txConfirm(false, m))
-        } else u.alert(m.message)
+        } else {
+          u.alert(m.message)
+          u.getInfo() // if we're being told about a charge or payment, refresh the list of recent txs
+        }
       }
     } catch(er) { console.log('socket error', er); return null }
 

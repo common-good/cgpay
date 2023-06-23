@@ -4,40 +4,24 @@
   import c from '#constants.js'
   import { onMount } from 'svelte'
 
-  const me = $st.me
-  let info = {}
-  let txs = $st.recentTxs
-  let balance = $st.balance
-  let pending = txs.reduce((total, tx) => tx.pending ? total + 1 : total + 0, 0)
-
-  async function getInfo() {
-    try {
-      const params = {deviceId:me.deviceId, actorId:me.accountId, count:c.recentTxMax }
-      info = await u.postRequest('info', params)
-      st.setBalance(balance = info.balance)
-      st.setRecentTxs(txs = info.txs)
-      st.setGotInfo(true)
-      //      balance, surtxs: {}, txs: [{xid, amount, accountId, name, description, created}, …]}
-      //  where surtxs: {amount, portion, crumbs, roundup}
-    } catch (er) { console.log('info er', er) }
-  }
+  let pending = $st.recentTxs.reduce((total, tx) => tx.pending ? total + 1 : total + 0, 0)
 
   onMount(async () => {
-    if (!$st.gotInfo) getInfo()
+    if (!$st.gotInfo) u.getInfo()
   })
 
 </script>
 <section id="dashboard">
-  <div class="balance">Balance: <span>${balance}</span></div>
+  <div class="balance">Balance: <span>${$st.balance}</span></div>
   <div class="txs">
-    <h2>Recent Transactions {#if !txs.length}(none){/if}</h2>
+    <h2>Recent Transactions {#if !$st.recentTxs.length}(none){/if}</h2>
     {#if pending}
       <a class="link pending" href="/pending">{pending} pending</a>
     {:else}
       <div class="pending">Zero pending</div>
     {/if}
     <ul>
-      {#key $st.recentTxs}{#each txs as tx}
+      {#key $st.recentTxs}{#each $st.recentTxs as tx}
         <li>
           <div class="row">
             <div class><span>{tx.pending ? 'Pending' : u.fmtDate(1000 * tx.created)}</div>
