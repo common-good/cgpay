@@ -20,7 +20,7 @@
     {:else}
       <div class="pending">Zero pending</div>
     {/if}
-    {#if !txs.length}
+    {#if !st.recentTxs?.length}
     <p>No transactions yet.</p>
     {:else}
     <ul>
