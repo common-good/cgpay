@@ -99,10 +99,10 @@ Scenario: these2
   | K6VMDCA | K6VMDCB |
   | K6VMDCD | K6VMDCE |
 
-Scenario: myAccount
+Scenario: me
   Given I am signed in as "Bea"
   Then ? I am signed in as "Bea"
-  And ? this "myAccount": "{ name:'Bea Two', isCo:false, accountId:'K6VMDCB', deviceId:'devB', selling:null }"
+  And ? this "me": "{ name:'Bea Two', isCo:false, accountId:'K6VMDCB', deviceId:'devB', selling:null }"
 
 Scenario: deviceId
   Given this "deviceId": "Bea"

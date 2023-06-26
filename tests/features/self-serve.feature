@@ -63,7 +63,7 @@ Scenario: A vendor (or customer) exits self-serve mode
   And I run the app
   When I click "btn-nav"
   And I click "menu-selfOff"
-  Then ? this "myAccount": "null"
+  Then ? this "me": "null"
   And ? I am on page "sign-in"
 
 Rule: Only business accounts have self-serve mode

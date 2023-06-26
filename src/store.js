@@ -30,12 +30,13 @@ export const createStore = () => {
   
   function convert(s) {
     if (u.empty(s) || c.version == s.version) return s
-    if (u.empty(s.version)) { // v4.0.0 has no stored version number
+    if (u.empty(s.version)) { // v4.0.0 (rel A) has no stored version number
       s.deviceIds = cache0.deviceIds
       if (s.choices) [s.choices, s.deviceIds] = reconcileDeviceIds(s.choices)
       if (s.myAccount) s.deviceIds[s.myAccount.accountId] = s.myAccount.deviceId
-    } else if (s.version == '4.1.0') {
+    } else if (s.version == '4.1.0') { // rel B
       s.selfServe = (s.payOk == 'self')
+      s.me = { ...s.myAccount }; delete s.myAccount
     }
   
     return s
@@ -67,6 +68,7 @@ export const createStore = () => {
 
   async function flushQ(k, endpoint) {
     if (flushing[k]) return; else flushing[k] = true
+//    console.log('flushing', k, cache[k].length)
     if (cache.corrupt == c.version) return; else if (cache.corrupt) st.setCorrupt(null) // don't retry hopeless tx indefinitely
     while (cache[k].length > 0) {
       if (!cache.useWifi) return; // allow immediate interruptions when testing
@@ -142,20 +144,10 @@ export const createStore = () => {
         setv('deviceIds', ids)
       }
     },
-    setMyAccount(acct) {
-      setv('myAccount', acct ? { ...acct } : null)
-      if (acct === null) { // LinkAccount calls this with null to clear any preferences (Tx calls to add info)
-        st.setPayOk(null)
-        st.setCoPaying(false)
-      }
-    },
-    linked() { return (cache.myAccount !== null) },
-    unlink() { setv('myAccount', null) },
-    signOut() { 
-      st.setSelf(false)
-      st.unlink()
-      st.setAcctChoices(null) 
-    },
+    setMe(acct) { setv('me', { ...acct } ) }, // null is not allowed (instead see clearSettings)
+    linked() { return (cache.me !== null) },
+    clearSettings() { for (let k in { ...cache0 }) if (cache0.reset.split(' ').includes(k)) setv(k, cache0[k]) }, // called by LinkAccount
+    signOut() { st.clearSettings(); st.setAcctChoices(null) },
     clearData() { if (!u.realData()) setst({ ...cache0 }) },
 
     setSawAdd() { setv('sawAdd', u.now()) },
@@ -167,6 +159,7 @@ export const createStore = () => {
     setBalance(n) { setv('balance', n) },
     setLocked(yesno) { setv('locked', yesno) },
     setSelf(yesno) { setv('selfServe', yesno) },
+    setSocket(socket) { setv('socket', socket) },
 
     resetNetwork() { if (cache.useWifi) st.setOnline(navigator.onLine) },
     setOnline(yesno) { // handling this in store helps with testing
@@ -213,15 +206,23 @@ export const createStore = () => {
     async flushTxs() { await flushQ('txs', 'transactions') },
     deqTx() { deQ('txs') }, // just for testing (in st.spec.js)
     undoTx() { pop('txs'); st.setPending(false) },
-    comment(text) { enQ('comments', { deviceId:cache.myAccount.deviceId, actorId:cache.myAccount.accountId, created:u.now(), text:text }) },
+    comment(text) { enQ('comments', { deviceId:cache.me.deviceId, actorId:cache.me.accountId, created:u.now(), text:text }) },
+    txConfirm(yesno, m) {
+      enQ('confirms', { deviceId:cache.me.deviceId, actorId:cache.me.accountId, yesno:yesno ? 1 : 0, id:m.note, whyNot:'' })
+      u.hide()
+      u.sleep(c.networkTimeoutMs * 2).then(u.getInfo) // usually after confirmation, there's a new transaction to show
+    },
+
     tellDev(text) { st.comment(`[dev] ${new Date().toLocaleTimeString('en-us')} page=${u.pageUri()}: ${text}`) },
     async flushComments() { await flushQ('comments', 'comments') },
+    async flushConfirms() { await flushQ('confirms', 'confirms') },
     async flushAll() {
       if (cache.pending) return
       if (u.testing() && !cache.flushOk) return
-      if (u.empty(cache.txs) && u.empty(cache.comments)) return
-      await st.flushTxs()
+      if (u.empty(cache.txs) && u.empty(cache.comments) && u.empty(cache.confirms)) return
+        await st.flushTxs()
       await st.flushComments()
+      await st.flushConfirms()
       if (u.testing()) setv('flushOk', false)
     },
   }

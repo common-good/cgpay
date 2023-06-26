@@ -32,6 +32,10 @@ const constants = {
     demo: 'https://demo.commongood.earth/api/',
     real: 'https://new.commongood.earth/api/',
   },
+  sockets: {
+    test: 'ws://demo.commongood.earth:8081',
+    real: 'ws://new.commongood.earth:8081',
+  }
 }
 
 export default constants

@@ -44,17 +44,17 @@
  *      since: Unix timestamp of when the account was activated
  *      lastTx: Unixtime (in ms) of the last transaction with this account created on this device
  * 
- *    myAccount: information about the account associated with the device
+ *    me: information about the account associated with the device
  *      accountId, name, qr, isCo, and selling as in the choices array described above
  */
 
 const cache = {
-  persist: 'version deviceId sawAdd cameraCount frontCamera useWifi locked selfServe payOk allowType allowShow showDash balance choices recentTxs txs comments deviceIds corrupt accts myAccount',
+  persist: 'version sawAdd cameraCount frontCamera locked selfServe payOk allowType allowShow showDash balance choices recentTxs txs comments confirms deviceIds corrupt accts me',
+  reset: 'balance showSettings locked selfServe payOk allowType allowShow showDash balance recentTxs me token timeout qr msg erMsg coPaying hdrLeft pending modal gotInfo',
 
   version: null, // latest app version that touched this data (an integer with two digits representing each segment of x.y.z)
   corrupt: null, // timestamp that cached data got corrupted
   sawAdd: null, // time user pressed Continue on the Add-to-home-screen page
-  useWifi: true, // true to use wifi whenever possible (false if developer or test framework has disabled wifi)
   balance: 'unknown', // last known balance
   cameraCount: 0, // number of cameras in the device - set this when scanning for the first time
 
@@ -73,13 +73,15 @@ const cache = {
   recentTxs: [], // list of current account's most recent transactions
   txs: [], // transactions waiting to be uploaded
   comments: [], // comments waiting to be uploaded
+  confirms: [], // transaction confirmations/denials waiting to be uploaded
 
   deviceIds: {}, // list of deviceIds keyed by accountId
   accts: {}, // keyed list of accounts that user has transacted with (or tried to)
-  myAccount: null, // information about user's account, signed in
+  me: null, // information about user's account, signed in
 
   // transient data (not stored in local storage)
   token: null, // session token (a stand-in for the deviceId in GET requests)
+  socket: null, // webSocket connection
   timeout: null, // milliseconds before inactivity timeout (for return to Home Page)
   qr: null, // (blob) a scanned QR url
   msg: null, // an informational message to display on the Home Page (not yet used)
@@ -95,6 +97,7 @@ const cache = {
   gotInfo: false, // true if we got transaction info from the server (set false to get it again)
 
   // for testing
+  useWifi: true, // true to use wifi whenever possible (false if developer or test framework has disabled wifi)
   posts: 0, // operation counters for calls to u.postRequest, enQ, and deQ
   enQ: 0,
   deQ: 0,

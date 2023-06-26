@@ -11,7 +11,7 @@
   export let params // else Svelte complains (I don't know why yet)
 
   const surveyLink = 'https://forms.gle/HKb5V4DueYt1W13v6'
-  const me = $st.myAccount
+  const me = $st.me
   const hasTxOptions = ($st.allowShow || $st.allowType)
   const payBtnText = hasTxOptions ? 'Pay' : 'Scan to Pay'
   const chgBtnText = $st.selfServe ? 'Pay' : (hasTxOptions ? 'Charge' : 'Scan to Charge')
@@ -42,7 +42,7 @@
   function scanIn() {
     try {
       const card = u.qrParse($st.qr) // does not return if format is bad
-      const mainId = u.getMainId($st.myAccount.accountId)
+      const mainId = u.getMainId($st.me.accountId)
       if (card.main != mainId) throw new Error('That is not a QR for this company.')
       st.setCoPaying(true)
     } catch (er) { showEr(u.qrEr(er)) }
@@ -83,7 +83,7 @@
     // } else toggleQr(!me.isCo)
 
     // const intent = $st.intent
-    // qr = intent === 'pay' ? $st.myAccount?.qr : null
+    // qr = intent === 'pay' ? $st.me?.qr : null
     // const qrAction = `Show this code to ${intent === 'pay' ? intent : 'be paid'}`
   })
 </script>

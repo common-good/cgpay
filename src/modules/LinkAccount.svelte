@@ -10,7 +10,7 @@
   let size = 4 // number of choices to show without scrolling (fails on Android)
   let lock = true
   let selfServe = false
-  let myAccount
+  let me
   let ready = false
   let acctIndex = null
   const choices = $st.choices
@@ -19,19 +19,18 @@
   function signOut() { st.signOut(); u.go('') }
 
   function gotAccount() {
-    myAccount = choices && choices[acctIndex]
-    st.setMyAccount(myAccount)
-    st.setShowDash(!myAccount.isCo)
+    me = choices && choices[acctIndex]
+    st.setMe(me)
+    st.setShowDash(!me.isCo)
     if (lock) st.setAcctChoices(null)
-    st.setPayOk(myAccount.isCo ? 'never' : true)
+    st.setPayOk(me.isCo ? 'never' : true)
     if (selfServe) st.setSelf(true)
-    st.setAllowShow(!myAccount.isCo)
-    u.goHome(`This device is now linked to your Common Good account: ${myAccount?.name}.`)
+    st.setAllowShow(!me.isCo)
+    u.goHome(`This device is now linked to your Common Good account: ${me?.name}.`)
   }
 
   onMount(async () => {
-    st.setLeft('logo')
-    st.setMyAccount(null) // clear account preferences
+    st.clearSettings() // clear account and preferences
     ready = true
     if (choices?.length) {
       for (let i in choices) acctOpts[i] = choices[i].name
