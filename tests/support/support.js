@@ -58,7 +58,6 @@ const t = {
 
   async putv(k, v) {
     await t.waitForApp()
-    if (u.empty(w.store)) w.store = { ...cache }
     w.tellApp.push({ k:k, v:v }); w.store[k] = v
     if (k == 'online') { w.tellApp.push({ k:'useWifi', v:v}); w.store.useWifi = v } // these values go together for faking online/offline
     await t.waitACycle() // give app time to ask
@@ -213,6 +212,7 @@ const t = {
    */
   async oldData(release) {
     w.store = release == 'A' ? u.clone(cacheA) : 'error'
+    w.store.now = w.now
     w.tellApp = [{ k:'clear', v:{ ...w.store } }] // replace what the Before hook set, with older data (see hooks.js)
     await t.waitACycle(2) // give app time to ask
   },

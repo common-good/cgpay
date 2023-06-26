@@ -18,7 +18,7 @@ export const createStore = () => {
  
   function reconcileDeviceIds(chx) {
     let s = getst()
-    let ids = s.deviceIds
+    let ids = u.empty(s.deviceIds) ? cache0.deviceIds : s.deviceIds
     let i, ch, old
     for (i in chx) {
       ch = chx[i]
@@ -46,8 +46,9 @@ export const createStore = () => {
 
   function save(s) {
     cache = { ...s }
-    localStorage.setItem(c.storeKey, JSON.stringify(u.just(cache0.persist, s)))
-    sessionStorage.setItem(c.storeKey, JSON.stringify(u.justNot(cache0.persist, s)))
+    const persist = !u.empty(s.persist) ? s.persist : Object.keys(s).join(' ') // allow saving of previous release data when testing
+    localStorage.setItem(c.storeKey, JSON.stringify(u.just(persist, s)))
+    sessionStorage.setItem(c.storeKey, JSON.stringify(u.justNot(persist, s)))
     return s
   }
 
