@@ -14,6 +14,7 @@ Given('these choices:', async function (rows) { await t.theseAccts('choices', ro
 Given('these server {string} values:', async function (table, rows) { await t.setServer(table, rows) })
 Given('we are offline', async function () { await t.putv('online', false) }) // w.page.setOfflineMode(true) prevents all w.page.goto!
 Given('we are online', async function () { await t.putv('online', true) })
+Given('data from release {string}', async function (v) { await t.oldData(v) })
 
 When('I run the app', async function () { await t.visit('') })
 When('I visit {string}', async function (site) { await t.visit(site) })

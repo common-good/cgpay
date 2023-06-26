@@ -2,6 +2,7 @@ import { assert, expect } from 'chai'
 import c from '../../constants.js'
 import u from '../../utils0.js'
 import cache from '../../src/cache.js'
+import cacheA from './oldData/cacheA.js'
 import w from './world.js'
 import queryString from 'query-string'
 
@@ -204,6 +205,17 @@ const t = {
   async waitACycle(n = 1) { return w.page.waitForTimeout(n * c.networkTimeoutMs + 1) },
   
   // MAKE / DO
+
+  /**
+   * Set typical data from a previous release
+   * @param string release: semantic version number of old data
+   * NOTE: If used, this should always be the first step in a scenario (including any background)
+   */
+  async oldData(release) {
+    w.store = release == 'A' ? u.clone(cacheA) : 'error'
+    w.tellApp = [{ k:'clear', v:{ ...w.store } }] // replace what the Before hook set, with older data (see hooks.js)
+    await t.waitACycle(2) // give app time to ask
+  },
 
   async visit(target, wait = 'networkidle0') { 
     await t.waitForApp()

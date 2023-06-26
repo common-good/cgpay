@@ -102,7 +102,7 @@ export const createStore = () => {
           while (todo.length) { // for each item
             ({ k, v } = todo.shift())
             if (k == 'clear') {
-              st.clearData()
+              st.clearData(v)
             } else setv(k, v, true)
           }
           u.tellTester('done').then(() => doing = false)
@@ -149,7 +149,7 @@ export const createStore = () => {
     linked() { return (cache.myAccount !== null) },
     unlink() { setv('myAccount', null) },
     signOut() { st.unlink(); st.setAcctChoices(null) },
-    clearData() { if (!u.realData()) setst({ ...cache0 }) },
+    clearData(data = cache0) { if (!u.realData()) setst({ ...data }) },
 
     setSawAdd() { setv('sawAdd', u.now()) },
     setCameraCount(n) { setv('cameraCount', n) },
