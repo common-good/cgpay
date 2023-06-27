@@ -29,7 +29,9 @@ const t = {
     return field == 'accounts' ? 'users'
 
     // field names
-    : field == 'actorId' ? (table == 'txs' ? 'actorUid' : 'uid')
+    : (table == 'users' && 'id actorId'.split(' ').includes(field)) ? 'uid' // maybe use just id?
+    : (table == 'users' && field == 'actorId') ? 'uid'
+    : (table == 'txs' && field == 'actorId') ? 'actorUid'
     : field == 'creditLine' ? 'floor'
     : field
   },
@@ -106,6 +108,7 @@ const t = {
       ray[rowi] = {}; obo = {} // don't combine these
       for (let coli in rows[0]) {
         k = rows[0][coli]
+        if (serverTable) k = t.mapToServer(k, serverTable)
         obo[k] = rows[rowi + 1][coli] // remember original value of this cell
         if (k == 'proof') w.proofRow = { ...ray[rowi], amount:obo.amount.replace('-', ''), cardCode:t.adjust(obo.otherId, 'cardCode') } // save this for calculating the wanted proof value in adjust
         ray[rowi][k] = t.adjust(obo[k], serverTable ? t.mapToServer(k, serverTable) : k)
@@ -141,7 +144,7 @@ const t = {
 
     const me = u.clone(w.accounts[v])
     if (me != null) return  (k == 'account') ? me
-                          : u.in(k, 'actorUid uid1 uid2 agt1 agt2') ? w.uid(v)
+                          : u.in(k, 'actorUid uid uid1 uid2 agt1 agt2') ? w.uid(v)
                           : k == 'myAccount' ? u.just('name isCo accountId deviceId selling', me)
                           : k == ('id' && v.includes('/')) ? v.split('/')[1] // without agent
                           : k == 'actorId' ? me.accountId
@@ -226,6 +229,17 @@ const t = {
     await w.page.goto(baseUrl + target, options)
   },
 
+  async go(target, from = 'home') { // simulate u.go() when no click is available (just from the scan page for now)
+    let trail = []
+    if (target != 'home') {
+      trail = await t.getv('trail')
+      trail.push(from) // we can't actually u.go anywhere from the scan page in testing, so these 5 lines fake it
+    }
+    await t.putv('trail', trail)
+    await t.putv('hdrLeft', target == 'home' ? 'logo' : 'back')
+    await t.visit(target)
+  },
+
   /**
    * Initialize an array or object
    * @param string k: key to value in store to store 
@@ -246,7 +260,7 @@ const t = {
     const serverTable = t.mapToServer(table)
     const ray = t.these(rows, false, serverTable)
     if ('floor' in ray[0]) for (let i in ray) ray[i].floor = -ray[i].floor // translation from "creditLine" changes sign
-    await t.postToTestEndpoint('update', { table:serverTable, keyedValues:[...ray] })
+    await t.postToTestEndpoint('update', { table:serverTable, keyedValues:JSON.stringify(ray) })
   },
 
   async setUA(browser, sys) {
@@ -267,17 +281,22 @@ const t = {
     t.test(newValue, text)
   },
 
-  async scan(who, why) {
-    await t.putv('qr', t.adjust(who, 'qr'))
+  async scan(who, why = 'charge') {
+    const qr = t.adjust(who, 'qr');
     await t.putv('intent', why)
-    const trail = await t.getv('trail')
-
-    trail.push('scan') // we can't actually u.go anywhere from the scan page in testing, so these 5 lines fake it
-    await t.putv('trail', trail)
-    await t.putv('hdrLeft', 'back')
+    if (why == 'scanIn') {
+      await t.putv('qr', qr) // must be after visit to Home page (because it resets qr)
+      await t.go('scan')
+      await t.go('home')
+    } else { // why is charge or pay
+      await t.visit('')
+      await t.onPage('home') // make sure we're starting in the right place
+      await t.putv('qr', qr) // must be after visit to Home page (because it resets qr)
+      await t.click('btn-' + why)
+      await t.onPage('scan') // make sure the button worked
+      await t.go('tx', 'scan')
+    }
     await t.waitACycle()
-
-    await t.visit(why == 'scanIn' ? 'home' : 'tx')
   },
 
   async tx(who, amount, description) {
@@ -411,6 +430,7 @@ async mockFetch(url, options = {}) {
   },
 
   async onPage(id) {
+    await t.waitForApp()
     const el = await w.page.$(`#${id}`)
     if (el === null) {
       const here = await t.whatPage()
