@@ -95,9 +95,9 @@ export const createStore = () => {
     },
 
     async fromTester() { // called only in test mode (see Route.svelte, hooks.js, and t.tellApp)
-      if (u.testing() && !doing) {
+      if (u.testing() && !doing) { // if doing, another thread is already handling it
         doing = true
-        u.tellTester('tellme').then(todo => { // if we have a todo list, another thread is already handling it
+        u.tellTester('tellme').then(todo => {
           if (!todo) return doing = false
           let k, v
           while (todo.length) { // for each item

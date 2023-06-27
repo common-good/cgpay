@@ -66,6 +66,7 @@ const t = {
   /**
    * This function is exposed to the app by the "page.exposeFunction" function in Before() in hooks.js).
    * It is used for communication (one way at a time) between this testing framework and the app using u.tellTester()
+   * w.tellApp is set to null while the app is working on something at the test framework's (our) request
    * @param string op: the operation to be performed by the tester (notified/requested by the app)
    * @param string k: key to store in w or localStore
    * @param {*} v: value operation details
