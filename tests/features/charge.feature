@@ -157,13 +157,13 @@ Scenario: A buyer has no balance and no credit
   Then ? this alert: "This account has no remaining funds"
   And ? I am on page "home"
 
-Scenario: A buyer a balance, but not enough
+Scenario: A buyer has a balance, but not enough
   Given these server "accounts" values:
   | id  | balance | creditLine |
   | Dee | 23      | 4          |
   And I am signed in as "Abe/Cit"
   When I charge "Dee" 30.00 for "food!"
-  Then ? this alert: "This transaction is limited to $"
+  Then ? this alert: "This transaction is limited to $27"
   And ? I am on page "tx"
   And ? count "txs" is 0
 
@@ -172,7 +172,7 @@ Scenario: A buyer has plenty, but tries to pay more than the app allows
   | id  | balance | creditLine |
   | Dee | 9999    | 9999       |
   And I am signed in as "Abe/Cit"
-  When I charge "Dee" 30.00 for "food!"
-  Then ? this alert: "CGPay transactions are limited to $"
+  When I charge "Dee" 20000.00 for "food!"
+  Then ? this alert: "CGPay transactions are limited to $10,000"
   And ? I am on page "tx"
   And ? count "txs" is 0
