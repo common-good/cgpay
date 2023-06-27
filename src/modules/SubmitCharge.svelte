@@ -18,8 +18,8 @@
     const old = tx.amount
     tx.amount = +tx.amount.toFixed(2) // round to 2 decimals
     if (tx.amount != old) return u.alert('The amount has been rounded to two decimal places. Make sure this is what you intended and try again.')
-    if (tx.amount > c.onlineLimit) return u.alert(`CGPay transactions are limited to ${u.withCommas(c.onlineLimit)}`)
-    if (tx.amount > otherAccount.limit) return u.alert(`This transaction is limited to ${u.withCommas(otherAccount.limit)}.`)
+    if (tx.amount > c.onlineLimit) return u.alert(`CGPay transactions are limited to $${u.withCommas(c.onlineLimit)}`)
+    if (tx.amount > otherAccount.limit) return u.alert(`This transaction is limited to $${u.withCommas(otherAccount.limit)}.`)
     if (tx.amount <= 0 ) return u.alert('The amount must be greater than zero.')
     return true
   }
