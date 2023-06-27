@@ -205,6 +205,8 @@ const t = {
   
   // MAKE / DO
 
+  async click(testId, options = {}) { await t.waitForApp(); await w.page.click(t.sel(testId), options) },
+
   /**
    * Set typical data from a previous release
    * @param string release: semantic version number of old data
@@ -255,8 +257,9 @@ const t = {
 
   async input(id, text) {
     await t.waitForApp()
-    const sel = t.sel('input-' + id) 
-    await w.page.click(sel, { clickCount: 3 }) // select field so that typing replaces it
+    const testId = 'input-' + id
+    const sel = t.sel(testId) 
+    await t.click(testId, { clickCount: 3 }) // select field so that typing replaces it
     await w.page.type(sel, isNaN(text) ? text : JSON.stringify(text))
     await t.waitACycle(2) // needed sometimes between inputs
     const newValue = await w.page.$eval(sel, el => el.value)
@@ -282,7 +285,7 @@ const t = {
     await t.waitACycle()
     await t.input('amount', amount)
     await t.input('description', description)
-    await w.page.click(t.sel('btn-submit'))
+    await t.click('btn-submit')
   },
 
 /**

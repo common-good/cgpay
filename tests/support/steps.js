@@ -18,7 +18,7 @@ Given('data from release {string}', async function (v) { await t.oldData(v) })
 
 When('I run the app', async function () { await t.visit('') })
 When('I visit {string}', async function (site) { await t.visit(site) })
-When('I click {string}', async function(testId) { await w.page.click(t.sel(testId)) })
+When('I click {string}', async function(testId) { await t.click(testId) })
 When('I scan {string} to {string}', async function (who, why) { await t.scan(who, why) })
 When('I input {string} as {string}', async function (text, inputId) { await t.input(inputId, text) })
 When('I charge {string} {float} for {string}', async function (who, amount, description) { await t.tx(who, amount, description) })
@@ -43,7 +43,7 @@ Then('? this error: {string}', async function (msg) { await t.is('messageText', 
 Then('? this confirmation: {string}', async function (msg) { await t.is('messageText', msg, 'part') })
 Then('? this alert: {string}', async function (msg) { await t.is('messageText', msg, 'part') })
 Then('? we post this to {string}:', async function (endpoint, rows) { await t.posted(endpoint, rows, 'post') })
-Then('? we request this from {string}:', async function (endpoint, rows) { await t.posted(endpoint, rows, 'get') })
+// (not currently used) Then('? we request this from {string}:', async function (endpoint, rows) { await t.posted(endpoint, rows, 'get') })
 
 //========== Debugging Steps =============
 
