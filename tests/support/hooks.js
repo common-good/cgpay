@@ -15,7 +15,7 @@ Before(async () => { // before each scenario
   w.reset() // reinitialize test variables
   const ci = process.env.CIRCLECI // headless and fast when doing continuous integration
   const launchOptions = {
-    headless: ci ? true : w.headlessMode,
+    headless: ci ? 'old' : w.headlessMode, // new, old, or false
     slowMo: ci ? 0 : w.slowMo,
     args: ['--remote-debugging-port=9222'], // allows use of chrome's remote debugging (see https://www.browserless.io/blog/2019/02/26/puppeteer-debugging)
   //    ignoreDefaultArgs: ['--disable-extensions'],
