@@ -15,7 +15,7 @@ Before(async () => { // before each scenario
   w.reset() // reinitialize test variables
   const ci = process.env.CIRCLECI // headless and fast when doing continuous integration
   const launchOptions = {
-    headless: ci ? true : w.headlessMode,
+    headless: ci ? 'old' : w.headlessMode, // new, old, or false
     slowMo: ci ? 0 : w.slowMo,
     args: ['--remote-debugging-port=9222'], // allows use of chrome's remote debugging (see https://www.browserless.io/blog/2019/02/26/puppeteer-debugging)
   //    ignoreDefaultArgs: ['--disable-extensions'],
@@ -37,9 +37,8 @@ Before(async () => { // before each scenario
   })
   
   await t.postToTestEndpoint('initialize') // initialize data on the server (real or fake)
-  w.store = cache0
   await t.visit('empty') // a page is required before app can save anything to localStorage
-  await t.putv('now', w.now) // synchronize time between tester and app
+  w.tellApp = [{ k:'clear', v:{ ...w.store } }] // synchronize data between tester and app
 })
 
 After(async () => { 

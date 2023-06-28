@@ -64,7 +64,6 @@ Scenario: On scan page
 Scenario: On tx page
   Given I am signed in as "Bea"
   And I scan "Abe" to "charge"
-  * snap
   When I click "btn-back"
   Then ? I am on page "scan"
   When I click "btn-back"

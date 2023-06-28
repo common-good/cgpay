@@ -11,8 +11,6 @@
   import st from'#store.js'
   import u from '#utils.js'
   import c from '#constants.js'
-  import cgLogo from '#modules/assets/cg-logo-300-noR.png?webp'
-  import QrIcon from "svelte-material-icons/QrcodeScan.svelte"
   import ScanFake from './ScanFake.svelte'
 
   export let currentRoute // else Svelte complains (I don't know why yet)
@@ -30,7 +28,7 @@
   async function receiveQr() { return await u.generateQr(u.makeQrUrl(u.getMainId($st.me.accountId))) }
 
   onMount(async () => {
-    if ($st.allowShow) [qr, qrAction] = paying ? [me.qr, 'pay'] : [await receiveQr(), 'be paid']
+    if ($st.allowShow) [qr, qrAction] = paying ? [me.qr, 'pay'] : [await receiveQr(), 'charge']
     payOk = (!me.isCo || $st.payOk == 'always' || $st.coPaying) && c.showScanToPay
     btnPay = me.isCo ? 'Pay / Refund / Sell CG Credit' : 'Pay'
   })
@@ -43,15 +41,12 @@
 
 <section class="page" id="tx-start">
   <div class="top">
-    <h1 class="page-title">Show this code to {qrAction}</h1>
-    <img src="{qr}" data-testid="qr" alt={qrAction} />
+    <h1 class="page-title">Show to {qrAction}</h1>
+    <img class="qr-{$st.intent}" src="{qr}" data-testid="qr" alt={qrAction} />
   </div>
   <div class="bottom">
     <ScanFake intent={$st.intent}/>
     <button class="primary" data-testid="btn-scan" on:click={scan}>
-      <span class="icon">
-        <QrIcon size="1.5rem" />
-      </span>
       Scan to {paying ? btnPay : 'Charge'}
     </button>
   </div>
@@ -64,12 +59,13 @@
   h1 
     text-transform capitalize
 
-  img
-    min-height 300px
-
   p 
     margin-bottom $s0
 
   .icon
     margin-right $s-1
+
+  .qr-pay
+    width 250px
+    margin 30px
 </style>

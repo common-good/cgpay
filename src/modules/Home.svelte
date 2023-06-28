@@ -10,7 +10,6 @@
   export let currentRoute // else Svelte complains (I don't know why yet)
   export let params // else Svelte complains (I don't know why yet)
 
-  const surveyLink = 'https://forms.gle/HKb5V4DueYt1W13v6'
   const me = $st.me
   const hasTxOptions = ($st.allowShow || $st.allowType)
   const payBtnText = hasTxOptions ? 'Pay' : 'Scan to Pay'
@@ -94,7 +93,7 @@
 
 <section class="page" id="home">
   <div class="top">
-    <h1 class="page-title" data-testid="header">{hdr}</h1>
+    <h1 class="page-title {$st.showDash ? 'visuallyhidden' : null}" data-testid="header">{hdr}</h1>
     { #if me.isCo }
       { #if $st.selfServe}
         <p>Press the button below to scan your <br />Common Good QR Code</p>
@@ -111,9 +110,6 @@
     {#if u.localMode() && !hasTxOptions}
       {#if payOk}<ScanFake intent="pay"/>{/if}
       <ScanFake intent="charge"/>
-    {/if}
-    {#if me.isCo && !$st.selfServe}
-      <a class="survey" data-testid="lnk-survey" href="{surveyLink}" target="_blank">Take Our User Survey</a>
     {/if}
     <div class="actions">
       {#if payOk }
@@ -134,6 +130,7 @@
 
   .fakes 
     display flex
+    width 100%
     button
       cgButtonSecondary()
       padding 5px

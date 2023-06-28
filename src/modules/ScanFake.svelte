@@ -23,6 +23,7 @@
     display flex
     justify-content space-between
     margin-top $s0
+    width 100%
 
   button
     cgButton()

@@ -46,6 +46,7 @@ const u = {
       const urlRay = url.split('?')
       await u.tellTester('get', urlRay[0], urlRay[1].split('&'))
     }
+//    console.log('fetch post url options', post, url, options)
     const { timeout = c.fetchTimeoutMs, type = 'json' } = options;
     const aborter = new AbortController();
     aborter.name = 'Timeout'
@@ -79,7 +80,7 @@ const u = {
 
   async generateQr(text) {
     try {
-      return await QRCode.toDataURL(text)
+      return await QRCode.toDataURL(text, {'width': 310})
     } catch (er) { console.error(er) }
   },
 
