@@ -79,7 +79,7 @@ const u = {
 
   async generateQr(text) {
     try {
-      return await QRCode.toDataURL(text)
+      return await QRCode.toDataURL(text, {'width': 310})
     } catch (er) { console.error(er) }
   },
 
