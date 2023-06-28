@@ -9,7 +9,7 @@ const constants = {
   fetchTimeoutMs: 3200,
   networkTimeoutMs: 100,
   recentTxMax: 20, // maximum number of recent transactions to store
-  recentTxMin: 3, // number of recent txs to show on dashboard
+  recentTxMin: 4, // number of recent txs to show on dashboard
 
   showDevStuff: true, // if true, enable dev-only features
 

@@ -134,6 +134,7 @@
 
   .fakes 
     display flex
+    width 100%
     button
       cgButtonSecondary()
       padding 5px
