@@ -26,6 +26,7 @@ Scenario: A user with one account signs in
 
 Scenario: A user with multiple accounts signs in
   When I run the app
+  * I wait .2 seconds
   And I input "a" as "identifier"
   And I input "k" as "password"
   And I click "btn-signin"
