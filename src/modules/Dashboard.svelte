@@ -12,7 +12,7 @@
 
 </script>
 <section id="dashboard">
-  <div class="balance">Balance: <span>${$st.balance}</span></div>
+  <div class="balance">Balance: <span>${u.withCommas($st.balance)}</span></div>
   <div class="txs">
     <h2>Recent Transactions {#if !$st.recentTxs.length}(none){/if}</h2>
     {#if pending}
@@ -20,10 +20,10 @@
     {:else}
       <div class="pending">Zero pending</div>
     {/if}
-    {#if !st.recentTxs?.length}
-    <p>No transactions yet.</p>
+    {#if u.empty($st.recentTxs)}
+      <p>No transactions yet.</p>
     {:else}
-    <ul>
+      <ul>
       {#key $st.recentTxs}{#each $st.recentTxs as tx}
         <li>
           <div class="row">
@@ -36,8 +36,8 @@
           </div>
         </li>
       {/each}{/key}
-    </ul>
-    <a class="link" href="/txs">View More Transactions</a>
+      </ul>
+      <a class="link" href="/txs">View More Transactions</a>
     {/if}
   </div>
 </section>
