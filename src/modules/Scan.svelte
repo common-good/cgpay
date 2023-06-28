@@ -13,7 +13,7 @@
 
   onMount(async () => {
     if (!$st.intent) u.goEr(u.crash('scan with no intent'))
-    try {
+    if (!u.testing()) try { // don't activate camera when testing
       Html5Qrcode.getCameras().then(devices => {
         if (devices?.length) {
           st.setCameraCount(devices.length)

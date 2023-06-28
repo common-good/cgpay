@@ -11,6 +11,11 @@ Background:
 
 Rule: Scanning requires an intent
 
+Scenario: A user clicks the scan-to-charge button
+  Given I run the app
+  When I click "btn-charge"
+  Then ? I am on page "scan"
+
 Scenario: We scan with intent to charge
   Given this "intent": "charge"
   When I visit "scan"
@@ -64,7 +69,7 @@ Scenario: I scan my own card to charge
   When I scan "Bea" to "charge"
   Then ? I am on page "home" 
   And ? this error: "same account as yours"
-
+@c
 Scenario: I scan my own card to pay
   When I scan "Bea" to "pay"
   Then ? I am on page "home" 
@@ -126,7 +131,7 @@ Scenario: I scan another employee card to scan in
   Given I am signed in as "Bea/Cit"
   When I scan "Abe/Cit" to "scanIn"
   Then ? this "coPaying": "true"
-
+@c
 Scenario: I scan my personal card to scan in online
   Given I am signed in as "Bea/Cit"
   And we are online
@@ -152,7 +157,7 @@ Scenario: I scan another employee card offline to scan in
   And we are offline
   When I scan "Abe/Cit" to "scanIn"
   Then ? this "coPaying": "true"
-
+@c
 Scenario: I scan my personal card to scan in offline
   Given I am signed in as "Bea/Cit"
   And we are offline

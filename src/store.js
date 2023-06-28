@@ -18,7 +18,7 @@ export const createStore = () => {
  
   function reconcileDeviceIds(chx) {
     let s = getst()
-    let ids = s.deviceIds
+    let ids = u.empty(s.deviceIds) ? cache0.deviceIds : s.deviceIds
     let i, ch, old
     for (i in chx) {
       ch = chx[i]
@@ -46,8 +46,9 @@ export const createStore = () => {
 
   function save(s) {
     cache = { ...s }
-    localStorage.setItem(c.storeKey, JSON.stringify(u.just(cache0.persist, s)))
-    sessionStorage.setItem(c.storeKey, JSON.stringify(u.justNot(cache0.persist, s)))
+    const persist = !u.empty(s.persist) ? s.persist : Object.keys(s).join(' ') // allow saving of previous release data when testing
+    localStorage.setItem(c.storeKey, JSON.stringify(u.just(persist, s)))
+    sessionStorage.setItem(c.storeKey, JSON.stringify(u.justNot(persist, s)))
     return s
   }
 
@@ -94,15 +95,15 @@ export const createStore = () => {
     },
 
     async fromTester() { // called only in test mode (see Route.svelte, hooks.js, and t.tellApp)
-      if (u.testing() && !doing) {
+      if (u.testing() && !doing) { // if doing, another thread is already handling it
         doing = true
-        u.tellTester('tellme').then(todo => { // if we have a todo list, another thread is already handling it
+        u.tellTester('tellme').then(todo => {
           if (!todo) return doing = false
           let k, v
           while (todo.length) { // for each item
             ({ k, v } = todo.shift())
             if (k == 'clear') {
-              st.clearData()
+              st.clearData(v)
             } else setv(k, v, true)
           }
           u.tellTester('done').then(() => doing = false)
@@ -149,7 +150,7 @@ export const createStore = () => {
     linked() { return (cache.myAccount !== null) },
     unlink() { setv('myAccount', null) },
     signOut() { st.unlink(); st.setAcctChoices(null) },
-    clearData() { if (!u.realData()) setst({ ...cache0 }) },
+    clearData(data = cache0) { if (!u.realData()) setst({ ...data }) },
 
     setSawAdd() { setv('sawAdd', u.now()) },
     setCameraCount(n) { setv('cameraCount', n) },
