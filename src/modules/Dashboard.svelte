@@ -24,7 +24,7 @@
       <p>No transactions yet.</p>
     {:else}
       <ul>
-      {#key $st.recentTxs}{#each $st.recentTxs.slice(0, recentTxMin) as tx}
+      {#key $st.recentTxs}{#each $st.recentTxs.slice(0, c.recentTxMin) as tx}
         <li>
           <div class="row">
             <div class><span>{tx.pending ? 'Pending' : u.fmtDate(1000 * tx.created)}</div>
