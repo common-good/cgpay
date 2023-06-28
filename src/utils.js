@@ -161,7 +161,7 @@ const u = {
     try {
       const params = {deviceId:me.deviceId, actorId:me.accountId, count:c.recentTxMax }
       const info = await u.postRequest('info', params)
-      st.setBalance(info.balance)
+      st.setBalance(+info.balance)
       st.setRecentTxs(info.txs)
       st.setGotInfo(true)
       //      balance, surtxs: {}, txs: [{xid, amount, accountId, name, description, created}, …]}
