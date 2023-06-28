@@ -38,7 +38,7 @@
     if (!otherAccount.name) otherAccount.name = 'Unidentified Member'
     st.enqTx(tx)   
     st.setRecentTxs({ ...tx, name:otherAccount.name }) // assume, for now, the tx will succeed
-    st.setBalance($st.balance + tx.amount)
+    st.setBalance(+$st.balance + +tx.amount)
     dispatch('complete') // update display
   }
 </script>
