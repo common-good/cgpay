@@ -156,6 +156,7 @@ const u = {
    * Get financial information from the server for the current account.
    */
   async getInfo() {
+    if (!u.st().showDash) return
     const me = u.st().me
     try {
       const params = {deviceId:me.deviceId, actorId:me.accountId, count:c.recentTxMax }
