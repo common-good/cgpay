@@ -157,11 +157,12 @@ const u = {
    * Get financial information from the server for the current account.
    */
   async getInfo() {
+    if (!u.st().showDash) return
     const me = u.st().me
     try {
       const params = {deviceId:me.deviceId, actorId:me.accountId, count:c.recentTxMax }
       const info = await u.postRequest('info', params)
-      st.setBalance(info.balance)
+      st.setBalance(+info.balance)
       st.setRecentTxs(info.txs)
       st.setGotInfo(true)
       //      balance, surtxs: {}, txs: [{xid, amount, accountId, name, description, created}, …]}

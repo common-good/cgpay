@@ -35,9 +35,10 @@
       tx.offline = false
     }
     st.setPending(true) // give the user a chance to undo (or add a tip)
-    st.enqTx(tx)   
-    st.setRecentTxs(tx)
     if (!otherAccount.name) otherAccount.name = 'Unidentified Member'
+    st.enqTx(tx)   
+    st.setRecentTxs({ ...tx, name:otherAccount.name }) // assume, for now, the tx will succeed
+    st.setBalance(+$st.balance + +tx.amount)
     dispatch('complete') // update display
   }
 </script>

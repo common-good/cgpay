@@ -12,7 +12,7 @@
   })
 </script>
 <section id="dashboard">
-  <div class="balance">Balance: <span>${$st.balance}</span></div>
+  <div class="balance">Balance: <span>${u.withCommas($st.balance)}</span></div>
   <div class="txs">
     <h2>Recent Transactions</h2>
     <!-- Pending disabled until Type-To-Charge and Charge Confirm are released -->
@@ -20,12 +20,12 @@
       <a class="link pending" href="/pending">{pending} pending</a>
     {:else}
       <div class="pending">Zero pending</div>
-    {/if} -->
-    {#if !$st.recentTxs?.length}
-    <p>No transactions yet.</p>
+    {/if}
+    {#if u.empty($st.recentTxs)}
+      <p>No transactions yet.</p>
     {:else}
-    <ul>
-      {#key txs}{#each txs as tx}
+      <ul>
+      {#key $st.recentTxs}{#each $st.recentTxs.slice(0, c.recentTxMin) as tx}
         <li>
           <div class="row">
             <div class><span>{tx.pending ? 'Pending' : u.fmtDate(1000 * tx.created)}</div>
