@@ -15,11 +15,12 @@
   <div class="balance">Balance: <span>${$st.balance}</span></div>
   <div class="txs">
     <h2>Recent Transactions {#if !$st.recentTxs.length}(none){/if}</h2>
-    {#if pending}
+    <!-- Pending to be hidden until Type-To-Charge and Charge Confirm are released -->
+    <!-- {#if pending}
       <a class="link pending" href="/pending">{pending} pending</a>
     {:else}
       <div class="pending">Zero pending</div>
-    {/if}
+    {/if} -->
     {#if !st.recentTxs?.length}
     <p>No transactions yet.</p>
     {:else}
