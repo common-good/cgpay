@@ -20,7 +20,7 @@
       <a class="link pending" href="/pending">{pending} pending</a>
     {:else}
       <div class="pending">Zero pending</div>
-    {/if}
+    {/if} -->
     {#if u.empty($st.recentTxs)}
       <p>No transactions yet.</p>
     {:else}
