@@ -28,7 +28,7 @@
     menuItems.push({text, callback, criteria, id})
   }
 
-  item('Go Home', () => u.go('home'), () => !u.atHome(), 'home')
+  item($st.me.isCo ? 'Go Home' : 'Dashboard', () => u.go('home'), () => !u.atHome(), 'home')
   item('Scan Yourself In to Pay', scanIn, () => u.atHome() && $st.payOk == 'scan' && !$st.coPaying, 'scanIn') // for managers
   item('Use Rear Camera', rearCamera, () => $st.cameraCount > 1 && $st.frontCamera, 'rear')
   item('Use Front Camera', frontCamera, () => $st.cameraCount > 1 && !$st.frontCamera, 'front')
