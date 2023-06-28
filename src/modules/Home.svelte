@@ -10,7 +10,6 @@
   export let currentRoute // else Svelte complains (I don't know why yet)
   export let params // else Svelte complains (I don't know why yet)
 
-  const surveyLink = 'https://forms.gle/HKb5V4DueYt1W13v6'
   const me = $st.me
   const hasTxOptions = ($st.allowShow || $st.allowType)
   const payBtnText = hasTxOptions ? 'Pay' : 'Scan to Pay'
@@ -111,9 +110,6 @@
     {#if u.localMode() && !hasTxOptions}
       {#if payOk}<ScanFake intent="pay"/>{/if}
       <ScanFake intent="charge"/>
-    {/if}
-    {#if me.isCo && !$st.selfServe}
-      <a class="survey" data-testid="lnk-survey" href="{surveyLink}" target="_blank">Take Our User Survey</a>
     {/if}
     <div class="actions">
       {#if payOk }
