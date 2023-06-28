@@ -94,7 +94,7 @@
 
 <section class="page" id="home">
   <div class="top">
-    <h1 class="page-title" data-testid="header">{hdr}</h1>
+    <h1 class="page-title {$st.showDash ? 'visuallyhidden' : null}" data-testid="header">{hdr}</h1>
     { #if me.isCo }
       { #if $st.selfServe}
         <p>Press the button below to scan your <br />Common Good QR Code</p>

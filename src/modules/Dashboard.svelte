@@ -64,6 +64,10 @@
 
   .balance
     margin-bottom $s1
+    span
+      text(2xl)
+      font-weight 500
+      margin-left $s-3
 
   .row
     width 100%
