@@ -8,6 +8,8 @@
 
 <section id="txs">
   <h1 class="page-title">Transaction History</h1>
+  <p>View your complete history at <a class="link" target="_blank" href="https://new.commongood.earth/history">commongood.earth</a>.</p>
+  <p class="tx-amt">{$st.recentTxs.length} Recent Transactions</p>
   <ul>
     {#each $st.recentTxs as tx}
     <li>
@@ -22,7 +24,6 @@
     </li>
   {/each}
   </ul>
-  <p>View your complete account history at <a class="link" target="_blank" href="https://new.commongood.earth/history">commongood.earth</a>.</p>
 </section>
 
 <style lang='stylus'>
@@ -58,4 +59,9 @@
 
   .neg
     color $c-red
+
+  .tx-amt
+    font-weight 500
+    text-align left
+    margin-bottom 0
 </style>

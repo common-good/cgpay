@@ -4,27 +4,28 @@
   import c from '#constants.js'
   import { onMount } from 'svelte'
 
-  let pending = $st.recentTxs.reduce((total, tx) => tx.pending ? total + 1 : total + 0, 0)
+  // let pending = $st.recentTxs.reduce((total, tx) => tx.pending ? total + 1 : total + 0, 0)
+  let txs = $st.recentTxs.slice(0, c.recentTxMin)
 
   onMount(async () => {
     if (!$st.gotInfo) u.getInfo()
   })
-
 </script>
 <section id="dashboard">
   <div class="balance">Balance: <span>${$st.balance}</span></div>
   <div class="txs">
-    <h2>Recent Transactions {#if !$st.recentTxs.length}(none){/if}</h2>
-    {#if pending}
+    <h2>Recent Transactions</h2>
+    <!-- Pending disabled until Type-To-Charge and Charge Confirm are released -->
+    <!-- {#if pending}
       <a class="link pending" href="/pending">{pending} pending</a>
     {:else}
       <div class="pending">Zero pending</div>
-    {/if}
-    {#if !st.recentTxs?.length}
+    {/if} -->
+    {#if !$st.recentTxs?.length}
     <p>No transactions yet.</p>
     {:else}
     <ul>
-      {#key $st.recentTxs}{#each $st.recentTxs as tx}
+      {#key txs}{#each txs as tx}
         <li>
           <div class="row">
             <div class><span>{tx.pending ? 'Pending' : u.fmtDate(1000 * tx.created)}</div>
@@ -37,7 +38,7 @@
         </li>
       {/each}{/key}
     </ul>
-    <a class="link" href="/txs">View More Transactions</a>
+    <a class="link" href="/txs">View More</a>
     {/if}
   </div>
 </section>
@@ -55,15 +56,26 @@
     border-top solid 1px
     margin-bottom $s0
     padding-top $s-1
+    &:first-of-type
+      border-top none
+      padding-top $s-2
 
   section
     width 100%
+    display: flex
+    flex-direction: column
+    align-items: center
+    width: 100%
 
   ul
     margin-bottom $s1
 
   .balance
     margin-bottom $s1
+    span
+      text(2xl)
+      font-weight 500
+      margin-left $s-3
 
   .row
     width 100%
@@ -83,4 +95,15 @@
 
   .neg
     color $c-red
+
+  .txs
+    width 100%
+    max-width 600px
+
+  @media screen and (max-width $xs-screen)
+    .balance
+      margin-bottom 0
+
+    h2
+      margin-bottom 0
 </style>
