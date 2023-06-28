@@ -144,8 +144,8 @@ const t = {
 
     const me = u.clone(w.accounts[v])
     if (me != null) return  (k == 'account') ? me
+                          : k == 'me' ? u.just('name isCo accountId deviceId selling', me)
                           : u.in(k, 'actorUid uid uid1 uid2 agt1 agt2') ? w.uid(v)
-                          : k == 'myAccount' ? u.just('name isCo accountId deviceId selling', me)
                           : k == ('id' && v.includes('/')) ? v.split('/')[1] // without agent
                           : k == 'actorId' ? me.accountId
                           : k == 'otherId' ? me.accountId
@@ -177,7 +177,7 @@ const t = {
         assert.equal(got.length, want.length, msg)
         for (let i in want) t.test(got[i], want[i], i, mode)
       } else { // object
-        if (field == 'myAccount') want = { ...want, deviceId:'?', qr:'?' }
+        if (field == 'me') want = { ...want, deviceId:'?', qr:'?' }
         for (let i of Object.keys(want)) t.test(got[i], want[i], i, u.empty(mode) ? null : mode)
       }
       return
@@ -465,8 +465,8 @@ async mockFetch(url, options = {}) {
 
   async signedInAs(who, set = false) {
     const me = w.accounts[who]
-    if (set) await t.putv('myAccount', { ...u.just('name isCo accountId deviceId selling', me), qr:'qr' + me.name.charAt(0) })
-    if (!set) t.test(u.just('name isCo accountId selling', await t.getv('myAccount')), u.just('name isCo accountId selling', me), 'myAccount')
+    if (set) await t.putv('me', { ...u.just('name isCo accountId deviceId selling', me), qr:'qr' + me.name.charAt(0) })
+    if (!set) t.test(u.just('name isCo accountId selling', await t.getv('me')), u.just('name isCo accountId selling', me), 'me')
   },
 
 }

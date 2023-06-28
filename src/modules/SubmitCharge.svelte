@@ -11,7 +11,7 @@
   export let tx
 
   const pay = $st.intent == 'pay'
-  const action = (pay || st.selfServe()) ? 'Pay' : 'Charge'
+  const action = (pay || $st.selfServe) ? 'Pay' : 'Charge'
   const dispatch = createEventDispatcher()
 
   function validateAmount() {
@@ -34,19 +34,18 @@
       delete tx.code
       tx.offline = false
     }
-    st.setMyAccount({ ...$st.myAccount, lastTx:tx.created })
-
     st.setPending(true) // give the user a chance to undo (or add a tip)
-    st.enqTx(tx)                                                                                                         
+    st.enqTx(tx)   
+    st.setRecentTxs(tx)
     if (!otherAccount.name) otherAccount.name = 'Unidentified Member'
     dispatch('complete') // update display
   }
 </script>
 
 <section id="submit-charge">
-  <h1 data-testid="action">{action}</h1>
+  <h1 class="page-title" data-testid="action">{action}</h1>
   <form on:submit|preventDefault={charge}>
-    { #if !st.selfServe() }<Profile {otherAccount} {photo} />{ /if }
+    { #if !$st.selfServe }<Profile {otherAccount} {photo} />{ /if }
     <div class="bottom">
       <fieldset>
         <label for="amount">Amount</label>
@@ -60,9 +59,6 @@
 </section>
 
 <style lang="stylus">
-  h1 
-   margin-bottom $s0
-
   form
     height 100%
     display flex

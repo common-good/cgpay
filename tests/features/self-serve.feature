@@ -26,7 +26,7 @@ Scenario: A customer scans in self-serve mode
   Given I am signed in as "Abe/Cit"
   And this "payOk": "self"
   When I scan "Bea" to "charge"
-  Then ? I am on page "tx"
+  Then ? I am on page "tx-details"
   And ? I see no "theirPhoto"
   And ? I see no "theirLocation"
 
@@ -63,7 +63,7 @@ Scenario: A vendor (or customer) exits self-serve mode
   And I run the app
   When I click "btn-nav"
   And I click "menu-selfOff"
-  Then ? this "myAccount": "null"
+  Then ? this "me": "null"
   And ? I am on page "sign-in"
 
 Rule: Only business accounts have self-serve mode

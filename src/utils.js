@@ -16,6 +16,7 @@ const u = {
   undo: null, // notify subscribers every time the Back button is clicked when it means "undo" (see Layout.svelte)
 
   api() { return u.realData() ? c.apis.real : c.apis.test }, 
+  socket() { return u.realData() ? c.sockets.real : c.sockets.test }, 
 
   dlg(title, text, labels, m1 = u.hide, m2 = null) {
     const m0 = [true, title, text, labels]
@@ -39,7 +40,7 @@ const u = {
    * @throws an AbortError if the fetch times out (identify with isTimeout())
    */
   async timedFetch(url, options = {}, post = false) {
-    if (!st.inspect().online) throw u.er('Offline') // this works for setWifiOff also
+    if (!u.st().online) throw u.er('Offline') // this works for setWifiOff also
     if (!post) {
       if (!url.includes('version=')) url += '&version=' + c.version
       const urlRay = url.split('?')
@@ -62,7 +63,8 @@ const u = {
     return res
   },
 
-  async postRequest(endpoint, v, options) {
+  async postRequest(endpoint, v, options = {}) {
+//    console.log('post', endpoint, v, options)
     st.bump('posts')
     if (!v.version) v.version = c.version
     await u.tellTester('post', endpoint, { ...v })
@@ -151,7 +153,26 @@ const u = {
     : 'dev'
   }, 
   
-  now() { return (u.testing()) ? st.inspect().now : u.now0() }, // keep "now" constant in tests
+  /**
+   * Get financial information from the server for the current account.
+   */
+  async getInfo() {
+    const me = u.st().me
+    try {
+      const params = {deviceId:me.deviceId, actorId:me.accountId, count:c.recentTxMax }
+      const info = await u.postRequest('info', params)
+      st.setBalance(info.balance)
+      st.setRecentTxs(info.txs)
+      st.setGotInfo(true)
+      //      balance, surtxs: {}, txs: [{xid, amount, accountId, name, description, created}, …]}
+      //  where surtxs: {amount, portion, crumbs, roundup}
+    } catch (er) { console.log('info er', er) }
+  },
+
+  st() { return st.inspect() },
+  tx9() { return st().txs[st().txs.length - 1] },
+  now() { return (u.testing()) ? u.st().now : u.now0() }, // keep "now" constant in tests
+  fmtDate(dt) { return new Date(dt).toLocaleDateString('en-us', { year:'numeric', month:'numeric', day:'numeric'}) },
   realData() { return ['production', 'staging'].includes(u.mode()) },
   localMode() { return (u.mode() == 'local' && c.showDevStuff) }, 
   yesno(question, m1, m2) { u.dlg('Confirm', question, 'Yes, No', m1, m2) },
@@ -166,9 +187,8 @@ const u = {
   isApple() { return /iPhone|iPod|iPad/i.test(navigator.userAgent) },
   isAndroid() { return !u.isApple() && /Android/i.test(navigator.userAgent) },
   go(page, setTrail = true) { 
-    if (setTrail) st.setTrail(u.pageUri())
-    if (st.inspect().pending) st.setTrail('')
-    st.setPending(false) // once you leave the tx confirmation page, the tx is assumed complete
+    if (setTrail) st.setTrail(u.st()?.pending ? '' : u.pageUri())
+    st.setPending(false) // must come after setTrail
     st.setLeft(u.atHome(page) ? 'logo' : 'back')
     navigateTo('/' + page)
   },
@@ -185,7 +205,7 @@ const u = {
   },
 
   addableToHome() { 
-    if (st.inspect().sawAdd) return false
+    if (u.st().sawAdd) return false
     return (u.isApple() && u.isSafari()) || (u.isAndroid() && u.isChrome())
   },
 
@@ -210,7 +230,7 @@ const u = {
   */
 
   /* for POST auth in HTTP header (any advantage?)
-          'authorization': `Bearer ${ $st.deviceId }`,
+          'authorization': `Bearer ${ u.st().me.deviceId }`,
           'Accept': 'application/json',
           'Content-type': 'application/json',
           body: JSON.stringify(tx)

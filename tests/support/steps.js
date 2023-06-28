@@ -5,8 +5,8 @@ import { assert, expect } from 'chai'
 
 Given('I use {string} on an {string} device', async function (browser, sys) { await t.setUA(browser, sys) })
 Given('I am signed in as {string}', async function (who) { await t.signedInAs(who, true) })
-Given('I am not signed in', async function () { await t.putv('myAccount', null) })
-Given('this {string}:', async function (k, rows) { await t.setThis(k, rows, 1) }) // for myAccount, for example
+Given('I am not signed in', async function () { await t.putv('me', null) })
+Given('this {string}:', async function (k, rows) { await t.setThis(k, rows, 1) }) // for me, for example
 Given('this {string}: {string}', async function (k, v) { await t.setThis(k, v) })
 Given('these {string}:', async function (k, rows) { await t.setThis(k, rows) })
 Given('these accounts:', async function (rows) { await t.theseAccts('accts', rows, true) })

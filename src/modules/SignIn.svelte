@@ -16,7 +16,7 @@
       if (res.accounts.length > 1) {
         u.go('link-account')
       } else {
-        st.setMyAccount(res.accounts[0])
+        st.setMe(res.accounts[0])
         u.go('home')
       }
     } catch (er) {
