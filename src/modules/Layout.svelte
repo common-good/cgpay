@@ -58,7 +58,7 @@
   }
 
   u.undo = writable(0)
-  if (!$st.socket || true) st.setSocket(socket())
+  if (c.enableSockets && !$st.socket) st.setSocket(socket())
 </script>
 
 <svelte:window on:load={setViewportHeight}/>

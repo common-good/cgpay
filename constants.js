@@ -10,6 +10,7 @@ const constants = {
   networkTimeoutMs: 100,
   recentTxMax: 20, // maximum number of recent transactions to store
   recentTxMin: 4, // number of recent txs to show on dashboard
+  enableSockets: false, // websockets
 
   showDevStuff: true, // if true, enable dev-only features
 
