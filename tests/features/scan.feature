@@ -11,6 +11,11 @@ Background:
 
 Rule: Scanning requires an intent
 
+Scenario: A user clicks the scan-to-charge button
+  Given I run the app
+  When I click "btn-charge"
+  Then ? I am on page "scan"
+
 Scenario: We scan with intent to charge
   Given this "intent": "charge"
   When I visit "scan"
@@ -30,7 +35,7 @@ Rule: Personal accounts can scan an individual or company card
 
 Scenario: I scan an individual's QR
   When I scan "Abe" to "charge"
-  Then ? I am on page "tx"
+  Then ? I am on page "tx-details"
   And ? I am on page "charge-profile"
   And ? I see "theirPhoto"
   And ? "theirName" is "Abe One"
@@ -38,7 +43,7 @@ Scenario: I scan an individual's QR
 
 Scenario: I scan a company agent's QR
   When I scan "Abe/Cit" to "charge"
-  Then ? I am on page "tx"
+  Then ? I am on page "tx-details"
   And ? I am on page "charge-profile"
   And ? I see "theirPhoto"
   And ? "theirAgent" is "Abe One"
@@ -50,7 +55,7 @@ Rule: Company accounts can scan an individual or company card
 Scenario: A company scans an individual's QR
   Given I am signed in as "Bea/Cit"
   When I scan "Abe" to "charge"
-  Then ? I am on page "tx"
+  Then ? I am on page "tx-details"
   And ? I am on page "charge-profile"
   And ? I see "theirPhoto"
   And ? "theirName" is "Abe One"
@@ -64,7 +69,7 @@ Scenario: I scan my own card to charge
   When I scan "Bea" to "charge"
   Then ? I am on page "home" 
   And ? this error: "same account as yours"
-
+@c
 Scenario: I scan my own card to pay
   When I scan "Bea" to "pay"
   Then ? I am on page "home" 
@@ -92,7 +97,7 @@ Rule: Scanning to charge or pay works fine offline
 Scenario: I scan an individual's QR offline
   Given we are offline
   When I scan "Abe" to "charge"
-  Then ? I am on page "tx"
+  Then ? I am on page "tx-details"
   And ? I am on page "charge-profile"
   And ? "theirName" is not "Abe One"
   And ? I see "network-offline"
@@ -126,7 +131,7 @@ Scenario: I scan another employee card to scan in
   Given I am signed in as "Bea/Cit"
   When I scan "Abe/Cit" to "scanIn"
   Then ? this "coPaying": "true"
-
+@c
 Scenario: I scan my personal card to scan in online
   Given I am signed in as "Bea/Cit"
   And we are online
@@ -152,7 +157,7 @@ Scenario: I scan another employee card offline to scan in
   And we are offline
   When I scan "Abe/Cit" to "scanIn"
   Then ? this "coPaying": "true"
-
+@c
 Scenario: I scan my personal card to scan in offline
   Given I am signed in as "Bea/Cit"
   And we are offline

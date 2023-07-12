@@ -64,7 +64,6 @@ Scenario: On scan page
 Scenario: On tx page
   Given I am signed in as "Bea"
   And I scan "Abe" to "charge"
-  * snap
   When I click "btn-back"
   Then ? I am on page "scan"
   When I click "btn-back"
@@ -95,7 +94,7 @@ Scenario: On comments page from tx page
   And I click "btn-nav"
   And I click "menu-comment"
   When I click "btn-back"
-  Then ? I am on page "tx"
+  Then ? I am on page "tx-details"
   When I click "btn-back"
   Then ? I am on page "scan"
   When I click "btn-back"
@@ -107,7 +106,7 @@ Scenario: On comments page from tx page back and forth
   And I click "btn-nav"
   And I click "menu-comment"
   When I click "btn-back"
-  Then ? I am on page "tx"
+  Then ? I am on page "tx-details"
   When I input "1234.50" as "amount"
   And I input "food!" as "description"
   And I click "btn-submit"

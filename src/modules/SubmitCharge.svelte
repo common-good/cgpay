@@ -11,15 +11,15 @@
   export let tx
 
   const pay = $st.intent == 'pay'
-  const action = (pay || st.selfServe()) ? 'Pay' : 'Charge'
+  const action = (pay || $st.selfServe) ? 'Pay' : 'Charge'
   const dispatch = createEventDispatcher()
 
   function validateAmount() {
     const old = tx.amount
     tx.amount = +tx.amount.toFixed(2) // round to 2 decimals
     if (tx.amount != old) return u.alert('The amount has been rounded to two decimal places. Make sure this is what you intended and try again.')
-    if (tx.amount > c.onlineLimit) return u.alert(`CGPay transactions are limited to ${u.withCommas(c.onlineLimit)}`)
-    if (tx.amount > otherAccount.limit) return u.alert(`This transaction is limited to ${u.withCommas(otherAccount.limit)}.`)
+    if (tx.amount > c.onlineLimit) return u.alert(`CGPay transactions are limited to $${u.withCommas(c.onlineLimit)}`)
+    if (tx.amount > otherAccount.limit) return u.alert(`This transaction is limited to $${u.withCommas(otherAccount.limit)}.`)
     if (tx.amount <= 0 ) return u.alert('The amount must be greater than zero.')
     return true
   }
@@ -34,19 +34,19 @@
       delete tx.code
       tx.offline = false
     }
-    st.setMyAccount({ ...$st.myAccount, lastTx:tx.created })
-
     st.setPending(true) // give the user a chance to undo (or add a tip)
-    st.enqTx(tx)                                                                                                         
     if (!otherAccount.name) otherAccount.name = 'Unidentified Member'
+    st.enqTx(tx)   
+    st.setRecentTxs({ ...tx, name:otherAccount.name }) // assume, for now, the tx will succeed
+    st.setBalance(+$st.balance + +tx.amount)
     dispatch('complete') // update display
   }
 </script>
 
 <section id="submit-charge">
-  <h1 data-testid="action">{action}</h1>
+  <h1 class="page-title" data-testid="action">{action}</h1>
   <form on:submit|preventDefault={charge}>
-    { #if !st.selfServe() }<Profile {otherAccount} {photo} />{ /if }
+    { #if !$st.selfServe }<Profile {otherAccount} {photo} />{ /if }
     <div class="bottom">
       <fieldset>
         <label for="amount">Amount</label>
@@ -60,9 +60,6 @@
 </section>
 
 <style lang="stylus">
-  h1 
-   margin-bottom $s0
-
   form
     height 100%
     display flex

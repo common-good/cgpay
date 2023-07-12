@@ -10,24 +10,24 @@ $c-gray = #cfcbc3
 $c-gray-dark = #5c5b54
 
 $c-blue-bright = #3399FF
-$c-blue-light = #e5f5ff
+$c-blue-light = #e5effc // #e5f5ff
 $c-blue = #0946a6  // #0b57d0 or #0a4ebb 
 $c-blue-dark = #07347d
 $c-blue-muted = #335366
 
 $c-green-light = #eff4e9
-$c-green = #5D9220
+$c-green = #439220 // #5D9220
 $c-green-dark = #416616
 
-$c-error = #e71809
-$c-error-light = #fde8e6
+$c-red = #e71809
+$c-red-light = #fde8e6
 $c-warning = #fefacd
 $c-warning-dark = #e3d105
 
 // --------------------------------------------
 // Breakpoints
 
-$mobile = 300px
+$xs-screen = 320px
 $tablet = 820px
 
 // --------------------------------------------
@@ -167,6 +167,6 @@ contentCentered(direction = row)
   if direction is 'column'
     flex-direction column
 
-constrainWidth(max = $mobile)
+constrainWidth(max = $xs-screen)
   margin 0 auto
   max-width max

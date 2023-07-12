@@ -1,5 +1,5 @@
 const constants = {
-  version: '4.1.0',
+  version: 40200, // 4.2.0
   storeKey: 'cgpay',
   qrUrlRegex: '^HTTP://[0-9A-Za-z]{1,4}\.RC[24]\.ME/[0-9A-Z]{2,5}[0-9A-Za-z]{0,25}$', // like HTTP://6VM.RC4.ME/KDJJ34kjdfKJ4
   testQrStart: 'HTTP://6VM.RC4.ME/', // is a test QR if it starts with this string
@@ -8,11 +8,11 @@ const constants = {
   offlineLimit: 250, // how much an account can be charged without knowing its credit limit
   fetchTimeoutMs: 3200,
   networkTimeoutMs: 100,
+  recentTxMax: 20, // maximum number of recent transactions to store
+  recentTxMin: 4, // number of recent txs to show on dashboard
+  enableSockets: false, // websockets
 
   showDevStuff: true, // if true, enable dev-only features
-  showSelfServe: true, // if true, enable self-serve feature
-  showScanToPay: false, // if true, enable scan-to-pay feature
-  showShowToPay: false, // if true, enable show-to-pay feature
 
   // how long user has, on the current screen (in seconds), before we return automatically to Home
   txTimeout: 10, // Tx page
@@ -33,6 +33,10 @@ const constants = {
     demo: 'https://demo.commongood.earth/api/',
     real: 'https://new.commongood.earth/api/',
   },
+  sockets: {
+    test: 'ws://demo.commongood.earth:8081',
+    real: 'ws://new.commongood.earth:8081',
+  }
 }
 
 export default constants

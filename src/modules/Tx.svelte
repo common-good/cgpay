@@ -18,9 +18,9 @@
   
   let tx = {
     amount: null,
-    description: (!pay && $st.myAccount.selling) ? $st.myAccount.selling[0] : null,
-    deviceId: $st.myAccount.deviceId,
-    actorId: u.noCardCode($st.myAccount.accountId),
+    description: (!pay && $st.me.selling) ? $st.me.selling[0] : null,
+    deviceId: $st.me.deviceId,
+    actorId: u.noCardCode($st.me.accountId),
     otherId: null,
     created: null,
     proof: null,
@@ -32,7 +32,7 @@
   let tipable = false
   let gotTx = false
   let photo = { alt: 'Customer Profile', blob: null }
-  const pastAction = (pay || st.selfServe()) ? 'Paid' : 'Charged'
+  const pastAction = (pay || $st.selfServe) ? 'Paid' : 'Charged'
 
 	u.undo.subscribe(askUndo) // receive notification of Back click (see Layout.svelte)
 
@@ -43,14 +43,14 @@
     st.setTimeout(null)
     u.yesno('Reverse the transaction?', 
       () => { u.hide(); st.undoTx(); u.goHome('The transaction has been reversed.') },
-      () => { u.hide(); if (st.selfServe()) st.setTimeout(c.txTimeout)
+      () => { u.hide(); if ($st.selfServe) st.setTimeout(c.txTimeout)
     })
   }
 
   function handleSubmitCharge() {
     st.setTrail('', true) // no going back from here
     gotTx = true
-    if (st.selfServe()) st.setTimeout(c.txTimeout)
+    if ($st.selfServe) st.setTimeout(c.txTimeout)
   } // state success, show undo/tip/done/receipt buttons
     
   /**
@@ -66,13 +66,14 @@
     return { alt:'photo of the other party', blob:blob }
   }
 
-  function profileOffline() { if (!st.selfServe()) u.alert('OFFLINE. Trust this member or ask for ID.') }
+  function profileOffline() { if (!$st.selfServe) u.alert('OFFLINE. Trust this member or ask for ID.') }
 
   onMount(async () => {
+    if (qr === null) return u.go('home') // pressed back button from Home page
+    st.setCoPaying(false)
     try {
-      if (qr === null) return u.go('home') // pressed back button from Home page
       const card = u.qrParse(qr) // does not return if format is bad
-      const mainId = u.getMainId($st.myAccount.accountId)
+      const mainId = u.getMainId($st.me.accountId)
       if (card.main == mainId) throw new Error('That QR is for the same account as yours.')
       const acctInfo = st.getAcct(card) // retrieve and/or update stored customer account info
       if (acctInfo) otherAccount = { ...otherAccount, ...acctInfo }
@@ -87,12 +88,12 @@
         const res = await u.postRequest('identity', info)
         const { selling } = res
         if (selling.length) tx.description = selling[0]
-        st.setMyAccount({ ...$st.myAccount, selling: selling })
+        st.setMe({ ...$st.me, selling: selling })
         otherAccount = { ...otherAccount, ...res, lastTx:u.now() } // lastTx date lets us jettison old customers to save storage
         delete otherAccount.selling
         st.putAcct(card, otherAccount) // store and/or update stored customer account info
         if (otherAccount.limit <= 0) u.goEr('This account has no remaining funds, so a transaction is not possible at this time.')
-        if (!st.selfServe()) photo = await getPhoto(info)
+        if (!$st.selfServe) photo = await getPhoto(info)
       }
     } catch (er) {
       if (u.isTimeout(er)) { // internet unavailable; recognize a repeat customer or limit CG's liability
@@ -115,8 +116,8 @@
         <div class='row payee-info'>
           <p><span data-testid="action">{pastAction}</span> to:</p>
           <div class='payee-details'>
-          {#if st.selfServe()}
-            <p data-testid="other-name">{ $st.myAccount.name }</p>
+          {#if $st.selfServe}
+            <p data-testid="other-name">{ $st.me.name }</p>
           {:else}
             {#if otherAccount.agent}
               <p data-testid="agent">{ otherAccount.agent }</p>
