@@ -113,4 +113,8 @@
     flex-direction column
     background $c-white
     constrainWidth($tablet)
+
+  @media screen and (max-width $xs-screen)
+    .content
+      padding $s-2
 </style>
