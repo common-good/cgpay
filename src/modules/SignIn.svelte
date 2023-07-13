@@ -16,7 +16,11 @@
       if (res.accounts.length > 1) {
         u.go('link-account')
       } else {
+        // Skip /link-account and use individual account settings
         st.setMe(res.accounts[0])
+        st.setShowDash(true)
+        st.setPayOk(true)
+        st.setAllowShow(true)
         u.go('home')
       }
     } catch (er) {
