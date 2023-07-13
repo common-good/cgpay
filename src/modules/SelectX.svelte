@@ -17,7 +17,6 @@
   select
     border solid 1px $c-black
     margin-bottom $s0
-    height 80%
     display flex
     flex-direction column
     justify-content space-between
