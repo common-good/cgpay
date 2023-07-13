@@ -1,12 +1,12 @@
-import Charge from '#modules/Charge.svelte'
-import store from '#store.js'
+import Tx from '#modules/Tx.svelte'
+import st from'#store.js'
 
 // --------------------------------------------
 
-describe('Charge', () => {
+describe('Tx', () => {
   it('renders', () => {
-    store.setMyAccount({ name: 'Business', accountId: '123' })
+    st.setMe({ name: 'Business', accountId: '123' })
 
-    render(Charge)
+    render(Tx)
   })
 })

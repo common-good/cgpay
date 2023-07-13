@@ -1,11 +1,11 @@
 <script>
-  import store from '#store.js'
+  import st from'#store.js'
   import WifiOff from "svelte-material-icons/WifiOff.svelte"
 
-  let txsWaiting = $store.txs.length ? (' (' + $store.txs.length + ' transactions waiting to upload)') : ''
+  let txsWaiting = $st.txs.length ? (' (' + $st.txs.length + ' transactions waiting to upload)') : ''
 </script>
 
-{ #if !$store.online }
+{ #if !$st.online }
   <section id='network-status'>
     <WifiOff size={"1rem"} />
     <p data-testid="network-offline">Network is offline.{txsWaiting}</p>

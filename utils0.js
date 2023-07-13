@@ -12,8 +12,14 @@ const u = {
     let res = {}; for (let k of u.ray(which)) res[k] = obj[k]
     return res
   },
+  justNot(which, obj) {
+    let res = { ...obj }
+    for (let k of u.ray(which)) delete res[k]
+    return res
+  },
 
   now0() { return Math.floor(Date.now() / 1000) },
+  async sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)) }, // sleep for that many milliseconds
   clone(v) { return u.empty(v) ? v: JSON.parse(JSON.stringify(v)) }, // deep clone (assumes object contains just objects, numbers, and strings)
   ray(s) { return s.split(s.includes(', ') ? ', ' : (s.includes(',') ? ',' : ' ')) }, // express an array as a space or comma-delimited string list
 

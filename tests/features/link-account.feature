@@ -22,43 +22,89 @@ Background:
   * these choices:
   | Bea   | Bea/Cit |
 
-Rule: Users must link their device to a CGPay account to use the app
+Rule: Users can link their device to a specific CGPay account
 
-Scenario: The user chooses from among multiple accounts with default account lock
+Scenario: A user with multiple accounts visits the link-account page
   When I visit "link-account"
   Then ? I am on page "link-account"
   And ? I see "select-account"
-  And ? I see "option-0" is "Bea Two"
-  When I click "option-0"
+  And ? "account-opt-0" is "Bea Two"
+  And ? "account-opt-1" is "Citre"
+  And ? "account-opt-1" is "selected"
+  And ? "lock-account" is "checked"
+  And ? "self-serve" is not "checked"
+
+#  And ? "payOk-radio-always" is not "checked"
+#  And ? "payOk-radio-scan" is "checked"
+#  And ? "payOk-radio-never" is not "checked"
+
+Scenario: A user with multiple accounts selects an account with all the defaults
+  When I visit "link-account"
+  And I click "btn-link"
+#  Then ? this "payOk": "scan"
+  And ? this "choices": "null"
+  And ? I am signed in as "Bea/Cit"
+  And ? this confirmation: "now linked to your Common Good account: Citre"
+  And ? I am on page "home"
+  And ? "Citre" is in "account-name"
+  When I click "btn-nav"
+#  Then ? I see "menu-scanIn"
+  But ? I see no "menu-switch"
+
+Scenario: A user with multiple accounts selects a company with different options
+  When I visit "link-account"
+  And I click "lock-account"
+#  And I click "payOk-radio-never"
   And I click "btn-link"
   And I wait 1 seconds
-  Then ? I am on page "home"
-  And ? I see "Bea Two" in "account-name"
-  And ? I see this confirmation: "now linked to your Common Good account: Bea Two"
-  And ? I am signed in as "Bea"
-  And ? this "choices": "null" 
+#  Then ? this "payOk": "never"
+  And ? these choices:
+  | Bea | Bea/Cit |
+  And ? I am signed in as "Bea/Cit"
+  And ? I am on page "home"
   When I click "btn-nav"
-  Then ? I do not see "menu-switch"
+#  Then ? I see no "menu-scanIn"
+  But ? I see "menu-switch"
 
-Scenario: The user chooses a different account without account lock
+Scenario: A user with multiple accounts selects a company allowed to pay always
   When I visit "link-account"
-  And I click "option-1"
+#  And I click "payOk-radio-always"
+  And I click "btn-link"
+  And I wait 1 seconds
+#  Then ? this "payOk": "always"
+  And ? this "choices": "null"
+  And ? I am signed in as "Bea/Cit"
+  And ? I am on page "home"
+  When I click "btn-nav"
+#  Then ? I see no "menu-scanIn"
+  And ? I see no "menu-switch"
+#  But ? I see "btn-pay"
+
+Scenario: A user with multiple accounts selects an individual account
+  When I visit "link-account"
+  And I click "account-opt-0"
   And I click "lock-account"
   And I click "btn-link"
   And I wait 1 seconds
-  Then ? I see "Citre" in "account-name"
+  Then ? this "payOk": "null"
+  And ? these choices:
+  | Bea | Bea/Cit |
+  And ? I am signed in as "Bea"
+  And ? I am on page "home"
+  And ? "Bea Two" is in "account-name"
   When I click "btn-nav"
-  And ? I see "menu-switch"
+#  Then ? I see no "menu-scanIn"
+  But ? I see "menu-switch"
 
 Scenario: The user chooses an account offline
   Given I visit "link-account"
   And we are offline
   And I wait 1 seconds
   And ? I see "network-offline"
-  When I click "option-0"
+  When I click "account-opt-0"
   And I click "btn-link"
   Then ? I am on page "home"
-  And ? I see "Bea Two" in "account-name"
+  And ? "Bea Two" is in "account-name"
 
 Scenario: The user restarts the app after signing in but before linking
   When I run the app

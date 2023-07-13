@@ -1,16 +1,13 @@
 <script>
   import u from '#utils.js'
-  import store from '#store.js'
+  import st from'#store.js'
 
   export let currentRoute // else Svelte complains (I don't know why yet)
   export let params // else Svelte complains (I don't know why yet)
-
+  const msg = 'Thank you for your feedback! We very much appreciate your participation in creating a Common Good economy.'
   let text
 
-  async function submit() {
-    store.comment(text)
-    u.goHome('Thank you for your feedback! We very much appreciate your participation in creating a Common Good economy.')
-  }
+  async function submit() { await st.comment(text); u.alert(msg, u.goBack) }
 </script>
 
 <svelte:head>
@@ -22,7 +19,7 @@
   <div class="top">
     <h1>Comments and Suggestions</h1>
       <p>We love feedback! Please type your comment and/or suggestion below in as much detail as you you think we might need, in order to correct a problem or make your suggested improvement.</p>
-      <form id="feedback" on:submit|preventDefault={ submit }>
+      <form id="feedback" on:submit|preventDefault={submit}>
         <label class='visuallyhidden' for='input-comment'>Type here</label>
         <textarea data-testid='input-comment' id='input-comment' name='comment' placeholder='Type here...' bind:value={ text } required></textarea> 
       </form>

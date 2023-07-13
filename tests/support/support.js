@@ -2,6 +2,7 @@ import { assert, expect } from 'chai'
 import c from '../../constants.js'
 import u from '../../utils0.js'
 import cache from '../../src/cache.js'
+import cacheA from './oldData/cacheA.js'
 import w from './world.js'
 import queryString from 'query-string'
 
@@ -10,14 +11,30 @@ const baseUrl = 'http://localhost:' + c.port + '/'
 const t = {
   // Constants
   ONE: true, // parameter for these()
-  SERVER: 'server', // parameter for these()
 
   // UTILITY FUNCTIONS
 
   getst(key = c.storeKey) { return JSON.parse(localStorage.getItem(key)) }, // for debugging
   async snap(picName = 'snap') { await w.page.screenshot({ path:picName + '.png' }) }, // screen capture
   async wait(secs) { await w.page.waitForTimeout(secs * 1000) },
-  mapServerField(field) { return field == 'actorId' ? 'actorUid' : field }, // disambiguate server's from app's actorId field
+
+  /**
+   * Translate app's table and field names to server's
+   * @param string field: table or field name 
+   * @param string table: table name, if relevant
+   * @returns the translated field name
+   */
+  mapToServer(field, table = null) {
+    // table names
+    return field == 'accounts' ? 'users'
+
+    // field names
+    : (table == 'users' && 'id actorId'.split(' ').includes(field)) ? 'uid' // maybe use just id?
+    : (table == 'users' && field == 'actorId') ? 'uid'
+    : (table == 'txs' && field == 'actorId') ? 'actorUid'
+    : field == 'creditLine' ? 'floor'
+    : field
+  },
 
   async whatPage() { 
     const el = await w.page.$('.page')
@@ -43,7 +60,6 @@ const t = {
 
   async putv(k, v) {
     await t.waitForApp()
-    if (u.empty(w.store)) w.store = { ...cache }
     w.tellApp.push({ k:k, v:v }); w.store[k] = v
     if (k == 'online') { w.tellApp.push({ k:'useWifi', v:v}); w.store.useWifi = v } // these values go together for faking online/offline
     await t.waitACycle() // give app time to ask
@@ -52,10 +68,11 @@ const t = {
   /**
    * This function is exposed to the app by the "page.exposeFunction" function in Before() in hooks.js).
    * It is used for communication (one way at a time) between this testing framework and the app using u.tellTester()
+   * w.tellApp is set to null while the app is working on something at the test framework's (our) request
    * @param string op: the operation to be performed by the tester (notified/requested by the app)
    * @param string k: key to store in w or localStore
    * @param {*} v: value operation details
-   * @returns an array of key/value pairs waiting for the app to store (see t.putv() and store.fromTester())
+   * @returns an array of key/value pairs waiting for the app to store (see t.putv() and st.fromTester())
    */
   async appPipe(op = null, k = null, v = null) {
     if (op == 'store') {
@@ -78,9 +95,9 @@ const t = {
    * For an array of n arrays, the first element being the keys (from a Gherkin multi-value field), return an array of n-1 objects.
    * @param {*} rows: a list of field names and one or more data records
    * @param bool one: if true, return just the first/only record
-   * @param bool serverField: if true, the rows represent data expected from the server
+   * @param bool serverTable: if specified, the rows represent data expected from (or sent to) the server
    */
-  these({ rawTable:rows }, one = null, serverField = null ) {
+  these({ rawTable:rows }, one = false, serverTable = null ) {
     if (rows.length === 1) return [ t.adjust(rows[0][0]) ]
     if (one) assert.equal(rows.length, 2)
     let ray = [] // the resulting array of objects
@@ -91,9 +108,10 @@ const t = {
       ray[rowi] = {}; obo = {} // don't combine these
       for (let coli in rows[0]) {
         k = rows[0][coli]
+        if (serverTable) k = t.mapToServer(k, serverTable)
         obo[k] = rows[rowi + 1][coli] // remember original value of this cell
         if (k == 'proof') w.proofRow = { ...ray[rowi], amount:obo.amount.replace('-', ''), cardCode:t.adjust(obo.otherId, 'cardCode') } // save this for calculating the wanted proof value in adjust
-        ray[rowi][k] = t.adjust(obo[k], serverField ? t.mapServerField(k) : k)
+        ray[rowi][k] = t.adjust(obo[k], serverTable ? t.mapToServer(k, serverTable) : k)
       }
     }
     return u.clone(one ? ray[0] : ray)
@@ -126,11 +144,13 @@ const t = {
 
     const me = u.clone(w.accounts[v])
     if (me != null) return  (k == 'account') ? me
-                          : u.in(k, 'actorUid uid1 uid2 agt1 agt2') ? w.uid(v)
-                          : k == 'myAccount' ? u.just('name isCo accountId deviceId selling', me)
+                          : k == 'me' ? u.just('name isCo accountId deviceId selling', me)
+                          : u.in(k, 'actorUid uid uid1 uid2 agt1 agt2') ? w.uid(v)
+                          : k == ('id' && v.includes('/')) ? v.split('/')[1] // without agent
                           : k == 'actorId' ? me.accountId
                           : k == 'otherId' ? me.accountId
                           : k == 'cardCode' ? me.cardCode
+                          : k == 'deviceId' ? me.deviceId
                           : k == 'qr' ? c.testQrStart + me.accountId.charAt(0) + me.accountId.substring(4) + me.cardCode
                           : v 
     return v
@@ -157,7 +177,7 @@ const t = {
         assert.equal(got.length, want.length, msg)
         for (let i in want) t.test(got[i], want[i], i, mode)
       } else { // object
-        if (field == 'myAccount') want = { ...want, deviceId:'?', qr:'?' }
+        if (field == 'me') want = { ...want, deviceId:'?', qr:'?' }
         for (let i of Object.keys(want)) t.test(got[i], want[i], i, u.empty(mode) ? null : mode)
       }
       return
@@ -185,14 +205,39 @@ const t = {
   async element(testId) { await t.waitForApp(); return await w.page.$(t.sel(testId)) },
   sel(testId) { return `[data-testid="${testId}"]` },
   isTimeField(k) { return u.in(k, 'created') },
-  async waitACycle() { return w.page.waitForTimeout(c.networkTimeoutMs + 1) },
+  async waitACycle(n = 1) { return w.page.waitForTimeout(n * c.networkTimeoutMs + 1) },
   
   // MAKE / DO
+
+  async click(testId, options = {}) { await t.waitForApp(); await w.page.click(t.sel(testId), options) },
+
+  /**
+   * Set typical data from a previous release
+   * @param string release: semantic version number of old data
+   * NOTE: If used, this should always be the first step in a scenario (including any background)
+   */
+  async oldData(release) {
+    w.store = release == 'A' ? u.clone(cacheA) : 'error'
+    w.store.now = w.now
+    w.tellApp = [{ k:'clear', v:{ ...w.store } }] // replace what the Before hook set, with older data (see hooks.js)
+    await t.waitACycle(2) // give app time to ask
+  },
 
   async visit(target, wait = 'networkidle0') { 
     await t.waitForApp()
     const options = wait ? { waitUntil:wait } : {} // load, domcontentloaded, networkidle0, or networkidle2
     await w.page.goto(baseUrl + target, options)
+  },
+
+  async go(target, from = 'home') { // simulate u.go() when no click is available (just from the scan page for now)
+    let trail = []
+    if (target != 'home') {
+      trail = await t.getv('trail')
+      trail.push(from) // we can't actually u.go anywhere from the scan page in testing, so these 5 lines fake it
+    }
+    await t.putv('trail', trail)
+    await t.putv('hdrLeft', target == 'home' ? 'logo' : 'back')
+    await t.visit(target)
   },
 
   /**
@@ -206,6 +251,18 @@ const t = {
     await t.putv(k, t.adjust(typeof v === 'string' ? v : t.these(v, one), k))
   },
 
+  /**
+   * Set record values on the server
+   * @param string table: app's name for the server table to update
+   * @param {*} rows: a list of tables/record IDs/field values to set on the server
+   */
+  async setServer(table, rows) {
+    const serverTable = t.mapToServer(table)
+    const ray = t.these(rows, false, serverTable)
+    if ('floor' in ray[0]) for (let i in ray) ray[i].floor = -ray[i].floor // translation from "creditLine" changes sign
+    await t.postToTestEndpoint('update', { table:serverTable, keyedValues:JSON.stringify(ray) })
+  },
+
   async setUA(browser, sys) {
     let agent = ''
     if (sys == 'Apple' && browser == 'Safari') agent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) FxiOS/36.0  Mobile/15E148 Safari/605.1.15'
@@ -215,20 +272,40 @@ const t = {
 
   async input(id, text) {
     await t.waitForApp()
-    const sel = t.sel('input-' + id) 
-    await w.page.click(sel, { clickCount: 3 }) // select field so that typing replaces it
+    const testId = 'input-' + id
+    const sel = t.sel(testId) 
+    await t.click(testId, { clickCount: 3 }) // select field so that typing replaces it
     await w.page.type(sel, isNaN(text) ? text : JSON.stringify(text))
+    await t.waitACycle(2) // needed sometimes between inputs
     const newValue = await w.page.$eval(sel, el => el.value)
     t.test(newValue, text)
   },
 
-  async scan(who) { await t.putv('qr', t.adjust(who, 'qr')); await t.visit('charge') },
+  async scan(who, why = 'charge') {
+    const qr = t.adjust(who, 'qr');
+    await t.putv('intent', why)
+    if (why == 'scanIn') {
+      await t.putv('qr', qr) // must be after visit to Home page (because it resets qr)
+      await t.go('scan')
+      await t.go('home')
+    } else { // why is charge or pay
+      await t.visit('')
+      await t.onPage('home') // make sure we're starting in the right place
+      await t.putv('qr', qr) // must be after visit to Home page (because it resets qr)
+      await t.click('btn-' + why)
+      await t.onPage('scan') // make sure the button worked
+      await t.go('tx', 'scan')
+    }
+    await t.waitACycle()
+  },
 
   async tx(who, amount, description) {
+    await t.visit('home') // sometimes needed
     await t.scan(who)
+    await t.waitACycle()
     await t.input('amount', amount)
     await t.input('description', description)
-    await w.page.click(t.sel('btn-submit'))
+    await t.click('btn-submit')
   },
 
 /**
@@ -293,7 +370,7 @@ async mockFetch(url, options = {}) {
   },
 
   async testServer(table, rows) {
-    const want = t.these(rows, false, t.SERVER)
+    const want = t.these(rows, false, table)
     let msg, kvs, i
     const got = await t.postToTestEndpoint('rows', { fieldList:'*', table:table })
     for (let rowi in want) {
@@ -305,6 +382,12 @@ async mockFetch(url, options = {}) {
     }
   },
 
+  /**
+   * Test just the most recent post or get to the given endpoint
+   * @param {*} endpoint 
+   * @param {*} rows 
+   * @param {*} method 
+   */
   async posted(endpoint, rows, method) {
     await t.waitACycle()
     assert.isNotNull(w[method][endpoint], `expected a "${method}" request to endpoint "${endpoint}"`)
@@ -347,6 +430,7 @@ async mockFetch(url, options = {}) {
   },
 
   async onPage(id) {
+    await t.waitForApp()
     const el = await w.page.$(`#${id}`)
     if (el === null) {
       const here = await t.whatPage()
@@ -357,16 +441,22 @@ async mockFetch(url, options = {}) {
   async see(testId) {
     const el = await t.element(testId)
     assert.isNotNull(el)
-    return el // this is required (I don't know why)
+    return el
   },
 
-  async seeIs(testId, want, mode = 'exact') {
-    const gotEl = await t.see(testId)
-    const got = await gotEl.evaluate(el => el.textContent)
+  async is(testId, want, mode = 'exact') {
+    const prefix = testId.split('-')[0]
+    const el = await t.see(testId)
+    if (u.in(want, 'selected checked')) { // Svelte doesn't use selected and checked so we simulate it with class
+      const has = (await (await el.getProperty('className')).jsonValue()).split(' ').includes(want)
+      return assert.isTrue(mode === false ? !has : has)
+    }
+    let got = await el.evaluate(el0 => el0.textContent)
+    if (prefix == 'input') got = await (await el.getProperty('value')).jsonValue()
     t.test(got, want, null, mode)
   },
 
-  async dontSee(testId) { assert.isNull(await t.element(testId), "shouldn't see" + testId) },
+  async dontSee(testId) { assert.isNull(await t.element(testId), "shouldn't see " + testId) },
 
   async countIs(list, count) {
     const ray = await t.getv(list)
@@ -375,8 +465,8 @@ async mockFetch(url, options = {}) {
 
   async signedInAs(who, set = false) {
     const me = w.accounts[who]
-    if (set) await t.putv('myAccount', { ...u.just('name isCo accountId deviceId selling', me), qr:'qr' + me.name.charAt(0) })
-    if (!set) t.test(u.just('name isCo accountId selling', await t.getv('myAccount')), u.just('name isCo accountId selling', me), 'myAccount')
+    if (set) await t.putv('me', { ...u.just('name isCo accountId deviceId selling', me), qr:'qr' + me.name.charAt(0) })
+    if (!set) t.test(u.just('name isCo accountId selling', await t.getv('me')), u.just('name isCo accountId selling', me), 'me')
   },
 
 }

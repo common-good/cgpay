@@ -1,38 +1,36 @@
 <script>
-  import { navigateTo } from 'svelte-router-spa'
-  import store from '#store.js'
+  import st from'#store.js'
   import u from '#utils.js'
-  import c from '#constants.js'
   import cgLogo from '#modules/assets/cg-logo-300.png?webp'
-  import Modal from '#modules/Modal.svelte'; let m0, m1
 
   const credentials = {}
   let statusMsg = ''
 
-  function showEr(msg) { 
-    ;({ m0, m1 } = u.dlg('Alert', msg, 'Close', () => m0 = false)); m0=m0; m1=m1
-//    console.log('showEr: ', msg)
-    statusMsg = ''
-  }
+  function showEr(msg) { u.alert(msg); statusMsg = '' }
 
   async function signIn() {
     statusMsg = 'Finding your account(s)...'
     try {
-      const result = await u.postRequest('accounts', credentials)
-      store.setAcctChoices(result.accounts)
-      if (result.accounts.length > 1) {
-        navigateTo('/link-account')
+      const res = await u.postRequest('accounts', credentials)
+      st.setAcctChoices(res.accounts)
+      if (res.accounts.length > 1) {
+        u.go('link-account')
       } else {
-        store.setMyAccount(result.accounts[0])
-        navigateTo('/home')
+        // Skip /link-account and use individual account settings
+        st.setMe(res.accounts[0])
+        st.setShowDash(true)
+        st.setPayOk(true)
+        st.setAllowShow(true)
+        u.go('home')
       }
     } catch (er) {
-      store.resetNetwork()
-      if (u.isTimeout(er) || !$store.online) {
+      st.resetNetwork()
+      if (u.isTimeout(er) || !$st.online) {
         showEr('The server is unavailable. Check your internet connection and try again.')
       } else if (er.message == 403) { // forbidden
         showEr('That account is not completely set up. Sign back in at CommonGood.earth to complete it.')
       } else {
+        console.log(er)
         showEr('We could not find an account with that information. Please try again.')
       }
     }
@@ -51,7 +49,7 @@
 
   <div class='content'>
     <h2>Sign In</h2>
-    <form on:submit|preventDefault={ signIn }>
+    <form on:submit|preventDefault={signIn}>
       <label class="visuallyhidden" for="account-id">Account ID or Email Address</label>
       <input data-testid="input-identifier" name="account-id" type="text" placeholder="Account ID or Email Address" autocomplete="off" autocapitalize="off" bind:value={ credentials.identifier } required />
       <label class="visuallyhidden" for="password">Password</label>
@@ -59,12 +57,10 @@
       <button data-testid="btn-signin" type="submit">Sign In</button>
       <a data-testid="lnk-reset" href="https://new.commongood.earth/settings/password/" target="_blank">Reset password</a>
        <a class="signup" data-testid="lnk-signup" href="https://new.commongood.earth/signup" target="_blank">Not a member yet? Sign Up</a>
-      <p class="status">{ statusMsg }</p>
+      <p class="status">{statusMsg}</p>
     </form>
   </div>
 </section>
-
-<Modal m0={m0} on:m1={m1} />
 
 <style lang='stylus'>
   a

@@ -1,16 +1,21 @@
 <script>
   import { Route } from 'svelte-router-spa'
   import { onMount } from 'svelte'
-
-  // --------------------------------------------
+  import Modal from '#modules/Modal.svelte'
 
   export let currentRoute
   let viewHeight
-  onMount(() => viewHeight = window?.visualViewport?.height)
+
+  function setViewportHeight() { viewHeight = window.visualViewport.height }
+
+  onMount(() => document.documentElement.classList.add('green'))
 </script>
+
+<svelte:window on:load={setViewportHeight}/>
 
 <div class='layout-intro' style="height: {viewHeight}px">
   <div class='container'>
+    <Modal/>
     <Route { currentRoute } />
   </div>
 </div>

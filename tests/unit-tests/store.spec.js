@@ -26,34 +26,34 @@ describe('store', () => {
     it('initializes to stored values', () => {
       setupLocalStorage({ foo: { bar: 'baz' } })
       const store = createStore()
-      expect(store.inspect()).toEqual({ foo: { bar: 'baz' } })
+      expect(st.inspect()).toEqual({ foo: { bar: 'baz' } })
     })
   })
 
   describe('when there are not existing values in local storage', () => {
     it('initializes to default values', () => {
       const store = createStore()
-      expect(store.inspect().sawAdd).toEqual(false)
+      expect(st.inspect().sawAdd).toEqual(false)
     })
   })
 
 
-  describe('.myAccount', () => {
+  describe('.me', () => {
     it('is accessible', () => {
       const store = createStore()
-      expect(store.inspect().myAccount).toEqual(null)
+      expect(st.inspect().me).toEqual(null)
     })
 
     describe('.setAcctChoices()', () => {
       const store = createStore()
       it('is initialized as null', () => {
-        expect(store.inspect().choices).toEqual(null)
+        expect(st.inspect().choices).toEqual(null)
       })
 
       it('sets the correct account choices', () => {
         const acctChoices = [{ acct1: 'foo' }, {acct2: 'bar'}]
-        store.setAcctChoices(acctChoices)
-        expect(store.inspect().choices).toEqual(acctChoices)
+        st.setAcctChoices(acctChoices)
+        expect(st.inspect().choices).toEqual(acctChoices)
         expect(stored().choices).toEqual(acctChoices)
       })
     })
@@ -62,32 +62,32 @@ describe('store', () => {
       describe('when there is a linked account', () => {
         it('is true', () => {
           setupLocalStorage({
-            myAccount: {name: 'bar'}
+            me: {name: 'bar'}
           })
           const store = createStore()
-          expect(store.linked()).toEqual(true)
+          expect(st.linked()).toEqual(true)
         })
       })
 
       describe('when there is not a linked business', () => {
         it('is false', () => {
           setupLocalStorage({
-            myAccount: null
+            me: null
           })
 
           const store = createStore()
-          expect(store.linked()).toEqual(false)
+          expect(st.linked()).toEqual(false)
         })
       })
     })
 
-    describe('.setMyAccount()', () => {
+    describe('.setMe()', () => {
       it('links the given account', () => {
         const store = createStore()
-        store.setMyAccount({name: 'Biz'})
+        st.setMe({name: 'Biz'})
 
-        expect(stored().myAccount.name).toEqual('Biz')
-        expect(store.inspect().myAccount.name).toEqual('Biz')
+        expect(stored().me.name).toEqual('Biz')
+        expect(st.inspect().me.name).toEqual('Biz')
       })
     })
   })
@@ -99,14 +99,14 @@ describe('store', () => {
     })
 
     it('is initialized as null', () => {
-      expect(store.inspect().qr).toBeNull()
+      expect(st.inspect().qr).toBeNull()
     })
 
     it('sets the correct qr value', () => {
       const v = '123'
 
-      store.setQr(v)
-      expect(store.inspect().qr).toEqual(v)
+      st.setQr(v)
+      expect(st.inspect().qr).toEqual(v)
     })
   })
 
@@ -117,14 +117,14 @@ describe('store', () => {
     })
 
     it('is initialized as null', () => {
-      expect(store.inspect().erMsg).toBeNull()
+      expect(st.inspect().erMsg).toBeNull()
     })
 
     it('sets the correct error message', () => {
       const msg = "error" 
 
-      store.setMsg(msg)
-      expect(store.inspect().erMsg).toEqual(msg)
+      st.setMsg(msg)
+      expect(st.inspect().erMsg).toEqual(msg)
     })
   })
 
@@ -133,16 +133,16 @@ describe('store', () => {
     describe('.online', () => {
       it('is accessible', () => {
         const store = createStore()
-        expect(store.inspect().online).toEqual(null)
+        expect(st.inspect().online).toEqual(null)
       })
     })
 
     describe('.resetNetwork()', () => {
       it('resets the network to basic online status', () => {
         const store = createStore()
-        store.resetNetwork()
+        st.resetNetwork()
 
-        expect(store.inspect().online).toEqual(navigator.onLine)
+        expect(st.inspect().online).toEqual(navigator.onLine)
       })
     })
 
@@ -150,11 +150,11 @@ describe('store', () => {
       it('sets the network status to online or offline', () => {
         const store = createStore()
 
-        store.setOnline(true)
-        expect(store.inspect().online).toEqual(true)
+        st.setOnline(true)
+        expect(st.inspect().online).toEqual(true)
 
-        store.setOnline(false)
-        expect(store.inspect().online).toEqual(false)
+        st.setOnline(false)
+        expect(st.inspect().online).toEqual(false)
       })
     })
 
@@ -165,18 +165,18 @@ describe('store', () => {
       const card = {acct: '123'}
       const store = createStore()
 
-      store.putAcct(card, { foo: 'bar' })
-      expect(store.getAcct(card)).toEqual({ foo: 'bar' })
+      st.putAcct(card, { foo: 'bar' })
+      expect(st.getAcct(card)).toEqual({ foo: 'bar' })
 
-      store.putAcct(card, { fizz: 'buzz' })
-      expect(store.getAcct(card)).toEqual({ fizz: 'buzz' })
+      st.putAcct(card, { fizz: 'buzz' })
+      expect(st.getAcct(card)).toEqual({ fizz: 'buzz' })
     })
   })
 
   describe('.sawAdd', () => {
     it('is accessible', () => {
       const store = createStore()
-      expect(store.inspect().sawAdd).toEqual(false)
+      expect(st.inspect().sawAdd).toEqual(false)
     })
   })
 
@@ -186,12 +186,12 @@ describe('store', () => {
 
       vi.useFakeTimers()
       const now = Math.floor(Date.now() / 1000)
-      expect(store.inspect().sawAdd).toEqual(false) // Confirm initial values are set.
-      store.setSawAdd()
+      expect(st.inspect().sawAdd).toEqual(false) // Confirm initial values are set.
+      st.setSawAdd()
 
       // Confirm that all forms of store access are updated.
-      expect(store.inspect().sawAdd).toEqual(now)
-      store.subscribe(state => expect(state.sawAdd).toEqual(now))
+      expect(st.inspect().sawAdd).toEqual(now)
+      st.subscribe(state => expect(state.sawAdd).toEqual(now))
     })
   })
 
@@ -200,17 +200,17 @@ describe('store', () => {
       it('dequeues the first transaction in the queue', () => {
         const store = createStore()
 
-        store.enqTx({ id: 1 })
-        store.enqTx({ id: 2 })
-        store.enqTx({ id: 3 })
-        store.deqTx()
+        st.enqTx({ id: 1 })
+        st.enqTx({ id: 2 })
+        st.enqTx({ id: 3 })
+        st.deqTx()
 
         // Confirm that all forms of store access are updated.
         expect(stored().txs).toHaveLength(2)
-        expect(store.inspect().txs).toHaveLength(2)
-        store.subscribe(state => expect(state.txs).toHaveLength(2))
+        expect(st.inspect().txs).toHaveLength(2)
+        st.subscribe(state => expect(state.txs).toHaveLength(2))
 
-        expect(store.inspect().txs).toEqual([
+        expect(st.inspect().txs).toEqual([
           { id: 2, offline: true },
           { id: 3, offline: true }
         ])
@@ -222,10 +222,10 @@ describe('store', () => {
         
         const store = createStore()
 
-        store.enqTx({ id: '1', amount: 1, description: '1' })
-        store.enqTx({ id: '2', amount: 2, description: '2' })
-        store.enqTx({ id: '3', amount: 3, description: '3' })
-        await store.flushTxs()
+        st.enqTx({ id: '1', amount: 1, description: '1' })
+        st.enqTx({ id: '2', amount: 2, description: '2' })
+        st.enqTx({ id: '3', amount: 3, description: '3' })
+        await st.flushTxs()
 
         expect(postRequest.calls).toHaveLength(3)
         expect(postRequest.calls[0][0]).toEqual({ id: '1', amount: 1, description: '1', offline: true })
@@ -237,13 +237,13 @@ describe('store', () => {
         it('dequeues the request', async () => {
           const store = createStore()
 
-          store.enqTx({ id: '1', amount: 1, description: '1' })
-          store.enqTx({ id: '2', amount: 2, description: '2' })
-          store.enqTx({ id: '3', amount: 3, description: '3' })
+          st.enqTx({ id: '1', amount: 1, description: '1' })
+          st.enqTx({ id: '2', amount: 2, description: '2' })
+          st.enqTx({ id: '3', amount: 3, description: '3' })
 
-          expect(store.inspect().txs).toHaveLength(3)
-          await store.flushTxs()
-          expect(store.inspect().txs).toHaveLength(0)
+          expect(st.inspect().txs).toHaveLength(3)
+          await st.flushTxs()
+          expect(st.inspect().txs).toHaveLength(0)
         })
       })
 
@@ -259,15 +259,15 @@ describe('store', () => {
 
           const store = createStore()
 
-          store.enqTx({ id: '1' })
-          store.enqTx({ id: '2' })
-          store.enqTx({ id: '3' })
+          st.enqTx({ id: '1' })
+          st.enqTx({ id: '2' })
+          st.enqTx({ id: '3' })
 
-          expect(store.inspect().txs).toHaveLength(3)
-          await store.flushTxs()
-          expect(store.inspect().txs).toHaveLength(2)
+          expect(st.inspect().txs).toHaveLength(3)
+          await st.flushTxs()
+          expect(st.inspect().txs).toHaveLength(2)
 
-          expect(store.inspect().txs[0]).toEqual({ id: '2', offline: true })
+          expect(st.inspect().txs[0]).toEqual({ id: '2', offline: true })
         })
       })
     })
@@ -275,14 +275,14 @@ describe('store', () => {
     describe('.enqTx', () => {
       it('stores the transaction', () => {
         const store = createStore()
-        store.enqTx({ id: '1' })
+        st.enqTx({ id: '1' })
 
         // Confirm that all forms of store access are updated.
         expect(stored().txs).toHaveLength(1)
-        expect(store.inspect().txs).toHaveLength(1)
-        store.subscribe(state => expect(state.txs).toHaveLength(1))
+        expect(st.inspect().txs).toHaveLength(1)
+        st.subscribe(state => expect(state.txs).toHaveLength(1))
 
-        expect(store.inspect().txs[0]).toEqual({ id: '1', offline: true })
+        expect(st.inspect().txs[0]).toEqual({ id: '1', offline: true })
       })
     })
   })

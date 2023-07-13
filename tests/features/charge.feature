@@ -13,113 +13,164 @@ Background:
 Rule: Charges must include an amount and a description
 
 Scenario: A company charges an individual
-  When I scan "Bea"
+  When I scan "Bea" to "charge"
   And I input "1234.50" as "amount"
   And I input "food!" as "description"
   And I click "btn-submit"
-  Then ? we post this to "transactions":
-  | amount  | actorId | otherId | description | created | proof | offline | version |
-  | 1234.50 | Abe/Cit | Bea     | food!       | now     | hash  | false   | version |
-  * I wait 1 seconds
   Then ? I see "transaction-complete"
-  And ? I see "action" is "Charged"
-  And ? I see "other-name" is "Bea Two"
-  And ? I do not see "agent"
-  And ? I see "description" is "food!"
-  And ? I see "amount" is "1,234.50"
+  And these "txs":
+  | deviceId | amount   | actorId | otherId | description | created | proof | offline | version |
+  | devC     | 1234.50  | Abe/Cit | Bea     | food!       | now     | hash  | true    | version |
+  And ? this "pending": "true"
+  And ? "action" is "Charged"
+  And ? "other-name" is "Bea Two"
+  And ? I see no "agent"
+  And ? "description" is "food!"
+  And ? "amount" is "1,234.50"
   And ? I see "thank-you"
   And ? I see "btn-undo"
-  And ? count "txs" is 0
+  And ? I see "btn-done"
+  
+  When I click "btn-done"
+  Then ? I am on page "home"
+  And ? this "pending": "false"
+  * we wait for uploads
   And ? these server "txs":
   | amt     | actorId | uid1 | uid2  | agt1 | agt2 | for2  | created | 
   | 1234.50 | Cit     | Bea  | Cit   | Bea  | Abe  | food! | now     |
 
+Scenario: A company charges an individual then undoes the transaction-*
+  # abbreviated syntax for first 4 steps
+  When I charge "Bea" 1234.50 for "food!"
+  Then ? I see "transaction-complete"
+  And these "txs":
+  | deviceId | amount   | actorId | otherId | description | created | proof | offline | version |
+  | devC     | 1234.50  | Abe/Cit | Bea     | food!       | now     | hash  | true    | version |
+
   When I click "btn-undo"
-  Then ? I see this alert: "Reverse the transaction?"
-  And ? I see "btn1" is "Yes"
-  When I click "btn1"
+  Then ? I am on page "tx-details"
+  And ? this alert: "Reverse the transaction?"
+  And ? this "pending": "true"
+  And ? "btn1" is "Yes"
+  And ? "btn2" is "No"
+  When I click "btn2"
+  Then ? I am on page "tx-details"
+  And ? I see "btn-undo"
+  And ? this "pending": "true"
+  
+  When I click "btn-back"
+  Then ? I am on page "tx-details"
+  And ? this alert: "Reverse the transaction?"
+  And ? this "pending": "true"
+  And ? "btn1" is "Yes"
+  And ? "btn2" is "No"
+  When I click "btn2"
+  Then ? I am on page "tx-details"
+  And ? I see "btn-undo"
+  And ? this "pending": "true"
+
   * I wait 1 seconds
-  Then ? I see this confirmation: "The transaction has been reversed."
-  When I click "btn1"
-  Then ? I am on page "home"
-  And ? these "txs":
-  | amount   | actorId | otherId | description | created | offline | version |
-  | -1234.50 | Abe/Cit | Bea     | food!       | now     | true    | version |
+  When I click "btn-undo"
+  And I wait 1 seconds
+  And I click "btn1"
+  And I wait 1 seconds
+  Then ? this confirmation: "The transaction has been reversed."
+  And ? this "pending": "false"
+  And ? count "txs" is 0
+  And ? I am on page "home"
   * we wait for uploads
   Then ? count "txs" is 0
-  And ? these server "txs":
-  | amt      | actorId | uid1 | uid2  | agt1 | agt2 | for2  | created | 
-  | 1234.50  | Cit     | Bea  | Cit   | Bea  | Abe  | food! | now     |
-  | -1234.50 | Cit     | Bea  | Cit   | Bea  | Abe  | food! | ?       |
 
 Scenario: A company charges a company
-# abbreviated syntax for first 4 steps
   When I charge "Flo/Gis" 1234.50 for "food!"
-  Then ? we post this to "transactions":
-  | amount  | actorId | otherId | description | created | proof | offline | version |
-  | 1234.50 | Abe/Cit | Flo/Gis | food!       | now     | hash  | false   | version |
-  * I wait 1 seconds
   Then ? I see "transaction-complete"
-  And ? I see "action" is "Charged"
-  And ? I see "other-name" is "Gisette"
-  And ? I see "agent" is "Flo Six"
-  And ? I see "description" is "food!"
-  And ? I see "amount" is "1,234.50"
+  And ? this "pending": "true"
+  And ? "action" is "Charged"
+  And ? "other-name" is "Gisette"
+  And ? "agent" is "Flo Six"
+  And ? "description" is "food!"
+  And ? "amount" is "1,234.50"
   And ? I see "thank-you"
   And ? I see "btn-undo"
-  And ? count "txs" is 0
 
 Scenario: An individual charges an individual
   Given I am signed in as "Abe"
   When I charge "Bea" 1234.50 for "food!"
-  Then ? we post this to "transactions":
-  | amount  | actorId | otherId | description | created | proof | offline | version |
-  | 1234.50 | Abe     | Bea     | food!       | now     | hash  | false   | version |
-  * I wait 1 seconds
   Then ? I see "transaction-complete"
-  And ? I see "action" is "Charged"
+  And ? this "pending": "true"
+  And ? "action" is "Charged"
 
 Scenario: A company charges an individual offline
   Given we are offline
   And I run the app
-  When I scan "Bea"
-  Then ? I see this alert: "Trust this member or ask for ID"
+  When I scan "Bea" to "charge"
+  Then ? this alert: "Trust this member or ask for ID"
   When I click "btn1"
-  * I wait 1 seconds
+  * I wait .2 seconds
   And I input "234.50" as "amount"
   And I input "food!" as "description"
   And I click "btn-submit"
   Then ? these "txs":
-  | amount | actorId | otherId | description | created | offline | version |
-  | 234.50 | Abe/Cit | Bea     | food!       | now     | true    | version |
+  | deviceId | amount | actorId | otherId | description | created | offline | version |
+  | devC     | 234.50 | Abe/Cit | Bea     | food!       | now     | true    | version |
   # Offline limit is $250
   Then ? I see "transaction-complete"
-  And ? I see "action" is "Charged"
-  And ? I see "other-name" is "Unidentified Customer"
-  And ? I do not see "agent"
-  And ? I see "description" is "food!"
-  And ? I see "amount" is "234.50"
+  And ? "action" is "Charged"
+  And ? "other-name" is "Unidentified Member"
+  And ? I see no "agent"
+  And ? "description" is "food!"
+  And ? "amount" is "234.50"
   And ? I see "thank-you"
   And ? I see "btn-undo"
   And ? count "txs" is 1
 
   When I click "btn-undo"
-  Then ? I see this alert: "Reverse the transaction?"
-  And ? I see "btn1" is "Yes"
-  When I click "btn1"
-  * I wait 1 seconds
-  Then ? I see this confirmation: "The transaction has been reversed."
+  Then ? this alert: "Reverse the transaction?"
+  And ? "btn1" is "Yes"
   When I click "btn1"
   Then ? I am on page "home"
-  And ? these "txs":
-  | amount  | actorId | otherId | description | created | offline | version |
-  | 234.50  | Abe/Cit | Bea     | food!       | now     | true    | version |
-  | -234.50 | Abe/Cit | Bea     | food!       | now     | true    | version |
-  And ? count "txs" is 2
+  Then ? this confirmation: "The transaction has been reversed."
+  And ? count "txs" is 0
 
-  When we are online
-  * we wait for uploads
-  Then ? count "txs" is 0
-  And ? these server "txs":
-  | amt     | actorId | uid1 | uid2  | agt1 | agt2 | for2  | created | 
-  | -234.50 | Cit     | Bea  | Cit   | Bea  | Abe  | food! | ?       |
+Scenario: A cashier enters too many decimal places (to be rounded up)
+  When I charge "Bea" 1.235 for "food!"
+  Then ? this alert: "The amount has been rounded to two decimal places. Make sure this is what you intended and try again."
+  And ? I am on page "tx-details"
+  And ? "input-amount" is "1.24"
+  And ? count "txs" is 0
+
+Scenario: A cashier enters too many decimal places (to be rounded down)
+  When I charge "Bea" 1.234 for "food!"
+  Then ? this alert: "The amount has been rounded to two decimal places. Make sure this is what you intended and try again."
+  And ? I am on page "tx-details"
+  And ? "input-amount" is "1.23"
+  And ? count "txs" is 0
+
+Scenario: A buyer has no balance and no credit
+  Given these server "accounts" values:
+  | id  | balance | creditLine |
+  | Dee | -23     | 0          |
+  And I am signed in as "Abe/Cit"
+  When I scan "Dee" to "charge"
+  Then ? this alert: "This account has no remaining funds"
+  And ? I am on page "home"
+
+Scenario: A buyer has a balance, but not enough
+  Given these server "accounts" values:
+  | id  | balance | creditLine |
+  | Dee | 23      | 4          |
+  And I am signed in as "Abe/Cit"
+  When I charge "Dee" 30.00 for "food!"
+  Then ? this alert: "This transaction is limited to $27"
+  And ? I am on page "tx-details"
+  And ? count "txs" is 0
+
+Scenario: A buyer has plenty, but tries to pay more than the app allows
+  Given these server "accounts" values:
+  | id  | balance | creditLine |
+  | Dee | 9999    | 9999       |
+  And I am signed in as "Abe/Cit"
+  When I charge "Dee" 20000.00 for "food!"
+  Then ? this alert: "CGPay transactions are limited to $10,000"
+  And ? I am on page "tx-details"
+  And ? count "txs" is 0

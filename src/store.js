@@ -1,71 +1,8 @@
 // use this example for setv() and get(): https://svelte.dev/repl/ccbc94cb1b4c493a9cf8f117badaeb31?version=3.16.7
 
 /**
- * Data structure
- *
- * The following data is stored, and cached in "cache" while the app runs.
- * All items are also stored in localStore, except those marked with an asterisk (*).
- * 
- * SCALARS
- *   int sawAdd: Unix timestamp when user saw the option to save the app to their home screen
- *   blob qr*: a scanned QR url
- *   int lastOp*: Unix timestamp of last operation that will be timed out after c.opTimeout seconds
- *   string msg*: an informational message to display on the Home Page
- *   string erMsg*: an error message to display on the Home Page
- *   int cameraCount: number of cameras in the device
- *   bool frontCamera: true to use front camera instead of rear (default false iff mobile)
- *   bool online*: true if the device is connected to the Internet
- *   bool useWifi: true to use wifi whenever possible (otherwise disable wifi)
- *   bool selfServe: true for selfServer mode
- * 
- * ARRAYS
- *    choices: a list (array) of Common Good accounts the signed-in user may choose to connect (one of) to the device
- *      accountId: the account ID including cardCode
- *      deviceId: a unique ID for the device associated with the account
- *      name: the name on the account
- *      qr: an image of the account’s QR code and ID photo (if any)
- *      isCo: true if the account is a company account
- *      selling: a list (array) of items for sale
- * 
- *    txs: transaction objects waiting to be uploaded to the server, each comprising:
- *      deviceId: a unique ID for the device associated with the actorId account
- *      amount: dollars to transfer from actorId to otherId (signed)
- *      actorId: the account initiating the transaction
- *      otherId: the other participant in the transaction
- *      description: the transaction description
- *      created: Unix timestamp when the transaction was created
- *      proof: the proof of the transaction -- a SHA256 hash of actorId, amount, otherId, cardCode, and created
- *        The amount has exactly two digits after the decimal point. For an Undo, proof contains the original amount.
- *      offline: true -- transactions completed offline are in the txs queue. All Undos are handled as though offline.
- *      version: the app's integer version number
- * 
- *    comments: user-submitted comments to be uploaded to the server
- *      created: Unix timestamp
- *      actorId: the account making the comment
- *      text: the comment
- * 
- * OBJECTS
- *    corrupt: version number when a transaction or comment upload fails inexplicably
- *    accts: an array of accounts the device has transacted with, keyed by the account ID without cardCode, each with:
- *      hash: SHA256 hash of cardCode
- *      name: name of the account
- *      agent: agent for the account, if any
- *      location: location of the account (city, ST)
- *      limit: maximum amount this account can be charged at this time (leaving room for Stepups)
- *      creditLine: the account's credit line
- *      avgBalance: the account’s average balance over the past 6 months
- *      trustRatio: ratio of the account’s trust rating to the average trust rating of all individual accounts (zero for company accounts)
- *      since: Unix timestamp of when the account was activated
- * 
- *    myAccount: information about the account associated with the device
- *      accountId, deviceId, name, qr, isCo, and selling as in the choices array described above
- *      lastTx: Unixtime (in ms) of the last transaction known to this device (null if none)
- * 
- * TEST DATA*
- *    now: a stable timestamp (in seconds)
- *    flushOk: if true, the tester is ready for data to be uploaded to the server
- *    enQ, deQ, and posts: operation counters
- *    fromTester: key/value pairs from tester (to set)
+ * Handle stored values for the app (persistent and transient).
+ * See data structure definition in cache.js
  */
 import { writable } from 'svelte/store'
 import u from '#utils.js'
@@ -73,19 +10,58 @@ import c from '#constants.js'
 import cache0 from '#cache.js'
 
 export const createStore = () => {
-  const lostMsg = `Tell the customer "I'm sorry, that card is marked "LOST or STOLEN".`
+  const lostMsg = `Tell the customer "I'm sorry, that QR Code is marked "LOST or STOLEN".`
 
-  let cache = { ...cache0, ...getst() }
-  for (let k in cache) if (!(k in cache0)) delete cache[k]
-  save(cache) // update store with any changes in defaults (crucial for tests)
-  
+  let cache
+  save({ ...cache0, ...convert(getst()), version:c.version }) // update store (and cache) with any changes in defaults (crucial for tests)
   const { subscribe, update } = writable(cache)
-  function getst() { return JSON.parse(localStorage.getItem(c.storeKey)) }
-  function save(s) { localStorage.setItem(c.storeKey, JSON.stringify(s)); cache = { ...s }; return s }
+ 
+  function reconcileDeviceIds(chx) {
+    let s = getst()
+    let ids = u.empty(s.deviceIds) ? cache0.deviceIds : s.deviceIds
+    let i, ch, old
+    for (i in chx) {
+      ch = chx[i]
+      old = ids[ch.accountId]
+      if (old) chx[i].deviceId = old; else ids[ch.accountId] = ch.deviceId
+    }
+    return [chx, ids]
+  }
+  
+  function convert(s) {
+    if (u.empty(s) || c.version == s.version) return s
+    if (u.empty(s.version)) { // v4.0.0 (rel A) has no stored version number
+      s.deviceIds = cache0.deviceIds
+      if (s.choices) [s.choices, s.deviceIds] = reconcileDeviceIds(s.choices)
+      if (s.myAccount) s.deviceIds[s.myAccount.accountId] = s.myAccount.deviceId
+    } else if (s.version == '4.1.0') { // rel B
+      s.selfServe = (s.payOk == 'self')
+      s.me = { ...s.myAccount }; delete s.myAccount
+    }
+  
+    return s
+  }
+
+  function getst() { return {
+    ...JSON.parse(localStorage.getItem(c.storeKey)),
+    ...JSON.parse(sessionStorage.getItem(c.storeKey)),
+  }}
+
+  function save(s) {
+    cache = { ...s }
+    const persist = !u.empty(s.persist) ? s.persist : Object.keys(s).join(' ') // allow saving of previous release data when testing
+    localStorage.setItem(c.storeKey, JSON.stringify(u.just(persist, s)))
+    sessionStorage.setItem(c.storeKey, JSON.stringify(u.justNot(persist, s)))
+    return s
+  }
+
   function setst(newS) { update(s => { return save(newS) } )}
-  function setv(k, v, fromTest = false) { update(s => { s[k] = v; return save(s) }); tSetV(k, v, fromTest) }
+  function setv(k, v, fromTest = false) { update(s => { s[k] = v; return save(s) }); tSetV(k, v, fromTest); return v }
+//  function setkv(k, k2, v, fromTest = false) { ('k', k, 'k2', k2, 'v', v, 'showHdr', cache.showHdr); cache[k][k2] = v; setv(k, k2, fromTest); return v }
   function enQ(k, v) { st.bump('enQ'); cache[k].push(v); return setv(k, cache[k]) }
-  function deQ(k) { st.bump('deQ'); cache[k].shift(); return setv(k, cache[k]) } // this is actually FIFO (shift) not LIFO (pop)
+  function pop(k) { st.bump('pop'); const res = cache[k].pop(); setv(k, cache[k]); return res }
+  function ins(k, v) { st.bump('ins'); const res = cache[k].unshift(v); setv(k, cache[k]); return res } // insert
+  function deQ(k) { st.bump('deQ'); const res = cache[k].shift(); setv(k, cache[k]); return res } // this is actually FIFO (shift) not LIFO (pop)
   function tSetV(k, v, fromTest) { if (u.testing() && !fromTest) u.tellTester('store', k, v).then() }
 
   let doing = false // true if we are handling a list of things the tester has told us (the app) to do
@@ -93,6 +69,7 @@ export const createStore = () => {
 
   async function flushQ(k, endpoint) {
     if (flushing[k]) return; else flushing[k] = true
+//    console.log('flushing', k, cache[k].length)
     if (cache.corrupt == c.version) return; else if (cache.corrupt) st.setCorrupt(null) // don't retry hopeless tx indefinitely
     while (cache[k].length > 0) {
       if (!cache.useWifi) return; // allow immediate interruptions when testing
@@ -123,15 +100,15 @@ export const createStore = () => {
     },
 
     async fromTester() { // called only in test mode (see Route.svelte, hooks.js, and t.tellApp)
-      if (u.testing() && !doing) {
+      if (u.testing() && !doing) { // if doing, another thread is already handling it
         doing = true
-        u.tellTester('tellme').then(todo => { // if we have a todo list, another thread is already handling it
+        u.tellTester('tellme').then(todo => {
           if (!todo) return doing = false
           let k, v
           while (todo.length) { // for each item
             ({ k, v } = todo.shift())
             if (k == 'clear') {
-              st.clearData()
+              st.clearData(v)
             } else setv(k, v, true)
           }
           u.tellTester('done').then(() => doing = false)
@@ -143,28 +120,65 @@ export const createStore = () => {
     bump(k)  { if (u.testing()) { cache[k]++; setv(k, cache[k]) } },
 
     setQr(v) { setv('qr', v) },
-    setLastOp(set = 'now') { setv('lastOp', set == 'now' ? u.now() : set ) },
+    setIntent(v) { setv('intent', v) },
     setMsg(v) { setv('erMsg', v) },
     setCorrupt(version) { setv('corrupt', version) }, // pause uploading until a new version is released
     setWifi(yesno) { setv('useWifi', yesno); st.resetNetwork() },
-    setSelfServe(yesno) { setv('selfServe', yesno) },
+    setCoPaying(yesno) { setv('coPaying', yesno) },
+    setPayOk(v) { setv('payOk', v) },
+    setTrail(page = 'back', clear = false) {
+      if (!page) page = 'home' // handle root url showing home page
+      if (clear || u.atHome(page)) setv('trail', []) // always clear when going home
+      if (page == 'back') return pop('trail')
+      if (!cache.trail.includes(page)) enQ('trail', page)
+    },
+    setLeft(what) { setv('hdrLeft', what) },
+    setPending(yesno) { setv('pending', yesno) },
+    setModal(modal, m1 = null, m2 = null) { setv('modal', modal); setv('m1', m1); setv('m2', m2) },
+    setGotInfo(yesno) { setv('gotInfo', yesno) },
 
-    setAcctChoices(v) { setv('choices', v) },
-    setMyAccount(acct) { setv('myAccount', acct ? { ...acct } : null) },
-    linked() { return (cache.myAccount !== null) },
-    unlink() { setv('myAccount', null) },
-    signOut() { st.unlink(); st.setAcctChoices(null) },
-    clearData() { if (!u.realData()) setst({ ...cache0 }) },
+    setAcctChoices(v) {
+      setv('choices', v)
+      if (v) {
+        const [chx, ids] = reconcileDeviceIds(v)
+        setv('choices', chx)
+        setv('deviceIds', ids)
+      }
+    },
+    setMe(acct) { setv('me', { ...acct } ) }, // null is not allowed (instead see clearSettings)
+    linked() { return (cache.me !== null) },
+    clearSettings() { for (let k in { ...cache0 }) if (cache0.reset.split(' ').includes(k)) setv(k, cache0[k]) }, // called by LinkAccount
+    signOut() { st.clearSettings(); st.setAcctChoices(null) },
+    clearData(data = cache0) { if (!u.realData()) setst({ ...data }) },
 
     setSawAdd() { setv('sawAdd', u.now()) },
     setCameraCount(n) { setv('cameraCount', n) },
     setFrontCamera(yesno) { setv('frontCamera', yesno) },
+    setShowDash(yesno) { setv('showDash', yesno) },
+    setAllowType(yesno) { setv('allowType', yesno) },
+    setAllowShow(yesno) { setv('allowShow', yesno) },
+    setBalance(n) { setv('balance', n) },
+    setLocked(yesno) { setv('locked', yesno) },
+    setSelf(yesno) { setv('selfServe', yesno) },
+    setSocket(socket) { setv('socket', socket) },
 
     resetNetwork() { if (cache.useWifi) st.setOnline(navigator.onLine) },
     setOnline(yesno) { // handling this in store helps with testing
       const v = cache.useWifi ? yesno : false
       if (v !== cache.online) setv('online', v)
       if (cache.useWifi && yesno) st.flushAll().then() // when testing only do *explicit* flushing
+    },
+
+    /**
+     * Set inactivity timeout
+     * @param int t: omitted=decrement by one timer cycle, null=cancel timeout, n=number of seconds before return to Home Page
+     * @return new value of timeout
+     */
+    setTimeout(t = -1) { // -1 means one timer cycle
+      t = t == -1 ? Math.max(0, cache.timeout - c.networkTimeoutMs) // decrement
+      : t === null ? null // cancel
+      : 1000 * (u.testing() ? c.testTimeout : t) // set
+      return setv('timeout', t )
     },
 
     /**
@@ -184,24 +198,37 @@ export const createStore = () => {
       return acct
     },
 
+    setRecentTxs(tx = null) {
+      if (Array.isArray(tx)) return setv('recentTxs', tx) // replace list with results of info endpoint
+      ins('recentTxs', { ...tx }) // insert just one transaction (processed by this device just now)
+      while (cache.recentTxs.length > c.recentTxMax) pop('recentTxs')
+    },
     enqTx(tx) { tx.offline = true; enQ('txs', { ...tx }) },
     async flushTxs() { await flushQ('txs', 'transactions') },
-    deqTx() { deQ('txs') }, // just for testing (in store.spec.js)
-    comment(text) { enQ('comments', { deviceId:cache.myAccount.deviceId, actorId:cache.myAccount.accountId, created:u.now(), text:text }) },
-    async flushComments() { await flushQ('comments', 'comments') },
-    async flushAll() {
-      if (u.testing() && !cache.flushOk) return
-      if (u.empty(cache.txs) && u.empty(cache.comments)) return
-      await st.flushTxs()
-      await st.flushComments()
-      if (u.testing()) setv('flushOk', false)
-    }
+    deqTx() { deQ('txs') }, // just for testing (in st.spec.js)
+    undoTx() { pop('txs'); st.setPending(false) },
+    comment(text) { enQ('comments', { deviceId:cache.me.deviceId, actorId:cache.me.accountId, created:u.now(), text:text }) },
+    txConfirm(yesno, m) {
+      enQ('confirms', { deviceId:cache.me.deviceId, actorId:cache.me.accountId, yesno:yesno ? 1 : 0, id:m.note, whyNot:'' })
+      u.hide()
+      u.sleep(c.networkTimeoutMs * 2).then(u.getInfo) // usually after confirmation, there's a new transaction to show
+    },
 
+    tellDev(text) { st.comment(`[dev] ${new Date().toLocaleTimeString('en-us')} page=${u.pageUri()}: ${text}`) },
+    async flushComments() { await flushQ('comments', 'comments') },
+    async flushConfirms() { await flushQ('confirms', 'confirms') },
+    async flushAll() {
+      if (cache.pending) return
+      if (u.testing() && !cache.flushOk) return
+      if (u.empty(cache.txs) && u.empty(cache.comments) && u.empty(cache.confirms)) return
+        await st.flushTxs()
+      await st.flushComments()
+      await st.flushConfirms()
+      if (u.testing()) setv('flushOk', false)
+    },
   }
 
   return st
 }
-
-// --------------------------------------------
 
 export default createStore()

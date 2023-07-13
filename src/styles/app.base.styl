@@ -1,4 +1,5 @@
 @import './app.support.styl'
+@import './layout.styl'
 
 // --------------------------------------------
 
@@ -8,6 +9,9 @@ html
   +at(290px)
     font-size text(md)
 
+  &.green
+    background $c-green
+
 html, body, main
   font-family: 'Poppins', sans-serif
   height: 100%
@@ -16,6 +20,17 @@ html, body, main
 
 main
   overflow-x hidden
+
+button
+  max-width 600px
+  &.primary
+    cgButton()
+  
+  &.secondary
+    cgButtonSecondary()
+
+  &.tertiary
+    cgButtonTertiary()
 
 h1
   text(2xl)
@@ -27,6 +42,9 @@ h2
 
 form
   width 100%
+
+  fieldset
+    text-align left
 
   label
     text(sm)
@@ -51,13 +69,19 @@ form
     width 100%
 
 option:checked
-  background-color $c-blue-light
+  background-color $c-blue-bright
 
 p
   text(md)
   font-weight 400
   letter-spacing 0.005rem
   margin 0
+
+.link
+  color $c-blue
+  text-decoration underline
+  &:hover, &:focus
+    text-decoration none
 
 .visuallyhidden
 	border 0

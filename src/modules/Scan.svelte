@@ -1,23 +1,35 @@
 <script>
   import { Html5Qrcode } from 'html5-qrcode'
-  import { navigateTo } from 'svelte-router-spa'
   import { onMount } from 'svelte'
-  import store from '#store.js'
+  import st from'#store.js'
   import u from '#utils.js'
-  import cgLogo from '#modules/assets/cg-logo-300.png?webp'
+  import cgLogo from '#modules/assets/cg-logo-300-noR.png?webp'
 
   // --------------------------------------------
 
   let isLoading = true
   let di = 0 // default to first device
+  let action = ''
+
+  switch($st.intent) {
+    case 'charge':
+      action = $st.selfServe ? 'Pay' : 'Charge'
+      break
+    case 'scanIn':
+      action = "Scan In"
+      break
+    default:
+      action = $st.intent
+  }
 
   onMount(async () => {
-    try {
+    if (!$st.intent) u.goEr(u.crash('scan with no intent'))
+    if (!u.testing()) try { // don't activate camera when testing
       Html5Qrcode.getCameras().then(devices => {
         if (devices?.length) {
-          store.setCameraCount(devices.length)
+          st.setCameraCount(devices.length)
           if (devices.length > 1) { // choose front or rear camera as appropriate (ignore camera #3+)
-            if (/rear/.test(devices[0].label) ? $store.frontCamera : !$store.frontCamera) di = 1
+            if (/rear/.test(devices[0].label) ? $st.frontCamera : !$st.frontCamera) di = 1
           }
           const cameraId = devices[di].id
           const scanner = new Html5Qrcode('scanner')
@@ -27,9 +39,9 @@
             { qrbox: { width: 250, height: 250 } }, // Configuration options.
 
             async (decodedText, decodedResult) => { // Handle code
-              store.setQr(decodedText)
               await scanner.stop()
-              navigateTo('/charge')
+              st.setQr(decodedText)
+              u.go($st.intent == 'scanIn' ? 'home' : 'tx')
             },
             (erMsg) => { } // ignore "parse" errors -- no valid QR yet (keep scanning)
 
@@ -54,7 +66,7 @@
 
 <section class="page" id="scan">
   <div class='top'>
-    <h1>Scan QR Code</h1>
+    <h1 class="page-title">Scan to {action}</h1>
     {#if isLoading}
       <div class='loading'>
         <img class='logo' src= { cgLogo } alt="Common Good logo" />
@@ -63,23 +75,12 @@
     {/if}
       <div id='scanner'></div> 
   </div>
-  <a href="/home">Cancel</a>
 </section>
 
 <style lang='stylus'>
-  a
-    cgButtonSecondary()
-
   h1
-    margin-bottom $s2
-
-  section
-    display flex
-    flex-direction column
-    justify-content space-between
-    align-items center
-    height 100%
-
+    text-transform capitalize
+    
   .loading
     font-style italic
     height 250px
