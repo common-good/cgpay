@@ -55,7 +55,7 @@ const cache = {
   version: null, // latest app version that touched this data (an integer with two digits representing each segment of x.y.z)
   corrupt: null, // timestamp that cached data got corrupted
   sawAdd: null, // time user pressed Continue on the Add-to-home-screen page
-  balance: 'unknown', // last known balance
+  balance: '...', // last known balance
   cameraCount: 0, // number of cameras in the device - set this when scanning for the first time
 
   // persistent parameters that can be changed by user in Settings
