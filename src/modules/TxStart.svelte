@@ -43,6 +43,8 @@
   <div class="top">
     <h1 class="page-title">Show to {qrAction}</h1>
     <img class="qr-{$st.intent}" src="{qr}" data-testid="qr" alt={qrAction} />
+    <p>Please confirm payment amount with the Common Good member you are paying.</p>
+    <p>Or Scan To Pay to enter the amount yourself.</p>
   </div>
   <div class="bottom">
     <ScanFake intent={$st.intent}/>
@@ -60,7 +62,10 @@
     text-transform capitalize
 
   p 
-    margin-bottom $s0
+    margin-bottom $s1
+    text(sm)
+    text-align center
+    max-width 340px
 
   .icon
     margin-right $s-1
@@ -68,4 +73,5 @@
   .qr-pay
     width 250px
     margin 30px
+    
 </style>
