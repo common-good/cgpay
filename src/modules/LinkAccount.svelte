@@ -4,7 +4,6 @@
   import u from '#utils.js'
   import c from '#constants.js'
   import SelectX from '#modules/SelectX.svelte'
-  import Radios from '#modules/Radios.svelte'
 
   let acctOpts = []
   let size = 4 // number of choices to show without scrolling (fails on Android)
@@ -21,11 +20,11 @@
   function gotAccount() {
     me = choices && choices[acctIndex]
     st.setMe(me)
-    st.setShowDash(!me.isCo)
-    if (lock) st.setAcctChoices(null)
-    st.setPayOk(me.isCo ? 'never' : true)
-    if (selfServe) st.setSelf(true)
-    st.setAllowShow(!me.isCo)
+    st.setShowDash(!me.isCo) // or me.isCo && allowPay
+    // if (lock) st.setAcctChoices(null)
+    st.setPayOk(me.isCo ? 'never' : true) // me.isCo && allowPay || !me.isCo
+    // if (selfServe) st.setSelf(true)
+    st.setAllowShow(!me.isCo) // unsure what this one is
     u.goHome(`This device is now linked to your Common Good account: ${me?.name}.`)
   }
 
@@ -55,13 +54,10 @@
         <p>Select a Common Good account to link to CGPay on this device.</p>
         <form>
           <SelectX name="account" label={'Select an account'} options={acctOpts} size={size} bind:value={acctIndex} required="required" />
-          {#if size > 0}
-            <label><input type="checkbox" data-testid="lock-account" name="lock-account" 
-              bind:checked={lock} class={ lock ? 'checked' : '' }/> Require sign-in to change account</label>
-          {/if}
           {#if acctIndex > 0}
-            <label><input type="checkbox" data-testid="self-serve" name="self-serve" 
-              bind:checked={selfServe} class={ selfServe ? 'checked' : '' }/> Self-serve mode</label>
+            <label><span><input type="checkbox" data-testid="self-serve" name="self-serve" 
+              bind:checked={selfServe} class={ selfServe ? 'checked' : '' }/>Allow payments from this device.
+            </span></label>
           {/if}
         </form>
       </div>
@@ -93,9 +89,15 @@
   label
     text(md)
     display flex
-    align-items center
-    letter-spacing 0.005rem
-    margin-bottom 1rem
+    flex-direction column
+
+    span:first-of-type
+      display flex
+      align-items center
+      margin-bottom $s-2
+
+    span:last-of-type
+      text(sm)
 
   .card
     height 100%
