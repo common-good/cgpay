@@ -137,7 +137,15 @@ const u = {
   },
 
   /**
-   * Return the cardId with cardCode (and everything that follows) removed
+   * Return just the cardCode from the cardId.
+   */
+  cardCode(cardId) {
+    const len = u.noCardCode(cardId).length
+    return cardId.substring(len)
+  },
+
+  /**
+   * Return the cardId with cardCode removed
    */
   noCardCode(cardId) {
     if (cardId === null) return null
