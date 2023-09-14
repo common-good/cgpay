@@ -64,6 +64,7 @@
   // }
 
   onMount(async () => {
+    if (me.cardCode === undefined) await st.convert() // async data update for rel D
     st.setTimeout(null) // stop the timeout timer from interrupting us
     st.setTrail(null, true)
     st.setLeft('logo')

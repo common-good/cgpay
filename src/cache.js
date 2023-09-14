@@ -7,6 +7,7 @@
  * ARRAYS
  *    choices: a list (array) of Common Good accounts the signed-in user may choose to connect (one of) to the device
  *      accountId: the account ID including cardCode
+ *      cardCode: the account's card security code
  *      name: the name on the account
  *      qr: an image of the account’s QR code and ID photo (if any) for purchases
  *      isCo: true if the account is a company account

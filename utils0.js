@@ -33,7 +33,7 @@ const u = {
 
   /**
    * Return Find the object, in a list of objects, that has a given keyed value.
-   * @param {*} obj: the object to search
+   * @param {*} obj: the object (or array) to search
    * @param {*} kvs: keyed values to find
    * @return index to the found object (or null)
    */
