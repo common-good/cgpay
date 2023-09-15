@@ -43,8 +43,9 @@
   <div class="top">
     <h1 class="page-title">Show to {qrAction}</h1>
     <img class="qr-{$st.intent}" src="{qr}" data-testid="qr" alt={qrAction} />
-    <p>Please confirm payment amount with the Common Good member you are paying.</p>
-    <p>Or Scan To Pay to enter the amount yourself.</p>
+    {#if paying}
+      <p>Note: Only charges by an individual require confirmation.</p>
+    {/if}
   </div>
   <div class="bottom">
     <ScanFake intent={$st.intent}/>
