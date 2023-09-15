@@ -95,8 +95,7 @@ const u = {
     try {
       socket = new WebSocket(u.socketURL()) // socket.readyState has status
       socket.onopen = () => {
-        const ms = Date.now()
-        const msg = JSON.stringify({ op:'connect', actorId:u.st().me.accountId, ms:ms, hash:u.hash(u.st().me.cardCode + ms) })
+        const msg = JSON.stringify({ op:'connect', deviceId:u.st().me.deviceId, actorId:u.st().me.accountId })
         try {
           socket.send(msg)
         } catch (er) { console.log('socket error', er) }
