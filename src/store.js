@@ -190,7 +190,7 @@ export const createStore = () => {
     setShowDash(yesno) { setv('showDash', yesno) },
     setAllowType(yesno) { setv('allowType', yesno) },
     setAllowShow(yesno) { setv('allowShow', yesno) },
-    setBalance(n) { setv('balance', n) },
+    setBalance(n) { setv('balance', n.toFixed(2)) },
     setLocked(yesno) { setv('locked', yesno) },
     setSelf(yesno) { setv('selfServe', yesno) },
     setSocket(socket) { setv('socket', socket) },
