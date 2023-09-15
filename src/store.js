@@ -15,7 +15,7 @@ export const createStore = () => {
   let cache
   save({ ...cache0, ...convert(getst()), version:c.version }) // update store (and cache) with any changes in defaults (crucial for tests)
   const { subscribe, update } = writable(cache)
- 
+
   function reconcileDeviceIds(chx) {
     let s = getst()
     let ids = u.empty(s.deviceIds) ? cache0.deviceIds : s.deviceIds
@@ -28,17 +28,29 @@ export const createStore = () => {
     return [chx, ids]
   }
   
+  /**
+   * Convert data from previous releases
+   * See also at the bottom of this file for asynchronous updates that require st to be defined.
+   * @param {*} s 
+   * @returns 
+   */
   function convert(s) {
     if (u.empty(s) || c.version == s.version) return s
-    if (u.empty(s.version)) { // v4.0.0 (rel A) has no stored version number
+    if (u.empty(s.version)) { // before rel B (rel A has no stored version number)
+      s.version = 40000
       s.deviceIds = cache0.deviceIds
       if (s.choices) [s.choices, s.deviceIds] = reconcileDeviceIds(s.choices)
       if (s.myAccount) s.deviceIds[s.myAccount.accountId] = s.myAccount.deviceId
-    } else if (s.version == '4.1.0') { // rel B
+    }
+
+    if (s.version < 40200) { // before rel C
       s.selfServe = (s.payOk == 'self')
       s.me = { ...s.myAccount }; delete s.myAccount
     }
-  
+    
+    if (s.version < 40300) { // before rel D
+    } 
+    
     return s
   }
 
@@ -103,19 +115,40 @@ export const createStore = () => {
       if (u.testing() && !doing) { // if doing, another thread is already handling it
         doing = true
         u.tellTester('tellme').then(todo => {
+//          console.log('todo', todo)
           if (!todo) return doing = false
           let k, v
           while (todo.length) { // for each item
             ({ k, v } = todo.shift())
             if (k == 'clear') {
+//              console.log('about to clear')
               st.clearData(v)
+//              console.log('cleared', v)
             } else setv(k, v, true)
           }
+//          console.log('about to tellTester done')
           u.tellTester('done').then(() => doing = false)
         })
       }
     },
     inspect() { return cache },
+
+    /**
+     * Conversions that depend on st having been initialized.
+     */
+    async convert() {
+      if ((cache.choices && !cache.choices[0].cardCode) || (cache.me && !cache.me.cardCode)) { // get cardCodes (for rel D)
+        const credentials = { identifier:'getCardCodes', password:cache.choices[0].deviceId }
+        const res = await u.postRequest('accounts', credentials, { noSt:true })
+        if (res.accounts) {
+          if (cache.choices) st.setAcctChoices(res.accounts)
+          if (cache.me) {
+            const i = u.findByValue(res.accounts, { accountId:cache.me.accountId })
+            if (i != null) st.setMe(res.accounts[i])
+          }
+        }
+      }
+    },
 
     bump(k)  { if (u.testing()) { cache[k]++; setv(k, cache[k]) } },
 
@@ -227,7 +260,7 @@ export const createStore = () => {
       if (u.testing()) setv('flushOk', false)
     },
   }
-
+  
   return st
 }
 

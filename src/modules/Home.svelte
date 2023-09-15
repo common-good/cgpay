@@ -36,7 +36,11 @@
     tx('pay')
   }
   function charge() { tx('charge') }
-  function tx(intent) { st.setIntent(intent); u.go(hasTxOptions ? 'tx-start' : 'scan') }
+  function tx(intent) {
+    st.setSocket(u.socket()) // refresh websocket, so the device that is about to pay or charge (perhaps by QR) is the one that gets a response
+    st.setIntent(intent)
+    u.go(hasTxOptions ? 'tx-start' : 'scan')
+  }
 
   function scanIn() {
     try {
@@ -64,6 +68,7 @@
   // }
 
   onMount(async () => {
+    if (me.cardCode === undefined) await st.convert() // async data update for rel D
     st.setTimeout(null) // stop the timeout timer from interrupting us
     st.setTrail(null, true)
     st.setLeft('logo')

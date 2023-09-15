@@ -1,5 +1,5 @@
 const constants = {
-  version: 40200, // 4.2.0
+  version: 40200, // 4.2.0 rel C
   storeKey: 'cgpay',
   qrUrlRegex: '^HTTP://[0-9A-Za-z]{1,4}\.RC[24]\.ME/[0-9A-Z]{2,5}[0-9A-Za-z]{0,25}$', // like HTTP://6VM.RC4.ME/KDJJ34kjdfKJ4
   testQrStart: 'HTTP://6VM.RC4.ME/', // is a test QR if it starts with this string
@@ -10,7 +10,7 @@ const constants = {
   networkTimeoutMs: 100,
   recentTxMax: 20, // maximum number of recent transactions to store
   recentTxMin: 4, // number of recent txs to show on dashboard
-  enableSockets: false, // websockets
+  enableSockets: true, // websockets
 
   showDevStuff: true, // if true, enable dev-only features
 
@@ -34,8 +34,8 @@ const constants = {
     real: 'https://new.commongood.earth/api/',
   },
   sockets: {
-    test: 'ws://demo.commongood.earth:8081',
-    real: 'ws://new.commongood.earth:8081',
+    test: 'wss://demo.commongood.earth:8081',
+    real: 'wss://new.commongood.earth:8081',
   }
 }
 

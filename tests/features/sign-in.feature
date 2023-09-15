@@ -14,7 +14,7 @@ Scenario: A user visits the Sign-in page
   Then ? I see "btn-signin"
   And ? I see "lnk-signup"
   And ? I see "lnk-reset"
-@a 
+@a
 Scenario: A user with one account signs in
   When I run the app
   And I input "d" as "identifier"
