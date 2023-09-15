@@ -110,7 +110,7 @@
 
 <section class="page" id="tx">
   {#if gotTx}
-    <h1 class="page-title" data-testid="transaction-complete">Transaction Complete</h1>
+    <h1 class="page-title" data-testid="transaction-complete">Transaction Summary</h1>
     <div class='top'>
       <div class='charge-info'>
         <div class='row payee-info'>
