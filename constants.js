@@ -10,7 +10,7 @@ const constants = {
   networkTimeoutMs: 100,
   recentTxMax: 20, // maximum number of recent transactions to store
   recentTxMin: 4, // number of recent txs to show on dashboard
-  enableSockets: false, // websockets
+  enableSockets: true, // websockets
 
   showDevStuff: true, // if true, enable dev-only features
 
@@ -34,8 +34,8 @@ const constants = {
     real: 'https://new.commongood.earth/api/',
   },
   sockets: {
-    test: 'ws://demo.commongood.earth:8081',
-    real: 'ws://new.commongood.earth:8081',
+    test: 'wss://demo.commongood.earth:8081',
+    real: 'wss://new.commongood.earth:8081',
   }
 }
 
