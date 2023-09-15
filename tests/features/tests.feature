@@ -102,7 +102,7 @@ Scenario: these2
 Scenario: me
   Given I am signed in as "Bea"
   Then ? I am signed in as "Bea"
-  And ? this "me": "{ name:'Bea Two', isCo:false, accountId:'K6VMDCB', deviceId:'devB', selling:null }"
+  And ? this "me": "{ name:'Bea Two', isCo:false, accountId:'K6VMDCB', cardCode:'12345b', deviceId:'devB', selling:null }"
 
 Scenario: deviceId
   Given this "deviceId": "Bea"
@@ -153,9 +153,9 @@ Scenario: theseAccts/choices (notice no quotes around "choices")
   Given these choices:
   | Abe |
   Then ? this "choices":
-  | { name:'Abe One', isCo:false, accountId:'K6VMDCA', selling:null } |
+  | { name:'Abe One', isCo:false, accountId:'K6VMDCA', cardCode:'12345a', selling:null } |
 
   Given this "choices":
-  | { name:'Abe One', isCo:false, accountId:'K6VMDCA', selling:null } |
+  | { name:'Abe One', isCo:false, accountId:'K6VMDCA', cardCode:'12345a', selling:null } |
   Then ? these choices:
   | Abe |

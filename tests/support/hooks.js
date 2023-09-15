@@ -17,6 +17,7 @@ Before(async () => { // before each scenario
   const launchOptions = {
     headless: ci ? 'old' : w.headlessMode, // new, old, or false
     slowMo: ci ? 0 : w.slowMo,
+    ignoreHTTPSErrors: true, // https://stackoverflow.com/questions/56226990/puppeteers-page-click-is-working-on-some-links-but-not-others/56227068
     args: ['--remote-debugging-port=9222'], // allows use of chrome's remote debugging (see https://www.browserless.io/blog/2019/02/26/puppeteer-debugging)
   //    ignoreDefaultArgs: ['--disable-extensions'],
   }
