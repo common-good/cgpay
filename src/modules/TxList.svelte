@@ -9,7 +9,7 @@
   {#key $st.recentTxs}{#each useMin ? $st.recentTxs.slice(0, c.recentTxMin) : $st.recentTxs as tx}
     <li>
       <div class="row">
-        <div><span>{tx.pending ? 'Pending' : u.fmtDate(1000 * tx.created)}</div>
+        <div><span>{tx.pending ? 'Pending' : u.fmtDate(1000 * tx.created)}</span></div>
       </div>
       <div class="row">
         <div class="name">{tx.name}</div>

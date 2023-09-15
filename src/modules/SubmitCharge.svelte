@@ -33,12 +33,13 @@
       tx.proof = u.hash(tx.actorId + tx.amount + tx.otherId + tx.code + tx.created)
       delete tx.code
       tx.offline = false
+      tx.pending = !pay && !$st.me.isCo && !$st.selfServe // individuals cannot unilaterally charge others
     }
     st.setPending(true) // give the user a chance to undo (or add a tip)
     if (!otherAccount.name) otherAccount.name = 'Unidentified Member'
-    st.enqTx(tx)   
+    st.enqTx(tx)
     st.setRecentTxs({ ...tx, name:otherAccount.name }) // assume, for now, the tx will succeed
-    st.setBalance(+$st.balance + +tx.amount)
+    if (!tx.pending) st.setBalance(+$st.balance + +tx.amount)
     dispatch('complete') // update display
   }
 </script>
