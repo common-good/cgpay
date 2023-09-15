@@ -18,7 +18,7 @@ Scenario: A company charges an individual
   And I input "food!" as "description"
   And I click "btn-submit"
   Then ? I see "transaction-complete"
-  And these "txs":
+  And ? these "txs":
   | deviceId | amount   | actorId | otherId | description | created | proof | offline | version |
   | devC     | 1234.50  | Abe/Cit | Bea     | food!       | now     | hash  | true    | version |
   And ? this "pending": "true"
