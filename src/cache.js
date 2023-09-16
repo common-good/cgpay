@@ -7,6 +7,7 @@
  * ARRAYS
  *    choices: a list (array) of Common Good accounts the signed-in user may choose to connect (one of) to the device
  *      accountId: the account ID including cardCode
+ *      cardCode: the account's card security code
  *      name: the name on the account
  *      qr: an image of the account’s QR code and ID photo (if any) for purchases
  *      isCo: true if the account is a company account
@@ -23,7 +24,8 @@
  *      created: Unix timestamp when the transaction was created
  *      proof: the proof of the transaction -- a SHA256 hash of actorId, amount, otherId, cardCode, and created
  *        The amount has exactly two digits after the decimal point. For an Undo, proof contains the original amount.
- *      offline: true -- transactions completed offline are in the txs queue. All Undos are handled as though offline.
+ *      offline: true -- all transactions are completed offline then put in the txs queue. Undos are handled as though offline.
+ *      pending: true if the transaction is an invoice rather than a completed transaction (pending approval by the payer)
  *      version: the app's integer version number
  * 
  *    comments: user-submitted comments to be uploaded to the server
@@ -55,7 +57,7 @@ const cache = {
   version: null, // latest app version that touched this data (an integer with two digits representing each segment of x.y.z)
   corrupt: null, // timestamp that cached data got corrupted
   sawAdd: null, // time user pressed Continue on the Add-to-home-screen page
-  balance: 'unknown', // last known balance
+  balance: '...', // last known balance
   cameraCount: 0, // number of cameras in the device - set this when scanning for the first time
 
   // persistent parameters that can be changed by user in Settings

@@ -7,8 +7,6 @@
   let viewHeight
 
   function setViewportHeight() { viewHeight = window.visualViewport.height }
-
-  onMount(() => document.documentElement.classList.add('green'))
 </script>
 
 <svelte:window on:load={setViewportHeight}/>

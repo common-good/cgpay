@@ -23,6 +23,20 @@ describe('utils', () => {
     navigator = originalNavigator
   })
 
+  describe('noCardCode', () => {
+    it('return the cardId without its cardCode', () => {
+      expect(u.noCardCode('K6VMDCA12345a')).toEqual('K6VMDCA')
+      expect(u.noCardCode('L6VMDCC098765a')).toEqual('L6VMDCC0')
+    })
+  })
+
+  describe('cardCode', () => {
+    it('return the cardCode part of a cardId', () => {
+      expect(u.cardCode('K6VMDCA12345a')).toEqual('12345a')
+      expect(u.cardCode('L6VMDCC098765a')).toEqual('98765a')
+    })
+  })
+
   describe('makeQrUrl', () => {
     it('returns a QR URL for the given account ID', () => {
       expect(u.makeQrUrl('K6VMDCA12345a')).toEqual('HTTP://6VM.RC4.ME/KDCA12345a')

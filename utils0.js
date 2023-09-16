@@ -33,7 +33,7 @@ const u = {
 
   /**
    * Return Find the object, in a list of objects, that has a given keyed value.
-   * @param {*} obj: the object to search
+   * @param {*} obj: the object (or array) to search
    * @param {*} kvs: keyed values to find
    * @return index to the found object (or null)
    */
@@ -47,7 +47,11 @@ const u = {
   },
 
   in(k, ks) { return ks.split(' ').includes(k) },
-  withCommas(num) { return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') },
+  withCommas(num) { 
+    let withCommas = num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') 
+    const i = withCommas.indexOf('.');
+    return (i && withCommas.slice(i + 1).length < 2) ? withCommas += '0' : withCommas;
+  },
   testing() { return (typeof window !== 'undefined' && typeof window.testerPipe === 'function') },
   async tellTester(op, k = null, v = null) { return u.testing() ? await window.testerPipe(op, k, v) : null },
 

@@ -25,40 +25,8 @@
   function setViewportHeight() { viewHeight = window.visualViewport.height }
   function goBack() { if (u.pageUri() == 'tx' && $st.pending) u.undo.update(n => n + 1); else u.goBack() }
 
-  function socket() {
-    if ($st.me.isCo) return // only for individual accounts for now
-    if ($st.socket) try {
-      $st.socket.close() // for now, reopen every time
-    } catch (er) {}
-
-    if (!('WebSocket' in window)) return null
-    let socket
-    try {
-      socket = new WebSocket(u.socket()) // socket.readyState has status
-      socket.onopen = () => {
-        const msg = JSON.stringify({ op:'connect', actorId:$st.me.accountId, deviceId:$st.me.deviceId })
-        try {
-          socket.send(msg)
-        } catch (er) { console.log('socket error', er) }
-      }
-      socket.onclose = () => {}			
-      socket.onmessage = (msg) => {
-        const m = JSON.parse(msg.data) // get message, action, and note
-
-        if (m.action == 'request') {
-          u.yesno(m.message, () => st.txConfirm(true, m), () => st.txConfirm(false, m))
-        } else {
-          u.alert(m.message)
-          u.getInfo() // if we're being told about a charge or payment, refresh the list of recent txs
-        }
-      }
-    } catch(er) { console.log('socket error', er); return null }
-
-    return socket
-  }
-
   u.undo = writable(0)
-  if (c.enableSockets && !$st.socket) st.setSocket(socket())
+  st.setSocket(u.socket())
 </script>
 
 <svelte:window on:load={setViewportHeight}/>
@@ -113,4 +81,8 @@
     flex-direction column
     background $c-white
     constrainWidth($tablet)
+
+  @media screen and (max-width $xs-screen)
+    .content
+      padding $s-2
 </style>

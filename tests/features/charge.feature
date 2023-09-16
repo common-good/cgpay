@@ -18,7 +18,7 @@ Scenario: A company charges an individual
   And I input "food!" as "description"
   And I click "btn-submit"
   Then ? I see "transaction-complete"
-  And these "txs":
+  And ? these "txs":
   | deviceId | amount   | actorId | otherId | description | created | proof | offline | version |
   | devC     | 1234.50  | Abe/Cit | Bea     | food!       | now     | hash  | true    | version |
   And ? this "pending": "true"
@@ -92,13 +92,17 @@ Scenario: A company charges a company
   And ? "amount" is "1,234.50"
   And ? I see "thank-you"
   And ? I see "btn-undo"
-
+@this
 Scenario: An individual charges an individual
   Given I am signed in as "Abe"
   When I charge "Bea" 1234.50 for "food!"
   Then ? I see "transaction-complete"
   And ? this "pending": "true"
   And ? "action" is "Charged"
+
+  When I click "btn-done"
+  Then ? I am on page "home"
+  And ? count "recentTxs" is 0
 
 Scenario: A company charges an individual offline
   Given we are offline

@@ -16,7 +16,7 @@ const u = {
   undo: null, // notify subscribers every time the Back button is clicked when it means "undo" (see Layout.svelte)
 
   api() { return u.realData() ? c.apis.real : c.apis.test }, 
-  socket() { return u.realData() ? c.sockets.real : c.sockets.test }, 
+  socketURL() { return u.realData() ? c.sockets.real : c.sockets.test }, 
 
   dlg(title, text, labels, m1 = u.hide, m2 = null) {
     const m0 = [true, title, text, labels]
@@ -28,7 +28,7 @@ const u = {
    * Fetch from the server API and return and object (or a blob if specified in the options).
    * @param {*} url: the enpoint to fetch from (without the API path)
    * @param {*} options: 
-   *   timeout: the number of miliseconds
+   *   timeout: the number of milliseconds
    *   type: 'json' (default) or 'blob'
    *   method: 'POST' or 'GET'
    *   etc.
@@ -76,6 +76,44 @@ const u = {
       body: queryString.stringify(v),
       ...options,
     }, true)
+  },
+
+  /**
+   * Open a websocket to communicate with the server and, indirectly, with other devices
+   * @returns a websocket
+   */
+  socket() {
+    if (!c.enableSockets) return null
+    if (u.st().me.isCo) return null // only for individual accounts for now
+    if (!('WebSocket' in window)) return null
+
+    if (u.st().socket) try {
+      u.st().socket.close() // for now, reopen every time
+    } catch (er) {}
+
+    let socket
+    try {
+      socket = new WebSocket(u.socketURL()) // socket.readyState has status
+      socket.onopen = () => {
+        const msg = JSON.stringify({ op:'connect', deviceId:u.st().me.deviceId, actorId:u.st().me.accountId })
+        try {
+          socket.send(msg)
+        } catch (er) { console.log('socket error', er) }
+      }
+      socket.onclose = () => {}			
+      socket.onmessage = (msg) => {
+        const m = JSON.parse(msg.data) // get message, action, and note
+
+        if (m.action == 'request') {
+          u.yesno(m.message, () => st.txConfirm(true, m), () => st.txConfirm(false, m))
+        } else {
+          u.alert(m.message)
+          u.getInfo() // if we're being told about a charge or payment, refresh the list of recent txs
+        }
+      }
+    } catch(er) { console.log('socket error', er); return null }
+
+    return socket
   },
 
   async generateQr(text) {
@@ -137,12 +175,20 @@ const u = {
   },
 
   /**
-   * Return the cardId with cardCode (and everything that follows) removed
+   * Return just the cardCode from the cardId.
+   */
+  cardCode(cardId) {
+    const len = u.noCardCode(cardId).length
+    return cardId.substring(len)
+  },
+
+  /**
+   * Return the cardId with cardCode removed
    */
   noCardCode(cardId) {
     if (cardId === null) return null
     const i = dig36.indexOf(cardId[0])
-    const len = regionLens[i] + acctLens[i] + agentLens[i]
+    const len = 1 + +regionLens[i] + +acctLens[i] + +agentLens[i]
     return cardId.substr(0, len)
   },
   

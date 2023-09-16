@@ -75,6 +75,7 @@ const t = {
    * @returns an array of key/value pairs waiting for the app to store (see t.putv() and st.fromTester())
    */
   async appPipe(op = null, k = null, v = null) {
+//    console.log('appPipe',op,k,v)
     if (op == 'store') {
       w.store[k] = v
     } else if (op == 'post' || op == 'get') {
@@ -85,6 +86,7 @@ const t = {
       if (u.empty(w.tellApp)) return null
       const res = u.clone(w.tellApp)
       w.tellApp = null // prevent most steps until this step is done
+//      console.log('appPipe res', res)
       return res
     } else assert.fail('invalid appPipe op: ' + op)
   },
@@ -274,6 +276,7 @@ const t = {
     await t.waitForApp()
     const testId = 'input-' + id
     const sel = t.sel(testId) 
+    t.wait(2) // required by 2023 Chrome :(
     await t.click(testId, { clickCount: 3 }) // select field so that typing replaces it
     await w.page.type(sel, isNaN(text) ? text : JSON.stringify(text))
     await t.waitACycle(2) // needed sometimes between inputs
