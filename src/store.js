@@ -244,7 +244,10 @@ export const createStore = () => {
     txConfirm(yesno, m) {
       enQ('confirms', { deviceId:cache.me.deviceId, actorId:cache.me.accountId, yesno:yesno ? 1 : 0, id:m.note, whyNot:'' })
       u.hide()
-      u.sleep(c.networkTimeoutMs * 2).then(u.getInfo) // usually after confirmation, there's a new transaction to show
+      if (yesno) {
+        u.sleep(c.fetchTimeoutMs/5).then(u.getInfo) // usually after confirmation, there's a new transaction to show
+        u.sleep(c.fetchTimeoutMs).then(u.getInfo) // try once quick and once after a delay
+      }
     },
 
     tellDev(text) { st.comment(`[dev] ${new Date().toLocaleTimeString('en-us')} page=${u.pageUri()}: ${text}`) },
