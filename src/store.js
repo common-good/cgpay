@@ -12,8 +12,8 @@ import cache0 from '#cache.js'
 export const createStore = () => {
   const lostMsg = `Tell the customer "I'm sorry, that QR Code is marked "LOST or STOLEN".`
 
-  let cache
-  save({ ...cache0, ...convert(getst()), version:c.version }) // update store (and cache) with any changes in defaults (crucial for tests)
+  let cache = { ...cache0, ...convert(getst()), version:c.version }
+  save(u.justNot('persist reset', cache)) // update store (and cache) with any changes in defaults (crucial for tests)
   const { subscribe, update } = writable(cache)
 
   function reconcileDeviceIds(chx) {
@@ -35,20 +35,25 @@ export const createStore = () => {
    * @returns 
    */
   function convert(s) {
-    if (u.empty(s) || c.version == s.version) return s
-    if (u.empty(s.version)) { // before rel B (rel A has no stored version number)
-      s.version = 40000
+    if (u.empty(s)) return {}
+    const version = u.empty(s.version) ? 40000 // rel A (40000) has no stored version number
+    : s.version == '4.1.0' ? 40100 // rel B had string format version
+    : s.version
+    if (version == c.version) return s // already up to date
+
+    if (version < 40100) { // before rel B
       s.deviceIds = cache0.deviceIds
       if (s.choices) [s.choices, s.deviceIds] = reconcileDeviceIds(s.choices)
       if (s.myAccount) s.deviceIds[s.myAccount.accountId] = s.myAccount.deviceId
     }
 
-    if (s.version < 40200) { // before rel C
+    if (version < 40200) { // before rel C
       s.selfServe = (s.payOk == 'self')
-      s.me = { ...s.myAccount }; delete s.myAccount
+      s.me = u.clone(s.myAccount); delete s.myAccount
+      s.showDash = !s.me.isCo
     }
     
-    if (s.version < 40300) { // before rel D
+    if (version < 40300) { // before rel D
     } 
     
     return s
@@ -59,9 +64,8 @@ export const createStore = () => {
     ...JSON.parse(sessionStorage.getItem(c.storeKey)),
   }}
 
-  function save(s) {
+  function save(s, persist = cache0.persist) { // allow saving of previous release data when testing: eg Object.keys(s).join(' '))
     cache = { ...s }
-    const persist = !u.empty(s.persist) ? s.persist : Object.keys(s).join(' ') // allow saving of previous release data when testing
     localStorage.setItem(c.storeKey, JSON.stringify(u.just(persist, s)))
     sessionStorage.setItem(c.storeKey, JSON.stringify(u.justNot(persist, s)))
     return s
