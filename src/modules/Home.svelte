@@ -13,7 +13,7 @@
   const me = $st.me
   const hasTxOptions = ($st.allowShow || $st.allowType)
   const payBtnText = hasTxOptions ? 'Pay' : 'Scan to Pay'
-  const chgBtnText = $st.selfServe ? 'Pay' : (hasTxOptions ? 'Charge' : 'Scan to Charge')
+  const chgBtnText = $st.selfServe ? 'Pay' : (hasTxOptions ? 'Receive' : 'Scan to Charge')
   let payOk
   let hdr = $st.selfServe ? 'Self Serve'
   : $st.showDash ? 'Dashboard'
@@ -21,8 +21,6 @@
   : 'Ready to Charge Someone'
 
   function showEr(msg) { u.alert(msg, () => { u.hide(); st.setMsg(null) }) }
-  function fmtVersion(n) { n = n.toString(); return n.substring(0, 1) + '.' + n.substring(2, 3) + '.' + n.substring(3, 4) }
-
   function fake(code) { st.setQr(code); st.setIntent('charge'); u.go('tx') }
 
 /*  const chgBtnText = () => {
@@ -105,7 +103,7 @@
       {/if}
       <div class='watermark'>
         <img class='logo' src= {cgLogo} alt='Common Good Logo' />
-        <p>CGPay v{fmtVersion(c.version)}</p>
+        <p>CGPay v{u.fmtVersion(c.version)}</p>
       </div>
     {:else}
       {#key $st.recentTxs}<Dashboard />{/key}

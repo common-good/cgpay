@@ -18,17 +18,14 @@
 
   const me = $st.me
   const paying = ($st.intent == 'pay')
-  let hdr = paying ? 'Pay' : 'Charge / Request Payment'
-  let qr, btnPay, btnChg, payOk
+  let qr, btnPay, payOk
   let qrAction
-
-  const intent = $st.intent
 
   function scan() { u.go('scan') }
   async function receiveQr() { return await u.generateQr(u.makeQrUrl(u.getMainId($st.me.accountId))) }
 
   onMount(async () => {
-    if ($st.allowShow) [qr, qrAction] = paying ? [me.qr, 'pay'] : [await receiveQr(), 'charge']
+    if ($st.allowShow) [qr, qrAction] = paying ? [me.qr, 'Pay'] : [await receiveQr(), 'Receive']
     payOk = (!me.isCo || $st.payOk == 'always' || $st.coPaying) && c.showScanToPay
     btnPay = me.isCo ? 'Pay / Refund / Sell CG Credit' : 'Pay'
   })
@@ -43,12 +40,11 @@
   <div class="top">
     <h1 class="page-title">Show to {qrAction}</h1>
     <img class="qr-{$st.intent}" src="{qr}" data-testid="qr" alt={qrAction} />
-    {#if paying}
-      <p>Note: Only charges by an individual require confirmation.</p>
-    {/if}
+    <p>CGPay v{u.fmtVersion(c.version)}</p>
+    {#if paying}<p>Note: Only charges by an individual require confirmation.</p>{/if}
   </div>
   <div class="bottom">
-    <ScanFake intent={$st.intent}/>
+    {#if u.localMode()}<ScanFake intent={$st.intent}/>{/if}
     <button class="primary" data-testid="btn-scan" on:click={scan}>
       Scan to {paying ? btnPay : 'Charge'}
     </button>

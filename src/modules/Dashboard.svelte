@@ -1,7 +1,6 @@
 <script>
   import st from'#store.js'
   import u from'#utils.js'
-  import c from '#constants.js'
   import TxList from './TxList.svelte';
   import { onMount } from 'svelte'
 
@@ -32,6 +31,9 @@
   h2
     text-align center
     margin-bottom $s-3
+
+  p
+    text-align center
 
   section
     width 100%

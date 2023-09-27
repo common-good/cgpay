@@ -49,8 +49,12 @@ export const createStore = () => {
 
     if (version < 40200) { // before rel C
       s.selfServe = (s.payOk == 'self')
-      s.me = u.clone(s.myAccount); delete s.myAccount
-      s.showDash = !s.me.isCo
+      if (s.myAccount) {
+        s.me = u.clone(s.myAccount); delete s.myAccount
+        s.showDash = !s.me.isCo
+        s.payOk = s.me.isCo ? 'never' : true
+        s.allowShow = !s.me.isCo
+      }
     }
     
     if (version < 40300) { // before rel D

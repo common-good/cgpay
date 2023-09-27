@@ -10,8 +10,7 @@ const ASSETS = [
  
 self.addEventListener('install', (ev) => {
   self.skipWaiting(); // once a new version is available, install it immediately
-  // Create a new cache and add all files to it
-  async function addFilesToCache() {
+  async function addFilesToCache() { // Create a new cache and add all files to it
     const cache = await caches.open(CACHE);
     await cache.addAll(ASSETS);
   }

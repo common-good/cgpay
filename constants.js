@@ -16,7 +16,6 @@ const constants = {
 
   // how long user has, on the current screen (in seconds), before we return automatically to Home
   txTimeout: 10, // Tx page
-  doneTimeout: 10, // confirmation page
   testTimeout: 0.7, // how long user has when testing (compress time to make the tests run faster)
 
   domains: { // domains used in QR Codes
