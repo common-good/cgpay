@@ -18,17 +18,14 @@
 
   const me = $st.me
   const paying = ($st.intent == 'pay')
-  let hdr = paying ? 'Pay' : 'Charge / Request Payment'
-  let qr, btnPay, btnChg, payOk
+  let qr, btnPay, payOk
   let qrAction
-
-  const intent = $st.intent
 
   function scan() { u.go('scan') }
   async function receiveQr() { return await u.generateQr(u.makeQrUrl(u.getMainId($st.me.accountId))) }
 
   onMount(async () => {
-    if ($st.allowShow) [qr, qrAction] = paying ? [me.qr, 'pay'] : [await receiveQr(), 'charge']
+    if ($st.allowShow) [qr, qrAction] = paying ? [me.qr, 'Pay'] : [await receiveQr(), 'Receive']
     payOk = (!me.isCo || $st.payOk == 'always' || $st.coPaying) && c.showScanToPay
     btnPay = me.isCo ? 'Pay / Refund / Sell CG Credit' : 'Pay'
   })
