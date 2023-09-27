@@ -43,9 +43,8 @@
   <div class="top">
     <h1 class="page-title">Show to {qrAction}</h1>
     <img class="qr-{$st.intent}" src="{qr}" data-testid="qr" alt={qrAction} />
-    {#if paying}
-      <p>Note: Only charges by an individual require confirmation.</p>
-    {/if}
+    <p>CGPay v{u.fmtVersion(c.version)}</p>
+    {#if paying}<p>Note: Only charges by an individual require confirmation.</p>{/if}
   </div>
   <div class="bottom">
     <ScanFake intent={$st.intent}/>
