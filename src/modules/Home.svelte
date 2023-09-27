@@ -13,7 +13,7 @@
   const me = $st.me
   const hasTxOptions = ($st.allowShow || $st.allowType)
   const payBtnText = hasTxOptions ? 'Pay' : 'Scan to Pay'
-  const chgBtnText = $st.selfServe ? 'Pay' : (hasTxOptions ? 'Charge' : 'Scan to Charge')
+  const chgBtnText = $st.selfServe ? 'Pay' : (hasTxOptions ? 'Receive' : 'Scan to Charge')
   let payOk
   let hdr = $st.selfServe ? 'Self Serve'
   : $st.showDash ? 'Dashboard'
