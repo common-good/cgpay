@@ -43,14 +43,14 @@
     st.setTimeout(null)
     u.yesno('Reverse the transaction?', 
       () => { u.hide(); st.undoTx(); u.goHome('The transaction has been reversed.') },
-      () => { u.hide(); if ($st.selfServe) st.setTimeout(c.txTimeout)
+      () => { u.hide(); st.setTimeout(c.txTimeout)
     })
   }
 
   function handleSubmitCharge() {
     st.setTrail('', true) // no going back from here
     gotTx = true
-    if ($st.selfServe) st.setTimeout(c.txTimeout)
+    st.setTimeout(c.txTimeout)
   } // state success, show undo/tip/done/receipt buttons
     
   /**
