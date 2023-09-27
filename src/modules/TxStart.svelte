@@ -47,7 +47,7 @@
     {#if paying}<p>Note: Only charges by an individual require confirmation.</p>{/if}
   </div>
   <div class="bottom">
-    <ScanFake intent={$st.intent}/>
+    {#if u.localMode()}<ScanFake intent={$st.intent}/>{/if}
     <button class="primary" data-testid="btn-scan" on:click={scan}>
       Scan to {paying ? btnPay : 'Charge'}
     </button>
