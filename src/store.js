@@ -23,7 +23,8 @@ export const createStore = () => {
     for (i in chx) {
       ch = chx[i]
       old = ids[ch.accountId]
-      if (old) chx[i].deviceId = old; else ids[ch.accountId] = ch.deviceId
+      // if (old) chx[i].deviceId = old; else // NO! wait until 5/1/2024 to do this
+      ids[ch.accountId] = ch.deviceId
     }
     return [chx, ids]
   }
