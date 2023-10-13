@@ -13,11 +13,12 @@
           If you do not see a banner:
           <ul>
             <li>Tap the three-dot icon in the top right corner of your screen.</li>
-            <li>In the menu, scroll down and select "Add to Home screen".</li>
+            <li>In the menu, scroll down and select "Install" or "Add to Home screen".</li>
           </ul>
         </li>
         <li>2. Wait for installation to complete.</li>
         <li>3. Choose "Open CGPay" on the system menu.</li> 
+        <li>4. Press "Continue" below, sign in to your personal Common Good account, then follow instructions.</li>
       </ul>    
     { :else }
       <ul>
