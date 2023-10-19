@@ -6,6 +6,7 @@ const constants = {
   port: 3000,
   onlineLimit: 10000, // the most any account can be charged on the app
   offlineLimit: 250, // how much an account can be charged without knowing its credit limit
+  corruptionDelay: 60*60*24, // how long to wait before retrying upload of corrupted transactions, in seconds
   fetchTimeoutMs: 3200,
   networkTimeoutMs: 100,
   recentTxMax: 20, // maximum number of recent transactions to store

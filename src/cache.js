@@ -55,7 +55,7 @@ const cache = {
   reset: 'balance showSettings locked selfServe payOk allowType allowShow showDash balance recentTxs me token timeout qr msg erMsg coPaying hdrLeft pending modal gotInfo',
 
   version: null, // latest app version that touched this data (an integer with two digits representing each segment of x.y.z)
-  corrupt: null, // timestamp that cached data got corrupted
+  corrupt: null, // timestamp to retry uploading corrupted cached data
   sawAdd: null, // time user pressed Continue on the Add-to-home-screen page
   balance: '...', // last known balance
   cameraCount: 0, // number of cameras in the device - set this when scanning for the first time
