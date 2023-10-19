@@ -88,12 +88,23 @@ export const createStore = () => {
   let doing = false // true if we are handling a list of things the tester has told us (the app) to do
   let flushing = {} // queue name set true if we are flushing
 
+  function reportCorrupt() {
+    const who = cache.confirms.length ? cache.confirms[0].actorId
+    : cache.txs.length ? cache.txs[0].actorId: 'Unknown'
+    st.comment(`Member ${who} mobile device has corrupt data.`)
+  }
+
   async function flushQ(k, endpoint) {
-    if (flushing[k]) return; else flushing[k] = true
 //    console.log('flushing', k, cache[k].length)
-    if (cache.corrupt == c.version) return; else if (cache.corrupt) st.setCorrupt(null) // don't retry hopeless tx indefinitely
+    if (cache.corrupt) { // don't retry hopeless tx indefinitely
+      if (u.now() < cache.corrupt) return // not time yet to retry
+      st.setCorrupt(null) // reset before retry
+      if (!cache.comments.length) reportCorrupt() // tell the tech team
+    }
+    if (flushing[k]) return; else flushing[k] = true
+
     while (cache[k].length > 0) {
-      if (!cache.useWifi) return; // allow immediate interruptions when testing
+      if (!cache.useWifi) { flushing[k] = false; return } // allow immediate interruptions when testing
       try {
         await u.postRequest(endpoint, cache[k][0])
       } catch (er) {
@@ -103,7 +114,7 @@ export const createStore = () => {
         } else {
           console.log('corrupt er:', er) // keep this
           console.log('corrupt cache', k, cache[k]) // keep this
-          st.setCorrupt(c.version)
+          st.setCorrupt(u.now() + c.corruptionDelay)
           if (u.testing()) throw 'corrupt'
         }
         return // don't deQ when there's an error
@@ -164,7 +175,7 @@ export const createStore = () => {
     setQr(v) { setv('qr', v) },
     setIntent(v) { setv('intent', v) },
     setMsg(v) { setv('erMsg', v) },
-    setCorrupt(version) { setv('corrupt', version) }, // pause uploading until a new version is released
+    setCorrupt(time) { setv('corrupt', time) }, // pause uploading temporarily unless time is null
     setWifi(yesno) { setv('useWifi', yesno); st.resetNetwork() },
     setCoPaying(yesno) { setv('coPaying', yesno) },
     setPayOk(v) { setv('payOk', v) },
@@ -250,7 +261,7 @@ export const createStore = () => {
     deqTx() { deQ('txs') }, // just for testing (in st.spec.js)
     undoTx() { pop('txs'); st.setPending(false) },
     comment(text) { enQ('comments', { deviceId:cache.me.deviceId, actorId:cache.me.accountId, created:u.now(), text:text }) },
-    txConfirm(yesno, m) {
+    txConfirm(yesno, m) { // m.note is the invoice record ID received from the server's u\tellApp function
       enQ('confirms', { deviceId:cache.me.deviceId, actorId:cache.me.accountId, yesno:yesno ? 1 : 0, id:m.note, whyNot:'' })
       u.hide()
       if (yesno) {
@@ -266,9 +277,9 @@ export const createStore = () => {
       if (cache.pending) return
       if (u.testing() && !cache.flushOk) return
       if (u.empty(cache.txs) && u.empty(cache.comments) && u.empty(cache.confirms)) return
-        await st.flushTxs()
-      await st.flushComments()
+      await st.flushComments() // do this first (before flushConfirms, flushTxs, etc), so info gets out about trapped transactions
       await st.flushConfirms()
+      await st.flushTxs()
       if (u.testing()) setv('flushOk', false)
     },
   }
