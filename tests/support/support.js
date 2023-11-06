@@ -303,12 +303,19 @@ const t = {
   },
 
   async tx(who, amount, description) {
+    console.log('going home')
     await t.visit('home') // sometimes needed
+    console.log('who', who)
     await t.scan(who)
+    console.log('wait')
     await t.waitACycle()
+    console.log('amount', amount)
     await t.input('amount', amount)
+    console.log('description', description)
     await t.input('description', description)
+    console.log('submit')
     await t.click('btn-submit')
+    console.log('end tx')
   },
 
 /**
@@ -447,7 +454,14 @@ async mockFetch(url, options = {}) {
     return el
   },
 
-  async is(testId, want, mode = 'exact') {
+  /**
+   * Test the value of a DOM element
+   * @param string testId: element ID 
+   * @param string want: value wanted 
+   * @param string mode: exact (default), false (exact not), part, or <n (meaning got and want are less than n apart) 
+   * @returns 
+   */
+  async elementIs(testId, want, mode = 'exact') {
     const prefix = testId.split('-')[0]
     const el = await t.see(testId)
     if (u.in(want, 'selected checked')) { // Svelte doesn't use selected and checked so we simulate it with class
