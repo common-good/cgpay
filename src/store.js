@@ -95,6 +95,7 @@ export const createStore = () => {
       if (!cache.useWifi) { flushing[k] = false; return } // allow immediate interruptions when testing
       try {
         await u.postRequest(endpoint, cache[k][0])
+        if (k == 'txs') st.unPend(u.findByValue(cache.recentTxs, { created:cache.txs[0].created }))
       } catch (er) {
         flushing[k] = false
         if (u.isTimeout(er)) {
@@ -187,7 +188,7 @@ export const createStore = () => {
       }
     },
     setMe(acct) { setv('me', { ...acct } ) }, // null is not allowed (instead see clearSettings)
-    linked() { return (cache.me !== null) },
+    linked() { return (!u.empty(cache.me)) },
     clearSettings() { for (let k in { ...cache0 }) if (cache0.reset.split(' ').includes(k)) setv(k, cache0[k]) }, // called by LinkAccount
     signOut() { st.clearSettings(); st.setAcctChoices(null) },
     clearData(data = cache0) { if (!u.realData()) setst({ ...data }) },
@@ -240,14 +241,15 @@ export const createStore = () => {
     },
 
     setRecentTxs(tx = null) {
-      if (Array.isArray(tx)) return setv('recentTxs', tx) // replace list with results of info endpoint
+      if (Array.isArray(tx)) return setv('recentTxs', [ ...tx, ...cache.txs ]) // replace list with results of info endpoint (plus corrupt txs)
       ins('recentTxs', { ...tx }) // insert just one transaction (processed by this device just now)
       while (cache.recentTxs.length > c.recentTxMax) pop('recentTxs')
     },
+    unPend(txi) { if (txi != null) { cache.recentTxs[txi].pending = false; st.setRecentTxs(cache.recentTxs) } },
     enqTx(tx) { tx.offline = true; enQ('txs', { ...tx }) },
     async flushTxs() { await flushQ('txs', 'transactions') },
     deqTx() { deQ('txs') }, // just for testing (in st.spec.js)
-    undoTx() { pop('txs'); st.setPending(false) },
+    undoTx() { pop('txs'); deQ('recentTxs'); st.setPending(false) },
     comment(text) { enQ('comments', { deviceId:cache.me.deviceId, actorId:cache.me.accountId, created:u.now(), text:text }) },
     txConfirm(yesno, m) { // m.note is the invoice record ID received from the server's u\tellApp function
       enQ('confirms', { deviceId:cache.me.deviceId, actorId:cache.me.accountId, yesno:yesno ? 1 : 0, id:m.note, whyNot:'' })
