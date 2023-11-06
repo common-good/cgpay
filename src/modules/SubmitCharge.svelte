@@ -30,7 +30,9 @@
     if (!tx.proof) { // unless retrying
       tx.created = u.now() // Unix timestamp
       tx.amount = (pay ? -tx.amount : +tx.amount).toFixed(2) // convert to string
-      tx.proof = u.hash(tx.actorId + tx.amount + tx.otherId + tx.code + tx.created)
+      const proof0 = tx.actorId + tx.amount + tx.otherId + tx.code + tx.created
+      //console.log('proof0', proof0)
+      tx.proof = u.hash(proof0)
       delete tx.code
       tx.offline = false
       tx.pending = !pay && !$st.me.isCo && !$st.selfServe // individuals cannot unilaterally charge others

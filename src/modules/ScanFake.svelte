@@ -3,7 +3,7 @@
   import u from '#utils.js'
 
   export let intent
-  const accts = u.ray('A:KDCA12345a, B:KDCB12345b, CA:LDCC098765a, CG:LDCC198765b, GF:LDCG098765f, Worse:')
+  const accts = u.ray('A:KDCA12345a, B:KDCB12345b, CA:LDCC098765a, C:KDCC, GF:LDCG098765f, Worse:')
 
   function fake(code) {
     code = code ? 'HTTP://6VM.RC4.ME/' + code : 'garbage'

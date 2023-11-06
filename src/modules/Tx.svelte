@@ -31,6 +31,7 @@
   const qr = $st.qr
   let tipable = false
   let gotTx = false
+  let card = null
   let photo = { alt: 'Customer Profile', blob: null } // used only for charges
   const pastAction = (pay || $st.selfServe) ? 'Paid' : 'Charged'
 
@@ -69,7 +70,8 @@
     if (u.lowStorage()) return u.goEr('You are running low on storage. Delete some media files or programs before trying again.')
     st.setCoPaying(false)
     try {
-      const card = u.qrParse(qr) // does not return if format is bad
+      card = u.qrParse(qr) // does not return if format is bad
+      if (!pay && u.empty(card.code)) throw new Error('That QR is for payments only.')
       const mainId = u.getMainId($st.me.accountId)
       if (card.main == mainId) throw new Error('That QR is for the same account as yours.')
       const acctInfo = st.getAcct(card) // retrieve and/or update stored customer account info
