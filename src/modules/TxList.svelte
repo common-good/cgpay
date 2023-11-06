@@ -9,7 +9,7 @@
   {#key $st.recentTxs}{#each useMin ? $st.recentTxs.slice(0, c.recentTxMin) : $st.recentTxs as tx}
     <li>
       <div class="row">
-        <div><span>{tx.pending ? 'Pending' : u.fmtDate(1000 * tx.created)}</span></div>
+        <div data-testid="tx-date">{tx.pending ? 'Pending' : u.fmtDate(tx.created)}</div>
       </div>
       <div class="row">
         <div class="name">{tx.name}</div>
@@ -32,13 +32,6 @@
 
   ul
     margin-bottom $s-1
-
-  .balance
-    margin-bottom $s0
-    span
-      text(2xl)
-      font-weight 500
-      margin-left $s-3
 
   .for
     font-weight: 600

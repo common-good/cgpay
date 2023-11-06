@@ -47,6 +47,7 @@ const u = {
     return null
   },
 
+  fmtDate(dt) { return new Date(dt < 9999999999 ? dt : dt/1000).toLocaleDateString('en-us', { year:'numeric', month:'numeric', day:'numeric'}) },
   in(k, ks) { return ks.split(' ').includes(k) },
   withCommas(num) { 
     let withCommas = num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') 

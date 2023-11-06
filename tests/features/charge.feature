@@ -92,7 +92,7 @@ Scenario: A company charges a company
   And ? "amount" is "1,234.50"
   And ? I see "thank-you"
   And ? I see "btn-undo"
-@this
+
 Scenario: An individual charges an individual
   Given I am signed in as "Abe"
   When I charge "Bea" 1234.50 for "food!"
@@ -102,7 +102,9 @@ Scenario: An individual charges an individual
 
   When I click "btn-done"
   Then ? I am on page "home"
-  And ? count "recentTxs" is 0
+  And ? this "balance": "..."
+  And ? count "recentTxs" is 1
+  And ? "tx-date" is "Pending"
 
 Scenario: A company charges an individual offline
   Given we are offline
