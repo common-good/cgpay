@@ -14,7 +14,7 @@
   function scanIn() { st.setIntent('scanIn'); u.go('scan') }
   function rearCamera() { st.setFrontCamera(false) }
   function frontCamera() { st.setFrontCamera(true) }
-  function switchAccount() { u.go('link-account') }
+  function switchAccount() { st.setMe(null); u.go('link-account') }
   function comment() { u.go('comment')}
   function signOut() { st.signOut(); u.go('') }
 
