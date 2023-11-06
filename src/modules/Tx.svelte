@@ -31,7 +31,7 @@
   const qr = $st.qr
   let tipable = false
   let gotTx = false
-  let photo = { alt: 'Customer Profile', blob: null }
+  let photo = { alt: 'Customer Profile', blob: null } // used only for charges
   const pastAction = (pay || $st.selfServe) ? 'Paid' : 'Charged'
 
 	u.undo.subscribe(askUndo) // receive notification of Back click (see Layout.svelte)
@@ -58,12 +58,8 @@
    * @param info: data for photoId endpoint
    */
   async function getPhoto(info) {
-    let blob = null
-    if (!pay) {
-      const res = await u.postRequest('idPhoto', info, { type:'blob' })
-      blob = URL.createObjectURL(res)
-    }
-    return { alt:'photo of the other party', blob:blob }
+    const res = await u.postRequest('idPhoto', info, { type:'blob' })
+    photo.blob = URL.createObjectURL(res)
   }
 
   function profileOffline() { if (!$st.selfServe) u.alert('OFFLINE. Trust this member or ask for ID.') }
@@ -94,7 +90,9 @@
         delete otherAccount.isell
         st.putAcct(card, otherAccount) // store and/or update stored customer account info
         if (otherAccount.limit <= 0) u.goEr('This account has no remaining funds, so a transaction is not possible at this time.')
-        if (!$st.selfServe) photo = await getPhoto(info)
+        if (!$st.selfServe && !pay) {
+          await getPhoto(info)
+        } else photo.blob = 'none'
       }
     } catch (er) {
       if (u.isTimeout(er)) { // internet unavailable; recognize a repeat customer or limit CG's liability
@@ -143,7 +141,7 @@
     <div class="actions">
       {#if tipable}<a class="secondary" href='/tip'>Add Tip</a>{/if}
       <!-- button>Receipt</button -->
-      <button data-testid="btn-undo" on:click={askUndo} class="tertiary">Undo</button>
+      <button class="tertiary" data-testid="btn-undo" on:click={askUndo}>Undo</button>
       <a class="primary" data-testid="btn-done" on:click={goHome}>Done</a>
     </div>
 

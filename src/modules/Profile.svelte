@@ -7,7 +7,9 @@
 
 <section id='charge-profile'>
   <div class='photo'>
-    {#if photo.blob}
+    {#if photo.blob == 'none'}
+      <!--no image when paying-->
+    {:else if photo.blob}
       <img src={photo.blob} alt="{photo.alt}" data-testid="theirPhoto" />
     {:else}
       <ProfileSvg />
