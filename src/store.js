@@ -1,19 +1,19 @@
-// use this example for setv() and get(): https://svelte.dev/repl/ccbc94cb1b4c493a9cf8f117badaeb31?version=3.16.7
-
 /**
  * Handle stored values for the app (persistent and transient).
  * See data structure definition in cache.js
+ * We used this example for setv() and get(): https://svelte.dev/repl/ccbc94cb1b4c493a9cf8f117badaeb31?version=3.16.7
  */
 import { writable } from 'svelte/store'
 import u from '#utils.js'
 import c from '#constants.js'
 import cache0 from '#cache.js'
+import { getst, save } from '#db.js'
 
 export const createStore = () => {
   const lostMsg = `Tell the customer "I'm sorry, that QR Code is marked "LOST or STOLEN".`
 
   let cache = { ...cache0, ...convert(getst()), version:c.version }
-  save(u.justNot('persist reset', cache)) // update store (and cache) with any changes in defaults (crucial for tests)
+  cache = save(u.justNot('persist reset', cache)) // update store (and cache) with any changes in defaults (crucial for tests)
   const { subscribe, update } = writable(cache)
 
   function reconcileDeviceIds(chx) {
@@ -64,20 +64,8 @@ export const createStore = () => {
     return s
   }
 
-  function getst() { return {
-    ...JSON.parse(localStorage.getItem(c.storeKey)),
-    ...JSON.parse(sessionStorage.getItem(c.storeKey)),
-  }}
-
-  function save(s, persist = cache0.persist) { // allow saving of previous release data when testing: eg Object.keys(s).join(' '))
-    cache = { ...s }
-    localStorage.setItem(c.storeKey, JSON.stringify(u.just(persist, s)))
-    sessionStorage.setItem(c.storeKey, JSON.stringify(u.justNot(persist, s)))
-    return s
-  }
-
-  function setst(newS) { update(s => { return save(newS) } )}
-  function setv(k, v, fromTest = false) { update(s => { s[k] = v; return save(s) }); tSetV(k, v, fromTest); return v }
+  function setst(newS) { update(s => { return cache = save(newS) } )}
+  function setv(k, v, fromTest = false) { update(s => { s[k] = v; return cache = save(s, k) }); tSetV(k, v, fromTest); return v }
 //  function setkv(k, k2, v, fromTest = false) { ('k', k, 'k2', k2, 'v', v, 'showHdr', cache.showHdr); cache[k][k2] = v; setv(k, k2, fromTest); return v }
   function enQ(k, v) { st.bump('enQ'); cache[k].push(v); return setv(k, cache[k]) }
   function pop(k) { st.bump('pop'); const res = cache[k].pop(); setv(k, cache[k]); return res }

@@ -70,6 +70,7 @@
 
   onMount(async () => {
     if (qr === null) return u.go('home') // pressed back button from Home page
+    if (u.lowStorage()) return u.goEr('You are running low on storage. Delete some media files or programs before trying again.')
     st.setCoPaying(false)
     try {
       const card = u.qrParse(qr) // does not return if format is bad

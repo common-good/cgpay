@@ -256,6 +256,14 @@ const u = {
     return (u.isApple() && u.isSafari()) || (u.isAndroid() && u.isChrome())
   },
 
+  lowStorage() {
+    try {
+      localStorage.setItem('test', 'x'.repeat(1024))
+      localStorage.setItem('test', '')
+      return false
+    } catch (er) { return Object.keys(u.st().accts).length < 20 }
+  },
+
   /*
   async function cgEncrypt(text) {
   console.log('before readKey');
