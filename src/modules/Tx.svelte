@@ -18,7 +18,7 @@
   
   let tx = {
     amount: null,
-    description: (!pay && $st.me.selling) ? $st.me.selling[0] : null,
+    description: null,
     deviceId: $st.me.deviceId,
     actorId: u.noCardCode($st.me.accountId),
     otherId: null,
@@ -87,11 +87,11 @@
       } else  {
         const info = {deviceId: tx.deviceId, actorId: tx.actorId, otherId: tx.otherId + tx.code}
         const res = await u.postRequest('identity', info)
-        const { selling } = res
-        if (selling.length) tx.description = selling[0]
-        st.setMe({ ...$st.me, selling: selling })
+        st.setMe({ ...$st.me, selling: res.isell })
+        const dfts = res[pay ? 'selling' : 'isell']
+        tx.description = dfts[0]
         otherAccount = { ...otherAccount, ...res, lastTx:u.now() } // lastTx date lets us jettison old customers to save storage
-        delete otherAccount.selling
+        delete otherAccount.isell
         st.putAcct(card, otherAccount) // store and/or update stored customer account info
         if (otherAccount.limit <= 0) u.goEr('This account has no remaining funds, so a transaction is not possible at this time.')
         if (!$st.selfServe) photo = await getPhoto(info)
