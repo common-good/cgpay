@@ -46,7 +46,7 @@
   }
 </script>
 
-<section id="submit-charge">
+<section class="page" id="submit-charge">
   <h1 class="page-title" data-testid="action">{action}</h1>
   <form on:submit|preventDefault={charge}>
     { #if !$st.selfServe }<Profile {otherAccount} {photo} />{ /if }

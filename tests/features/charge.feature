@@ -17,7 +17,7 @@ Scenario: A company charges an individual
   And I input "1234.50" as "amount"
   And I input "food!" as "description"
   And I click "btn-submit"
-  Then ? I see "transaction-complete"
+  Then ? I see "tx-summary"
   And ? these "txs":
   | deviceId | amount   | actorId | otherId | description | created | proof | offline | version |
   | devC     | 1234.50  | Abe/Cit | Bea     | food!       | now     | hash  | true    | version |
@@ -42,13 +42,13 @@ Scenario: A company charges an individual
 Scenario: A company charges an individual then undoes the transaction-*
   # abbreviated syntax for first 4 steps
   When I charge "Bea" 1234.50 for "food!"
-  Then ? I see "transaction-complete"
+  Then ? I see "tx-summary"
   And these "txs":
   | deviceId | amount   | actorId | otherId | description | created | proof | offline | version |
   | devC     | 1234.50  | Abe/Cit | Bea     | food!       | now     | hash  | true    | version |
 
   When I click "btn-undo"
-  Then ? I am on page "tx-details"
+  Then ? I see "tx-summary"
   And ? this alert: "Reverse the transaction?"
   And ? this "pending": "true"
   And ? "btn1" is "Yes"
@@ -83,7 +83,7 @@ Scenario: A company charges an individual then undoes the transaction-*
 
 Scenario: A company charges a company
   When I charge "Flo/Gis" 1234.50 for "food!"
-  Then ? I see "transaction-complete"
+  Then ? I see "tx-summary"
   And ? this "pending": "true"
   And ? "action" is "Charged"
   And ? "other-name" is "Gisette"
@@ -96,7 +96,7 @@ Scenario: A company charges a company
 Scenario: An individual charges an individual
   Given I am signed in as "Abe"
   When I charge "Bea" 1234.50 for "food!"
-  Then ? I see "transaction-complete"
+  Then ? I see "tx-summary"
   And ? this "pending": "true"
   And ? "action" is "Charged"
 
@@ -120,7 +120,7 @@ Scenario: A company charges an individual offline
   | deviceId | amount | actorId | otherId | description | created | offline | version |
   | devC     | 234.50 | Abe/Cit | Bea     | food!       | now     | true    | version |
   # Offline limit is $250
-  Then ? I see "transaction-complete"
+  Then ? I see "tx-summary"
   And ? "action" is "Charged"
   And ? "other-name" is "Unidentified Member"
   And ? I see no "agent"

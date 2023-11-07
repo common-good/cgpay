@@ -111,4 +111,4 @@ Scenario: On comments page from tx page back and forth
   And I input "food!" as "description"
   And I click "btn-submit"
   * I wait 1 seconds
-  Then ? I see "transaction-complete"
+  Then ? I see "tx-summary"

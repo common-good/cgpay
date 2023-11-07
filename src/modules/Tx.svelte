@@ -109,9 +109,9 @@
   <title>CGPay - Transact</title>
 </svelte:head>
 
-<section class="page" id="tx">
-  {#if gotTx}
-    <h1 class="page-title" data-testid="transaction-complete">Transaction Summary</h1>
+{#if gotTx}
+  <section class="page" id="tx-details">
+    <h1 class="page-title" data-testid="tx-summary">Transaction Summary</h1>
     <div class='top'>
       <div class='charge-info'>
         <div class='row payee-info'>
@@ -146,11 +146,10 @@
       <button class="tertiary" data-testid="btn-undo" on:click={askUndo}>Undo</button>
       <a class="primary" data-testid="btn-done" on:click={goHome}>Done</a>
     </div>
-
-  { :else }
-    <SubmitCharge {otherAccount} {photo} {tx} on:complete={handleSubmitCharge} />
-  { /if }
-</section>
+  </section>
+{ :else }
+  <SubmitCharge {otherAccount} {photo} {tx} on:complete={handleSubmitCharge} />
+{ /if }
 
 <style lang='stylus'>
   h1 
