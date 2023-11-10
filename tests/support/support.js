@@ -430,8 +430,8 @@ async mockFetch(url, options = {}) {
         } else t.test(u.just('agent name', got[me.accountId]), { agent:agent, name:name }, field)
       } else { // choices
         if (set) {
-          make.push(u.just('name accountId deviceId qr isCo selling', me))
-        } else t.test(u.just('name accountId isCo selling', got[i]), u.just('name accountId isCo selling', me), field)
+          make.push(u.just('name accountId cardCode deviceId qr isCo selling', me))
+        } else t.test(u.just('name accountId cardCode isCo selling', got[i]), u.just('name accountId cardCode isCo selling', me), field)
       }
     }
     if (set) await t.putv(field, make) // make is an object or array
@@ -476,8 +476,9 @@ async mockFetch(url, options = {}) {
 
   async signedInAs(who, set = false) {
     const me = w.accounts[who]
-    if (set) await t.putv('me', { ...u.just('name isCo accountId deviceId selling', me), qr:'qr' + me.name.charAt(0) })
-    if (!set) t.test(u.just('name isCo accountId selling', await t.getv('me')), u.just('name isCo accountId selling', me), 'me')
+    if (set) await t.putv('me', { ...u.just('name isCo accountId cardCode deviceId selling', me), qr:'qr' + me.name.charAt(0) })
+//    if (set) t.wait(20) // the wait is required when using the "new" headless Chrome (0.1 is not enough)
+    if (!set) t.test(u.just('name isCo accountId cardCode selling', await t.getv('me')), u.just('name isCo accountId cardCode selling', me), 'me')
   },
 
 }
