@@ -237,7 +237,7 @@ export const createStore = () => {
     },
 
     setRecentTxs(tx = null) {
-      if (Array.isArray(tx)) return setv('recentTxs', [ ...tx, ...cache.txs ]) // replace list with results of info endpoint (plus corrupt txs)
+      if (Array.isArray(tx)) return setv('recentTxs', cache.corrupt ? [ ...tx, ...cache.txs ] : tx) // replace list with results of info endpoint (plus corrupt txs)
       ins('recentTxs', { ...tx }) // insert just one transaction (processed by this device just now)
       while (cache.recentTxs.length > c.recentTxMax) pop('recentTxs')
     },
