@@ -38,8 +38,9 @@ Scenario: A company charges an individual
   And ? these server "txs":
   | amt     | actorId | uid1 | uid2  | agt1 | agt2 | for2  | created | 
   | 1234.50 | Cit     | Bea  | Cit   | Bea  | Abe  | food! | now     |
-
-Scenario: A company charges an individual then undoes the transaction-*
+@this
+Scenario: A company charges an individual then undoes the transaction
+#  * I am signed in as "Abe/Cit"
   # abbreviated syntax for first 4 steps
   When I charge "Bea" 1234.50 for "food!"
   Then ? I see "tx-summary"
@@ -53,6 +54,7 @@ Scenario: A company charges an individual then undoes the transaction-*
   And ? this "pending": "true"
   And ? "btn1" is "Yes"
   And ? "btn2" is "No"
+
   When I click "btn2"
   Then ? I am on page "tx-details"
   And ? I see "btn-undo"
@@ -64,20 +66,21 @@ Scenario: A company charges an individual then undoes the transaction-*
   And ? this "pending": "true"
   And ? "btn1" is "Yes"
   And ? "btn2" is "No"
+
   When I click "btn2"
   Then ? I am on page "tx-details"
   And ? I see "btn-undo"
   And ? this "pending": "true"
 
-  * I wait 1 seconds
   When I click "btn-undo"
-  And I wait 1 seconds
-  And I click "btn1"
-  And I wait 1 seconds
+  Then ? this alert: "Reverse the transaction?"
+  And ? "btn1" is "Yes"
+
+  When I click "btn1"
   Then ? this confirmation: "The transaction has been reversed."
-  And ? this "pending": "false"
-  And ? count "txs" is 0
   And ? I am on page "home"
+  And ? count "txs" is 0
+  And ? this "pending": "false"
   * we wait for uploads
   Then ? count "txs" is 0
 
@@ -109,6 +112,8 @@ Scenario: An individual charges an individual
 Scenario: A company charges an individual offline
   Given we are offline
   And I run the app
+  Then ? this "useWifi": "false"
+  And ? this "online": "false"
   When I scan "Bea" to "charge"
   Then ? this alert: "Trust this member or ask for ID"
   When I click "btn1"
@@ -141,14 +146,14 @@ Scenario: A company charges an individual offline
 Scenario: A cashier enters too many decimal places (to be rounded up)
   When I charge "Bea" 1.235 for "food!"
   Then ? this alert: "The amount has been rounded to two decimal places. Make sure this is what you intended and try again."
-  And ? I am on page "tx-details"
+  And ? I am on page "submit-charge"
   And ? "input-amount" is "1.24"
   And ? count "txs" is 0
 
 Scenario: A cashier enters too many decimal places (to be rounded down)
   When I charge "Bea" 1.234 for "food!"
   Then ? this alert: "The amount has been rounded to two decimal places. Make sure this is what you intended and try again."
-  And ? I am on page "tx-details"
+  And ? I am on page "submit-charge"
   And ? "input-amount" is "1.23"
   And ? count "txs" is 0
 
@@ -168,7 +173,7 @@ Scenario: A buyer has a balance, but not enough
   And I am signed in as "Abe/Cit"
   When I charge "Dee" 30.00 for "food!"
   Then ? this alert: "This transaction is limited to $27"
-  And ? I am on page "tx-details"
+  And ? I am on page "submit-charge"
   And ? count "txs" is 0
 
 Scenario: A buyer has plenty, but tries to pay more than the app allows
@@ -178,5 +183,5 @@ Scenario: A buyer has plenty, but tries to pay more than the app allows
   And I am signed in as "Abe/Cit"
   When I charge "Dee" 20000.00 for "food!"
   Then ? this alert: "CGPay transactions are limited to $10,000"
-  And ? I am on page "tx-details"
+  And ? I am on page "submit-charge"
   And ? count "txs" is 0

@@ -18,7 +18,7 @@ const w = {
     w.get = [] // for receiving reports of GET requests from the app
     w.now = u.now0() // keep a stable time reference point during each test
     w.proofRow = null // current row that may contain a proof field (to construct the wanted proof value)
-    w.store = { ...cache, now:w.now } // mirrors app's localStorage (including synchronized time)
+    w.store = { ...cache, now:w.now } // mirrors app's localStorage + sessionStorage (including synchronized time)
   },
 
   // test constants

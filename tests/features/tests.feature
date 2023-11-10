@@ -137,16 +137,16 @@ Scenario: theseAccts/choices (notice no quotes around "choices")
   Then ? these choices:
   | Abe | Bea | Bea/Cit |
   And ? these "choices":
-  | name    | isCo  | accountId | selling |
-  | Abe One | false | K6VMDCA   | null    |
-  | Bea Two | false | K6VMDCB   | null    |
-  | Citre   | true  | L6VMDCC1  | ['groceries', 'gifts', 'sundries'] |
+  | name    | isCo  | accountId | cardCode | selling |
+  | Abe One | false | K6VMDCA   | 12345a   | null    |
+  | Bea Two | false | K6VMDCB   | 12345b   | null    |
+  | Citre   | true  | L6VMDCC1  | 98765b   | ['groceries', 'gifts', 'sundries'] |
 
   Given these "choices":
-  | name    | isCo  | accountId | selling |
-  | Abe One | false | K6VMDCA   | null    |
-  | Bea Two | false | K6VMDCB   | null    |
-  | Citre   | true  | L6VMDCC1  | ['groceries', 'gifts', 'sundries'] |
+  | name    | isCo  | accountId | cardCode | selling |
+  | Abe One | false | K6VMDCA   | 12345a   | null    |
+  | Bea Two | false | K6VMDCB   | 12345b   | null    |
+  | Citre   | true  | L6VMDCC1  | 98765b   | ['groceries', 'gifts', 'sundries'] |
   Then ? these choices:
   | Abe | Bea | Bea/Cit |
 

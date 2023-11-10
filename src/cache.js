@@ -83,6 +83,7 @@ const cache = {
   me: null, // information about user's account, signed in
 
   // transient data (not stored in local storage)
+  intent: null, // what we're scanning for (pay, chare, or scanIn)
   token: null, // session token (a stand-in for the deviceId in GET requests)
   socket: null, // webSocket connection
   timeout: null, // milliseconds before inactivity timeout (for return to Home Page)
