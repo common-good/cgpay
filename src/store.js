@@ -124,18 +124,14 @@ export const createStore = () => {
       if (u.testing() && !doing) { // if doing, another thread is already handling it
         doing = true
         u.tellTester('tellme').then(todo => {
-//          console.log('todo', todo)
           if (!todo) return doing = false
-          let k, v
-          while (todo.length) { // for each item
-            ({ k, v } = todo.shift())
-            if (k == 'clear') {
-//              console.log('about to clear')
-              st.clearData(v)
-//              console.log('cleared', v)
-            } else setv(k, v, true)
-          }
-//          console.log('about to tellTester done')
+          let [k, v] = Object.entries(todo)[0]
+          if (k == 'online') setv('useWifi', v, true) // these two test values act together to simulate online/offline
+
+          if (k == 'clear') {
+            st.clearData(v)
+          } else setv(k, v, true)
+
           u.tellTester('done').then(() => doing = false)
         })
       }

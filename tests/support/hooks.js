@@ -39,7 +39,7 @@ Before(async () => { // before each scenario
   
   await t.postToTestEndpoint('initialize') // initialize data on the server (real or fake)
   await t.visit('empty') // a page is required before app can save anything to localStorage
-  w.tellApp = [{ k:'clear', v:{ ...w.store } }] // synchronize data between tester and app
+  await t.setStore() // synchronize data between tester and app
 })
 
 After(async () => { 
