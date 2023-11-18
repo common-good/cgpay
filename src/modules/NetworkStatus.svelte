@@ -2,7 +2,8 @@
   import st from'#store.js'
   import WifiOff from "svelte-material-icons/WifiOff.svelte"
 
-  let txsWaiting = $st.txs.length ? (' (' + $st.txs.length + ' transactions waiting to upload)') : ''
+  let txsWaiting
+$: txsWaiting = $st.txs.length ? (' (' + $st.txs.length + ' transactions waiting to upload)') : ''
 </script>
 
 { #if !$st.online }
