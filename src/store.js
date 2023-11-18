@@ -165,6 +165,7 @@ export const createStore = () => {
     setCoPaying(yesno) { setv('coPaying', yesno) },
     setPayOk(v) { setv('payOk', v) },
     setTrail(page = 'back', clear = false) {
+//      console.log('trail', trail, 'page', page)
       if (!page) page = 'home' // handle root url showing home page
       if (clear || u.atHome(page)) setv('trail', []) // always clear when going home
       if (page == 'back') return pop('trail')
@@ -201,10 +202,10 @@ export const createStore = () => {
     setSocket(socket) { setv('socket', socket) },
 
     resetNetwork() { if (cache.useWifi) st.setOnline(navigator.onLine) },
-    setOnline(yesno) { // handling this in store helps with testing
-      const v = cache.useWifi ? yesno : false
+    setOnline(onoff) { // handling this in store helps with testing
+      const v = cache.useWifi ? onoff : false
       if (v !== cache.online) setv('online', v)
-      if (cache.useWifi && yesno) st.flushAll().then() // when testing only do *explicit* flushing
+      if (cache.useWifi && onoff) st.flushAll().then() // when testing only do *explicit* flushing
     },
 
     /**

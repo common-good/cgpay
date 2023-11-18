@@ -25,7 +25,7 @@
       </form>
   </div>
   <div class="bottom">
-  <button data-testid='submit-comment' type='submit' form='feedback'>Submit</button>
+    <button data-testid='submit-comment' type='submit' form='feedback'>Submit</button>
   </div>
 </section>
 
