@@ -204,7 +204,7 @@ const u = {
    */
   async getInfo() {
     const me = u.st().me
-    if (u.st().gotInfo || u.empty(me)) return false
+    if (u.empty(me) || !u.empty(u.st().txs)) return false
 
     try {
       const params = { deviceId:me.deviceId, actorId:me.accountId, count:c.recentTxMax }

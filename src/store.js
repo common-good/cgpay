@@ -264,9 +264,11 @@ export const createStore = () => {
       if (cache.pending) return
       if (u.testing() && !cache.flushOk) return
       if (u.empty(cache.txs) && u.empty(cache.comments) && u.empty(cache.confirms)) return
+      const noTxs0 = u.empty(cache.txs)
       await st.flushComments() // do this first (before flushConfirms, flushTxs, etc), so info gets out about trapped transactions
       await st.flushConfirms()
       await st.flushTxs()
+      if (u.empty(cache.txs) && !noTxs0) await u.getInfo()
       if (u.testing()) setv('flushOk', false)
     },
   }

@@ -5,11 +5,10 @@
   import TxList from './TxList.svelte';
   import { onMount } from 'svelte'
 
-  // let pending = $st.recentTxs.reduce((total, tx) => tx.pending ? total + 1 : total + 0, 0)
-  let got
+// let pending = $st.recentTxs.reduce((total, tx) => tx.pending ? total + 1 : total + 0, 0)
 
   onMount(async () => {
-    got = await u.getInfo()
+    if (u.empty($st.txs)) u.getInfo()
   })
 </script>
 
