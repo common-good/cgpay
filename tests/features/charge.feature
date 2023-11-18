@@ -107,7 +107,7 @@ Scenario: An individual charges an individual
   Then ? I am on page "home"
   And ? this "balance": "9999.00"
   And ? count "recentTxs" is 1
-  And ? "tx-date" is "Pending"
+  And ? "tx-pending" is "(pending)"
 
 Scenario: A company charges an individual offline
   Given we are offline
