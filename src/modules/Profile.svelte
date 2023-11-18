@@ -5,9 +5,9 @@
   export let photo
 </script>
 
-<section id='charge-profile'>
-  <div class='photo'>
-    {#if photo.blob == 'none'}
+<section id="charge-profile" data-testid="charge-profile">
+  <div class="photo">
+    {#if photo.blob == "none"}
       <!--no image when paying-->
     {:else if photo.blob}
       <img src={photo.blob} alt="{photo.alt}" data-testid="theirPhoto" />
@@ -15,7 +15,7 @@
       <ProfileSvg />
     {/if}
   </div>
-  <div class='info'>
+  <div class="info">
     {#if otherAccount.agent}
       <h2 data-testid="theirAgent">{otherAccount.agent}</h2>
       <p data-testid="theirCompany">{otherAccount.name}</p>
@@ -26,7 +26,7 @@
   </div>
 </section>
 
-<style lang='stylus'>
+<style lang="stylus">
   section
     display flex
     flex-direction column

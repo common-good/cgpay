@@ -56,24 +56,6 @@
     height 48px
     width 48px
 
-  header
-    display flex
-    align-items center
-    justify-content space-between
-    margin-bottom $s-4
-    padding $s-2
-    background $c-blue-light
-    box-shadow 0 1px 4px $c-gray
-    z-index 1
-    position fixed
-    width 100%
-    max-width 820px
-
-  .content
-    height 100%
-    padding $s-1
-    margin-top 64px
-
   .layout-step
     height 100%
     position relative
@@ -81,6 +63,28 @@
     flex-direction column
     background $c-white
     constrainWidth($tablet)
+    max-width 820px
+
+  header
+    flex 0 0 64px
+    display flex
+    align-items center
+    justify-content space-between
+    margin-bottom $s-4
+    padding $s-2
+    background $c-blue-light
+    box-shadow 0 1px 4px $c-gray
+    width 100%
+
+  .network-status
+    flex 0 0 14px
+
+  .content
+    display flex
+    flex-direction column
+    flex-grow 1
+    overflow auto
+    padding $s-1
 
   @media screen and (max-width $xs-screen)
     .content
