@@ -251,8 +251,8 @@ export const createStore = () => {
       enQ('confirms', { deviceId:cache.me.deviceId, actorId:cache.me.accountId, yesno:yesno ? 1 : 0, id:m.note, whyNot:'' })
       u.hide()
       if (yesno) {
-        u.sleep(c.fetchTimeoutMs/5).then(u.getInfo) // usually after confirmation, there's a new transaction to show
-        u.sleep(c.fetchTimeoutMs).then(u.getInfo) // try once quick and once after a delay
+        u.sleep(c.fetchTimeoutMs/5).then(async () => await u.getInfo()) // usually after confirmation, there's a new transaction to show
+        u.sleep(c.fetchTimeoutMs).then(async () => await u.getInfo()) // try once quick and once after a delay
       }
     },
 

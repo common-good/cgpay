@@ -6,9 +6,10 @@
   import { onMount } from 'svelte'
 
   // let pending = $st.recentTxs.reduce((total, tx) => tx.pending ? total + 1 : total + 0, 0)
+  let got
 
   onMount(async () => {
-    if (!$st.gotInfo) u.getInfo()
+    got = await u.getInfo()
   })
 </script>
 
