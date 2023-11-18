@@ -12,27 +12,23 @@
 
 </script>
 
-<div class="fakes">
+<div class="bottom fakes">
   {#each accts as acct}
     <button on:click={ () => fake(acct.split(':')[1]) }>{acct.split(':')[0]}</button>
   {/each}
 </div>
 
 <style lang="stylus">
-  .fakes
+  .fakes 
     display flex
     justify-content space-between
-    margin-top $s0
     width 100%
 
   button
-    cgButton()
-    width 100%
-
-  .fakes button
     cgButtonSecondary()
     padding 5px
-    margin-bottom $s0
+    margin-top $s1
+    margin-bottom 0
     flex-grow 1
     margin-right $s-2
     visibility visible

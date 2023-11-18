@@ -7,8 +7,7 @@
 
 { #if !$st.online }
   <section id='network-status'>
-    <WifiOff size={"1rem"} />
-    <p data-testid="network-offline">Network is offline.{txsWaiting}</p>
+    <span><WifiOff size={"1rem"} /></span><p data-testid="network-offline">Network is offline.{txsWaiting}</p>
   </section>
 { /if }
 
@@ -21,9 +20,14 @@
     background $c-warning
     border-bottom solid 1px $c-warning-dark
     padding $s-3 $s-1 $s-4
-    margin-top -1rem
 
   p
     text sm
-    margin-left $s-2
+    width 100%
+    justify-content center
+    display flex
+    margin-left 10px
+
+  scan
+    margin-top 1px
 </style>

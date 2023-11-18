@@ -39,12 +39,14 @@
 <section class="page" id="tx-start">
   <div class="top">
     <h1 class="page-title">Show to {qrAction}</h1>
-    <img class="qr-{$st.intent}" src="{qr}" data-testid="qr" alt={qrAction} />
+    <div class="img">
+      <img class="qr-{$st.intent}" src="{qr}" data-testid="qr" alt={qrAction} />
+    </div>
     <p>CGPay v{u.fmtVersion(c.version)}</p>
     {#if paying}<p>Note: Only requests by an individual require confirmation.</p>{/if}
   </div>
+  {#if u.localMode() && !u.testing()}<ScanFake intent={$st.intent}/>{/if}
   <div class="bottom">
-    {#if u.localMode()}<ScanFake intent={$st.intent}/>{/if}
     <button class="primary" data-testid="btn-scan" on:click={scan}>
       Scan to {paying ? btnPay : 'Charge'}
     </button>
@@ -59,7 +61,7 @@
     text-transform capitalize
 
   p 
-    margin-bottom $s1
+    margin 0 auto $s1 auto
     text(sm)
     text-align center
     max-width 340px
@@ -67,8 +69,16 @@
   .icon
     margin-right $s-1
 
-  .qr-pay
-    width 250px
-    margin 30px
+  .img
+    display flex
+    flex 0 1 60vh
+
+  img
+    max-width 130%
+    height 100%
+    position:relative;
+    left: 50%;
+    transform: translateX(-50%);
+    width: auto;
     
 </style>

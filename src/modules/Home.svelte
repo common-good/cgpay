@@ -109,17 +109,15 @@
       {#key $st.recentTxs}<Dashboard />{/key}
     {/if}
   </div>
-  <div class="bottom">
-    {#if u.localMode() && !hasTxOptions}
+  {#if u.localMode() && !hasTxOptions && !u.testing()}
       {#if payOk}<ScanFake intent="pay"/>{/if}
       <ScanFake intent="charge"/>
     {/if}
-    <div class="actions">
+  <div class="bottom">
       {#if payOk }
         <button class="pay" data-testid="btn-pay" on:click={pay}>{payBtnText}</button>
       {/if}
       <button class="charge" data-testid="btn-charge" on:click={charge}>{chgBtnText}</button>
-    </div>
   </div>
 </section>
 

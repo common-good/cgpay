@@ -24,7 +24,9 @@
         <textarea data-testid='input-comment' id='input-comment' name='comment' placeholder='Type here...' bind:value={ text } required></textarea> 
       </form>
   </div>
+  <div class="bottom">
   <button data-testid='submit-comment' type='submit' form='feedback'>Submit</button>
+  </div>
 </section>
 
 <style lang='stylus'>
@@ -37,6 +39,7 @@
   form
    height 100%
    width 100%
+   overflow clip
 
   p 
     margin-bottom $s0
@@ -53,6 +56,7 @@
     height 100%
     width 100%
     padding $s-2
+    overflow scroll
 
   .top
     height 100%
