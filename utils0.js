@@ -2,12 +2,6 @@
 import { sha256 } from 'js-sha256'
 
 const u = {
-  hash(s) {
-    const hash = sha256.create()
-    hash.update(s)
-    return hash.hex()
-  },
-
   just(which, obj) { // subset of object
     let res = {}; for (let k of u.ray(which)) res[k] = obj[k]
     return res
@@ -18,6 +12,7 @@ const u = {
     return res
   },
 
+  hash(s) { return sha256(s) },
   now0() { return Math.floor(Date.now() / 1000) },
   async sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)) }, // sleep for that many milliseconds
   clone(v) { return u.empty(v) ? v: JSON.parse(JSON.stringify(v)) }, // deep clone (assumes object contains just objects, numbers, and strings)
