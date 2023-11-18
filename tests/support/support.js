@@ -209,7 +209,7 @@ const t = {
   
   // MAKE / DO
 
-  async click(testId, options = {}) { await w.page.click(t.sel(testId), options) },
+  async click(testId, options = {}) { await w.page.click(t.sel(testId), options) }, // sometimes takes a moment
 
   /**
    * Tell the app to do something (when it next asks for instructions)
@@ -299,19 +299,19 @@ const t = {
       await t.go('scan')
       await t.go('home')
 
-    } else { // why is charge or pay
-      await t.visit('')
+    } else { // why is charge or pay (assume we're on home page)
+      await t.visit('') // scan is sometimes called directly (not from tx(), so we need this here)
       await t.onPage('home') // make sure we're starting in the right place
       await t.putv('qr', qr) // must be after visit to Home page (because it resets qr)
       await t.click('btn-' + why)
+      await t.waitACycle(3)
       await t.onPage('scan') // make sure the button worked
       await t.go('tx', 'scan')
     }
   },
 
   async tx(who, amount, description) {
-    await t.visit('home') // sometimes needed
-    await t.scan(who)
+    await t.scan(who) // scan for pay or charge starts by going home, so no need to do that here
     await t.input('amount', amount)
     await t.input('description', description)
     await t.click('btn-submit')
@@ -476,9 +476,10 @@ async mockFetch(url, options = {}) {
 
   async signedInAs(who, set = false) {
     const me = w.accounts[who]
-    if (set) await t.putv('me', { ...u.just('name isCo accountId cardCode deviceId selling', me), qr:'qr' + me.name.charAt(0) })
-//    if (set) t.wait(20) // the wait is required when using the "new" headless Chrome (0.1 is not enough)
-    if (!set) t.test(u.just('name isCo accountId cardCode selling', await t.getv('me')), u.just('name isCo accountId cardCode selling', me), 'me')
+    if (set) {
+      await t.putv('me', { ...u.just('name isCo accountId cardCode deviceId selling', me), qr:'qr' + me.name.charAt(0) })
+      await t.putv('showDash', !me.isCo)
+    } else t.test(u.just('name isCo accountId cardCode selling', await t.getv('me')), u.just('name isCo accountId cardCode selling', me), 'me')
   },
 
 }

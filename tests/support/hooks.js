@@ -15,7 +15,7 @@ Before(async () => { // before each scenario
   w.reset() // reinitialize test variables
   const ci = process.env.CIRCLECI // headless and fast when doing continuous integration
   const launchOptions = {
-    headless: ci ? 'old' : w.headlessMode, // new, old, or false
+    headless: ci ? 'new' : w.headlessMode, // new, old, or false
     slowMo: ci ? 0 : w.slowMo,
     ignoreHTTPSErrors: true, // https://stackoverflow.com/questions/56226990/puppeteers-page-click-is-working-on-some-links-but-not-others/56227068
     args: ['--remote-debugging-port=9222'], // allows use of chrome's remote debugging (see https://www.browserless.io/blog/2019/02/26/puppeteer-debugging)
@@ -24,7 +24,10 @@ Before(async () => { // before each scenario
   if (w.chromiumPath) launchOptions.executablePath = w.chromiumPath
 
   w.browser = await puppeteer.launch(launchOptions) // recreate for each scenario, otherwise page doesn't get fully cleared
+
   w.fetcher = await w.browser.newPage() // for fetching done just for test purposes (must be different from w.page)
+  await t.postToTestEndpoint('initialize') // initialize data on the server (real or fake)
+
   w.page = await w.browser.newPage()
   //  w.page.setViewport({ width: 1280, height: 1024 })
 
@@ -37,7 +40,6 @@ Before(async () => { // before each scenario
       || (!args[0].includes('was created with unknown prop') && !args[0].includes('[vite] connect'))) console.log(...args)
   })
   
-  await t.postToTestEndpoint('initialize') // initialize data on the server (real or fake)
   await t.visit('empty') // a page is required before app can save anything to localStorage
   await t.setStore() // synchronize data between tester and app
 })
