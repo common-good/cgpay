@@ -16,7 +16,7 @@ const constants = {
   showDevStuff: true, // if true, enable dev-only features
 
   // how long user has, on the current screen (in seconds), before we return automatically to Home
-  txTimeout: 10, // Tx page
+  txTimeout: 10, // Tx page (normally 10 seconds)
   testTimeout: 1.5, // how long user has when testing (compress time to make the tests run faster)
 
   domains: { // domains used in QR Codes

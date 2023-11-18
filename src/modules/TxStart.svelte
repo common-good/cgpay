@@ -13,9 +13,6 @@
   import c from '#constants.js'
   import ScanFake from './ScanFake.svelte'
 
-  export let currentRoute // else Svelte complains (I don't know why yet)
-  export let params // else Svelte complains (I don't know why yet)
-
   const me = $st.me
   const paying = ($st.intent == 'pay')
   let qr, btnPay, payOk

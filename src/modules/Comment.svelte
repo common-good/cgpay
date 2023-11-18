@@ -2,8 +2,6 @@
   import u from '#utils.js'
   import st from'#store.js'
 
-  export let currentRoute // else Svelte complains (I don't know why yet)
-  export let params // else Svelte complains (I don't know why yet)
   const msg = 'Thank you for your feedback! We very much appreciate your participation in creating a Common Good economy.'
   let text
 
