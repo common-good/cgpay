@@ -49,6 +49,8 @@ Scenario: A user with multiple accounts selects an account with all the defaults
   And ? this confirmation: "now linked to your Common Good account: Citre"
   And ? I am on page "home"
   And ? "Citre" is in "account-name"
+  * I click "btn1"
+  * I wait .1 seconds
   When I click "btn-nav"
 #  Then ? I see "menu-scanIn"
   But ? I see no "menu-switch"
@@ -63,7 +65,11 @@ Scenario: A user with multiple accounts selects a company with different options
   And ? these choices:
   | Bea | Bea/Cit |
   And ? I am signed in as "Bea/Cit"
+  And ? this "locked": "false"
+  And ? this alert: "This device is now linked to your Common Good account: Citre"
   And ? I am on page "home"
+  * I click "btn1"
+  * I wait .1 seconds
   When I click "btn-nav"
 #  Then ? I see no "menu-scanIn"
   But ? I see "menu-switch"
@@ -96,6 +102,8 @@ Scenario: A user with multiple accounts selects an individual account
   And ? I am signed in as "Bea"
   And ? I am on page "home"
   And ? "Bea Two" is in "account-name"
+  * I click "btn1"
+  * I wait .1 seconds
   When I click "btn-nav"
 #  Then ? I see no "menu-scanIn"
   But ? I see "menu-switch"

@@ -7,12 +7,11 @@ Feature: Show QR
 Background:
 
 Rule: Personal account members have the ability to show a QR code to pay or charge
-@this
+
 Scenario: An individual shows their QR code to be paid
   Given I am signed in as "Bea"
   When I run the app
   And I click "btn-charge"
-  * snap
   Then ? I see "qr"
 
 Scenario: An individual shows their QR code to pay

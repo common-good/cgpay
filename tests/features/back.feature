@@ -66,7 +66,7 @@ Scenario: On tx page
   When I click "btn-back"
   Then ? I am on page "scan"
   When I click "btn-back"
-  Then ? I am on page "home"
+  Then ? I am on page "tx-start"
 
 Scenario: On comments page from home page
   Given I am signed in as "Bea"
@@ -80,10 +80,13 @@ Scenario: On comments page from scan page
   Given I am signed in as "Bea"
   And I run the app
   And I click "btn-charge"
+  And I click "btn-scan"
   And I click "btn-nav"
   And I click "menu-comment"
   When I click "btn-back"
   Then ? I am on page "scan"
+  When I click "btn-back"
+  Then ? I am on page "tx-start"
   When I click "btn-back"
   Then ? I am on page "home"
 
@@ -96,6 +99,8 @@ Scenario: On comments page from tx page
   Then ? I am on page "submit-charge"
   When I click "btn-back"
   Then ? I am on page "scan"
+  When I click "btn-back"
+  Then ? I am on page "tx-start"
   When I click "btn-back"
   Then ? I am on page "home"
 

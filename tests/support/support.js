@@ -302,6 +302,10 @@ const t = {
     } else { // why is charge or pay (assume we're on home page)
       await t.visit('') // scan is sometimes called directly (not from tx(), so we need this here)
       await t.onPage('home') // make sure we're starting in the right place
+      if (w.store.showDash) { // an extra click if home page shows Dashboard
+        await t.click('btn-' + why)
+        why = 'scan'
+      }
       await t.putv('qr', qr) // must be after visit to Home page (because it resets qr)
       await t.click('btn-' + why)
       await t.waitACycle(3)
@@ -311,8 +315,8 @@ const t = {
   },
 
   async tx(who, amount, description) {
-    await t.scan(who) // scan for pay or charge starts by going home, so no need to do that here
-    await t.input('amount', amount)
+    await t.scan(who, amount < 0 ? 'pay' : 'charge') // scan for pay or charge starts by going home, so no need to do that here
+    await t.input('amount', Math.abs(amount))
     await t.input('description', description)
     await t.click('btn-submit')
   },
@@ -479,6 +483,7 @@ async mockFetch(url, options = {}) {
     if (set) {
       await t.putv('me', { ...u.just('name isCo accountId cardCode deviceId selling', me), qr:'qr' + me.name.charAt(0) })
       await t.putv('showDash', !me.isCo)
+      await t.putv('allowShow', !me.isCo)
     } else t.test(u.just('name isCo accountId cardCode selling', await t.getv('me')), u.just('name isCo accountId cardCode selling', me), 'me')
   },
 

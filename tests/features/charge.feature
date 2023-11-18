@@ -98,7 +98,6 @@ Scenario: A company charges a company
 
 Scenario: An individual charges an individual
   Given I am signed in as "Abe"
-  And this "showDash": "true"
   When I charge "Bea" 1234.50 for "food!"
   Then ? I see "tx-summary"
   And ? this "pending": "true"

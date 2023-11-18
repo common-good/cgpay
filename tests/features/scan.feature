@@ -14,6 +14,7 @@ Rule: Scanning requires an intent
 Scenario: A user clicks the scan-to-charge button
   Given I run the app
   When I click "btn-charge"
+  And I click "btn-scan"
   Then ? I am on page "scan"
 
 Scenario: We scan with intent to charge
