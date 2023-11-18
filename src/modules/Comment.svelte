@@ -2,8 +2,6 @@
   import u from '#utils.js'
   import st from'#store.js'
 
-  export let currentRoute // else Svelte complains (I don't know why yet)
-  export let params // else Svelte complains (I don't know why yet)
   const msg = 'Thank you for your feedback! We very much appreciate your participation in creating a Common Good economy.'
   let text
 
@@ -24,7 +22,9 @@
         <textarea data-testid='input-comment' id='input-comment' name='comment' placeholder='Type here...' bind:value={ text } required></textarea> 
       </form>
   </div>
-  <button data-testid='submit-comment' type='submit' form='feedback'>Submit</button>
+  <div class="bottom">
+    <button data-testid='submit-comment' type='submit' form='feedback'>Submit</button>
+  </div>
 </section>
 
 <style lang='stylus'>
@@ -37,6 +37,7 @@
   form
    height 100%
    width 100%
+   overflow clip
 
   p 
     margin-bottom $s0
@@ -53,6 +54,7 @@
     height 100%
     width 100%
     padding $s-2
+    overflow scroll
 
   .top
     height 100%

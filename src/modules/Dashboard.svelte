@@ -1,15 +1,17 @@
 <script>
   import st from'#store.js'
   import u from'#utils.js'
+  import c from'#constants.js'
   import TxList from './TxList.svelte';
   import { onMount } from 'svelte'
 
-  // let pending = $st.recentTxs.reduce((total, tx) => tx.pending ? total + 1 : total + 0, 0)
+// let pending = $st.recentTxs.reduce((total, tx) => tx.pending ? total + 1 : total + 0, 0)
 
   onMount(async () => {
-    if (!$st.gotInfo) u.getInfo()
+    if (u.empty($st.txs)) u.getInfo()
   })
 </script>
+
 <section id="dashboard">
   <div class="balance">Balance: <span>${u.withCommas($st.balance)}</span></div>
   <div class="txs">
@@ -18,7 +20,9 @@
       <p>No transactions yet.</p>
     {:else}
       <TxList useMin={true} />
-    <a class="link" href="/txs">View More</a>
+      {#if $st.recentTxs.length > c.recentTxMin}
+        <a class="link" href="/txs">View More</a>
+      {/if}
     {/if}
   </div>
 </section>

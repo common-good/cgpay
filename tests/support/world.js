@@ -18,14 +18,14 @@ const w = {
     w.get = [] // for receiving reports of GET requests from the app
     w.now = u.now0() // keep a stable time reference point during each test
     w.proofRow = null // current row that may contain a proof field (to construct the wanted proof value)
-    w.store = { ...cache, now:w.now } // mirrors app's localStorage (including synchronized time)
+    w.store = { ...cache, now:w.now } // mirrors app's localStorage + sessionStorage (including synchronized time)
   },
 
   // test constants
-  headlessMode: 'new', // new, old, or false (new times out)
-  slowMo: 0, // 0 is fast, 100 is readable
+  headlessMode: 'new', // 'new', 'old', or false
+  slowMo: 50, // 0 is fast, 50+ is required for some tests, 100 is readable but sometimes causes tests to time out
   testTimeout: 18, // test timeout in seconds (12 is not enough)
-  chromiumPath: '', // can be used to test different versions of chromium
+  chromiumPath: null, // can be used to test different versions of chromium
   seeLog: true, // show what the automated browser logs to console
   timeSlop: 10, // seconds between timestamps in tests is treated as negligible
 //  chromiumPath: '/usr/bin/chromium-browser', // requires sudo apt-get install chromium-browser

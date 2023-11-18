@@ -9,14 +9,18 @@
   {#key $st.recentTxs}{#each useMin ? $st.recentTxs.slice(0, c.recentTxMin) : $st.recentTxs as tx}
     <li>
       <div class="row">
-        <div><span>{tx.pending ? 'Pending' : u.fmtDate(1000 * tx.created)}</span></div>
       </div>
       <div class="row">
-        <div class="name">{tx.name}</div>
-        <div class="rgt amt { tx.amount.startsWith('-') ? 'neg' : 'pos'}">${u.withCommas(tx.amount)}</div>
+        <div>
+          {u.fmtDate(tx.created)}
+          <span class="name">{tx.name}</span>
+          {#if tx.pending}<span data-testid="tx-pending">(pending)</span>{/if}
+        </div>
+        <div class="rgt amt { tx.amount.startsWith('-') ? 'neg' : 'pos' }">${u.withCommas(tx.amount)}</div>
       </div>
       <div class="row">
-        <div class="rgt desc">{tx.description}</div>
+        <div class="desc">{tx.description}</div>
+        {#if tx.extra && tx.extra != "0"}<div class="rgt extra">{ tx.extra.startsWith('-') ? '' : '+' }{u.withCommas(tx.extra)}</div>{/if}
       </div>
     </li>
   {/each}{/key}
@@ -33,19 +37,12 @@
   ul
     margin-bottom $s-1
 
-  .balance
-    margin-bottom $s0
-    span
-      text(2xl)
-      font-weight 500
-      margin-left $s-3
-
   .for
-    font-weight: 600
-    margin-right: $s-3
+    font-weight 600
+    margin-right $s-3
 
   .name
-    font-weight: 500
+    font-weight 500
 
   .row
     width 100%
@@ -53,14 +50,16 @@
     justify-content space-between
     &:first-of-type
       text(sm)
-    &:last-of-type 
-      justify-content: unset
 
   .rgt
     text-align right
 
   .amt
     font-weight 500
+
+  .extra
+    font-size 85%
+    color silver
 
   .pos
     color $c-green-dark

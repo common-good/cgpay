@@ -9,7 +9,7 @@
 
   let isLoading = true
   let di = 0 // default to first device
-  let action = ''
+  let action
 
   switch($st.intent) {
     case 'charge':
@@ -24,7 +24,8 @@
 
   onMount(async () => {
     if (!$st.intent) u.goEr(u.crash('scan with no intent'))
-    if (!u.testing()) try { // don't activate camera when testing
+
+    if (!u.testing()) try { // don't activate camera when testing (works whether or not headless)
       Html5Qrcode.getCameras().then(devices => {
         if (devices?.length) {
           st.setCameraCount(devices.length)

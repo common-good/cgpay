@@ -24,9 +24,9 @@
     st.setShowDash(!me.isCo)
     if (lock) st.setAcctChoices(null)
     st.setPayOk(me.isCo ? 'never' : true)
-    if (selfServe) st.setSelf(true)
+//    if (selfServe) st.setSelf(true)
     st.setAllowShow(!me.isCo)
-    u.goHome(`This device is now linked to your Common Good account: ${me?.name}.`)
+    u.goHome(`This device is now linked to your Common Good account: ${me.name}.`)
   }
 
   onMount(async () => {
@@ -47,7 +47,7 @@
 </svelte:head>
 
 <!-- <Navigation /> -->
-<section class="card" id="link-account">
+<section class="page card" id="link-account">
   <h1>Link Account</h1>
   {#if ready}
     <div class="select-account">

@@ -13,6 +13,7 @@
     try {
       const res = await u.postRequest('accounts', credentials)
       st.setAcctChoices(res.accounts)
+      st.setCorrupt(null) // retry any failed (corrupt) transactions
       if (res.accounts.length > 1) {
         u.go('link-account')
       } else {

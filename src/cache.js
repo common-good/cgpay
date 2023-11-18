@@ -44,6 +44,7 @@
  *      avgBalance: the account’s average balance over the past 6 months
  *      trustRatio: ratio of the account’s trust rating to the average trust rating of all individual accounts (zero for company accounts)
  *      since: Unix timestamp of when the account was activated
+ *      selling: array of items being sold (an empty array for individuals)
  *      lastTx: Unixtime (in ms) of the last transaction with this account created on this device
  * 
  *    me: information about the account associated with the device
@@ -82,6 +83,7 @@ const cache = {
   me: null, // information about user's account, signed in
 
   // transient data (not stored in local storage)
+  intent: null, // what we're scanning for (pay, chare, or scanIn)
   token: null, // session token (a stand-in for the deviceId in GET requests)
   socket: null, // webSocket connection
   timeout: null, // milliseconds before inactivity timeout (for return to Home Page)

@@ -1,19 +1,19 @@
-// use this example for setv() and get(): https://svelte.dev/repl/ccbc94cb1b4c493a9cf8f117badaeb31?version=3.16.7
-
 /**
  * Handle stored values for the app (persistent and transient).
  * See data structure definition in cache.js
+ * We used this example for setv() and get(): https://svelte.dev/repl/ccbc94cb1b4c493a9cf8f117badaeb31?version=3.16.7
  */
 import { writable } from 'svelte/store'
 import u from '#utils.js'
 import c from '#constants.js'
 import cache0 from '#cache.js'
+import { getst, save } from '#db.js'
 
 export const createStore = () => {
   const lostMsg = `Tell the customer "I'm sorry, that QR Code is marked "LOST or STOLEN".`
 
   let cache = { ...cache0, ...convert(getst()), version:c.version }
-  save(u.justNot('persist reset', cache)) // update store (and cache) with any changes in defaults (crucial for tests)
+  cache = save(u.justNot('persist reset', cache)) // update store (and cache) with any changes in defaults (crucial for tests)
   const { subscribe, update } = writable(cache)
 
   function reconcileDeviceIds(chx) {
@@ -64,20 +64,8 @@ export const createStore = () => {
     return s
   }
 
-  function getst() { return {
-    ...JSON.parse(localStorage.getItem(c.storeKey)),
-    ...JSON.parse(sessionStorage.getItem(c.storeKey)),
-  }}
-
-  function save(s, persist = cache0.persist) { // allow saving of previous release data when testing: eg Object.keys(s).join(' '))
-    cache = { ...s }
-    localStorage.setItem(c.storeKey, JSON.stringify(u.just(persist, s)))
-    sessionStorage.setItem(c.storeKey, JSON.stringify(u.justNot(persist, s)))
-    return s
-  }
-
-  function setst(newS) { update(s => { return save(newS) } )}
-  function setv(k, v, fromTest = false) { update(s => { s[k] = v; return save(s) }); tSetV(k, v, fromTest); return v }
+  function setst(newS) { update(s => { return cache = save(newS) } )}
+  function setv(k, v, fromTest = false) { update(s => { s[k] = v; return cache = save(s, k) }); tSetV(k, v, fromTest); return v }
 //  function setkv(k, k2, v, fromTest = false) { ('k', k, 'k2', k2, 'v', v, 'showHdr', cache.showHdr); cache[k][k2] = v; setv(k, k2, fromTest); return v }
   function enQ(k, v) { st.bump('enQ'); cache[k].push(v); return setv(k, cache[k]) }
   function pop(k) { st.bump('pop'); const res = cache[k].pop(); setv(k, cache[k]); return res }
@@ -107,6 +95,7 @@ export const createStore = () => {
       if (!cache.useWifi) { flushing[k] = false; return } // allow immediate interruptions when testing
       try {
         await u.postRequest(endpoint, cache[k][0])
+        if (k == 'txs') st.unPend(u.findByValue(cache.recentTxs, { created:cache.txs[0].created }))
       } catch (er) {
         flushing[k] = false
         if (u.isTimeout(er)) {
@@ -135,18 +124,14 @@ export const createStore = () => {
       if (u.testing() && !doing) { // if doing, another thread is already handling it
         doing = true
         u.tellTester('tellme').then(todo => {
-//          console.log('todo', todo)
           if (!todo) return doing = false
-          let k, v
-          while (todo.length) { // for each item
-            ({ k, v } = todo.shift())
-            if (k == 'clear') {
-//              console.log('about to clear')
-              st.clearData(v)
-//              console.log('cleared', v)
-            } else setv(k, v, true)
-          }
-//          console.log('about to tellTester done')
+          let [k, v] = Object.entries(todo)[0]
+          if (k == 'online') setv('useWifi', v, true) // these two test values act together to simulate online/offline
+
+          if (k == 'clear') {
+            st.clearData(v)
+          } else setv(k, v, true)
+
           u.tellTester('done').then(() => doing = false)
         })
       }
@@ -180,6 +165,7 @@ export const createStore = () => {
     setCoPaying(yesno) { setv('coPaying', yesno) },
     setPayOk(v) { setv('payOk', v) },
     setTrail(page = 'back', clear = false) {
+//      console.log('trail', trail, 'page', page)
       if (!page) page = 'home' // handle root url showing home page
       if (clear || u.atHome(page)) setv('trail', []) // always clear when going home
       if (page == 'back') return pop('trail')
@@ -199,7 +185,7 @@ export const createStore = () => {
       }
     },
     setMe(acct) { setv('me', { ...acct } ) }, // null is not allowed (instead see clearSettings)
-    linked() { return (cache.me !== null) },
+    linked() { return (!u.empty(cache.me)) },
     clearSettings() { for (let k in { ...cache0 }) if (cache0.reset.split(' ').includes(k)) setv(k, cache0[k]) }, // called by LinkAccount
     signOut() { st.clearSettings(); st.setAcctChoices(null) },
     clearData(data = cache0) { if (!u.realData()) setst({ ...data }) },
@@ -216,10 +202,10 @@ export const createStore = () => {
     setSocket(socket) { setv('socket', socket) },
 
     resetNetwork() { if (cache.useWifi) st.setOnline(navigator.onLine) },
-    setOnline(yesno) { // handling this in store helps with testing
-      const v = cache.useWifi ? yesno : false
+    setOnline(onoff) { // handling this in store helps with testing
+      const v = cache.useWifi ? onoff : false
       if (v !== cache.online) setv('online', v)
-      if (cache.useWifi && yesno) st.flushAll().then() // when testing only do *explicit* flushing
+      if (cache.useWifi && onoff) st.flushAll().then() // when testing only do *explicit* flushing
     },
 
     /**
@@ -252,21 +238,22 @@ export const createStore = () => {
     },
 
     setRecentTxs(tx = null) {
-      if (Array.isArray(tx)) return setv('recentTxs', tx) // replace list with results of info endpoint
+      if (Array.isArray(tx)) return setv('recentTxs', cache.corrupt ? [ ...tx, ...cache.txs ] : tx) // replace list with results of info endpoint (plus corrupt txs)
       ins('recentTxs', { ...tx }) // insert just one transaction (processed by this device just now)
       while (cache.recentTxs.length > c.recentTxMax) pop('recentTxs')
     },
+    unPend(txi) { if (txi != null) { cache.recentTxs[txi].pending = false; st.setRecentTxs(cache.recentTxs) } },
     enqTx(tx) { tx.offline = true; enQ('txs', { ...tx }) },
     async flushTxs() { await flushQ('txs', 'transactions') },
     deqTx() { deQ('txs') }, // just for testing (in st.spec.js)
-    undoTx() { pop('txs'); st.setPending(false) },
+    undoTx() { pop('txs'); deQ('recentTxs'); st.setPending(false) },
     comment(text) { enQ('comments', { deviceId:cache.me.deviceId, actorId:cache.me.accountId, created:u.now(), text:text }) },
     txConfirm(yesno, m) { // m.note is the invoice record ID received from the server's u\tellApp function
       enQ('confirms', { deviceId:cache.me.deviceId, actorId:cache.me.accountId, yesno:yesno ? 1 : 0, id:m.note, whyNot:'' })
       u.hide()
       if (yesno) {
-        u.sleep(c.fetchTimeoutMs/5).then(u.getInfo) // usually after confirmation, there's a new transaction to show
-        u.sleep(c.fetchTimeoutMs).then(u.getInfo) // try once quick and once after a delay
+        u.sleep(c.fetchTimeoutMs/5).then(async () => await u.getInfo()) // usually after confirmation, there's a new transaction to show
+        u.sleep(c.fetchTimeoutMs).then(async () => await u.getInfo()) // try once quick and once after a delay
       }
     },
 
@@ -277,9 +264,11 @@ export const createStore = () => {
       if (cache.pending) return
       if (u.testing() && !cache.flushOk) return
       if (u.empty(cache.txs) && u.empty(cache.comments) && u.empty(cache.confirms)) return
+      const noTxs0 = u.empty(cache.txs)
       await st.flushComments() // do this first (before flushConfirms, flushTxs, etc), so info gets out about trapped transactions
       await st.flushConfirms()
       await st.flushTxs()
+      if (u.empty(cache.txs) && !noTxs0) await u.getInfo()
       if (u.testing()) setv('flushOk', false)
     },
   }

@@ -40,13 +40,13 @@ const u = {
    * @throws an AbortError if the fetch times out (identify with isTimeout())
    */
   async timedFetch(url, options = {}, post = false) {
+//    console.log('timedFetch url opts post:', url, JSON.stringify(options), post)
     if (!u.st().online) throw u.er('Offline') // this works for setWifiOff also
     if (!post) {
       if (!url.includes('version=')) url += '&version=' + c.version
       const urlRay = url.split('?')
       await u.tellTester('get', urlRay[0], urlRay[1].split('&'))
     }
-//    console.log('fetch post url options', post, url, options)
     const { timeout = c.fetchTimeoutMs, type = 'json' } = options;
     const aborter = new AbortController();
     aborter.name = 'Timeout'
@@ -64,7 +64,6 @@ const u = {
   },
 
   async postRequest(endpoint, v, options = {}) {
-//    console.log('post', endpoint, v, options)
     st.bump('posts')
     if (!v.version) v.version = c.version
     await u.tellTester('post', endpoint, { ...v })
@@ -108,7 +107,7 @@ const u = {
           u.yesno(m.message, () => st.txConfirm(true, m), () => st.txConfirm(false, m))
         } else {
           u.alert(m.message)
-          u.getInfo() // if we're being told about a charge or payment, refresh the list of recent txs
+          u.getInfo().then() // if we're being told about a charge or payment, refresh the list of recent txs
         }
       }
     } catch(er) { console.log('socket error', er); return null }
@@ -139,7 +138,6 @@ const u = {
   qrParse(qr) {
     let acct, testing
     const parts = qr.split(/[\/.]/)
-
 /*    if ((new RegExp('^[0-9A-Za-z]{12,29}[\.!]$')).test(qr)) { // like H6VM0G0NyCBBlUF1qWNZ2k.
       acct = parts[0]
       testing = qr.slice(-1) == '.'
@@ -156,7 +154,8 @@ const u = {
     const mainId = u.getMainId(acct)
     const acct0 = acct.substring(0, mainId.length + agentLen) // include agent chars in original account ID
     const code = acct.substring(acct0.length)
-    return { acct: acct0, main: mainId, code: code, hash: u.hash(code) }
+
+    return { acct:acct0, main:mainId, code:code, hash:u.hash(code) }
   },
   
   qrEr(er) {
@@ -201,25 +200,27 @@ const u = {
   
   /**
    * Get financial information from the server for the current account.
+   * @return true if we got the info
    */
   async getInfo() {
-    if (!u.st().showDash) return
     const me = u.st().me
+    if (u.empty(me) || !u.empty(u.st().txs)) return false
+
     try {
-      const params = {deviceId:me.deviceId, actorId:me.accountId, count:c.recentTxMax }
+      const params = { deviceId:me.deviceId, actorId:me.accountId, count:c.recentTxMax }
       const info = await u.postRequest('info', params)
       st.setBalance(+info.balance)
       st.setRecentTxs(info.txs)
-      st.setGotInfo(true)
       //      balance, surtxs: {}, txs: [{xid, amount, accountId, name, description, created}, …]}
       //  where surtxs: {amount, portion, crumbs, roundup}
-    } catch (er) { console.log('info er', er) }
+      st.setGotInfo(true)
+    } catch (er) { if (er.name != 'Offline') console.log('info er', JSON.stringify(er)) }
+    return true
   },
 
   st() { return st.inspect() },
   tx9() { return st().txs[st().txs.length - 1] },
   now() { return (u.testing()) ? u.st().now : u.now0() }, // keep "now" constant in tests
-  fmtDate(dt) { return new Date(dt).toLocaleDateString('en-us', { year:'numeric', month:'numeric', day:'numeric'}) },
   realData() { return ['production', 'staging'].includes(u.mode()) },
   localMode() { return (u.mode() == 'local' && c.showDevStuff) }, 
   yesno(question, m1, m2) { u.dlg('Confirm', question, 'Yes, No', m1, m2) },
@@ -254,6 +255,14 @@ const u = {
   addableToHome() { 
     if (u.st().sawAdd) return false
     return (u.isApple() && u.isSafari()) || (u.isAndroid() && u.isChrome())
+  },
+
+  lowStorage() {
+    try {
+      localStorage.setItem('test', 'x'.repeat(1024))
+      localStorage.setItem('test', '')
+      return false
+    } catch (er) { return Object.keys(u.st().accts).length < 20 }
   },
 
   /*

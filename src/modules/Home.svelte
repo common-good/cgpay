@@ -7,9 +7,6 @@
   import Dashboard from './Dashboard.svelte'
   import ScanFake from './ScanFake.svelte'
 
-  export let currentRoute // else Svelte complains (I don't know why yet)
-  export let params // else Svelte complains (I don't know why yet)
-
   const me = $st.me
   const hasTxOptions = ($st.allowShow || $st.allowType)
   const payBtnText = hasTxOptions ? 'Pay' : 'Scan to Pay'
@@ -74,7 +71,6 @@
     if ($st.intent == 'scanIn') scanIn() // must precede setQr
     st.setQr(null) // no going back to previous customer
     if ($st.erMsg) showEr($st.erMsg)
-
     payOk = (!me.isCo || $st.payOk == 'always' || $st.coPaying) && !$st.selfServe
 
     // if ($st.selfServe) {
@@ -88,6 +84,7 @@
     // qr = intent === 'pay' ? $st.me?.qr : null
     // const qrAction = `Show this code to ${intent === 'pay' ? intent : 'be paid'}`
   })
+  //{#key $st.recentTxs}{/key}
 </script>
 
 <svelte:head>
@@ -97,7 +94,7 @@
 <section class="page" id="home">
   <div class="top">
     <h1 class="page-title {$st.showDash ? 'visuallyhidden' : null}" data-testid="header">{hdr}</h1>
-    { #if me.isCo }
+    { #if me.isCo || !u.st().showDash }
       { #if $st.selfServe}
         <p>Press the button below to scan your <br />Common Good QR Code</p>
       {/if}
@@ -106,20 +103,18 @@
         <p>CGPay v{u.fmtVersion(c.version)}</p>
       </div>
     {:else}
-      {#key $st.recentTxs}<Dashboard />{/key}
+      <Dashboard />
     {/if}
   </div>
+  {#if u.localMode() && !hasTxOptions && !u.testing()}
+    {#if payOk}<ScanFake intent="pay"/>{/if}
+    <ScanFake intent="charge"/>
+  {/if}
   <div class="bottom">
-    {#if u.localMode() && !hasTxOptions}
-      {#if payOk}<ScanFake intent="pay"/>{/if}
-      <ScanFake intent="charge"/>
+    {#if payOk }
+      <button class="pay" data-testid="btn-pay" on:click={pay}>{payBtnText}</button>
     {/if}
-    <div class="actions">
-      {#if payOk }
-        <button class="pay" data-testid="btn-pay" on:click={pay}>{payBtnText}</button>
-      {/if}
-      <button class="charge" data-testid="btn-charge" on:click={charge}>{chgBtnText}</button>
-    </div>
+    <button class="charge" data-testid="btn-charge" on:click={charge}>{chgBtnText}</button>
   </div>
 </section>
 
@@ -131,22 +126,12 @@
   .pay
     margin-right $s-1
 
-  .fakes 
-    display flex
-    width 100%
-    button
-      cgButtonSecondary()
-      padding 5px
-      margin-bottom $s0
-      flex-grow 1
-      margin-right $s-2
-      visibility visible
-
   p
     text-align center
 
   img 
     max-width 250px
+    margin-bottom $s0
 
   .survey
     cgButtonTertiary()
@@ -156,7 +141,4 @@
     text-align center
     margin auto
     font-size $s-1
-
-    img
-      margin-bottom $s0
 </style>
