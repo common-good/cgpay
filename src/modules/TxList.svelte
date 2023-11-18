@@ -11,7 +11,7 @@
       <div class="row">
       </div>
       <div class="row">
-        <div>
+        <div class="lft">
           {u.fmtDate(tx.created)}
           <span class="name">{tx.name}</span>
           {#if tx.pending}<span data-testid="tx-pending">(pending)</span>{/if}
@@ -50,6 +50,9 @@
     justify-content space-between
     &:first-of-type
       text(sm)
+
+  .lft
+    text-align left
 
   .rgt
     text-align right
