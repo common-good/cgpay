@@ -35,7 +35,7 @@
       tx.proof = u.hash(proof0)
       delete tx.code
       tx.offline = false
-      tx.pending = !pay && !$st.me.isCo && !$st.selfServe // individuals cannot unilaterally charge others
+      tx.pending = !(pay || $st.me.isCo || $st.selfServe) // individuals cannot unilaterally charge others
     }
     st.setPending(true) // give the user a chance to undo (or add a tip)
     if (!otherAccount.name) otherAccount.name = 'Unidentified Member'
@@ -50,15 +50,11 @@
   <h1 class="page-title" data-testid="action">{action}</h1>
   <form on:submit|preventDefault={charge}>
     { #if !$st.selfServe }<Profile {otherAccount} {photo} />{ /if }
-    <div class="bottom">
-      <fieldset>
-        <label for="amount">Amount</label>
-        <input id="amount" data-testid="input-amount" type="number" step="any" name="amount" placeholder="$0.00" bind:value={tx.amount} required />
-        <label for="description">Description</label>
-        <input id="description" data-testid="input-description" type="text" name="description" placeholder="e.g. lunch, rent, supplies, loan, etc." bind:value={ tx.description } autocomplete required />
-      </fieldset>
-      <button data-testid="btn-submit" type="submit">{action}</button>
-    </div>
+    <label for="amount">Amount</label>
+    <input id="amount" data-testid="input-amount" type="number" step="any" name="amount" placeholder="$0.00" bind:value={tx.amount} required />
+    <label for="description">Description</label>
+    <input id="description" data-testid="input-description" type="text" name="description" placeholder="e.g. lunch, rent, supplies, loan, etc." bind:value={ tx.description } autocomplete required />
+    <button data-testid="btn-submit" type="submit">{action}</button>
   </form>
 </section>
 
@@ -76,6 +72,14 @@
     flex-direction column
     align-items center
     justify-content space-between
+
+  label
+    flex 0 0 10px
+    width 100%
+
+  input
+    flex 0 0 60px
+    width 100%
 
   button
     cgButton()

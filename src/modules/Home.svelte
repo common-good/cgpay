@@ -71,7 +71,6 @@
     if ($st.intent == 'scanIn') scanIn() // must precede setQr
     st.setQr(null) // no going back to previous customer
     if ($st.erMsg) showEr($st.erMsg)
-
     payOk = (!me.isCo || $st.payOk == 'always' || $st.coPaying) && !$st.selfServe
 
     // if ($st.selfServe) {
@@ -127,22 +126,12 @@
   .pay
     margin-right $s-1
 
-  .fakes 
-    display flex
-    width 100%
-    button
-      cgButtonSecondary()
-      padding 5px
-      margin-bottom $s0
-      flex-grow 1
-      margin-right $s-2
-      visibility visible
-
   p
     text-align center
 
   img 
     max-width 250px
+    margin-bottom $s0
 
   .survey
     cgButtonTertiary()
@@ -152,7 +141,4 @@
     text-align center
     margin auto
     font-size $s-1
-
-    img
-      margin-bottom $s0
 </style>

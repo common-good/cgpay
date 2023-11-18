@@ -140,12 +140,10 @@
       </div>
       <div class="note" data-testid="thank-you">Thank you for using CGPay for democracy and the common good!</div>
     </div>
-    <div class="actions">
-      {#if tipable}<a class="secondary" href='/tip'>Add Tip</a>{/if}
-      <!-- button>Receipt</button -->
-      <button class="tertiary" data-testid="btn-undo" on:click={askUndo}>Undo</button>
-      <a class="primary" data-testid="btn-done" on:click={goHome}>Done</a>
-    </div>
+    {#if tipable}<a class="bottom secondary" href='/tip'>Add Tip</a>{/if}
+    <!-- button>Receipt</button -->
+    <button class="bottom tertiary" data-testid="btn-undo" on:click={askUndo}>Undo</button>
+    <a class="bottom primary" data-testid="btn-done" on:click={goHome}>Done</a>
   </section>
 { :else }
   <SubmitCharge {otherAccount} {photo} {tx} on:complete={handleSubmitCharge} />
@@ -154,15 +152,6 @@
 <style lang='stylus'>
   h1 
     margin-bottom $s1
-
-  section
-    height calc(100vh + 300px)
-    width 100%
-    display flex
-    flex-direction column
-    align-items center
-    justify-content space-between
-    padding-bottom 400px
 
   .charge-info
     width 95%
@@ -192,24 +181,11 @@
     .co
       text sm
       
-  .top
-    height 100%
-    width 100%
-    display flex
-    flex-direction column
-    align-items center
-    justify-content space-between
+  a, button
     margin-bottom $s1
 
-  .actions
-    display flex
-    flex-direction column
-    width 100%
-
-    a, button
-      margin-bottom $s1
-    a:last-of-type
-        margin-bottom 0
+  a:last-of-type
+    margin-bottom 0
 
   .primary
     cgButton()

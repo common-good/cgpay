@@ -68,7 +68,7 @@
 
   .img
     display flex
-    flex 0 1 60vh
+    flex 0 1 40vh
 
   img
     max-width 130%
