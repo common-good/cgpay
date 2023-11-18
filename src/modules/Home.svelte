@@ -88,6 +88,7 @@
     // qr = intent === 'pay' ? $st.me?.qr : null
     // const qrAction = `Show this code to ${intent === 'pay' ? intent : 'be paid'}`
   })
+  //{#key $st.recentTxs}{/key}
 </script>
 
 <svelte:head>
@@ -106,18 +107,18 @@
         <p>CGPay v{u.fmtVersion(c.version)}</p>
       </div>
     {:else}
-      {#key $st.recentTxs}<Dashboard />{/key}
+      <Dashboard />
     {/if}
   </div>
   {#if u.localMode() && !hasTxOptions && !u.testing()}
-      {#if payOk}<ScanFake intent="pay"/>{/if}
-      <ScanFake intent="charge"/>
-    {/if}
+    {#if payOk}<ScanFake intent="pay"/>{/if}
+    <ScanFake intent="charge"/>
+  {/if}
   <div class="bottom">
-      {#if payOk }
-        <button class="pay" data-testid="btn-pay" on:click={pay}>{payBtnText}</button>
-      {/if}
-      <button class="charge" data-testid="btn-charge" on:click={charge}>{chgBtnText}</button>
+    {#if payOk }
+      <button class="pay" data-testid="btn-pay" on:click={pay}>{payBtnText}</button>
+    {/if}
+    <button class="charge" data-testid="btn-charge" on:click={charge}>{chgBtnText}</button>
   </div>
 </section>
 
