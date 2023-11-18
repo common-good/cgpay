@@ -38,7 +38,7 @@ Scenario: A company charges an individual
   And ? these server "txs":
   | amt     | actorId | uid1 | uid2  | agt1 | agt2 | for2  | created | 
   | 1234.50 | Cit     | Bea  | Cit   | Bea  | Abe  | food! | now     |
-@this
+
 Scenario: A company charges an individual then undoes the transaction
 #  * I am signed in as "Abe/Cit"
   # abbreviated syntax for first 4 steps
@@ -98,6 +98,7 @@ Scenario: A company charges a company
 
 Scenario: An individual charges an individual
   Given I am signed in as "Abe"
+  And this "showDash": "true"
   When I charge "Bea" 1234.50 for "food!"
   Then ? I see "tx-summary"
   And ? this "pending": "true"
@@ -105,7 +106,7 @@ Scenario: An individual charges an individual
 
   When I click "btn-done"
   Then ? I am on page "home"
-  And ? this "balance": "..."
+  And ? this "balance": "9999.00"
   And ? count "recentTxs" is 1
   And ? "tx-date" is "Pending"
 

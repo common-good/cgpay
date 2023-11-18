@@ -20,7 +20,7 @@ Scenario: On link-account page
   | Abe | Abe/Cit |
   When I visit "link-account"
   Then ? I see no "btn-back"
-  But ? I see "btn-nav"
+  And ? I see no "btn-nav"
 
 Scenario: On home page
   Given I am signed in as "Bea"
@@ -35,7 +35,6 @@ Scenario: A user completes a transaction and goes back
   And I charge "Abe" 12.34 for "lunch"
   Then ? I see "btn-back"
   And ? I see "btn-nav"
-
   When I click "btn-back"
   Then ? this confirmation: "Reverse the transaction?"
 
@@ -94,7 +93,7 @@ Scenario: On comments page from tx page
   And I click "btn-nav"
   And I click "menu-comment"
   When I click "btn-back"
-  Then ? I am on page "tx-details"
+  Then ? I am on page "submit-charge"
   When I click "btn-back"
   Then ? I am on page "scan"
   When I click "btn-back"
@@ -106,9 +105,8 @@ Scenario: On comments page from tx page back and forth
   And I click "btn-nav"
   And I click "menu-comment"
   When I click "btn-back"
-  Then ? I am on page "tx-details"
+  Then ? I am on page "submit-charge"
   When I input "1234.50" as "amount"
   And I input "food!" as "description"
   And I click "btn-submit"
-  * I wait 1 seconds
   Then ? I see "tx-summary"
