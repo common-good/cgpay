@@ -22,10 +22,10 @@ const w = {
   },
 
   // test constants
-  headlessMode: 'new', // new, old, or false (new times out)
-  slowMo: 0, // 0 is fast, 100 is readable
+  headlessMode: 'new', // 'new', 'old', or false
+  slowMo: 50, // 0 is fast, 50+ is required for some tests, 100 is readable but sometimes causes tests to time out
   testTimeout: 18, // test timeout in seconds (12 is not enough)
-  chromiumPath: '', // can be used to test different versions of chromium
+  chromiumPath: null, // can be used to test different versions of chromium
   seeLog: true, // show what the automated browser logs to console
   timeSlop: 10, // seconds between timestamps in tests is treated as negligible
 //  chromiumPath: '/usr/bin/chromium-browser', // requires sudo apt-get install chromium-browser
