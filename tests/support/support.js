@@ -37,9 +37,8 @@ const t = {
   },
 
   async whatPage() { 
-    const el = await w.page.$('.page')
     try {
-      return el ? await w.page.$eval( '.page', el => getAttribute('data-testid') ) : null
+      return await w.page.$eval( '.page', el => el.getAttribute('id') )
     } catch (er) {
       console.log('Page has no .page element')
       return 'UNKNOWN PAGE'
@@ -56,13 +55,12 @@ const t = {
   },
   */
 
-  async getv(k) { await t.waitForApp(); return w.store[k] },
+  async getv(k) { return w.store[k] },
 
   async putv(k, v) {
-    await t.waitForApp()
-    w.tellApp.push({ k:k, v:v }); w.store[k] = v
-    if (k == 'online') { w.tellApp.push({ k:'useWifi', v:v}); w.store.useWifi = v } // these values go together for faking online/offline
-    await t.waitACycle() // give app time to ask
+    w.store[k] = v
+    if (k == 'online') { w.store.useWifi = v } // these values go together for faking online/offline
+    await t.tellApp(k, v)
   },
 
   /**
@@ -77,19 +75,21 @@ const t = {
   async appPipe(op = null, k = null, v = null) {
     if (op == 'store') {
       w.store[k] = v
+
     } else if (op == 'post' || op == 'get') {
       w[op][k] = v
-    } else if (op == 'done') { // app has finished handling our instructions, so stop waitForApp()
-      w.tellApp = []
-    } else if (op == 'tellme') {
+
+    } else if (op == 'done') { // app has finished handling our instructions
+      w.tellApp = {} // signal to t.tellApp that handling is done
+
+    } else if (op == 'tellme') { // app is ready for instructions, tell it whatever is in w.tellApp
       if (u.empty(w.tellApp)) return null
       const res = u.clone(w.tellApp)
-      w.tellApp = null // prevent most steps until this step is done
+      w.tellApp = null // signal to t.tellApp that handling has begun
       return res
+
     } else assert.fail('invalid appPipe op: ' + op)
   },
-
-  async waitForApp() { while(w.tellApp === null) await t.waitACycle() }, // wait for app to handle instructions before going on to next step
 
   /**
    * For an array of n arrays, the first element being the keys (from a Gherkin multi-value field), return an array of n-1 objects.
@@ -144,8 +144,8 @@ const t = {
 
     const me = u.clone(w.accounts[v])
     if (me != null) return  (k == 'account') ? me
+                          : k == 'me' ? u.just('name isCo accountId deviceId selling', me)
                           : u.in(k, 'actorUid uid uid1 uid2 agt1 agt2') ? w.uid(v)
-                          : k == 'myAccount' ? u.just('name isCo accountId deviceId selling', me)
                           : k == ('id' && v.includes('/')) ? v.split('/')[1] // without agent
                           : k == 'actorId' ? me.accountId
                           : k == 'otherId' ? me.accountId
@@ -177,7 +177,7 @@ const t = {
         assert.equal(got.length, want.length, msg)
         for (let i in want) t.test(got[i], want[i], i, mode)
       } else { // object
-        if (field == 'myAccount') want = { ...want, deviceId:'?', qr:'?' }
+        if (field == 'me') want = { ...want, deviceId:'?', qr:'?' }
         for (let i of Object.keys(want)) t.test(got[i], want[i], i, u.empty(mode) ? null : mode)
       }
       return
@@ -202,29 +202,38 @@ const t = {
     } else assert.fail('bad mode:' + mode)
   },
 
-  async element(testId) { await t.waitForApp(); return await w.page.$(t.sel(testId)) },
+  async element(testId) { return await w.page.$(t.sel(testId)) },
   sel(testId) { return `[data-testid="${testId}"]` },
   isTimeField(k) { return u.in(k, 'created') },
   async waitACycle(n = 1) { return w.page.waitForTimeout(n * c.networkTimeoutMs + 1) },
   
   // MAKE / DO
 
-  async click(testId, options = {}) { await t.waitForApp(); await w.page.click(t.sel(testId), options) },
+  async click(testId, options = {}) { await w.page.click(t.sel(testId), options) }, // sometimes takes a moment
 
   /**
-   * Set typical data from a previous release
-   * @param string release: semantic version number of old data
-   * NOTE: If used, this should always be the first step in a scenario (including any background)
+   * Tell the app to do something (when it next asks for instructions)
    */
-  async oldData(release) {
-    w.store = release == 'A' ? u.clone(cacheA) : 'error'
+  async tellApp(k, v) {
+    w.tellApp = { [k]:v } // [k] means evaluate k (it doesn't mean the key is an array)
+    while (!u.empty(w.tellApp)) await t.waitACycle() // wait for app to ask for these instructions -- w.tellApp gets set to null ({} if complete)
+    while (w.tellApp === null) await t.waitACycle() // wait for app to handle instructions (w.tellApp gets set to {})
+  },
+
+  /**
+   * Set typical data (possibly from a previous release)
+   * @param string release: semantic version number of old data (defaults to current version)
+   * NOTE: If release is specified, it should be called from the first step in a scenario (including any background)
+   */
+  async setStore(release = null) {
+    if (release != null) w.store = u.clone(
+      release == 'A' ? cacheA : 'error'
+    )
     w.store.now = w.now
-    w.tellApp = [{ k:'clear', v:{ ...w.store } }] // replace what the Before hook set, with older data (see hooks.js)
-    await t.waitACycle(2) // give app time to ask
+    await t.tellApp('clear', { ...w.store })
   },
 
   async visit(target, wait = 'networkidle0') { 
-    await t.waitForApp()
     const options = wait ? { waitUntil:wait } : {} // load, domcontentloaded, networkidle0, or networkidle2
     await w.page.goto(baseUrl + target, options)
   },
@@ -271,9 +280,9 @@ const t = {
   },
 
   async input(id, text) {
-    await t.waitForApp()
     const testId = 'input-' + id
     const sel = t.sel(testId) 
+    t.wait(2) // required by 2023 Chrome :(
     await t.click(testId, { clickCount: 3 }) // select field so that typing replaces it
     await w.page.type(sel, isNaN(text) ? text : JSON.stringify(text))
     await t.waitACycle(2) // needed sometimes between inputs
@@ -284,26 +293,30 @@ const t = {
   async scan(who, why = 'charge') {
     const qr = t.adjust(who, 'qr');
     await t.putv('intent', why)
+
     if (why == 'scanIn') {
       await t.putv('qr', qr) // must be after visit to Home page (because it resets qr)
       await t.go('scan')
       await t.go('home')
-    } else { // why is charge or pay
-      await t.visit('')
+
+    } else { // why is charge or pay (assume we're on home page)
+      await t.visit('') // scan is sometimes called directly (not from tx(), so we need this here)
       await t.onPage('home') // make sure we're starting in the right place
+      if (w.store.showDash) { // an extra click if home page shows Dashboard
+        await t.click('btn-' + why)
+        why = 'scan'
+      }
       await t.putv('qr', qr) // must be after visit to Home page (because it resets qr)
       await t.click('btn-' + why)
+      await t.waitACycle(3)
       await t.onPage('scan') // make sure the button worked
       await t.go('tx', 'scan')
     }
-    await t.waitACycle()
   },
 
   async tx(who, amount, description) {
-    await t.visit('home') // sometimes needed
-    await t.scan(who)
-    await t.waitACycle()
-    await t.input('amount', amount)
+    await t.scan(who, amount < 0 ? 'pay' : 'charge') // scan for pay or charge starts by going home, so no need to do that here
+    await t.input('amount', Math.abs(amount))
     await t.input('description', description)
     await t.click('btn-submit')
   },
@@ -389,7 +402,6 @@ async mockFetch(url, options = {}) {
    * @param {*} method 
    */
   async posted(endpoint, rows, method) {
-    await t.waitACycle()
     assert.isNotNull(w[method][endpoint], `expected a "${method}" request to endpoint "${endpoint}"`)
     t.test({ ...w[method][endpoint] }, t.these(rows, t.ONE) )
     delete w[method][endpoint]
@@ -422,20 +434,16 @@ async mockFetch(url, options = {}) {
         } else t.test(u.just('agent name', got[me.accountId]), { agent:agent, name:name }, field)
       } else { // choices
         if (set) {
-          make.push(u.just('name accountId deviceId qr isCo selling', me))
-        } else t.test(u.just('name accountId isCo selling', got[i]), u.just('name accountId isCo selling', me), field)
+          make.push(u.just('name accountId cardCode deviceId qr isCo selling', me))
+        } else t.test(u.just('name accountId cardCode isCo selling', got[i]), u.just('name accountId cardCode isCo selling', me), field)
       }
     }
     if (set) await t.putv(field, make) // make is an object or array
   },
 
   async onPage(id) {
-    await t.waitForApp()
-    const el = await w.page.$(`#${id}`)
-    if (el === null) {
-      const here = await t.whatPage()
-      assert.isNotNull(el, `page "${id}" not found. You are on page "${here}"`)
-    }
+    const here = await t.whatPage()
+    assert.equal(here, id, `page "${id}" not found. You are on page "${here}"`)
   },
 
   async see(testId) {
@@ -444,7 +452,14 @@ async mockFetch(url, options = {}) {
     return el
   },
 
-  async is(testId, want, mode = 'exact') {
+  /**
+   * Test the value of a DOM element
+   * @param string testId: element ID 
+   * @param string want: value wanted 
+   * @param string mode: exact (default), false (exact not), part, or <n (meaning got and want are less than n apart) 
+   * @returns 
+   */
+  async elementIs(testId, want, mode = 'exact') {
     const prefix = testId.split('-')[0]
     const el = await t.see(testId)
     if (u.in(want, 'selected checked')) { // Svelte doesn't use selected and checked so we simulate it with class
@@ -465,8 +480,11 @@ async mockFetch(url, options = {}) {
 
   async signedInAs(who, set = false) {
     const me = w.accounts[who]
-    if (set) await t.putv('myAccount', { ...u.just('name isCo accountId deviceId selling', me), qr:'qr' + me.name.charAt(0) })
-    if (!set) t.test(u.just('name isCo accountId selling', await t.getv('myAccount')), u.just('name isCo accountId selling', me), 'myAccount')
+    if (set) {
+      await t.putv('me', { ...u.just('name isCo accountId cardCode deviceId selling', me), qr:'qr' + me.name.charAt(0) })
+      await t.putv('showDash', !me.isCo)
+      await t.putv('allowShow', !me.isCo)
+    } else t.test(u.just('name isCo accountId cardCode selling', await t.getv('me')), u.just('name isCo accountId cardCode selling', me), 'me')
   },
 
 }

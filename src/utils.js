@@ -16,6 +16,7 @@ const u = {
   undo: null, // notify subscribers every time the Back button is clicked when it means "undo" (see Layout.svelte)
 
   api() { return u.realData() ? c.apis.real : c.apis.test }, 
+  socketURL() { return u.realData() ? c.sockets.real : c.sockets.test }, 
 
   dlg(title, text, labels, m1 = u.hide, m2 = null) {
     const m0 = [true, title, text, labels]
@@ -27,7 +28,7 @@ const u = {
    * Fetch from the server API and return and object (or a blob if specified in the options).
    * @param {*} url: the enpoint to fetch from (without the API path)
    * @param {*} options: 
-   *   timeout: the number of miliseconds
+   *   timeout: the number of milliseconds
    *   type: 'json' (default) or 'blob'
    *   method: 'POST' or 'GET'
    *   etc.
@@ -39,13 +40,13 @@ const u = {
    * @throws an AbortError if the fetch times out (identify with isTimeout())
    */
   async timedFetch(url, options = {}, post = false) {
-    if (!st.inspect().online) throw u.er('Offline') // this works for setWifiOff also
+//    console.log('timedFetch url opts post:', url, JSON.stringify(options), post)
+    if (!u.st().online) throw u.er('Offline') // this works for setWifiOff also
     if (!post) {
       if (!url.includes('version=')) url += '&version=' + c.version
       const urlRay = url.split('?')
       await u.tellTester('get', urlRay[0], urlRay[1].split('&'))
     }
-//    console.log('fetch post url options', post, url, options)
     const { timeout = c.fetchTimeoutMs, type = 'json' } = options;
     const aborter = new AbortController();
     aborter.name = 'Timeout'
@@ -62,7 +63,7 @@ const u = {
     return res
   },
 
-  async postRequest(endpoint, v, options) {
+  async postRequest(endpoint, v, options = {}) {
     st.bump('posts')
     if (!v.version) v.version = c.version
     await u.tellTester('post', endpoint, { ...v })
@@ -76,9 +77,47 @@ const u = {
     }, true)
   },
 
+  /**
+   * Open a websocket to communicate with the server and, indirectly, with other devices
+   * @returns a websocket
+   */
+  socket() {
+    if (!c.enableSockets) return null
+    if (u.st().me.isCo) return null // only for individual accounts for now
+    if (!('WebSocket' in window)) return null
+
+    if (u.st().socket) try {
+      u.st().socket.close() // for now, reopen every time
+    } catch (er) {}
+
+    let socket
+    try {
+      socket = new WebSocket(u.socketURL()) // socket.readyState has status
+      socket.onopen = () => {
+        const msg = JSON.stringify({ op:'connect', deviceId:u.st().me.deviceId, actorId:u.st().me.accountId })
+        try {
+          socket.send(msg)
+        } catch (er) { console.log('socket error', er) }
+      }
+      socket.onclose = () => {}			
+      socket.onmessage = (msg) => {
+        const m = JSON.parse(msg.data) // get message, action, and note
+
+        if (m.action == 'request') {
+          u.yesno(m.message, () => st.txConfirm(true, m), () => st.txConfirm(false, m))
+        } else {
+          u.alert(m.message)
+          u.getInfo().then() // if we're being told about a charge or payment, refresh the list of recent txs
+        }
+      }
+    } catch(er) { console.log('socket error', er); return null }
+
+    return socket
+  },
+
   async generateQr(text) {
     try {
-      return await QRCode.toDataURL(text)
+      return await QRCode.toDataURL(text, {'width': 310})
     } catch (er) { console.error(er) }
   },
 
@@ -99,7 +138,6 @@ const u = {
   qrParse(qr) {
     let acct, testing
     const parts = qr.split(/[\/.]/)
-
 /*    if ((new RegExp('^[0-9A-Za-z]{12,29}[\.!]$')).test(qr)) { // like H6VM0G0NyCBBlUF1qWNZ2k.
       acct = parts[0]
       testing = qr.slice(-1) == '.'
@@ -116,7 +154,8 @@ const u = {
     const mainId = u.getMainId(acct)
     const acct0 = acct.substring(0, mainId.length + agentLen) // include agent chars in original account ID
     const code = acct.substring(acct0.length)
-    return { acct: acct0, main: mainId, code: code, hash: u.hash(code) }
+
+    return { acct:acct0, main:mainId, code:code, hash:u.hash(code) }
   },
   
   qrEr(er) {
@@ -135,12 +174,20 @@ const u = {
   },
 
   /**
-   * Return the cardId with cardCode (and everything that follows) removed
+   * Return just the cardCode from the cardId.
+   */
+  cardCode(cardId) {
+    const len = u.noCardCode(cardId).length
+    return cardId.substring(len)
+  },
+
+  /**
+   * Return the cardId with cardCode removed
    */
   noCardCode(cardId) {
     if (cardId === null) return null
     const i = dig36.indexOf(cardId[0])
-    const len = regionLens[i] + acctLens[i] + agentLens[i]
+    const len = 1 + +regionLens[i] + +acctLens[i] + +agentLens[i]
     return cardId.substr(0, len)
   },
   
@@ -151,7 +198,29 @@ const u = {
     : 'dev'
   }, 
   
-  now() { return (u.testing()) ? st.inspect().now : u.now0() }, // keep "now" constant in tests
+  /**
+   * Get financial information from the server for the current account.
+   * @return true if we got the info
+   */
+  async getInfo() {
+    const me = u.st().me
+    if (u.empty(me) || !u.empty(u.st().txs)) return false
+
+    try {
+      const params = { deviceId:me.deviceId, actorId:me.accountId, count:c.recentTxMax }
+      const info = await u.postRequest('info', params)
+      st.setBalance(+info.balance)
+      st.setRecentTxs(info.txs)
+      //      balance, surtxs: {}, txs: [{xid, amount, accountId, name, description, created}, …]}
+      //  where surtxs: {amount, portion, crumbs, roundup}
+      st.setGotInfo(true)
+    } catch (er) { if (er.name != 'Offline') console.log('info er', JSON.stringify(er)) }
+    return true
+  },
+
+  st() { return st.inspect() },
+  tx9() { return st().txs[st().txs.length - 1] },
+  now() { return (u.testing()) ? u.st().now : u.now0() }, // keep "now" constant in tests
   realData() { return ['production', 'staging'].includes(u.mode()) },
   localMode() { return (u.mode() == 'local' && c.showDevStuff) }, 
   yesno(question, m1, m2) { u.dlg('Confirm', question, 'Yes, No', m1, m2) },
@@ -166,9 +235,8 @@ const u = {
   isApple() { return /iPhone|iPod|iPad/i.test(navigator.userAgent) },
   isAndroid() { return !u.isApple() && /Android/i.test(navigator.userAgent) },
   go(page, setTrail = true) { 
-    if (setTrail) st.setTrail(u.pageUri())
-    if (st.inspect().pending) st.setTrail('')
-    st.setPending(false) // once you leave the tx confirmation page, the tx is assumed complete
+    if (setTrail) st.setTrail(u.st()?.pending ? '' : u.pageUri())
+    st.setPending(false) // must come after setTrail
     st.setLeft(u.atHome(page) ? 'logo' : 'back')
     navigateTo('/' + page)
   },
@@ -185,8 +253,16 @@ const u = {
   },
 
   addableToHome() { 
-    if (st.inspect().sawAdd) return false
+    if (u.st().sawAdd) return false
     return (u.isApple() && u.isSafari()) || (u.isAndroid() && u.isChrome())
+  },
+
+  lowStorage() {
+    try {
+      localStorage.setItem('test', 'x'.repeat(1024))
+      localStorage.setItem('test', '')
+      return false
+    } catch (er) { return Object.keys(u.st().accts).length < 20 }
   },
 
   /*
@@ -210,7 +286,7 @@ const u = {
   */
 
   /* for POST auth in HTTP header (any advantage?)
-          'authorization': `Bearer ${ $st.deviceId }`,
+          'authorization': `Bearer ${ u.st().me.deviceId }`,
           'Accept': 'application/json',
           'Content-type': 'application/json',
           body: JSON.stringify(tx)

@@ -13,10 +13,15 @@
     try {
       const res = await u.postRequest('accounts', credentials)
       st.setAcctChoices(res.accounts)
+      st.setCorrupt(null) // retry any failed (corrupt) transactions
       if (res.accounts.length > 1) {
         u.go('link-account')
       } else {
-        st.setMyAccount(res.accounts[0])
+        // Skip /link-account and use individual account settings
+        st.setMe(res.accounts[0])
+        st.setShowDash(true)
+        st.setPayOk(true)
+        st.setAllowShow(true)
         u.go('home')
       }
     } catch (er) {

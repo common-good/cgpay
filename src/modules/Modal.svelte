@@ -57,7 +57,7 @@ $:[lab1, lab2, zot] = u.ray(labels + ', ')
     background rgba(0,0,0,0.3)
 
   .modal
-    position absolute
+    position fixed
     left 0
     right 0
     top 144px
