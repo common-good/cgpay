@@ -1,0 +1,11 @@
+version: 2.1
+
+setup: true
+
+orbs:
+  circletron: circletron/circletron@3.0.5
+
+workflows:
+  trigger-jobs:
+    jobs:
+      - circletron/trigger-jobs

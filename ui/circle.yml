@@ -1,0 +1,10 @@
+jobs:
+  run-ui-tests:
+    steps:
+      - checkout
+      - run: npm test
+
+workflows:
+  ui:
+    jobs:
+      - run-ui-tests

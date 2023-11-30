@@ -1,0 +1,1 @@
+targetBranches: ^(main$|develop$|feature/*)
