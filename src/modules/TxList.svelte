@@ -16,11 +16,13 @@
           <span class="name">{tx.name}</span>
           {#if tx.pending}<span data-testid="tx-pending">(pending)</span>{/if}
         </div>
-        <div class="rgt amt { tx.amount.startsWith('-') ? 'neg' : 'pos' }">${u.withCommas(tx.amount)}</div>
+        <div class="rgt amt { +tx.amount < 0 ? 'neg' : 'pos' }">$<span data-testid="amt">{u.withCommas(tx.amount)}</span></div>
       </div>
       <div class="row">
-        <div class="desc">{tx.description}</div>
-        {#if tx.extra && tx.extra != "0"}<div class="rgt extra">{ tx.extra.startsWith('-') ? '' : '+' }{u.withCommas(tx.extra)}</div>{/if}
+        <div class="desc" data-testid="description">{tx.description}</div>
+        {#if +tx.extra != 0}
+          <div class="rgt extra" data-testid="extra">{ +tx.extra < 0 ? '' : '+' }{u.withCommas(tx.extra)}</div>
+        {/if}
       </div>
     </li>
   {/each}{/key}

@@ -13,15 +13,15 @@
 </script>
 
 <section id="dashboard">
-  <div class="balance">Balance: <span>${u.withCommas($st.balance)}</span></div>
+  <div class="balance">Balance: $<span data-testid="balance">{u.withCommas($st.balance)}</span></div>
   <div class="txs">
     <h2>Recent Transactions</h2>
     {#if u.empty($st.recentTxs)}
-      <p>No transactions yet.</p>
+      <p data-testid="none">No transactions yet.</p>
     {:else}
       <TxList useMin={true} />
       {#if $st.recentTxs.length > c.recentTxMin}
-        <a class="link" href="/txs">View More</a>
+        <a class="link" data-testid="more" href="/txs">View More</a>
       {/if}
     {/if}
   </div>
