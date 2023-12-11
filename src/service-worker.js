@@ -47,7 +47,7 @@ self.addEventListener('fetch', (ev) => {
       if (response.status === 200) {
         cache.put(ev.request, response.clone());
       }
-       return response;
+      return response;
  
     } catch {
       return cache.match(ev.request); // offline, so fall back to the cache

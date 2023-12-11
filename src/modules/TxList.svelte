@@ -20,7 +20,7 @@
       </div>
       <div class="row">
         <div class="desc" data-testid="description">{tx.description}</div>
-        {#if +tx.extra != 0}
+        {#if !u.empty(tx.extra) && +tx.extra != 0}
           <div class="rgt extra" data-testid="extra">{ +tx.extra < 0 ? '' : '+' }{u.withCommas(tx.extra)}</div>
         {/if}
       </div>
