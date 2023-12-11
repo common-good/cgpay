@@ -110,7 +110,9 @@ const t = {
         k = rows[0][coli]
         if (serverTable) k = t.mapToServer(k, serverTable)
         obo[k] = rows[rowi + 1][coli] // remember original value of this cell
-        if (k == 'proof') w.proofRow = { ...ray[rowi], amount:obo.amount.replace('-', ''), cardCode:t.adjust(obo.otherId, 'cardCode') } // save this for calculating the wanted proof value in adjust
+//        if (k == 'proof') w.proofRow = { ...ray[rowi], amount:obo.amount.replace('-', ''), cardCode:t.adjust(obo.otherId, 'cardCode') } // save this for calculating the wanted proof value in adjust
+        if (k == 'proof') w.proofRow = { ...ray[rowi], amount:obo.amount, cardCode:t.adjust(obo.otherId, 'cardCode') } // save this for calculating the wanted proof value in adjust
+//        if (k == 'proof') console.log('proofRow', w.proofRow)
         ray[rowi][k] = t.adjust(obo[k], serverTable ? t.mapToServer(k, serverTable) : k)
       }
     }
@@ -386,6 +388,7 @@ async mockFetch(url, options = {}) {
     const want = t.these(rows, false, table)
     let msg, kvs, i
     const got = await t.postToTestEndpoint('rows', { fieldList:'*', table:table })
+    console.log('got', got)
     for (let rowi in want) {
       kvs = table == 'txs' ? { amt:want[rowi].amt, for2:want[rowi].for2 } : { none:0 }
       msg = `want server ${table} row (${rowi}) with ` + JSON.stringify(kvs)
