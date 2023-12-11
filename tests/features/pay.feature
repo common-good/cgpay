@@ -12,7 +12,7 @@ Background:
   * this "payOk": "always"
 
 Rule: Transactions must include an amount and a description
-
+@this
 Scenario: A company pays an individual
   When I scan "Bea" to "pay"
   And I input "1234.50" as "amount"

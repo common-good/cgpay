@@ -105,8 +105,8 @@ Scenario: An individual charges an individual
 
   When I click "btn-done"
   Then ? I am on page "home"
-  And ? this "balance": "9999.00"
   And ? count "recentTxs" is 1
+  And ? "balance" is "$9,999.00"
   And ? "tx-pending" is "(pending)"
 
 Scenario: A company charges an individual offline
