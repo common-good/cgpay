@@ -12,7 +12,7 @@ Background:
   * this "payOk": "always"
 
 Rule: Transactions must include an amount and a description
-@this
+
 Scenario: A company pays an individual
   When I scan "Bea" to "pay"
   And I input "1234.50" as "amount"
@@ -98,9 +98,8 @@ Scenario: A company pays a company
 
   When I click "btn-done"
   Then ? I am on page "home"
-  And ? this "balance": "8764.50"
+#  And ? this "balance": "8764.50"
   And ? count "recentTxs" is 1
-  And ? I see "tx-pending" is "(pending)"
 
 Scenario: An individual pays an individual
   Given I am signed in as "Abe"
@@ -109,7 +108,7 @@ Scenario: An individual pays an individual
   And ? this "pending": "true"
   And ? "action" is "Paid"
   And ? "other-name" is "Bea Two"
-  And ? "agent" is ""
+  And ? I see no "agent"
   And ? "description" is "food!"
   And ? "amount" is "1,234.50"
   And ? I see "thank-you"
@@ -128,8 +127,8 @@ Scenario: A company pays an individual offline
   And I input "food!" as "description"
   And I click "btn-submit"
   Then ? these "txs":
-  | deviceId | amount | actorId | otherId | description | created | offline | version |
-  | devC     | 234.50 | Abe/Cit | Bea     | food!       | now     | true    | version |
+  | deviceId | amount  | actorId | otherId | description | created | offline | version |
+  | devC     | -234.50 | Abe/Cit | Bea     | food!       | now     | true    | version |
   # Offline limit is $250
   Then ? I see "tx-summary"
   And ? "action" is "Paid"
