@@ -3,6 +3,8 @@ import c from '../../constants.js'
 import u from '../../utils0.js'
 import cache from '../../src/cache.js'
 import cacheA from './oldData/cacheA.js'
+import cacheB from './oldData/cacheB.js'
+import cacheC from './oldData/cacheC.js'
 import w from './world.js'
 import queryString from 'query-string'
 
@@ -229,7 +231,10 @@ const t = {
    */
   async setStore(release = null) {
     if (release != null) w.store = u.clone(
-      release == 'A' ? cacheA : 'error'
+        release == 'A' ? cacheA 
+      : release == 'B' ? cacheB
+      : release == 'C' ? cacheC
+      : 'error'
     )
     w.store.now = w.now
     await t.tellApp('clear', { ...w.store })

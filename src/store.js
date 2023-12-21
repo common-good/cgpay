@@ -79,7 +79,7 @@ export const createStore = () => {
   function reportCorrupt() {
     const who = cache.confirms.length ? cache.confirms[0].actorId
     : cache.txs.length ? cache.txs[0].actorId: 'Unknown'
-    st.comment(`Member ${who} mobile device has corrupt data.`)
+    st.comment(`Member ${who} mobile device has corrupt data: ` + JSON.stringify(cache.txs))
   }
 
   async function flushQ(k, endpoint) {

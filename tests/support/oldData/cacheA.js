@@ -1,4 +1,4 @@
-// initial values for store
+// initial values for conversion tests
 
 const cacheA = {
   sawAdd: 1687568066,
