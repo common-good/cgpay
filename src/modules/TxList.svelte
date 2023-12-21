@@ -13,7 +13,7 @@
       <div class="row">
         <div class="lft">
           {u.fmtDate(tx.created)}
-          <span class="name">{tx.name}</span>
+          <span class="name" data-testid="name">{tx.name}</span>
           {#if tx.pending}<span data-testid="tx-pending">(pending)</span>{/if}
         </div>
         <div class="rgt amt { +tx.amount < 0 ? 'neg' : 'pos' }">$<span data-testid="amt">{u.withCommas(tx.amount)}</span></div>
