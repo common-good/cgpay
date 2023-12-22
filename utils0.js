@@ -44,11 +44,7 @@ const u = {
 
   fmtDate(dt) { return new Date(dt < 1e11 ? dt * 1000 : dt).toLocaleDateString('en-us', { year:'numeric', month:'numeric', day:'numeric'}) },
   in(k, ks) { return ks.split(' ').includes(k) },
-  withCommas(num) { 
-    let withCommas = num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') 
-    const i = withCommas.indexOf('.');
-    return (i && withCommas.slice(i + 1).length < 2) ? withCommas += '0' : withCommas;
-  },
+  withCommas(num) { return (+num).toFixed(2).replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",") },
   testing() { return (typeof window !== 'undefined' && typeof window.testerPipe === 'function') },
   async tellTester(op, k = null, v = null) { return u.testing() ? await window.testerPipe(op, k, v) : null },
 

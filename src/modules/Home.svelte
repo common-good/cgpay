@@ -94,7 +94,9 @@
 <section class="page" id="home">
   <div class="top">
     <h1 class="page-title {$st.showDash ? 'visuallyhidden' : null}" data-testid="header">{hdr}</h1>
-    { #if me.isCo || !u.st().showDash }
+    {#if $st.showDash}
+      <Dashboard />
+    {:else}
       { #if $st.selfServe}
         <p>Press the button below to scan your <br />Common Good QR Code</p>
       {/if}
@@ -102,8 +104,6 @@
         <img class='logo' src= {cgLogo} alt='Common Good Logo' />
         <p>CGPay v{u.fmtVersion(c.version)}</p>
       </div>
-    {:else}
-      <Dashboard />
     {/if}
   </div>
   {#if u.localMode() && !hasTxOptions && !u.testing()}

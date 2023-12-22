@@ -135,7 +135,7 @@
         </div>
         <div class='row'>
           <p>Amount:</p>
-          <p>$ <span data-testid="amount">{ u.withCommas(tx.amount) }</span></p>
+          <p>$ <span data-testid="amount">{ u.withCommas(Math.abs(tx.amount)) }</span></p>
         </div>
       </div>
       <div class="note" data-testid="thank-you">Thank you for using CGPay for democracy and the common good!</div>

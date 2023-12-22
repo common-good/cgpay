@@ -1,55 +1,4 @@
-/**
- * Data structure
- *
- * Data defined here is stored (persistently or transiently), and cached in "cache" while the app runs.
- * See also store.js
- * 
- * ARRAYS
- *    choices: a list (array) of Common Good accounts the signed-in user may choose to connect (one of) to the device
- *      accountId: the account ID including cardCode
- *      cardCode: the account's card security code
- *      name: the name on the account
- *      qr: an image of the account’s QR code and ID photo (if any) for purchases
- *      isCo: true if the account is a company account
- *      selling: a list (array) of items for sale
- * 
- *    recentTxs: list of current account's most recent transactions (just name, amount, created, description, and xid)
- * 
- *    txs: transaction objects waiting to be uploaded to the server, each comprising:
- *      deviceId: a unique ID for the device associated with the actorId account
- *      amount: dollars to transfer from actorId to otherId (signed)
- *      actorId: the account initiating the transaction
- *      otherId: the other participant in the transaction
- *      description: the transaction description
- *      created: Unix timestamp when the transaction was created
- *      proof: the proof of the transaction -- a SHA256 hash of actorId, amount, otherId, cardCode, and created
- *        The amount has exactly two digits after the decimal point. For an Undo, proof contains the original amount.
- *      offline: true -- all transactions are completed offline then put in the txs queue. Undos are handled as though offline.
- *      pending: true if the transaction is an invoice rather than a completed transaction (pending approval by the payer)
- *      version: the app's integer version number
- * 
- *    comments: user-submitted comments to be uploaded to the server
- *      created: Unix timestamp
- *      actorId: the account making the comment
- *      text: the comment
- * 
- * OBJECTS
- *    accts: an array of accounts the device has transacted with, keyed by the account ID without cardCode, each with:
- *      hash: SHA256 hash of cardCode
- *      name: name of the account
- *      agent: agent for the account, if any
- *      location: location of the account (city, ST)
- *      limit: maximum amount this account can be charged at this time (leaving room for Stepups)
- *      creditLine: the account's credit line
- *      avgBalance: the account’s average balance over the past 6 months
- *      trustRatio: ratio of the account’s trust rating to the average trust rating of all individual accounts (zero for company accounts)
- *      since: Unix timestamp of when the account was activated
- *      selling: array of items being sold (an empty array for individuals)
- *      lastTx: Unixtime (in ms) of the last transaction with this account created on this device
- * 
- *    me: information about the account associated with the device
- *      accountId, cardCode, name, deviceId, qr, isCo, and selling as in the choices array described above
- */
+// initial values for conversion tests
 
 const cache = {
   persist: 'version sawAdd cameraCount frontCamera locked selfServe payOk allowType allowShow showDash balance choices recentTxs txs comments confirms deviceIds corrupt accts me',
@@ -58,7 +7,7 @@ const cache = {
   version: null, // latest app version that touched this data (an integer with two digits representing each segment of x.y.z)
   corrupt: null, // timestamp to retry uploading corrupted cached data
   sawAdd: null, // time user pressed Continue on the Add-to-home-screen page
-  balance: null, // last known balance
+  balance: '...', // last known balance
   cameraCount: 0, // number of cameras in the device - set this when scanning for the first time
 
   // persistent parameters that can be changed by user in Settings
@@ -80,10 +29,17 @@ const cache = {
 
   deviceIds: {}, // list of deviceIds keyed by accountId
   accts: {}, // keyed list of accounts that user has transacted with (or tried to)
-  me: null, // information about user's account, signed in
+  me: {
+    "accountId": "K6VMDCA",
+    "cardCode": "12345a",
+    "name": "Abe One",
+    "deviceId": "devA",
+    "qr": "data:image/gif;base64,R0lGODlhAQABAIABAP///wAAACwAAAAAAQABAAACAkQBADs=",
+    "isCo": false,
+    "selling": null
+  },
 
   // transient data (not stored in local storage)
-  intent: null, // what we're scanning for (pay, chare, or scanIn)
   token: null, // session token (a stand-in for the deviceId in GET requests)
   socket: null, // webSocket connection
   timeout: null, // milliseconds before inactivity timeout (for return to Home Page)

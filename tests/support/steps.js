@@ -22,6 +22,7 @@ When('I click {string}', async function(testId) { await t.click(testId) })
 When('I scan {string} to {string}', async function (who, why) { await t.scan(who, why) })
 When('I input {string} as {string}', async function (text, inputId) { await t.input(inputId, text) })
 When('I charge {string} {float} for {string}', async function (who, amount, description) { await t.tx(who, amount, description) })
+When('I pay {string} {float} for {string}', async function (who, amount, description) { await t.tx(who, -amount, description) })
 When('I wait {float} seconds', async function (secs) { await t.wait(secs) })
 When('we wait for uploads', async function () {await t.putv('flushOk', true); await t.wait(1.5) }) // wait(1) is sometimes not enough
 
