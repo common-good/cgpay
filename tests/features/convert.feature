@@ -23,17 +23,17 @@ Scenario: A user of release C runs this new version
   Given data from release "C"
   When I run the app
   Then ? I am on page "home"
-@this
+
 Scenario: A user with corrupt data runs this new version
   Given data from release "C"
   And this "corrupt": "12345"
   And these "txs":
-  | deviceId | amount | actorId | otherId | description | created | offline | version |
-  | devC     | 234.50 | Abe/Cit | Bea     | food!       | now     | true    | 40200   |
+  | deviceId | amount | actorId | otherId | description | created | proof | offline | version |
+  | devC     | 234.50 | Abe/Cit | Bea     | food!       | now     | hash  | true    | 40200   |
   When I run the app
   Then ? I am on page "home"
-#  And we report account "Bea" has corrupt txs:
-#  | deviceId | amount | actorId | otherId | description | created | offline | version |
-#  | devC     | 234.50 | Abe/Cit | Bea     | food!       | now     | true    | 40200   |
+#  And we report account "Bea" had corrupt txs:
+#  | deviceId | amount | actorId | otherId | description | created | proof | offline | version |
+#  | devC     | 234.50 | Abe/Cit | Bea     | food!       | now     | hash  | true    | 40200   |
   When we wait for uploads
   Then ? count "txs" is 0
