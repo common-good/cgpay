@@ -394,7 +394,8 @@ async mockFetch(url, options = {}) {
     let msg, kvs, i
     const got = await t.postToTestEndpoint('rows', { fieldList:'*', table:table })
     for (let rowi in want) {
-      kvs = table == 'txs' ? { created:want[rowi].created } : { none:0 } // identifier for this row
+      kvs = want[rowi]
+      for (let k in kvs) if (kvs[k] == '?') delete kvs[k]
       msg = `want server ${table} row (${rowi}) with ` + JSON.stringify(kvs)
       i = u.findByValue(got, kvs) // find the row
       assert.isNotNull(i, msg)
