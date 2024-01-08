@@ -3,6 +3,8 @@ import c from '../../constants.js'
 import u from '../../utils0.js'
 import cache from '../../src/cache.js'
 import cacheA from './oldData/cacheA.js'
+import cacheB from './oldData/cacheB.js'
+import cacheC from './oldData/cacheC.js'
 import w from './world.js'
 import queryString from 'query-string'
 
@@ -110,7 +112,9 @@ const t = {
         k = rows[0][coli]
         if (serverTable) k = t.mapToServer(k, serverTable)
         obo[k] = rows[rowi + 1][coli] // remember original value of this cell
-        if (k == 'proof') w.proofRow = { ...ray[rowi], amount:obo.amount.replace('-', ''), cardCode:t.adjust(obo.otherId, 'cardCode') } // save this for calculating the wanted proof value in adjust
+//        if (k == 'proof') w.proofRow = { ...ray[rowi], amount:obo.amount.replace('-', ''), cardCode:t.adjust(obo.otherId, 'cardCode') } // save this for calculating the wanted proof value in adjust
+        if (k == 'proof') w.proofRow = { ...ray[rowi], amount:obo.amount, cardCode:t.adjust(obo.otherId, 'cardCode') } // save this for calculating the wanted proof value in adjust
+//        if (k == 'proof') console.log('proofRow', w.proofRow)
         ray[rowi][k] = t.adjust(obo[k], serverTable ? t.mapToServer(k, serverTable) : k)
       }
     }
@@ -227,7 +231,10 @@ const t = {
    */
   async setStore(release = null) {
     if (release != null) w.store = u.clone(
-      release == 'A' ? cacheA : 'error'
+        release == 'A' ? cacheA 
+      : release == 'B' ? cacheB
+      : release == 'C' ? cacheC
+      : 'error'
     )
     w.store.now = w.now
     await t.tellApp('clear', { ...w.store })
@@ -282,10 +289,10 @@ const t = {
   async input(id, text) {
     const testId = 'input-' + id
     const sel = t.sel(testId) 
-    t.wait(2) // required by 2023 Chrome :(
+//    t.wait(3) // required by 2023 Chrome :(
     await t.click(testId, { clickCount: 3 }) // select field so that typing replaces it
     await w.page.type(sel, isNaN(text) ? text : JSON.stringify(text))
-    await t.waitACycle(2) // needed sometimes between inputs
+//    await t.waitACycle(2) // needed sometimes between inputs
     const newValue = await w.page.$eval(sel, el => el.value)
     t.test(newValue, text)
   },
@@ -293,6 +300,9 @@ const t = {
   async scan(who, why = 'charge') {
     const qr = t.adjust(who, 'qr');
     await t.putv('intent', why)
+    await t.visit('') // scan is sometimes called directly (not from tx(), so we need this here)
+    await t.onPage('home') // make sure we're starting in the right place
+    await t.putv('qr', qr) // must be after visit to Home page (because it resets qr)
 
     if (why == 'scanIn') {
       await t.putv('qr', qr) // must be after visit to Home page (because it resets qr)
@@ -300,15 +310,12 @@ const t = {
       await t.go('home')
 
     } else { // why is charge or pay (assume we're on home page)
-      await t.visit('') // scan is sometimes called directly (not from tx(), so we need this here)
-      await t.onPage('home') // make sure we're starting in the right place
-      if (w.store.showDash) { // an extra click if home page shows Dashboard
+      if (w.store.payOk == 'always' && (w.store.allowShow || w.store.allowType)) { // an extra click if home page shows both Pay and Request
         await t.click('btn-' + why)
         why = 'scan'
       }
-      await t.putv('qr', qr) // must be after visit to Home page (because it resets qr)
       await t.click('btn-' + why)
-      await t.waitACycle(3)
+//      await t.waitACycle(1)
       await t.onPage('scan') // make sure the button worked
       await t.go('tx', 'scan')
     }
@@ -387,11 +394,12 @@ async mockFetch(url, options = {}) {
     let msg, kvs, i
     const got = await t.postToTestEndpoint('rows', { fieldList:'*', table:table })
     for (let rowi in want) {
-      kvs = table == 'txs' ? { amt:want[rowi].amt, for2:want[rowi].for2 } : { none:0 }
+      kvs = want[rowi]
+      for (let k in kvs) if (kvs[k] == '?') delete kvs[k]
       msg = `want server ${table} row (${rowi}) with ` + JSON.stringify(kvs)
-      i = u.findByValue(got, kvs)
+      i = u.findByValue(got, kvs) // find the row
       assert.isNotNull(i, msg)
-      t.test(got[i], want[rowi])
+      t.test(got[i], want[rowi]) // test the row
     }
   },
 
@@ -466,8 +474,10 @@ async mockFetch(url, options = {}) {
       const has = (await (await el.getProperty('className')).jsonValue()).split(' ').includes(want)
       return assert.isTrue(mode === false ? !has : has)
     }
-    let got = await el.evaluate(el0 => el0.textContent)
-    if (prefix == 'input') got = await (await el.getProperty('value')).jsonValue()
+    let got
+    got = prefix == 'input'
+      ? await (await el.getProperty('value')).jsonValue()
+      : await el.evaluate(el0 => el0.textContent)
     t.test(got, want, null, mode)
   },
 
@@ -484,6 +494,7 @@ async mockFetch(url, options = {}) {
       await t.putv('me', { ...u.just('name isCo accountId cardCode deviceId selling', me), qr:'qr' + me.name.charAt(0) })
       await t.putv('showDash', !me.isCo)
       await t.putv('allowShow', !me.isCo)
+      await t.visit('')
     } else t.test(u.just('name isCo accountId cardCode selling', await t.getv('me')), u.just('name isCo accountId cardCode selling', me), 'me')
   },
 

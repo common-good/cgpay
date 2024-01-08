@@ -1,17 +1,16 @@
 import { createStore } from '#store.js'
 import { postRequest, isTimeout } from '#utils.js'
+import c from '#constants.js'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('#utils.js', () => ({ postRequest:vi.fn(), isTimeout:vi.fn() }))
 
-const storeKey = 'cgpay'
-
 function stored() {
-  return JSON.parse(localStorage.getItem(storeKey))
+  return JSON.parse(localStorage.getItem(c.storeKey))
 }
 
 function setupLocalStorage(data) {
-  return localStorage.setItem(storeKey, JSON.stringify(data))
+  return localStorage.setItem(c.storeKey, JSON.stringify(data))
 }
 
 // --------------------------------------------
@@ -25,14 +24,14 @@ describe('store', () => {
   describe('when there are existing values in local storage', () => {
     it('initializes to stored values', () => {
       setupLocalStorage({ foo: { bar: 'baz' } })
-      const store = createStore()
+      const st = createStore()
       expect(st.inspect()).toEqual({ foo: { bar: 'baz' } })
     })
   })
 
   describe('when there are not existing values in local storage', () => {
     it('initializes to default values', () => {
-      const store = createStore()
+      const st = createStore()
       expect(st.inspect().sawAdd).toEqual(false)
     })
   })
@@ -40,12 +39,12 @@ describe('store', () => {
 
   describe('.me', () => {
     it('is accessible', () => {
-      const store = createStore()
+      const st = createStore()
       expect(st.inspect().me).toEqual(null)
     })
 
     describe('.setAcctChoices()', () => {
-      const store = createStore()
+      const st = createStore()
       it('is initialized as null', () => {
         expect(st.inspect().choices).toEqual(null)
       })
@@ -64,7 +63,7 @@ describe('store', () => {
           setupLocalStorage({
             me: {name: 'bar'}
           })
-          const store = createStore()
+          const st = createStore()
           expect(st.linked()).toEqual(true)
         })
       })
@@ -75,7 +74,7 @@ describe('store', () => {
             me: null
           })
 
-          const store = createStore()
+          const st = createStore()
           expect(st.linked()).toEqual(false)
         })
       })
@@ -83,7 +82,7 @@ describe('store', () => {
 
     describe('.setMe()', () => {
       it('links the given account', () => {
-        const store = createStore()
+        const st = createStore()
         st.setMe({name: 'Biz'})
 
         expect(stored().me.name).toEqual('Biz')
@@ -132,14 +131,14 @@ describe('store', () => {
 
     describe('.online', () => {
       it('is accessible', () => {
-        const store = createStore()
+        const st = createStore()
         expect(st.inspect().online).toEqual(null)
       })
     })
 
     describe('.resetNetwork()', () => {
       it('resets the network to basic online status', () => {
-        const store = createStore()
+        const st = createStore()
         st.resetNetwork()
 
         expect(st.inspect().online).toEqual(navigator.onLine)
@@ -148,7 +147,7 @@ describe('store', () => {
 
     describe('.setOnline(yesno)', () => {
       it('sets the network status to online or offline', () => {
-        const store = createStore()
+        const st = createStore()
 
         st.setOnline(true)
         expect(st.inspect().online).toEqual(true)
@@ -163,7 +162,7 @@ describe('store', () => {
   describe('.accts', () => {
     it('updates data for a particular account', () => {
       const card = {acct: '123'}
-      const store = createStore()
+      const st = createStore()
 
       st.putAcct(card, { foo: 'bar' })
       expect(st.getAcct(card)).toEqual({ foo: 'bar' })
@@ -175,14 +174,14 @@ describe('store', () => {
 
   describe('.sawAdd', () => {
     it('is accessible', () => {
-      const store = createStore()
+      const st = createStore()
       expect(st.inspect().sawAdd).toEqual(false)
     })
   })
 
   describe('.setSawAdd()', () => {
     it('logs the time that the user saw the home screen prompt', async () => {
-      const store = createStore()
+      const st = createStore()
 
       vi.useFakeTimers()
       const now = Math.floor(Date.now() / 1000)
@@ -198,7 +197,7 @@ describe('store', () => {
   describe('.txs', () => {
     describe('.deqTx', () => {
       it('dequeues the first transaction in the queue', () => {
-        const store = createStore()
+        const st = createStore()
 
         st.enqTx({ id: 1 })
         st.enqTx({ id: 2 })
@@ -220,7 +219,7 @@ describe('store', () => {
     describe('.flush', () => {
       it('sends all requests', async () => {
         
-        const store = createStore()
+        const st = createStore()
 
         st.enqTx({ id: '1', amount: 1, description: '1' })
         st.enqTx({ id: '2', amount: 2, description: '2' })
@@ -235,7 +234,7 @@ describe('store', () => {
 
       describe('when a request is successful', () => {
         it('dequeues the request', async () => {
-          const store = createStore()
+          const st = createStore()
 
           st.enqTx({ id: '1', amount: 1, description: '1' })
           st.enqTx({ id: '2', amount: 2, description: '2' })
@@ -257,7 +256,7 @@ describe('store', () => {
           }
           isTimeout = function (er) { return true }
 
-          const store = createStore()
+          const st = createStore()
 
           st.enqTx({ id: '1' })
           st.enqTx({ id: '2' })
@@ -274,7 +273,7 @@ describe('store', () => {
 
     describe('.enqTx', () => {
       it('stores the transaction', () => {
-        const store = createStore()
+        const st = createStore()
         st.enqTx({ id: '1' })
 
         // Confirm that all forms of store access are updated.

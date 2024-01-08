@@ -253,6 +253,7 @@ const u = {
   },
 
   addableToHome() { 
+    //console.log('addable to home', u.st())
     if (u.st().sawAdd) return false
     return (u.isApple() && u.isSafari()) || (u.isAndroid() && u.isChrome())
   },

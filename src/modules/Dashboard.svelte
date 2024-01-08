@@ -13,15 +13,17 @@
 </script>
 
 <section id="dashboard">
-  <div class="balance">Balance: <span>${u.withCommas($st.balance)}</span></div>
+  <div class="balance">Balance: <span data-testid="balance">
+    {#if u.empty($st.balance)}Connect wifi to see balance.{:else}${u.withCommas($st.balance)}{/if}
+  </span></div>
   <div class="txs">
     <h2>Recent Transactions</h2>
     {#if u.empty($st.recentTxs)}
-      <p>No transactions yet.</p>
+      <p data-testid="none">No transactions yet.</p>
     {:else}
       <TxList useMin={true} />
       {#if $st.recentTxs.length > c.recentTxMin}
-        <a class="link" href="/txs">View More</a>
+        <a class="more link" data-testid="more" href="/txs">View More</a>
       {/if}
     {/if}
   </div>
@@ -56,6 +58,10 @@
   .txs
     width 100%
     max-width 600px
+
+  .more
+    display block
+    text-align center
 
   @media screen and (max-width $xs-screen)
     .balance

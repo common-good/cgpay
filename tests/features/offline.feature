@@ -33,9 +33,9 @@ Scenario: We reconnect to the internet with cached transactions
   | devC     | -1234.50 | Abe/Cit | Bea     | food!       | now     | hash  | true    | version |
   And ? count "txs" is 0
   And ? these server "txs":
-  | amt      | actorId | uid1 | uid2  | agt1 | agt2 | for2  | created | 
-  | 1234.50  | Cit     | Bea  | Cit   | Bea  | Abe  | food! | now     |
-  | -1234.50 | Cit     | Bea  | Cit   | Bea  | Abe  | food! | ?       |
+  | amt     | actorId | uid1 | uid2  | agt1 | agt2 | for2  | created | 
+  | 1234.50 | Cit     | Bea  | Cit   | Bea  | Abe  | food! | now     |
+  | 1234.50 | Cit     | Cit  | Bea   | Abe  | Bea  | food! | ?       |
 @a 
 Scenario: We reconnect to the internet with comments
   Given we are offline
