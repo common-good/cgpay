@@ -25,6 +25,7 @@ export default defineConfig({
       '#store.js':     root + '/src/store.js',
       '#cache.js':     root + '/src/cache.js',
       '#utils.js':     root + '/src/utils.js',
+      '#db.js':        root + '/src/db.js',
       '#constants.js': root + '/constants.js',
       '#modules':      root + '/src/modules',
     },

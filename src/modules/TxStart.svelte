@@ -13,22 +13,16 @@
   import c from '#constants.js'
   import ScanFake from './ScanFake.svelte'
 
-  export let currentRoute // else Svelte complains (I don't know why yet)
-  export let params // else Svelte complains (I don't know why yet)
-
   const me = $st.me
   const paying = ($st.intent == 'pay')
-  let hdr = paying ? 'Pay' : 'Charge / Request Payment'
-  let qr, btnPay, btnChg, payOk
+  let qr, btnPay, payOk
   let qrAction
-
-  const intent = $st.intent
 
   function scan() { u.go('scan') }
   async function receiveQr() { return await u.generateQr(u.makeQrUrl(u.getMainId($st.me.accountId))) }
 
   onMount(async () => {
-    if ($st.allowShow) [qr, qrAction] = paying ? [me.qr, 'pay'] : [await receiveQr(), 'charge']
+    if ($st.allowShow) [qr, qrAction] = paying ? [me.qr, 'Pay'] : [await receiveQr(), 'Receive']
     payOk = (!me.isCo || $st.payOk == 'always' || $st.coPaying) && c.showScanToPay
     btnPay = me.isCo ? 'Pay / Refund / Sell CG Credit' : 'Pay'
   })
@@ -42,10 +36,14 @@
 <section class="page" id="tx-start">
   <div class="top">
     <h1 class="page-title">Show to {qrAction}</h1>
-    <img class="qr-{$st.intent}" src="{qr}" data-testid="qr" alt={qrAction} />
+    <div class="img">
+      <img class="qr-{$st.intent}" src="{qr}" data-testid="qr" alt={qrAction} />
+    </div>
+    <p>CGPay v{u.fmtVersion(c.version)}</p>
+    {#if paying}<p>Note: Only requests by an individual require confirmation.</p>{/if}
   </div>
+  {#if u.localMode() && !u.testing()}<ScanFake intent={$st.intent}/>{/if}
   <div class="bottom">
-    <ScanFake intent={$st.intent}/>
     <button class="primary" data-testid="btn-scan" on:click={scan}>
       Scan to {paying ? btnPay : 'Charge'}
     </button>
@@ -60,12 +58,24 @@
     text-transform capitalize
 
   p 
-    margin-bottom $s0
+    margin 0 auto $s1 auto
+    text(sm)
+    text-align center
+    max-width 340px
 
   .icon
     margin-right $s-1
 
-  .qr-pay
-    width 250px
-    margin 30px
+  .img
+    display flex
+    flex 0 1 40vh
+
+  img
+    max-width 130%
+    height 100%
+    position:relative;
+    left: 50%;
+    transform: translateX(-50%);
+    width: auto;
+    
 </style>

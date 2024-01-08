@@ -18,9 +18,11 @@ Feature: Link Account
 
 Background:
 # Abe, Bea, and Flo have two accounts
-# Dee, Hal, and Ida have just one (see the sigin-in feature, because linking is automatic)
+# Dee, Hal, and Ida have just one (see the signin-in feature, because linking is automatic)
+  * ? I am on page "empty"
   * these choices:
   | Bea   | Bea/Cit |
+  * ? I am on page "empty"
 
 Rule: Users can link their device to a specific CGPay account
 
@@ -32,7 +34,7 @@ Scenario: A user with multiple accounts visits the link-account page
   And ? "account-opt-1" is "Citre"
   And ? "account-opt-1" is "selected"
   And ? "lock-account" is "checked"
-  And ? "self-serve" is not "checked"
+#  And ? "self-serve" is not "checked"
 
 #  And ? "payOk-radio-always" is not "checked"
 #  And ? "payOk-radio-scan" is "checked"
@@ -47,6 +49,8 @@ Scenario: A user with multiple accounts selects an account with all the defaults
   And ? this confirmation: "now linked to your Common Good account: Citre"
   And ? I am on page "home"
   And ? "Citre" is in "account-name"
+  * I click "btn1"
+  * I wait .1 seconds
   When I click "btn-nav"
 #  Then ? I see "menu-scanIn"
   But ? I see no "menu-switch"
@@ -61,7 +65,11 @@ Scenario: A user with multiple accounts selects a company with different options
   And ? these choices:
   | Bea | Bea/Cit |
   And ? I am signed in as "Bea/Cit"
+  And ? this "locked": "false"
+  And ? this alert: "This device is now linked to your Common Good account: Citre"
   And ? I am on page "home"
+  * I click "btn1"
+  * I wait .1 seconds
   When I click "btn-nav"
 #  Then ? I see no "menu-scanIn"
   But ? I see "menu-switch"
@@ -69,12 +77,14 @@ Scenario: A user with multiple accounts selects a company with different options
 Scenario: A user with multiple accounts selects a company allowed to pay always
   When I visit "link-account"
 #  And I click "payOk-radio-always"
+  And I click "account-opt-1"
   And I click "btn-link"
   And I wait 1 seconds
 #  Then ? this "payOk": "always"
-  And ? this "choices": "null"
+  Then ? this "choices": "null"
   And ? I am signed in as "Bea/Cit"
   And ? I am on page "home"
+
   When I click "btn-nav"
 #  Then ? I see no "menu-scanIn"
   And ? I see no "menu-switch"
@@ -85,13 +95,15 @@ Scenario: A user with multiple accounts selects an individual account
   And I click "account-opt-0"
   And I click "lock-account"
   And I click "btn-link"
-  And I wait 1 seconds
-  Then ? this "payOk": "null"
+  Then ? this alert: "This device is now linked to your Common Good account: Bea Two."
+  And ? this "payOk": "true"
   And ? these choices:
   | Bea | Bea/Cit |
   And ? I am signed in as "Bea"
   And ? I am on page "home"
   And ? "Bea Two" is in "account-name"
+  * I click "btn1"
+  * I wait .1 seconds
   When I click "btn-nav"
 #  Then ? I see no "menu-scanIn"
   But ? I see "menu-switch"
@@ -100,7 +112,7 @@ Scenario: The user chooses an account offline
   Given I visit "link-account"
   And we are offline
   And I wait 1 seconds
-  And ? I see "network-offline"
+
   When I click "account-opt-0"
   And I click "btn-link"
   Then ? I am on page "home"

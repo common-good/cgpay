@@ -23,6 +23,28 @@ describe('utils', () => {
     navigator = originalNavigator
   })
 
+  describe('withCommas', () => {
+    it('add conventional commas to a number', () => {
+      expect(u.withCommas(0)).toEqual('0.00')
+      expect(u.withCommas(5)).toEqual('5.00')
+      expect(u.withCommas(12345.678)).toEqual('12,345.68')
+      expect(u.withCommas(.678)).toEqual('0.68')
+    })
+  })
+  describe('noCardCode', () => {
+    it('return the cardId without its cardCode', () => {
+      expect(u.noCardCode('K6VMDCA12345a')).toEqual('K6VMDCA')
+      expect(u.noCardCode('L6VMDCC098765a')).toEqual('L6VMDCC0')
+    })
+  })
+
+  describe('cardCode', () => {
+    it('return the cardCode part of a cardId', () => {
+      expect(u.cardCode('K6VMDCA12345a')).toEqual('12345a')
+      expect(u.cardCode('L6VMDCC098765a')).toEqual('98765a')
+    })
+  })
+
   describe('makeQrUrl', () => {
     it('returns a QR URL for the given account ID', () => {
       expect(u.makeQrUrl('K6VMDCA12345a')).toEqual('HTTP://6VM.RC4.ME/KDCA12345a')
@@ -56,7 +78,7 @@ describe('utils', () => {
       it('is Android', () => {
         setUA('Android')
         expect(u.isAndroid()).toEqual(true)
-        expect(isApple()).toEqual(false)
+        expect(u.isApple()).toEqual(false)
       })
     })
 
@@ -79,7 +101,7 @@ describe('utils', () => {
       describe('when the user is on Safari on an Apple device and has not previously seen the prompt', () => {
         it('is true', () => {
           setUA('Apple')
-          setupLocalStorage({ sawAdd:false })
+          setupLocalStorage({ sawAdd:null })
           expect(u.addableToHome()).toEqual(true)
         })
       })
@@ -87,7 +109,7 @@ describe('utils', () => {
       describe('when the user is on Chrome on an Android device and has not previously seen the prompt', () => {
         it('is true', () => {
           setUA('Android')
-          setupLocalStorage({ sawAdd:false })
+          setupLocalStorage({ sawAdd:null })
           expect(u.addableToHome()).toEqual(true)
         })
       })
@@ -95,7 +117,7 @@ describe('utils', () => {
       describe('when the user is not on a mobile device', () => {
         it('is false', () => {
           setUA('Other')
-          setupLocalStorage({ sawAdd:false })
+          setupLocalStorage({ sawAdd:null })
           expect(u.addableToHome()).toEqual(false)
         })
       })
@@ -103,8 +125,10 @@ describe('utils', () => {
       describe('when the user has previously seen the prompt', () => {
         it('is false', () => {
           setUA('Apple')
-          setupLocalStorage({ sawAdd:true })
-          expect(u.addableToHome()).toEqual(false)
+          setupLocalStorage({ sawAdd:12345 })
+          const st = createStore()
+          expect(st.inspect().sawAdd).toEqual(12345)
+          expect(u.addableToHome()).toEqual(false) // somehow sawAdd gets set to null before used in addableToHome()
         })
       })
     })

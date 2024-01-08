@@ -18,7 +18,7 @@
   
   let tx = {
     amount: null,
-    description: (!pay && $st.me.selling) ? $st.me.selling[0] : null,
+    description: null,
     deviceId: $st.me.deviceId,
     actorId: u.noCardCode($st.me.accountId),
     otherId: null,
@@ -31,7 +31,8 @@
   const qr = $st.qr
   let tipable = false
   let gotTx = false
-  let photo = { alt: 'Customer Profile', blob: null }
+  let card = null
+  let photo = { alt: 'Customer Profile', blob: null } // used only for charges
   const pastAction = (pay || $st.selfServe) ? 'Paid' : 'Charged'
 
 	u.undo.subscribe(askUndo) // receive notification of Back click (see Layout.svelte)
@@ -43,14 +44,14 @@
     st.setTimeout(null)
     u.yesno('Reverse the transaction?', 
       () => { u.hide(); st.undoTx(); u.goHome('The transaction has been reversed.') },
-      () => { u.hide(); if ($st.selfServe) st.setTimeout(c.txTimeout)
+      () => { u.hide(); st.setTimeout(c.txTimeout)
     })
   }
 
   function handleSubmitCharge() {
     st.setTrail('', true) // no going back from here
     gotTx = true
-    if ($st.selfServe) st.setTimeout(c.txTimeout)
+    st.setTimeout(c.txTimeout)
   } // state success, show undo/tip/done/receipt buttons
     
   /**
@@ -58,21 +59,19 @@
    * @param info: data for photoId endpoint
    */
   async function getPhoto(info) {
-    let blob = null
-    if (!pay) {
-      const res = await u.postRequest('idPhoto', info, { type:'blob' })
-      blob = URL.createObjectURL(res)
-    }
-    return { alt:'photo of the other party', blob:blob }
+    const res = await u.postRequest('idPhoto', info, { type:'blob' })
+    photo.blob = URL.createObjectURL(res)
   }
 
   function profileOffline() { if (!$st.selfServe) u.alert('OFFLINE. Trust this member or ask for ID.') }
 
   onMount(async () => {
     if (qr === null) return u.go('home') // pressed back button from Home page
+    if (u.lowStorage()) return u.goEr('You are running low on storage. Delete some media files or programs before trying again.')
     st.setCoPaying(false)
     try {
-      const card = u.qrParse(qr) // does not return if format is bad
+      card = u.qrParse(qr) // does not return if format is bad
+      if (!pay && u.empty(card.code)) throw new Error('That QR is for payments only.')
       const mainId = u.getMainId($st.me.accountId)
       if (card.main == mainId) throw new Error('That QR is for the same account as yours.')
       const acctInfo = st.getAcct(card) // retrieve and/or update stored customer account info
@@ -86,14 +85,16 @@
       } else  {
         const info = {deviceId: tx.deviceId, actorId: tx.actorId, otherId: tx.otherId + tx.code}
         const res = await u.postRequest('identity', info)
-        const { selling } = res
-        if (selling.length) tx.description = selling[0]
-        st.setMe({ ...$st.me, selling: selling })
+        st.setMe({ ...$st.me, selling: res.isell })
+        const dfts = res[pay ? 'selling' : 'isell']
+        tx.description = dfts[0]
         otherAccount = { ...otherAccount, ...res, lastTx:u.now() } // lastTx date lets us jettison old customers to save storage
-        delete otherAccount.selling
+        delete otherAccount.isell
         st.putAcct(card, otherAccount) // store and/or update stored customer account info
         if (otherAccount.limit <= 0) u.goEr('This account has no remaining funds, so a transaction is not possible at this time.')
-        if (!$st.selfServe) photo = await getPhoto(info)
+        if (!$st.selfServe && !pay) {
+          await getPhoto(info)
+        } else photo.blob = 'none'
       }
     } catch (er) {
       if (u.isTimeout(er)) { // internet unavailable; recognize a repeat customer or limit CG's liability
@@ -108,9 +109,9 @@
   <title>CGPay - Transact</title>
 </svelte:head>
 
-<section class="page" id="tx">
-  {#if gotTx}
-    <h1 class="page-title" data-testid="transaction-complete">Transaction Complete</h1>
+{#if gotTx}
+  <section class="page" id="tx-details">
+    <h1 class="page-title" data-testid="tx-summary">Transaction Summary</h1>
     <div class='top'>
       <div class='charge-info'>
         <div class='row payee-info'>
@@ -134,35 +135,23 @@
         </div>
         <div class='row'>
           <p>Amount:</p>
-          <p>$ <span data-testid="amount">{ u.withCommas(tx.amount) }</span></p>
+          <p>$ <span data-testid="amount">{ u.withCommas(Math.abs(tx.amount)) }</span></p>
         </div>
       </div>
       <div class="note" data-testid="thank-you">Thank you for using CGPay for democracy and the common good!</div>
     </div>
-    <div class="actions">
-      {#if tipable}<a class="secondary" href='/tip'>Add Tip</a>{/if}
-      <!-- button>Receipt</button -->
-      <button data-testid="btn-undo" on:click={askUndo} class="tertiary">Undo</button>
-      <a class="primary" data-testid="btn-done" on:click={goHome}>Done</a>
-    </div>
-
-  { :else }
-    <SubmitCharge {otherAccount} {photo} {tx} on:complete={handleSubmitCharge} />
-  { /if }
-</section>
+    {#if tipable}<a class="bottom secondary" href='/tip'>Add Tip</a>{/if}
+    <!-- button>Receipt</button -->
+    <button class="bottom tertiary" data-testid="btn-undo" on:click={askUndo}>Undo</button>
+    <a class="bottom primary" data-testid="btn-done" on:click={goHome}>Done</a>
+  </section>
+{ :else }
+  <SubmitCharge {otherAccount} {photo} {tx} on:complete={handleSubmitCharge} />
+{ /if }
 
 <style lang='stylus'>
   h1 
     margin-bottom $s1
-
-  section
-    height calc(100vh + 300px)
-    width 100%
-    display flex
-    flex-direction column
-    align-items center
-    justify-content space-between
-    padding-bottom 400px
 
   .charge-info
     width 95%
@@ -192,24 +181,11 @@
     .co
       text sm
       
-  .top
-    height 100%
-    width 100%
-    display flex
-    flex-direction column
-    align-items center
-    justify-content space-between
+  a, button
     margin-bottom $s1
 
-  .actions
-    display flex
-    flex-direction column
-    width 100%
-
-    a, button
-      margin-bottom $s1
-    a:last-of-type
-        margin-bottom 0
+  a:last-of-type
+    margin-bottom 0
 
   .primary
     cgButton()

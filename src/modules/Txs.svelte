@@ -1,6 +1,6 @@
 <script>
   import st from'#store.js'
-  import u from'#utils.js'
+  import TxList from './TxList.svelte';
   import { onMount } from 'svelte'
 
   onMount(() => st.setLeft('back'))
@@ -10,20 +10,7 @@
   <h1 class="page-title">Transaction History</h1>
   <p>View your complete history at <a class="link" target="_blank" href="https://new.commongood.earth/history">commongood.earth</a>.</p>
   <p class="tx-amt">{$st.recentTxs.length} Recent Transactions</p>
-  <ul>
-    {#each $st.recentTxs as tx}
-    <li>
-      <div class="row">
-        <div class><span>{tx.pending ? 'Pending' : u.fmtDate(1000 * tx.created)}</div>
-        <div class="rgt amt { tx.amount.startsWith('-') ? 'neg' : 'pos'}">${u.withCommas(tx.amount)}</div>
-      </div>
-      <div class="row">
-        <div class>{tx.name}</div>
-        <div class="rgt">{tx.description}</div>
-      </div>
-    </li>
-  {/each}
-  </ul>
+  <TxList />
 </section>
 
 <style lang='stylus'>

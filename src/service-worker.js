@@ -9,8 +9,8 @@ const ASSETS = [
 ];
  
 self.addEventListener('install', (ev) => {
-  // Create a new cache and add all files to it
-  async function addFilesToCache() {
+  self.skipWaiting(); // once a new version is available, install it immediately
+  async function addFilesToCache() { // Create a new cache and add all files to it
     const cache = await caches.open(CACHE);
     await cache.addAll(ASSETS);
   }
@@ -47,7 +47,7 @@ self.addEventListener('fetch', (ev) => {
       if (response.status === 200) {
         cache.put(ev.request, response.clone());
       }
-       return response;
+      return response;
  
     } catch {
       return cache.match(ev.request); // offline, so fall back to the cache

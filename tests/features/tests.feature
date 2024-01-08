@@ -102,7 +102,7 @@ Scenario: these2
 Scenario: me
   Given I am signed in as "Bea"
   Then ? I am signed in as "Bea"
-  And ? this "me": "{ name:'Bea Two', isCo:false, accountId:'K6VMDCB', deviceId:'devB', selling:null }"
+  And ? this "me": "{ name:'Bea Two', isCo:false, accountId:'K6VMDCB', cardCode:'12345b', deviceId:'devB', selling:null }"
 
 Scenario: deviceId
   Given this "deviceId": "Bea"
@@ -137,25 +137,25 @@ Scenario: theseAccts/choices (notice no quotes around "choices")
   Then ? these choices:
   | Abe | Bea | Bea/Cit |
   And ? these "choices":
-  | name    | isCo  | accountId | selling |
-  | Abe One | false | K6VMDCA   | null    |
-  | Bea Two | false | K6VMDCB   | null    |
-  | Citre   | true  | L6VMDCC1  | ['groceries', 'gifts', 'sundries'] |
+  | name    | isCo  | accountId | cardCode | selling |
+  | Abe One | false | K6VMDCA   | 12345a   | null    |
+  | Bea Two | false | K6VMDCB   | 12345b   | null    |
+  | Citre   | true  | L6VMDCC1  | 98765b   | ['groceries', 'gifts', 'sundries'] |
 
   Given these "choices":
-  | name    | isCo  | accountId | selling |
-  | Abe One | false | K6VMDCA   | null    |
-  | Bea Two | false | K6VMDCB   | null    |
-  | Citre   | true  | L6VMDCC1  | ['groceries', 'gifts', 'sundries'] |
+  | name    | isCo  | accountId | cardCode | selling |
+  | Abe One | false | K6VMDCA   | 12345a   | null    |
+  | Bea Two | false | K6VMDCB   | 12345b   | null    |
+  | Citre   | true  | L6VMDCC1  | 98765b   | ['groceries', 'gifts', 'sundries'] |
   Then ? these choices:
   | Abe | Bea | Bea/Cit |
 
   Given these choices:
   | Abe |
   Then ? this "choices":
-  | { name:'Abe One', isCo:false, accountId:'K6VMDCA', selling:null } |
+  | { name:'Abe One', isCo:false, accountId:'K6VMDCA', cardCode:'12345a', selling:null } |
 
   Given this "choices":
-  | { name:'Abe One', isCo:false, accountId:'K6VMDCA', selling:null } |
+  | { name:'Abe One', isCo:false, accountId:'K6VMDCA', cardCode:'12345a', selling:null } |
   Then ? these choices:
   | Abe |

@@ -46,7 +46,7 @@ Scenario: A customer pays in self-serve mode
   | amount  | actorId | otherId | description | created | proof | offline | version |
   | 1234.50 | Abe/Cit | Bea     | food!       | now     | hash  | false   | version |
   * I wait .1 seconds
-  Then ? I see "transaction-complete"
+  Then ? I see "tx-summary"
   And ? "action" is "Paid"
   And ? "other-name" is "Citre"
   And ? I see no "agent"

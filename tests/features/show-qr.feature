@@ -6,20 +6,30 @@ Feature: Show QR
 
 Background:
 
-Rule: Personal account members have the ability to show a QR code to pay other members
+Rule: Personal account members have the ability to show a QR code to pay or charge
 
-Scenario: An individual shows their QR code
+Scenario: An individual shows their QR code to be paid
   Given I am signed in as "Bea"
   When I run the app
+  And I click "btn-charge"
   Then ? I see "qr"
+
+Scenario: An individual shows their QR code to pay
+  Given I am signed in as "Bea"
+  When I run the app
+  And I click "btn-pay"
+  Then ? I see "qr"
+
+Scenario: A user shows their QR code to pay offline
+  Given I am signed in as "Bea"
+  And we are offline
+  When I run the app
+  And I click "btn-pay"
+  Then ? I see "qr"
+
+Rule: Company accounts do not show a QR
 
 Scenario: A vendor shows their QR code
   Given I am signed in as "Abe/Cit"
   When I run the app
-#  Then ? I see "qr"
-
-Scenario: A user shows their QR code offline
-  Given I am signed in as "Bea"
-  And we are offline
-  When I run the app
-  Then ? I see "qr"
+  Then ? I see no "qr"

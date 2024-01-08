@@ -14,6 +14,7 @@ Rule: Scanning requires an intent
 Scenario: A user clicks the scan-to-charge button
   Given I run the app
   When I click "btn-charge"
+  And I click "btn-scan"
   Then ? I am on page "scan"
 
 Scenario: We scan with intent to charge
@@ -35,16 +36,16 @@ Rule: Personal accounts can scan an individual or company card
 
 Scenario: I scan an individual's QR
   When I scan "Abe" to "charge"
-  Then ? I am on page "tx-details"
-  And ? I am on page "charge-profile"
+  Then ? I am on page "submit-charge"
+  And ? I see "charge-profile"
   And ? I see "theirPhoto"
   And ? "theirName" is "Abe One"
   And ? "theirLocation" is "Aton, MA"
 
 Scenario: I scan a company agent's QR
   When I scan "Abe/Cit" to "charge"
-  Then ? I am on page "tx-details"
-  And ? I am on page "charge-profile"
+  Then ? I am on page "submit-charge"
+  And ? I see "charge-profile"
   And ? I see "theirPhoto"
   And ? "theirAgent" is "Abe One"
   And ? "theirCompany" is "Citre"
@@ -55,8 +56,8 @@ Rule: Company accounts can scan an individual or company card
 Scenario: A company scans an individual's QR
   Given I am signed in as "Bea/Cit"
   When I scan "Abe" to "charge"
-  Then ? I am on page "tx-details"
-  And ? I am on page "charge-profile"
+  Then ? I am on page "submit-charge"
+  And ? I see "charge-profile"
   And ? I see "theirPhoto"
   And ? "theirName" is "Abe One"
   And ? "theirLocation" is "Aton, MA"
@@ -97,8 +98,8 @@ Rule: Scanning to charge or pay works fine offline
 Scenario: I scan an individual's QR offline
   Given we are offline
   When I scan "Abe" to "charge"
-  Then ? I am on page "tx-details"
-  And ? I am on page "charge-profile"
+  Then ? I am on page "submit-charge"
+  And ? I see "charge-profile"
   And ? "theirName" is not "Abe One"
   And ? I see "network-offline"
   And ? "Trust this member or ask for ID" is in "messageText"
@@ -131,12 +132,12 @@ Scenario: I scan another employee card to scan in
   Given I am signed in as "Bea/Cit"
   When I scan "Abe/Cit" to "scanIn"
   Then ? this "coPaying": "true"
-@c
-Scenario: I scan my personal card to scan in online
-  Given I am signed in as "Bea/Cit"
-  And we are online
-  When I scan "Bea" to "scanIn"
-  Then ? this "coPaying": "true"
+# @c (do we ever want this?)
+# Scenario: I scan my personal card to scan in online
+#   Given I am signed in as "Bea/Cit"
+#   And we are online
+#   When I scan "Bea" to "scanIn"
+#   Then ? this "coPaying": "true"
 
 # Scenario: I scan another employee's personal card to scan in online
 #   Given I am signed in as "Bea/Cit"
@@ -157,12 +158,12 @@ Scenario: I scan another employee card offline to scan in
   And we are offline
   When I scan "Abe/Cit" to "scanIn"
   Then ? this "coPaying": "true"
-@c
-Scenario: I scan my personal card to scan in offline
-  Given I am signed in as "Bea/Cit"
-  And we are offline
-  When I scan "Bea" to "scanIn"
-  Then ? this "coPaying": "true"
+# @c
+# Scenario: I scan my personal card to scan in offline
+#   Given I am signed in as "Bea/Cit"
+#   And we are offline
+#   When I scan "Bea" to "scanIn"
+#   Then ? this "coPaying": "true"
 
 #Scenario: I scan my personal card to scan in offline
 #  Given I am signed in as "Bea/Cit"

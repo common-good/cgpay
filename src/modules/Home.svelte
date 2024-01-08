@@ -7,13 +7,10 @@
   import Dashboard from './Dashboard.svelte'
   import ScanFake from './ScanFake.svelte'
 
-  export let currentRoute // else Svelte complains (I don't know why yet)
-  export let params // else Svelte complains (I don't know why yet)
-
   const me = $st.me
   const hasTxOptions = ($st.allowShow || $st.allowType)
   const payBtnText = hasTxOptions ? 'Pay' : 'Scan to Pay'
-  const chgBtnText = $st.selfServe ? 'Pay' : (hasTxOptions ? 'Charge' : 'Scan to Charge')
+  const chgBtnText = $st.selfServe ? 'Pay' : (hasTxOptions ? 'Receive' : 'Scan to Charge')
   let payOk
   let hdr = $st.selfServe ? 'Self Serve'
   : $st.showDash ? 'Dashboard'
@@ -21,8 +18,6 @@
   : 'Ready to Charge Someone'
 
   function showEr(msg) { u.alert(msg, () => { u.hide(); st.setMsg(null) }) }
-  function fmtVersion(n) { n = n.toString(); return n.substring(0, 1) + '.' + n.substring(2, 3) + '.' + n.substring(3, 4) }
-
   function fake(code) { st.setQr(code); st.setIntent('charge'); u.go('tx') }
 
 /*  const chgBtnText = () => {
@@ -36,7 +31,11 @@
     tx('pay')
   }
   function charge() { tx('charge') }
-  function tx(intent) { st.setIntent(intent); u.go(hasTxOptions ? 'tx-start' : 'scan') }
+  function tx(intent) {
+    st.setSocket(u.socket()) // refresh websocket, so the device that is about to pay or charge (perhaps by QR) is the one that gets a response
+    st.setIntent(intent)
+    u.go(hasTxOptions ? 'tx-start' : 'scan')
+  }
 
   function scanIn() {
     try {
@@ -64,6 +63,7 @@
   // }
 
   onMount(async () => {
+    if (me.cardCode === undefined) await st.convert() // async data update for rel D
     st.setTimeout(null) // stop the timeout timer from interrupting us
     st.setTrail(null, true)
     st.setLeft('logo')
@@ -71,7 +71,6 @@
     if ($st.intent == 'scanIn') scanIn() // must precede setQr
     st.setQr(null) // no going back to previous customer
     if ($st.erMsg) showEr($st.erMsg)
-
     payOk = (!me.isCo || $st.payOk == 'always' || $st.coPaying) && !$st.selfServe
 
     // if ($st.selfServe) {
@@ -85,6 +84,7 @@
     // qr = intent === 'pay' ? $st.me?.qr : null
     // const qrAction = `Show this code to ${intent === 'pay' ? intent : 'be paid'}`
   })
+  //{#key $st.recentTxs}{/key}
 </script>
 
 <svelte:head>
@@ -94,29 +94,27 @@
 <section class="page" id="home">
   <div class="top">
     <h1 class="page-title {$st.showDash ? 'visuallyhidden' : null}" data-testid="header">{hdr}</h1>
-    { #if me.isCo }
+    {#if $st.showDash}
+      <Dashboard />
+    {:else}
       { #if $st.selfServe}
         <p>Press the button below to scan your <br />Common Good QR Code</p>
       {/if}
       <div class='watermark'>
         <img class='logo' src= {cgLogo} alt='Common Good Logo' />
-        <p>CGPay v{fmtVersion(c.version)}</p>
+        <p>CGPay v{u.fmtVersion(c.version)}</p>
       </div>
-    {:else}
-      {#key $st.recentTxs}<Dashboard />{/key}
     {/if}
   </div>
+  {#if u.localMode() && !hasTxOptions && !u.testing()}
+    {#if payOk}<ScanFake intent="pay"/>{/if}
+    <ScanFake intent="charge"/>
+  {/if}
   <div class="bottom">
-    {#if u.localMode() && !hasTxOptions}
-      {#if payOk}<ScanFake intent="pay"/>{/if}
-      <ScanFake intent="charge"/>
+    {#if payOk }
+      <button class="pay" data-testid="btn-pay" on:click={pay}>{payBtnText}</button>
     {/if}
-    <div class="actions">
-      {#if payOk }
-        <button class="pay" data-testid="btn-pay" on:click={pay}>{payBtnText}</button>
-      {/if}
-      <button class="charge" data-testid="btn-charge" on:click={charge}>{chgBtnText}</button>
-    </div>
+    <button class="charge" data-testid="btn-charge" on:click={charge}>{chgBtnText}</button>
   </div>
 </section>
 
@@ -128,22 +126,12 @@
   .pay
     margin-right $s-1
 
-  .fakes 
-    display flex
-    width 100%
-    button
-      cgButtonSecondary()
-      padding 5px
-      margin-bottom $s0
-      flex-grow 1
-      margin-right $s-2
-      visibility visible
-
   p
     text-align center
 
   img 
     max-width 250px
+    margin-bottom $s0
 
   .survey
     cgButtonTertiary()
@@ -153,7 +141,4 @@
     text-align center
     margin auto
     font-size $s-1
-
-    img
-      margin-bottom $s0
 </style>

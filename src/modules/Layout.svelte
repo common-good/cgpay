@@ -25,40 +25,8 @@
   function setViewportHeight() { viewHeight = window.visualViewport.height }
   function goBack() { if (u.pageUri() == 'tx' && $st.pending) u.undo.update(n => n + 1); else u.goBack() }
 
-  function socket() {
-    if ($st.me.isCo) return // only for individual accounts for now
-    if ($st.socket) try {
-      $st.socket.close() // for now, reopen every time
-    } catch (er) {}
-
-    if (!('WebSocket' in window)) return null
-    let socket
-    try {
-      socket = new WebSocket(u.socket()) // socket.readyState has status
-      socket.onopen = () => {
-        const msg = JSON.stringify({ op:'connect', actorId:$st.me.accountId, deviceId:$st.me.deviceId })
-        try {
-          socket.send(msg)
-        } catch (er) { console.log('socket error', er) }
-      }
-      socket.onclose = () => {}			
-      socket.onmessage = (msg) => {
-        const m = JSON.parse(msg.data) // get message, action, and note
-
-        if (m.action == 'request') {
-          u.yesno(m.message, () => st.txConfirm(true, m), () => st.txConfirm(false, m))
-        } else {
-          u.alert(m.message)
-          u.getInfo() // if we're being told about a charge or payment, refresh the list of recent txs
-        }
-      }
-    } catch(er) { console.log('socket error', er); return null }
-
-    return socket
-  }
-
   u.undo = writable(0)
-  if (c.enableSockets && !$st.socket) st.setSocket(socket())
+  st.setSocket(u.socket())
 </script>
 
 <svelte:window on:load={setViewportHeight}/>
@@ -88,24 +56,6 @@
     height 48px
     width 48px
 
-  header
-    display flex
-    align-items center
-    justify-content space-between
-    margin-bottom $s-4
-    padding $s-2
-    background $c-blue-light
-    box-shadow 0 1px 4px $c-gray
-    z-index 1
-    position fixed
-    width 100%
-    max-width 820px
-
-  .content
-    height 100%
-    padding $s-1
-    margin-top 64px
-
   .layout-step
     height 100%
     position relative
@@ -113,4 +63,30 @@
     flex-direction column
     background $c-white
     constrainWidth($tablet)
+    max-width 820px
+
+  header
+    flex 0 0 64px
+    display flex
+    align-items center
+    justify-content space-between
+    margin-bottom $s-4
+    padding $s-2
+    background $c-blue-light
+    box-shadow 0 1px 4px $c-gray
+    width 100%
+
+  .network-status
+    flex 0 0 14px
+
+  .content
+    display flex
+    flex-direction column
+    flex-grow 1
+    overflow auto
+    padding $s-1
+
+  @media screen and (max-width $xs-screen)
+    .content
+      padding $s-2
 </style>

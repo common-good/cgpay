@@ -13,6 +13,7 @@
         <li>1. Tap the Share <span class="inline-icon"><ShareIcon class="icon" size={"1.25rem"} /></span> button.</li>
         <li>2. In the menu, scroll down and select "Add to Home Screen <span class="inline-icon"><AddIcon class="icon" size={"1.25rem"} /></span>".</li>
         <li>3. Then tap "Add".</li>
+        <li>4. Press "Continue" below, sign in to your personal Common Good account, then follow instructions.</li>
       </ul>
     { :else }
     <ul>
