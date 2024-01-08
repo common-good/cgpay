@@ -17,9 +17,14 @@
   const paying = ($st.intent == 'pay')
   let qr, btnPay, payOk
   let qrAction
+  let acct = null
 
   function scan() { u.go('scan') }
   async function receiveQr() { return await u.generateQr(u.makeQrUrl(u.getMainId($st.me.accountId))) }
+  
+  async function type() {
+
+  }
 
   onMount(async () => {
     if ($st.allowShow) [qr, qrAction] = paying ? [me.qr, 'Pay'] : [await receiveQr(), 'Receive']
@@ -35,13 +40,18 @@
 
 <section class="page" id="tx-start">
   <div class="top">
-    <h1 class="page-title">Show to {qrAction}</h1>
+    <input id="acct" data-testid="input-acct" type="text" name="acct" placeholder="name, email, phone, or account ID" bind:value={acct} autocomplete required />
+    <button class="primary" data-testid="btn-type" on:click={type}>
+      Type to {paying ? btnPay : 'Charge'}
+    </button>
+    <h1 class="page-title">Show to {qrAction}:</h1>
     <div class="img">
       <img class="qr-{$st.intent}" src="{qr}" data-testid="qr" alt={qrAction} />
     </div>
     <p>CGPay v{u.fmtVersion(c.version)}</p>
     {#if paying}<p>Note: Only requests by an individual require confirmation.</p>{/if}
   </div>
+  <hr>
   {#if u.localMode() && !u.testing()}<ScanFake intent={$st.intent}/>{/if}
   <div class="bottom">
     <button class="primary" data-testid="btn-scan" on:click={scan}>
