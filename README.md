@@ -2,12 +2,32 @@
 
 A progressive web application for collecting payments with Common Good. 
 
+- [Code Tour](#code-tour-in-src)
 - [Setting Up](#setting-up)
 - [Developing](#developing)
 - [Development Workflow](#development-workflow)
 - [Unit Testing](#unit-testing)
 - [Deploying](#deploying)
 - [Releasing](#releasing)
+
+## Code Tour (in src/)
+
+CGPay is a Progressive Web App (PWA) written in Svelte, which is based on Vite
+
+- app.js: top level code under index.html
+- modules/: Svelte modules organized around major functionality
+- tests/
+    - features/: Cucumber behavioral feature regression tests
+    - features/background.txt: Description of implicit setup for each test
+    - support/: support code for feature tests
+    - unit-tests/: tests organized mostly around Svelte modules
+- cache.js: data structure definitions
+- db.js: low-level data manipulation functions
+- store.js: higher-level data management functions
+- utils.js: low-level utility functions
+- constants.js: constants used by both app and tests
+- utils0.js: low-level utility functions used by both app and tests
+- vite.config.js: contains some include file aliases and global literals
 
 ## Setting Up
 
