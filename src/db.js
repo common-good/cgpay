@@ -3,9 +3,26 @@
  * This may want to use an actual database someday. For now we use localStorage and sessionStorage.
  */
 
-import u from '#utils.js'
+// Break the store.js -> db.js -> utils.js circular import (db.save runs during
+// createStore at module-load). Same pattern as store.js: proxy `u` with utils0
+// as the fallback target until the full utils.js default export is available.
+import * as _utilsMod from '#utils.js'
+import u0 from '../utils0.js'
 import cache0 from '#cache.js'
 import c from '#constants.js'
+
+const u = new Proxy(u0, {
+  get(target, prop) {
+    try {
+      const full = _utilsMod.default
+      if (full && prop in full) return full[prop]
+    } catch { /* mocked module may not have default; fall through */ }
+    try {
+      if (prop in _utilsMod) return _utilsMod[prop]
+    } catch { /* same */ }
+    return target[prop]
+  }
+})
 
 export function getst() { return {
     ...JSON.parse(localStorage.getItem(c.storeKey)),
