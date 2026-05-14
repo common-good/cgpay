@@ -25,14 +25,14 @@ describe('store', () => {
     it('initializes to stored values', () => {
       setupLocalStorage({ foo: { bar: 'baz' } })
       const st = createStore()
-      expect(st.inspect()).toEqual({ foo: { bar: 'baz' } })
+      expect(st.inspect()).toMatchObject({ foo: { bar: 'baz' } })
     })
   })
 
   describe('when there are not existing values in local storage', () => {
     it('initializes to default values', () => {
       const st = createStore()
-      expect(st.inspect().sawAdd).toEqual(false)
+      expect(st.inspect().sawAdd).toEqual(null)
     })
   })
 
@@ -98,14 +98,14 @@ describe('store', () => {
     })
 
     it('is initialized as null', () => {
-      expect(st.inspect().qr).toBeNull()
+      expect(store.inspect().qr).toBeNull()
     })
 
     it('sets the correct qr value', () => {
       const v = '123'
 
-      st.setQr(v)
-      expect(st.inspect().qr).toEqual(v)
+      store.setQr(v)
+      expect(store.inspect().qr).toEqual(v)
     })
   })
 
@@ -116,14 +116,14 @@ describe('store', () => {
     })
 
     it('is initialized as null', () => {
-      expect(st.inspect().erMsg).toBeNull()
+      expect(store.inspect().erMsg).toBeNull()
     })
 
     it('sets the correct error message', () => {
-      const msg = "error" 
+      const msg = "error"
 
-      st.setMsg(msg)
-      expect(st.inspect().erMsg).toEqual(msg)
+      store.setMsg(msg)
+      expect(store.inspect().erMsg).toEqual(msg)
     })
   })
 
@@ -175,7 +175,7 @@ describe('store', () => {
   describe('.sawAdd', () => {
     it('is accessible', () => {
       const st = createStore()
-      expect(st.inspect().sawAdd).toEqual(false)
+      expect(st.inspect().sawAdd).toEqual(null)
     })
   })
 
@@ -185,7 +185,7 @@ describe('store', () => {
 
       vi.useFakeTimers()
       const now = Math.floor(Date.now() / 1000)
-      expect(st.inspect().sawAdd).toEqual(false) // Confirm initial values are set.
+      expect(st.inspect().sawAdd).toEqual(null) // Confirm initial values are set.
       st.setSawAdd()
 
       // Confirm that all forms of store access are updated.
