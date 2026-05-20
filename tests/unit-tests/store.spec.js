@@ -1,9 +1,21 @@
 import { createStore } from '#store.js'
 import { postRequest, isTimeout } from '#utils.js'
 import c from '#constants.js'
+import cache0 from '#cache.js'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('#utils.js', () => ({ postRequest:vi.fn(), isTimeout:vi.fn() }))
+// The real utils.js pulls in qrcode/router/websocket deps that hang the test runner, and
+// store.js's proxy already falls back to utils0.js for the pure helpers. So we only need to
+// supply now() (utils0 has now0, not now) and stub the network-facing calls.
+vi.mock('#utils.js', () => {
+  const now = () => Math.floor(Date.now() / 1000)
+  return { default:{ now }, now, postRequest:vi.fn(), isTimeout:vi.fn() }
+})
+
+// createStore() shallow-copies cache0, so its array/object fields (txs, accts, etc.) are shared
+// by reference and accumulate mutations across createStore() calls. Snapshot the pristine
+// defaults once and restore before each test so state can't leak between tests.
+const cache0Defaults = JSON.parse(JSON.stringify(cache0))
 
 function stored() {
   return JSON.parse(localStorage.getItem(c.storeKey))
@@ -17,8 +29,11 @@ function setupLocalStorage(data) {
 
 describe('store', () => {
   beforeEach(() => {
+    Object.assign(cache0, JSON.parse(JSON.stringify(cache0Defaults)))
+    localStorage.clear()
+    sessionStorage.clear()
     setupLocalStorage(null)
-    postRequest = vi.fn()
+    vi.clearAllMocks()
   })
 
   describe('when there are existing values in local storage', () => {
