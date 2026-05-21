@@ -242,9 +242,10 @@ describe('store', () => {
         await st.flushTxs()
 
         expect(postRequest.calls).toHaveLength(3)
-        expect(postRequest.calls[0][0]).toEqual({ id: '1', amount: 1, description: '1', offline: true })
-        expect(postRequest.calls[1][0]).toEqual({ id: '2', amount: 2, description: '2', offline: true })
-        expect(postRequest.calls[2][0]).toEqual({ id: '3', amount: 3, description: '3', offline: true })
+        // postRequest is called as (endpoint, tx), so the payload is the second arg ([1]).
+        expect(postRequest.calls[0][1]).toEqual({ id: '1', amount: 1, description: '1', offline: true })
+        expect(postRequest.calls[1][1]).toEqual({ id: '2', amount: 2, description: '2', offline: true })
+        expect(postRequest.calls[2][1]).toEqual({ id: '3', amount: 3, description: '3', offline: true })
       })
 
       describe('when a request is successful', () => {
