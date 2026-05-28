@@ -1,9 +1,12 @@
 <script lang="ts">
   import Icon from './Icon.svelte'
-  import { page } from '$app/state'
 
-  type Props = { active?: string }
-  let { active = 'Dashboard' }: Props = $props()
+  type User = { name: string; org: string; initials: string }
+  type Props = { active?: string; user?: User }
+  let {
+    active = 'Dashboard',
+    user = { name: 'Jane Smith', org: 'EarthSeed Consulting', initials: 'JS' }
+  }: Props = $props()
 
   const items = ['Dashboard', 'Funds', 'Activity', 'Documents', 'Messages']
   const pageActive = $derived(active ?? items[0])
@@ -29,10 +32,10 @@
       <span class="badge">2</span>
     </button>
     <div class="profile">
-      <div class="avatar" aria-hidden="true">JS</div>
+      <div class="avatar" aria-hidden="true">{user.initials}</div>
       <div class="who">
-        <span class="name">Jane Smith</span>
-        <span class="org">EarthSeed Consulting</span>
+        <span class="name">{user.name}</span>
+        <span class="org">{user.org}</span>
       </div>
     </div>
   </div>

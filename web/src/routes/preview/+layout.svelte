@@ -4,15 +4,22 @@
 
   let { children } = $props()
 
+  const isAdmin = $derived(page.url.pathname.startsWith('/preview/admin'))
+
+  const user = $derived(
+    isAdmin
+      ? { name: 'William Spademan', org: 'Super Admin', initials: 'WS' }
+      : { name: 'Jane Smith', org: 'EarthSeed Consulting', initials: 'JS' }
+  )
+
   const active = $derived.by(() => {
     const path = page.url.pathname
-    if (path.startsWith('/preview/dashboard')) return 'Dashboard'
     if (path.startsWith('/preview/grants')) return 'Funds'
     return 'Dashboard'
   })
 </script>
 
-<TopNav {active} />
+<TopNav {active} {user} />
 
 <main>
   {@render children()}
