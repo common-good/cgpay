@@ -4,15 +4,15 @@
   type Status = 'Approved' | 'Pending Review' | 'Under Review' | 'Suspended'
 
   const orgs: {
-    name: string; contact: string; mission: string; status: Status;
+    name: string; slug: string; contact: string; mission: string; status: Status;
     grantsYTD: string; lastActivity: string; sponsorshipSince: string
   }[] = [
-    { name: 'EarthSeed Consulting',       contact: 'Jane Smith',     mission: 'Community-scale environmental consulting and stewardship.',                 status: 'Approved',       grantsYTD: '$153,250', lastActivity: 'May 27, 2026', sponsorshipSince: 'Jan 2024' },
-    { name: 'Youth Rise',                  contact: 'Ana Lopez',      mission: 'After-school programs and leadership training for underserved youth.',     status: 'Approved',       grantsYTD: '$98,500',  lastActivity: 'May 25, 2026', sponsorshipSince: 'Mar 2023' },
-    { name: 'Harvest Network',             contact: 'David Okonkwo',  mission: 'Connecting small farms with food banks across the West Coast.',            status: 'Approved',       grantsYTD: '$220,750', lastActivity: 'May 22, 2026', sponsorshipSince: 'Jul 2022' },
-    { name: 'Bay Area Foundation',         contact: 'Tom Rivera',     mission: 'Community resilience and disaster preparedness in coastal communities.',  status: 'Approved',       grantsYTD: '$67,000',  lastActivity: 'May 21, 2026', sponsorshipSince: 'Sep 2024' },
-    { name: 'Pacific Forest Coalition',    contact: 'Marcus Chen',    mission: 'Old-growth forest restoration and indigenous-led land management.',       status: 'Pending Review', grantsYTD: '—',        lastActivity: 'May 18, 2026', sponsorshipSince: '—' },
-    { name: 'Community Neighborhood Services', contact: 'Lily Park',  mission: 'Affordable-housing advocacy and tenant services in urban areas.',         status: 'Under Review',   grantsYTD: '$14,200',  lastActivity: 'May 12, 2026', sponsorshipSince: 'Feb 2025' }
+    { name: 'EarthSeed Consulting',       slug: 'earthseed',       contact: 'Jane Smith',     mission: 'Community-scale environmental consulting and stewardship.',                 status: 'Approved',       grantsYTD: '$153,250', lastActivity: 'May 27, 2026', sponsorshipSince: 'Jan 2024' },
+    { name: 'Youth Rise',                  slug: 'youth-rise',      contact: 'Ana Lopez',      mission: 'After-school programs and leadership training for underserved youth.',     status: 'Approved',       grantsYTD: '$98,500',  lastActivity: 'May 25, 2026', sponsorshipSince: 'Mar 2023' },
+    { name: 'Harvest Network',             slug: 'harvest',         contact: 'David Okonkwo',  mission: 'Connecting small farms with food banks across the West Coast.',            status: 'Approved',       grantsYTD: '$220,750', lastActivity: 'May 22, 2026', sponsorshipSince: 'Jul 2022' },
+    { name: 'Bay Area Foundation',         slug: 'bay-area',        contact: 'Tom Rivera',     mission: 'Community resilience and disaster preparedness in coastal communities.',  status: 'Approved',       grantsYTD: '$67,000',  lastActivity: 'May 21, 2026', sponsorshipSince: 'Sep 2024' },
+    { name: 'Pacific Forest Coalition',    slug: 'pacific-forest',  contact: 'Marcus Chen',    mission: 'Old-growth forest restoration and indigenous-led land management.',       status: 'Pending Review', grantsYTD: '—',        lastActivity: 'May 18, 2026', sponsorshipSince: '—' },
+    { name: 'Community Neighborhood Services', slug: 'cns',         contact: 'Lily Park',      mission: 'Affordable-housing advocacy and tenant services in urban areas.',         status: 'Under Review',   grantsYTD: '$14,200',  lastActivity: 'May 12, 2026', sponsorshipSince: 'Feb 2025' }
   ]
 
   let query = $state('')
@@ -97,7 +97,7 @@
             <div><dt>Sponsorship since</dt><dd>{o.sponsorshipSince}</dd></div>
           </dl>
           <div class="org-actions">
-            <a href="/preview"><Icon name="eye" size={14} /> View profile</a>
+            <a href="/preview/admin/orgs/{o.slug}"><Icon name="eye" size={14} /> View profile</a>
             <a href="/preview/grants"><Icon name="download" size={14} /> Grants</a>
             <a href="/preview"><Icon name="chat" size={14} /> Message</a>
           </div>
