@@ -1,5 +1,6 @@
 <script lang="ts">
   import Icon from '$lib/components/Icon.svelte'
+  import Tooltip from '$lib/components/Tooltip.svelte'
 
   // Overview cards — high-signal counts Jose mentioned in his email.
   const overview = [
@@ -68,16 +69,18 @@
     <h2>What would you like to do?</h2>
     <div class="action-grid">
       {#each actions as a}
-        <a class="card action-card" href={a.href} title={a.desc}>
-          <div class="icon-wrap tone-green large">
-            <Icon name={a.icon} size={24} />
-          </div>
-          <div>
-            <span class="action-title">{a.title}</span>
-            <span class="action-desc">{a.desc}</span>
-          </div>
-          <Icon name="arrow" size={16} class="action-chev" />
-        </a>
+        <Tooltip text={a.desc} position="top">
+          <a class="card action-card" href={a.href}>
+            <div class="icon-wrap tone-green large">
+              <Icon name={a.icon} size={24} />
+            </div>
+            <div>
+              <span class="action-title">{a.title}</span>
+              <span class="action-desc">{a.desc}</span>
+            </div>
+            <Icon name="arrow" size={16} class="action-chev" />
+          </a>
+        </Tooltip>
       {/each}
     </div>
   </section>

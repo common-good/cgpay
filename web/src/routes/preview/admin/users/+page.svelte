@@ -4,15 +4,15 @@
   type Role = 'Super Admin' | 'Finance' | 'Sponsee Lead' | 'Board' | 'Member'
   type Status = 'Active' | 'Pending' | 'Suspended'
 
-  const rows: { name: string; email: string; role: Role; org: string; status: Status; lastLogin: string }[] = [
-    { name: 'Jane Smith',     email: 'jane@earthseed.org',     role: 'Sponsee Lead', org: 'EarthSeed Consulting',          status: 'Active',  lastLogin: 'May 27, 2026' },
-    { name: 'Marcus Chen',    email: 'marcus@pacificforest.org', role: 'Sponsee Lead', org: 'Pacific Forest Coalition',     status: 'Pending', lastLogin: '—' },
-    { name: 'Sarah Johnson',  email: 'sarah@commongood.earth', role: 'Finance',      org: 'Common Good',                   status: 'Active',  lastLogin: 'May 27, 2026' },
-    { name: 'Chris Avila',    email: 'chris.a@commongood.earth', role: 'Super Admin', org: 'Common Good',                 status: 'Active',  lastLogin: 'May 26, 2026' },
-    { name: 'Ana Lopez',      email: 'ana@youthrise.org',      role: 'Member',       org: 'Youth Rise',                    status: 'Active',  lastLogin: 'May 25, 2026' },
-    { name: 'David Okonkwo',  email: 'david@harvestnetwork.org', role: 'Board',      org: 'Harvest Network',               status: 'Active',  lastLogin: 'May 22, 2026' },
-    { name: 'Lily Park',      email: 'lily@cnservices.org',    role: 'Member',       org: 'Community Neighborhood Services', status: 'Suspended', lastLogin: 'Apr 10, 2026' },
-    { name: 'Tom Rivera',     email: 'tom@bayareafoundation.org', role: 'Member',    org: 'Bay Area Foundation',           status: 'Active',  lastLogin: 'May 21, 2026' }
+  const rows: { id: string; name: string; email: string; role: Role; org: string; status: Status; lastLogin: string }[] = [
+    { id: 'jane-smith',     name: 'Jane Smith',     email: 'jane@earthseed.org',       role: 'Sponsee Lead', org: 'EarthSeed Consulting',            status: 'Active',    lastLogin: 'May 27, 2026' },
+    { id: 'marcus-chen',    name: 'Marcus Chen',    email: 'marcus@pacificforest.org', role: 'Sponsee Lead', org: 'Pacific Forest Coalition',        status: 'Pending',   lastLogin: '—' },
+    { id: 'sarah-johnson',  name: 'Sarah Johnson',  email: 'sarah@commongood.earth',   role: 'Finance',      org: 'Common Good',                     status: 'Active',    lastLogin: 'May 27, 2026' },
+    { id: 'chris-avila',    name: 'Chris Avila',    email: 'chris.a@commongood.earth', role: 'Super Admin',  org: 'Common Good',                     status: 'Active',    lastLogin: 'May 26, 2026' },
+    { id: 'ana-lopez',      name: 'Ana Lopez',      email: 'ana@youthrise.org',        role: 'Member',       org: 'Youth Rise',                      status: 'Active',    lastLogin: 'May 25, 2026' },
+    { id: 'david-okonkwo',  name: 'David Okonkwo',  email: 'david@harvestnetwork.org', role: 'Board',        org: 'Harvest Network',                 status: 'Active',    lastLogin: 'May 22, 2026' },
+    { id: 'lily-park',      name: 'Lily Park',      email: 'lily@cnservices.org',      role: 'Member',       org: 'Community Neighborhood Services', status: 'Suspended', lastLogin: 'Apr 10, 2026' },
+    { id: 'tom-rivera',     name: 'Tom Rivera',     email: 'tom@bayareafoundation.org', role: 'Member',      org: 'Bay Area Foundation',             status: 'Active',    lastLogin: 'May 21, 2026' }
   ]
 
   let query = $state('')
@@ -105,7 +105,7 @@
               <td><span class="pill {pillFor(r.status)}">{r.status}</span></td>
               <td class="muted">{r.lastLogin}</td>
               <td class="row-actions">
-                <button aria-label="View"><Icon name="eye" size={16} /></button>
+                <a class="row-link" aria-label="View user" href="/preview/admin/users/{r.id}"><Icon name="eye" size={16} /></a>
                 <button aria-label="More"><Icon name="dots" size={16} /></button>
               </td>
             </tr>
@@ -202,12 +202,16 @@
 
   .muted { color: var(--cg-text-muted); }
 
-  .row-actions { display: flex; gap: 0.25rem; }
-  .row-actions button {
+  .row-actions { display: flex; gap: 0.25rem; align-items: center; }
+  .row-actions button,
+  .row-actions .row-link {
     background: transparent; border: none; padding: 0.3rem; cursor: pointer;
     color: var(--cg-text-muted); border-radius: var(--cg-radius-sm);
+    display: inline-flex; align-items: center; justify-content: center;
+    text-decoration: none;
   }
-  .row-actions button:hover { background: var(--cg-bg); color: var(--cg-text); }
+  .row-actions button:hover,
+  .row-actions .row-link:hover { background: var(--cg-bg); color: var(--cg-text); }
 
   .empty { text-align: center; padding: 2rem; color: var(--cg-text-muted); }
   .footer-row { display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; }
