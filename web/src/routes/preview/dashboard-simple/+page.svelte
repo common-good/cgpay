@@ -55,24 +55,24 @@
 
   <section class="actions">
     <Tooltip text="Send funds to another member or business" position="bottom">
-      <button class="action pay">
+      <a class="action pay" href="/preview/pay">
         <span class="action-icon"><Icon name="arrow" size={22} /></span>
         <span class="action-label">Pay</span>
-      </button>
+      </a>
     </Tooltip>
 
-    <Tooltip text="Request payment or charge a customer's QR" position="bottom">
-      <button class="action receive">
+    <Tooltip text="Show your QR or request payment from someone" position="bottom">
+      <a class="action receive" href="/preview/receive">
         <span class="action-icon"><Icon name="download" size={22} /></span>
         <span class="action-label">Receive</span>
-      </button>
+      </a>
     </Tooltip>
 
     <Tooltip text="Move funds between your bank and Common Good" position="bottom">
-      <button class="action transfer">
+      <a class="action transfer" href="/preview/transfer">
         <span class="action-icon"><Icon name="bank" size={22} /></span>
         <span class="action-label">Transfer</span>
-      </button>
+      </a>
     </Tooltip>
   </section>
 
@@ -165,11 +165,13 @@
     font-family: inherit;
     color: var(--cg-text);
     width: 100%;
+    text-decoration: none;
   }
   .action:hover {
     border-color: var(--cg-green);
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0,0,0,0.04), 0 12px 24px rgba(0,0,0,0.06);
+    text-decoration: none;
   }
   .action-icon {
     width: 3rem;
