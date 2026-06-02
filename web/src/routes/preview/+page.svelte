@@ -1,14 +1,25 @@
 <script lang="ts">
   const sections = [
     {
-      role: 'Member / Sponsee',
-      tag: 'For organizations like EarthSeed Consulting',
+      role: 'Ordinary user — two variants side-by-side',
+      tag: 'For Jose to compare and pick a direction',
       previews: [
         {
-          title: 'Member Dashboard',
+          title: 'Member Dashboard — rich (Jose\'s mockup)',
           href: '/preview/dashboard',
           note: 'Summary cards (Available Funds / Pending Deposits / Pending Requests / Unread Messages), Quick Actions, and Recent Activity.'
         },
+        {
+          title: 'Member Dashboard — simple (William\'s 4-function spec)',
+          href: '/preview/dashboard-simple',
+          note: 'Lean payment-first view: balance + Pay / Receive / Transfer + Recent transactions. Everything else moves to secondary menus.'
+        }
+      ]
+    },
+    {
+      role: 'Sponsee flows',
+      tag: 'For sponsored organizations like EarthSeed Consulting',
+      previews: [
         {
           title: 'Report Expected Grant',
           href: '/preview/grants/new',
