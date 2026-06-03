@@ -2,10 +2,10 @@
   import Icon from '$lib/components/Icon.svelte'
 
   const summary = [
-    { label: 'Available Funds', value: '$48,250.75', icon: 'bank', cta: 'View details', tone: 'green' },
-    { label: 'Pending Deposits', value: '$125,000.00', icon: 'clock', cta: 'View details', tone: 'blue' },
-    { label: 'Pending Requests', value: '2', icon: 'clipboard', cta: 'View details', tone: 'amber' },
-    { label: 'Unread Messages', value: '1', icon: 'chat', cta: 'View message', tone: 'purple' }
+    { label: 'Available Funds', value: '$48,250.75', icon: 'bank', cta: 'View details', tone: 'green',  href: '/preview/dashboard-simple/transactions' },
+    { label: 'Pending Deposits', value: '$125,000.00', icon: 'clock', cta: 'View details', tone: 'blue', href: '/preview/deposits' },
+    { label: 'Pending Requests', value: '2', icon: 'clipboard', cta: 'View details', tone: 'amber',     href: '/preview/requests' },
+    { label: 'Unread Messages', value: '1', icon: 'chat', cta: 'View message', tone: 'purple',         href: '/preview' }
   ]
 
   const actions = [
@@ -40,7 +40,7 @@
         <div class="card-body">
           <span class="label">{s.label}</span>
           <span class="value">{s.value}</span>
-          <a class="cta" href="/preview">{s.cta} →</a>
+          <a class="cta" href={s.href}>{s.cta} →</a>
         </div>
       </article>
     {/each}

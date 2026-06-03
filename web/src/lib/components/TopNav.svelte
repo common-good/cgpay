@@ -1,5 +1,6 @@
 <script lang="ts">
   import Icon from './Icon.svelte'
+  import NotificationDrawer from './NotificationDrawer.svelte'
 
   type User = { name: string; org: string; initials: string }
   type Props = { active?: string; user?: User }
@@ -27,10 +28,7 @@
   </ul>
 
   <div class="right">
-    <button class="bell" aria-label="Notifications">
-      <Icon name="bell" size={20} />
-      <span class="badge">2</span>
-    </button>
+    <NotificationDrawer />
     <div class="profile">
       <div class="avatar" aria-hidden="true">{user.initials}</div>
       <div class="who">
@@ -98,29 +96,6 @@
     display: flex;
     align-items: center;
     gap: 1rem;
-  }
-  .bell {
-    position: relative;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    color: var(--cg-text-muted);
-    padding: 0.4rem;
-  }
-  .badge {
-    position: absolute;
-    top: 0;
-    right: 0;
-    background: var(--cg-error);
-    color: white;
-    font-size: 0.65rem;
-    font-weight: 600;
-    min-width: 1rem;
-    height: 1rem;
-    border-radius: 999px;
-    display: grid;
-    place-items: center;
-    padding: 0 0.3rem;
   }
   .profile {
     display: flex;

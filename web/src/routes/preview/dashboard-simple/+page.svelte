@@ -79,7 +79,7 @@
   <section class="recent">
     <div class="recent-head">
       <h2>Recent transactions</h2>
-      <a class="view-all" href="/preview/dashboard-simple">View all →</a>
+      <a class="view-all" href="/preview/dashboard-simple/transactions">View all →</a>
     </div>
 
     <ul class="tx-list">

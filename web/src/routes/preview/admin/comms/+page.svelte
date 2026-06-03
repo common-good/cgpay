@@ -58,7 +58,7 @@
     </div>
     <div class="header-actions">
       <button class="ghost"><Icon name="folder" size={16} /> Templates</button>
-      <button class="primary"><Icon name="plus" size={16} /> New Broadcast</button>
+      <a class="primary" href="/preview/admin/comms/new"><Icon name="plus" size={16} /> New Broadcast</a>
     </div>
   </header>
 
@@ -173,8 +173,8 @@
   .header-actions { display: flex; gap: 0.6rem; }
   .ghost { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.55rem 0.9rem; background: var(--cg-surface); border: 1px solid var(--cg-border); border-radius: var(--cg-radius-sm); font-size: 0.88rem; cursor: pointer; color: var(--cg-text); }
   .ghost:hover { border-color: var(--cg-green); }
-  .primary { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.55rem 0.95rem; background: var(--cg-green); color: white; border: none; border-radius: var(--cg-radius-sm); font-size: 0.88rem; font-weight: 500; cursor: pointer; }
-  .primary:hover { background: var(--cg-green-hover); }
+  .primary { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.55rem 0.95rem; background: var(--cg-green); color: white; border: none; border-radius: var(--cg-radius-sm); font-size: 0.88rem; font-weight: 500; cursor: pointer; text-decoration: none; }
+  .primary:hover { background: var(--cg-green-hover); text-decoration: none; }
 
   .card { background: var(--cg-surface); border: 1px solid var(--cg-border); border-radius: var(--cg-radius); }
 

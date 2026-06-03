@@ -60,7 +60,7 @@
           <h2>{s.title}</h2>
         </div>
         <p>{s.desc}</p>
-        <a class="open" href="/preview/admin/settings">Configure →</a>
+        <a class="open" href="/preview/admin/settings/{s.id}">Configure →</a>
       </article>
     {/each}
   </section>
