@@ -1,42 +1,111 @@
-# sv
+# cgpay/web
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+SvelteKit subapp that proves out the Node + Svelte + MariaDB + JWT stack against the
+existing Drupal `users` table. First milestone of the broader PHP → Svelte migration.
 
-## Creating a project
+## What's here
 
-If you're seeing this, you've probably already done this step. Congrats!
+| Path | What |
+|---|---|
+| `src/routes/api/login/+server.ts` | `POST /api/login` — validates against `users.pass` (Drupal phpass), issues a JWT. Rate-limited; timing-constant. |
+| `src/routes/api/me/balance/+server.ts` | `GET /api/me/balance` — bearer-auth, returns `users.balance`. |
+| `src/routes/login/+page.svelte` | Login form. |
+| `src/routes/+page.svelte` | Dashboard: shows balance, redirects to `/login` if no token. |
+| `src/lib/server/drupal-password.ts` | Port of `cgmembers/includes/password.inc` — handles `$S$`, `$P$`, `$H$`, `U$` prefixes. |
+| `src/lib/server/db.ts` | `mysql2/promise` connection pool, env-driven. |
+| `src/lib/server/auth.ts` | JWT sign/verify; refuses to boot without a 32+ char `JWT_SECRET`. |
+| `src/lib/server/rate-limit.ts` | Minimal in-memory rate limiter (move to Redis before multi-instance). |
+| `src/routes/preview/...` | UI-only design previews. Use placeholder data; no auth required. |
 
-```sh
-# create a new project
-npx sv create my-app
-```
-
-To recreate this project with the same configuration:
-
-```sh
-# recreate this project
-npx sv@0.15.3 create --template minimal --types ts --install npm web
-```
-
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+## Quick start (local dev with mock data)
 
 ```sh
+cp .env.example .env
+# fill in JWT_SECRET only (any string >= 32 chars is fine for browsing UI)
+npm install
 npm run dev
+```
 
-# or start the server and open the app in a new browser tab
+The preview routes (`/preview/*`) render with placeholder data — you can browse the whole
+design without a database.
+
+## Running end-to-end against staging
+
+To actually log in and read a real balance, you need three things:
+
+1. **Read-only DB user** on staging's MariaDB.
+2. **A test member account** to log in as.
+3. **JWT secret** for token signing.
+
+### Step 1 — SSH tunnel to staging's MariaDB
+
+The MariaDB port isn't open to the internet; connect via SSH tunnel:
+
+```sh
+# Forward localhost:3307 to staging's MariaDB
+ssh -L 3307:127.0.0.1:3306 staging
+# leave this terminal open
+```
+
+### Step 2 — Configure `.env`
+
+```sh
+cp .env.example .env
+```
+
+Fill in:
+
+```dotenv
+DB_HOST=127.0.0.1
+DB_PORT=3307
+DB_USER=cgweb_ro          # read-only user provisioned on staging
+DB_PASSWORD=…
+DB_NAME=…
+JWT_SECRET=$(openssl rand -base64 48)
+```
+
+### Step 3 — Run
+
+```sh
 npm run dev -- --open
 ```
 
-## Building
+Log in with the test member account; the dashboard should show their real balance.
 
-To create a production version of your app:
+## Verifying the Drupal phpass port against a real hash
+
+If you have a real `$S$…` hash from `users.pass` and the plaintext password, you can
+confirm our port works before wiring anything else:
 
 ```sh
-npm run build
+npm run verify-phpass -- '$S$EXAMPLEHASH…' 'thepassword'
 ```
 
-You can preview the production build with `npm run preview`.
+Exits 0 if the hash matches, 1 otherwise.
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+## Scripts
+
+| Command | What |
+|---|---|
+| `npm run dev` | Vite dev server. |
+| `npm run check` | TypeScript + Svelte check. |
+| `npm run build` | Production build. |
+| `npm run preview` | Run the production build locally. |
+| `npm run verify-phpass` | One-off Drupal phpass verifier (see above). |
+
+## Security notes
+
+- All SQL is parameterized.
+- Login is rate-limited (5 attempts / 60s rolling window per IP; 5-minute lockout after).
+- Password verification is timing-constant (we always run the hash, even when the
+  username doesn't exist, to avoid leaking which usernames are valid).
+- `JWT_SECRET` must be at least 32 chars or the app refuses to start.
+- `.env` is gitignored; commit `.env.example` only.
+
+## Known gaps before production
+
+- Rate limiter is in-memory — move to Redis or use a shared cache before scaling out.
+- No refresh tokens; JWT expires after 8h and the user re-logs in.
+- No CSRF; the API expects a bearer token in `Authorization`, not a cookie.
+- `users.balance` is read as a JS Number (precise up to 2^53). Switch to a Decimal type
+  on the wire if balances ever exceed that.
