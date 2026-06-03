@@ -5,10 +5,17 @@ import { env } from '$env/dynamic/private'
 
 const SECRET = env.JWT_SECRET
 const TTL = '8h'
+const MIN_SECRET_LENGTH = 32
 
+// Fail at boot rather than silently accepting a weak or unset secret.
 if (!SECRET) {
-  // Surface this loudly at boot rather than at first request.
   throw new Error('JWT_SECRET is not set — refusing to start without it.')
+}
+if (SECRET.length < MIN_SECRET_LENGTH) {
+  throw new Error(
+    `JWT_SECRET is too short (${SECRET.length} chars; need >= ${MIN_SECRET_LENGTH}). ` +
+    `Generate one with: openssl rand -base64 48`
+  )
 }
 
 export type Claims = { uid: number; name: string }
