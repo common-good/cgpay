@@ -89,9 +89,37 @@ Exits 0 if the hash matches, 1 otherwise.
 |---|---|
 | `npm run dev` | Vite dev server. |
 | `npm run check` | TypeScript + Svelte check. |
-| `npm run build` | Production build. |
+| `npm run build` | Production build (adapter-node, self-contained Node server in `build/`). |
 | `npm run preview` | Run the production build locally. |
 | `npm run verify-phpass` | One-off Drupal phpass verifier (see above). |
+
+## Deploying
+
+The build uses `@sveltejs/adapter-node`, which produces a standalone Node server that
+runs anywhere with `node build`. Two reasonable hosting paths:
+
+### A. Co-locate on the existing demo VPS (recommended for staging)
+
+```sh
+npm run build
+# Copy the build/ directory + node_modules + package.json to the VPS.
+# On the VPS, with PORT and the required env vars set:
+PORT=3000 node build
+# Then put a reverse proxy (Nginx / Caddy) in front, e.g. app.demo.commongood.earth → :3000.
+```
+
+### B. Any Node host (Render, Fly, Railway, Vercel-with-node-build, etc.)
+
+Just `npm run build`; entry point is `build/index.js`. Set the same env vars you'd use
+locally (DB_* + JWT_SECRET).
+
+### Endpoints currently exposed
+
+| Method | Path | What | Status |
+|---|---|---|---|
+| `POST` | `/api/login` | Username + password → JWT | Phase 1 — production-ready |
+| `GET`  | `/api/me/balance` | Balance for JWT subject | Phase 1 — production-ready |
+| `GET`  | `/api/me/info` | Balance + recent transactions + pending invoices in one call | Phase 2 — queries match documented schema, awaiting verification against real data |
 
 ## Security notes
 
