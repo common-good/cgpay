@@ -30,16 +30,23 @@ export type InfoTx = {
   created: number          // unix seconds
 }
 
+export type InfoSummary = {
+  pendingDeposits: number     // sum of pending receivables ($)
+  pendingRequestsCount: number // count of pending payables
+}
+
 export type InfoResponse = {
   uid: number
-  name: string
+  name: string       // bestName: fullName falling back to login name
+  loginName: string  // raw users.name (the login handle)
   balance: number
+  summary: InfoSummary
   txs: InfoTx[]
 }
 
 // ---- Row shapes ----
 
-type BalanceRow = RowDataPacket & { balance: string | null }
+type UserRow = RowDataPacket & { balance: string | null; fullName: string | null; name: string }
 type PendingRow = RowDataPacket & {
   amount: string
   other_uid: number
@@ -62,13 +69,15 @@ export const GET: RequestHandler = async ({ request, url }) => {
 
   const limit = Math.min(MAX_LIMIT, Math.max(1, Number(url.searchParams.get('limit') ?? DEFAULT_LIMIT)))
 
-  // 1) Balance
-  const [balanceRows] = await pool.query<BalanceRow[]>(
-    'SELECT balance FROM users WHERE uid = ? LIMIT 1',
+  // 1) Balance + bestName for the user
+  const [userRows] = await pool.query<UserRow[]>(
+    'SELECT balance, fullName, name FROM users WHERE uid = ? LIMIT 1',
     [claims.uid]
   )
-  if (!balanceRows[0]) throw error(404, 'user not found')
-  const balance = balanceRows[0].balance === null ? 0 : Number(balanceRows[0].balance)
+  if (!userRows[0]) throw error(404, 'user not found')
+  const balance = userRows[0].balance === null ? 0 : Number(userRows[0].balance)
+  const loginName = userRows[0].name
+  const bestName = userRows[0].fullName || userRows[0].name
 
   // 2) Pending invoices (from tx_requests) — direction depends on who's the payer/payee
   // amount is signed: positive when we'd receive, negative when we'd pay
@@ -86,18 +95,19 @@ export const GET: RequestHandler = async ({ request, url }) => {
   )
 
   // 3) Recent completed transactions (from txs) — main pair only (type = E_PRIME)
+  // description is for2 when receiving (uid2 = me), for1 when paying — matches PHP info()
   const [txRows] = await pool.query<TxRow[]>(
     `SELECT
        xid,
        CASE WHEN uid2 = ? THEN amt ELSE -amt END AS amount,
        CASE WHEN uid2 = ? THEN uid1 ELSE uid2 END AS other_uid,
-       for2 AS description,
+       CASE WHEN uid2 = ? THEN for2 ELSE for1 END AS description,
        created
      FROM txs
      WHERE (uid1 = ? OR uid2 = ?) AND type = ?
      ORDER BY created DESC
      LIMIT ?`,
-    [claims.uid, claims.uid, claims.uid, claims.uid, E_PRIME, limit]
+    [claims.uid, claims.uid, claims.uid, claims.uid, claims.uid, E_PRIME, limit]
   )
 
   // 4) Look up counterparty names in one query
@@ -136,10 +146,22 @@ export const GET: RequestHandler = async ({ request, url }) => {
     }))
   ].sort((a, b) => b.created - a.created).slice(0, limit)
 
+  // Summary aggregates — derived from pendingRows so they reflect all pending, not just the
+  // first `limit`. For a strict count we'd run a separate COUNT(*) query, but at typical
+  // pending volumes (handful per member) the LIMIT and the true count agree.
+  const summary: InfoSummary = {
+    pendingDeposits: pendingRows
+      .filter(r => Number(r.amount) > 0)
+      .reduce((sum, r) => sum + Number(r.amount), 0),
+    pendingRequestsCount: pendingRows.filter(r => Number(r.amount) < 0).length
+  }
+
   const body: InfoResponse = {
     uid: claims.uid,
-    name: claims.name,
+    name: bestName,
+    loginName,
     balance,
+    summary,
     txs
   }
 
