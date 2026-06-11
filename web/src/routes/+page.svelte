@@ -1,13 +1,16 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import { goto } from '$app/navigation'
+  import Brand from '$lib/components/Brand.svelte'
   import Icon from '$lib/components/Icon.svelte'
   import type { InfoResponse, InfoTx } from './api/me/info/+server'
 
   let loading = $state(true)
   let error = $state<string | null>(null)
   let info = $state<InfoResponse | null>(null)
-  let showSoon = $state(false)
+
+  type ModalKind = 'pay' | 'receive' | 'transfer' | 'soon' | null
+  let modal = $state<ModalKind>(null)
   let soonAction = $state('')
 
   onMount(async () => {
@@ -17,7 +20,7 @@
       return
     }
     try {
-      const res = await fetch('/api/me/info?limit=8', {
+      const res = await fetch('/api/me/info?limit=20', {
         headers: { authorization: `Bearer ${token}` }
       })
       if (res.status === 401) {
@@ -48,39 +51,50 @@
   }
 
   function fmtDate(unixSec: number) {
-    const d = new Date(unixSec * 1000)
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    return new Date(unixSec * 1000).toLocaleDateString('en-US', {
+      month: 'short', day: 'numeric', year: 'numeric'
+    })
   }
 
-  function txIcon(tx: InfoTx): string {
-    if (tx.pending) return 'clock'
-    return tx.amount >= 0 ? 'download' : 'upload'
+  function payPendingItems(i: InfoResponse): InfoTx[] {
+    return i.txs.filter(t => t.pending && t.amount < 0)
+  }
+  function receivePendingItems(i: InfoResponse): InfoTx[] {
+    return i.txs.filter(t => t.pending && t.amount > 0)
   }
 
-  function txDescription(tx: InfoTx): string {
-    const verb = tx.amount >= 0 ? 'Received from' : 'Paid to'
-    const detail = tx.description ? ` — ${tx.description}` : ''
-    return `${verb} ${tx.counterparty}${detail}`
-  }
-
-  function comingSoon(action: string) {
+  function openPayPending() { modal = 'pay' }
+  function openReceivePending() { modal = 'receive' }
+  function openSoon(action: string) {
     soonAction = action
-    showSoon = true
+    modal = 'soon'
+  }
+  function closeModal() { modal = null }
+
+  function onKeydown(e: KeyboardEvent) {
+    if (e.key === 'Escape' && modal) closeModal()
   }
 
-  function onModalKeydown(e: KeyboardEvent) {
-    if (e.key === 'Escape') showSoon = false
+  function transferLabel(i: InfoResponse): string {
+    const { pendingTransferIn: inAmt, pendingTransferOut: outAmt } = i.summary
+    if (inAmt === 0 && outAmt === 0) return ''
+    if (inAmt > 0 && outAmt === 0) return `Pending: ${fmtMoney(inAmt)} in`
+    if (outAmt > 0 && inAmt === 0) return `Pending: ${fmtMoney(outAmt)} out`
+    return `Pending: ${fmtMoney(inAmt)} in / ${fmtMoney(outAmt)} out`
   }
 </script>
 
-<svelte:window onkeydown={(e) => { if (showSoon) onModalKeydown(e) }} />
+<svelte:window onkeydown={onKeydown} />
 
 <div class="page">
-  <nav>
-    <div class="brand">
-      <span class="brand-mark" aria-hidden="true">G</span>
-      <span class="brand-name">Common Good</span>
-    </div>
+  <nav class="topnav">
+    <Brand size={32} />
+    <ul class="nav-links">
+      <li><a class="active" href="/">Dashboard</a></li>
+      <li><button type="button" class="nav-disabled" title="Coming soon">History</button></li>
+      <li><button type="button" class="nav-disabled" title="Coming soon">Community</button></li>
+      <li><button type="button" class="nav-disabled" title="Coming soon">Settings</button></li>
+    </ul>
     {#if info}
       <div class="account">
         <span class="hi">Hi, {info.name}</span>
@@ -90,9 +104,7 @@
   </nav>
 
   {#if loading}
-    <main class="centered">
-      <p class="state">Loading…</p>
-    </main>
+    <main class="centered"><p class="state">Loading…</p></main>
   {:else if error}
     <main class="centered">
       <div class="error-card" role="alert">
@@ -101,115 +113,137 @@
       </div>
     </main>
   {:else if info}
-    <div class="hero">
-      <div class="hero-inner">
-        <h1>Welcome back, {info.name}.</h1>
-        <p>Here's your account at a glance.</p>
-      </div>
-    </div>
-
-    <div class="container">
-      <section class="summary">
-        <article class="card summary-card">
-          <div class="icon-wrap tone-green"><Icon name="bank" size={20} /></div>
-          <div class="card-body">
-            <span class="label">Available Balance</span>
-            <span class="value">{fmtMoney(info.balance)}</span>
-          </div>
-        </article>
-
-        <article class="card summary-card">
-          <div class="icon-wrap tone-blue"><Icon name="clock" size={20} /></div>
-          <div class="card-body">
-            <span class="label">Pending Deposits</span>
-            <span class="value">{fmtMoney(info.summary.pendingDeposits)}</span>
-          </div>
-        </article>
-
-        <article class="card summary-card">
-          <div class="icon-wrap tone-amber"><Icon name="clipboard" size={20} /></div>
-          <div class="card-body">
-            <span class="label">Pending Requests</span>
-            <span class="value">{info.summary.pendingRequestsCount}</span>
-          </div>
-        </article>
+    <main class="container">
+      <section class="balance card">
+        <span class="balance-label">Available Balance</span>
+        <span class="balance-amount">{fmtMoney(info.balance)}</span>
       </section>
 
-      <section class="actions card">
-        <h2>Quick Actions</h2>
-        <ul class="primary-actions">
-          <li>
-            <button type="button" onclick={() => comingSoon('Pay')}>
+      <section class="actions">
+        <article class="card action">
+          <button type="button" class="action-btn" onclick={() => openSoon('Pay')}>
+            <div class="action-head">
               <div class="icon-wrap tone-green"><Icon name="upload" size={20} /></div>
-              <div>
-                <span class="action-title">Pay</span>
-                <span class="action-desc">Send funds to another member.</span>
-              </div>
-              <span class="soon-badge">Coming soon</span>
+              <h2>Pay</h2>
+            </div>
+            <p class="action-desc">Send funds to another member.</p>
+          </button>
+          {#if info.summary.pendingPay > 0}
+            <button type="button" class="pending-link" onclick={openPayPending}>
+              Pending: {fmtMoney(info.summary.pendingPay)}
             </button>
-          </li>
-          <li>
-            <button type="button" onclick={() => comingSoon('Receive')}>
-              <div class="icon-wrap tone-green"><Icon name="download" size={20} /></div>
-              <div>
-                <span class="action-title">Receive</span>
-                <span class="action-desc">Request funds from another member.</span>
-              </div>
-              <span class="soon-badge">Coming soon</span>
-            </button>
-          </li>
-          <li>
-            <button type="button" onclick={() => comingSoon('Transfer')}>
-              <div class="icon-wrap tone-green"><Icon name="bank" size={20} /></div>
-              <div>
-                <span class="action-title">Transfer</span>
-                <span class="action-desc">Move funds in or out of your account.</span>
-              </div>
-              <span class="soon-badge">Coming soon</span>
-            </button>
-          </li>
-        </ul>
-      </section>
-
-      <section class="bottom">
-        <div class="recent card">
-          <h2>Recent Activity</h2>
-          {#if info.txs.length === 0}
-            <p class="empty">No transactions yet.</p>
-          {:else}
-            <ul>
-              {#each info.txs as tx (tx.pending ? `p-${tx.created}-${tx.counterparty}` : `t-${tx.xid}`)}
-                <li class:pending={tx.pending}>
-                  <div class="icon-wrap tone-soft"><Icon name={txIcon(tx)} size={18} /></div>
-                  <span class="text">{txDescription(tx)}</span>
-                  {#if tx.pending}
-                    <span class="pill pill-amber">Pending</span>
-                  {/if}
-                  <span class="amount" class:negative={tx.amount < 0}>{fmtMoney(tx.amount)}</span>
-                  <span class="date">{fmtDate(tx.created)}</span>
-                </li>
-              {/each}
-            </ul>
           {/if}
-        </div>
+        </article>
 
-        <aside class="help card">
-          <h3>Need help?</h3>
-          <p>Our team is here for you.</p>
-          <a class="primary-btn" href="mailto:support@commongood.earth">
-            <Icon name="help" size={16} /> Contact Support
-          </a>
-        </aside>
+        <article class="card action">
+          <button type="button" class="action-btn" onclick={() => openSoon('Receive')}>
+            <div class="action-head">
+              <div class="icon-wrap tone-green"><Icon name="download" size={20} /></div>
+              <h2>Receive</h2>
+            </div>
+            <p class="action-desc">Request funds from another member.</p>
+          </button>
+          {#if info.summary.pendingReceive > 0}
+            <button type="button" class="pending-link" onclick={openReceivePending}>
+              Pending: {fmtMoney(info.summary.pendingReceive)}
+            </button>
+          {/if}
+        </article>
+
+        <article class="card action">
+          <button type="button" class="action-btn" onclick={() => openSoon('Transfer')}>
+            <div class="action-head">
+              <div class="icon-wrap tone-green"><Icon name="bank" size={20} /></div>
+              <h2>Transfer</h2>
+            </div>
+            <p class="action-desc">Move funds in or out of your account.</p>
+          </button>
+          {#if transferLabel(info)}
+            <span class="pending-static">{transferLabel(info)}</span>
+          {/if}
+        </article>
       </section>
-    </div>
+
+      <section class="recent card">
+        <h2>Recent Activity</h2>
+        {#if info.txs.filter(t => !t.pending).length === 0}
+          <p class="empty">No transactions yet.</p>
+        {:else}
+          <ul>
+            {#each info.txs.filter(t => !t.pending) as tx (tx.xid)}
+              <li>
+                <div class="icon-wrap tone-soft">
+                  <Icon name={tx.amount >= 0 ? 'download' : 'upload'} size={18} />
+                </div>
+                <span class="text">
+                  {tx.amount >= 0 ? 'Received from' : 'Paid to'} {tx.counterparty}{tx.description ? ` — ${tx.description}` : ''}
+                </span>
+                <span class="amount" class:negative={tx.amount < 0}>{fmtMoney(tx.amount)}</span>
+                <span class="date">{fmtDate(tx.created)}</span>
+              </li>
+            {/each}
+          </ul>
+        {/if}
+      </section>
+    </main>
+
+    <footer class="footer">
+      <ul class="footer-links">
+        <li><button type="button" class="footer-disabled" title="Coming soon">Donate</button></li>
+        <li><button type="button" class="footer-disabled" title="Coming soon">Invite Someone</button></li>
+        <li><a href="https://commongood.earth/about-us" target="_blank" rel="noopener">About Us</a></li>
+        <li><button type="button" class="footer-disabled" title="Coming soon">The Agreement</button></li>
+        <li><a href="https://commongood.earth/about-us/privacy-and-security" target="_blank" rel="noopener">Security</a></li>
+        <li><a href="mailto:support@commongood.earth">Help</a></li>
+      </ul>
+      <p class="copyright">copyright &copy; {new Date().getFullYear()} Common Good&reg;, a nonprofit organization</p>
+    </footer>
   {/if}
 
-  {#if showSoon}
-    <button class="modal-backdrop" type="button" onclick={() => (showSoon = false)} aria-label="Close dialog"></button>
-    <div class="modal card" role="dialog" aria-labelledby="soon-title" aria-modal="true" tabindex="-1">
-      <h3 id="soon-title">{soonAction} — coming soon</h3>
-      <p>This action will go live in the next phase of the Common Good member rebuild.</p>
-      <button class="primary-btn" onclick={() => (showSoon = false)}>Got it</button>
+  {#if modal}
+    <button class="modal-backdrop" type="button" onclick={closeModal} aria-label="Close dialog"></button>
+    <div class="modal card" role="dialog" aria-labelledby="modal-title" aria-modal="true" tabindex="-1">
+      {#if modal === 'soon'}
+        <h3 id="modal-title">{soonAction} — coming soon</h3>
+        <p>This action will go live in the next phase of the Common Good member rebuild.</p>
+        <button class="primary-btn" onclick={closeModal}>Got it</button>
+      {:else if modal === 'pay' && info}
+        <h3 id="modal-title">Pending payments</h3>
+        <p class="modal-sub">Invoices waiting on you.</p>
+        <ul class="modal-list">
+          {#each payPendingItems(info) as tx}
+            <li>
+              <div class="modal-row">
+                <span class="modal-cp">{tx.counterparty}</span>
+                <span class="modal-amt">{fmtMoney(Math.abs(tx.amount))}</span>
+              </div>
+              {#if tx.description}
+                <span class="modal-desc">{tx.description}</span>
+              {/if}
+              <span class="modal-date">{fmtDate(tx.created)}</span>
+            </li>
+          {/each}
+        </ul>
+        <button class="primary-btn" onclick={closeModal}>Close</button>
+      {:else if modal === 'receive' && info}
+        <h3 id="modal-title">Pending receivables</h3>
+        <p class="modal-sub">Invoices you're waiting on.</p>
+        <ul class="modal-list">
+          {#each receivePendingItems(info) as tx}
+            <li>
+              <div class="modal-row">
+                <span class="modal-cp">{tx.counterparty}</span>
+                <span class="modal-amt receive">{fmtMoney(tx.amount)}</span>
+              </div>
+              {#if tx.description}
+                <span class="modal-desc">{tx.description}</span>
+              {/if}
+              <span class="modal-date">{fmtDate(tx.created)}</span>
+            </li>
+          {/each}
+        </ul>
+        <button class="primary-btn" onclick={closeModal}>Close</button>
+      {/if}
     </div>
   {/if}
 </div>
@@ -217,29 +251,43 @@
 <style>
   .page { min-height: 100vh; display: flex; flex-direction: column; }
 
-  nav {
+  .topnav {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 1rem 1.75rem;
+    gap: 2rem;
+    padding: 0.85rem 1.75rem;
     background: var(--cg-surface);
     border-bottom: 1px solid var(--cg-border);
   }
-  .brand { display: flex; align-items: center; gap: 0.6rem; }
-  .brand-mark {
-    display: grid; place-items: center;
-    width: 2rem; height: 2rem;
-    background: var(--cg-green); color: white;
-    border-radius: 50%; font-weight: 700; font-size: 1rem; letter-spacing: -0.02em;
+  .nav-links {
+    list-style: none; padding: 0; margin: 0;
+    display: flex; gap: 1.5rem; flex: 1;
   }
-  .brand-name {
-    font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
-    font-size: 0.85rem; color: var(--cg-text-muted);
+  .nav-links a {
+    color: var(--cg-text-muted);
+    font-size: 0.92rem;
+    font-weight: 500;
+    padding: 0.4rem 0.1rem;
+    border-bottom: 2px solid transparent;
   }
+  .nav-links a:hover { color: var(--cg-text); text-decoration: none; }
+  .nav-links a.active { color: var(--cg-text); border-bottom-color: var(--cg-green); }
+  .nav-disabled {
+    background: transparent;
+    border: none;
+    padding: 0.4rem 0.1rem;
+    color: var(--cg-text-muted);
+    font-size: 0.92rem;
+    font-weight: 500;
+    opacity: 0.55;
+    cursor: not-allowed;
+    font-family: inherit;
+  }
+
   .account { display: flex; align-items: center; gap: 1rem; }
   .hi { color: var(--cg-text); font-size: 0.95rem; }
   .ghost {
-    padding: 0.5rem 0.9rem;
+    padding: 0.45rem 0.85rem;
     background: transparent; color: var(--cg-text);
     border: 1px solid var(--cg-border); border-radius: var(--cg-radius-sm);
     font-size: 0.9rem; cursor: pointer;
@@ -259,18 +307,12 @@
   .error-card strong { color: var(--cg-error); }
   .error-card span { color: var(--cg-text-muted); font-size: 0.9rem; }
 
-  .hero {
-    background:
-      linear-gradient(to right, rgba(245,247,244,1) 0%, rgba(245,247,244,0.6) 60%, rgba(245,247,244,0) 100%),
-      linear-gradient(180deg, #eaf1ea 0%, #f5f7f4 100%);
-    padding: 2.5rem 0 3.5rem;
-    border-bottom: 1px solid var(--cg-border);
+  .container {
+    flex: 1;
+    max-width: 1080px; width: 100%; margin: 0 auto;
+    padding: 2rem 1.75rem 3rem;
+    display: grid; gap: 1.5rem;
   }
-  .hero-inner { max-width: 1280px; margin: 0 auto; padding: 0 1.75rem; }
-  .hero h1 { margin: 0 0 0.4rem; font-size: 2rem; font-weight: 600; letter-spacing: -0.01em; }
-  .hero p { margin: 0; color: var(--cg-text-muted); }
-
-  .container { max-width: 1280px; margin: -2rem auto 3rem; padding: 0 1.75rem; display: grid; gap: 1.5rem; }
 
   .card {
     background: var(--cg-surface);
@@ -279,49 +321,64 @@
     box-shadow: var(--cg-shadow);
   }
 
-  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
-  .summary-card { display: flex; gap: 1rem; padding: 1.25rem; align-items: flex-start; }
+  .balance {
+    padding: 1.75rem 2rem;
+    display: flex; flex-direction: column; gap: 0.3rem;
+    align-items: flex-start;
+  }
+  .balance-label {
+    font-size: 0.78rem; color: var(--cg-text-muted);
+    text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600;
+  }
+  .balance-amount {
+    font-size: 2.4rem; font-weight: 700; letter-spacing: -0.02em;
+    color: var(--cg-text);
+  }
+
+  .actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+  }
+  .action {
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .action-btn {
+    text-align: left; width: 100%;
+    background: var(--cg-surface); color: inherit;
+    border: none; padding: 1.25rem 1.25rem 1rem;
+    cursor: pointer; display: flex; flex-direction: column; gap: 0.4rem;
+    transition: background 0.15s;
+  }
+  .action-btn:hover { background: var(--cg-green-soft); }
+  .action-head { display: flex; align-items: center; gap: 0.75rem; }
+  .action h2 { margin: 0; font-size: 1.15rem; font-weight: 600; }
+  .action-desc { margin: 0; color: var(--cg-text-muted); font-size: 0.88rem; line-height: 1.4; }
+
   .icon-wrap {
-    flex-shrink: 0; width: 2.75rem; height: 2.75rem;
+    flex-shrink: 0; width: 2.4rem; height: 2.4rem;
     border-radius: 50%; display: grid; place-items: center;
   }
   .tone-green { background: rgba(30,122,58,0.1); color: var(--cg-green); }
-  .tone-blue  { background: rgba(45,108,189,0.1); color: #2d6cbd; }
-  .tone-amber { background: rgba(214,143,30,0.12); color: #b96e0c; }
   .tone-soft  { background: var(--cg-bg); color: var(--cg-text-muted); }
 
-  .card-body { display: grid; gap: 0.25rem; }
-  .label { font-size: 0.85rem; color: var(--cg-text-muted); font-weight: 500; }
-  .value { font-size: 1.4rem; font-weight: 700; color: var(--cg-text); letter-spacing: -0.01em; }
-
-  .actions { padding: 1.5rem; }
-  .actions h2 { margin: 0 0 1rem; font-size: 1rem; font-weight: 600; }
-  .primary-actions {
-    list-style: none; padding: 0; margin: 0;
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0.75rem;
+  .pending-link, .pending-static {
+    border-top: 1px solid var(--cg-border);
+    padding: 0.75rem 1.25rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+    text-align: left;
+    background: transparent;
   }
-  .primary-actions button {
-    width: 100%; display: flex; gap: 0.85rem;
-    padding: 1rem;
-    border: 1px solid var(--cg-border); border-radius: var(--cg-radius-sm);
-    background: var(--cg-surface); color: inherit; text-align: left;
-    cursor: pointer; transition: border-color 0.15s, background 0.15s;
-    align-items: flex-start; position: relative;
+  .pending-link {
+    color: var(--cg-green);
+    border-left: none; border-right: none; border-bottom: none;
+    cursor: pointer;
+    transition: background 0.15s;
   }
-  .primary-actions button:hover { border-color: var(--cg-green); background: var(--cg-green-soft); }
-  .action-title { display: block; font-weight: 600; font-size: 0.95rem; color: var(--cg-text); margin-bottom: 0.15rem; }
-  .action-desc { display: block; font-size: 0.82rem; color: var(--cg-text-muted); line-height: 1.35; }
-  .soon-badge {
-    position: absolute; top: 0.6rem; right: 0.6rem;
-    font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;
-    color: var(--cg-text-muted);
-    background: var(--cg-bg);
-    padding: 0.2rem 0.5rem;
-    border-radius: 999px;
-  }
-
-  .bottom { display: grid; grid-template-columns: 1fr 320px; gap: 1.5rem; }
-  @media (max-width: 900px) { .bottom { grid-template-columns: 1fr; } }
+  .pending-link:hover { background: var(--cg-green-soft); text-decoration: underline; }
+  .pending-static { color: var(--cg-text-muted); }
 
   .recent { padding: 1.5rem; }
   .recent h2 { margin: 0 0 1rem; font-size: 1rem; font-weight: 600; }
@@ -329,9 +386,9 @@
   .recent ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.5rem; }
   .recent li {
     display: grid;
-    grid-template-columns: auto 1fr auto auto auto;
+    grid-template-columns: auto 1fr auto auto;
     gap: 0.85rem; align-items: center;
-    padding: 0.75rem 0.85rem;
+    padding: 0.7rem 0.85rem;
     border-radius: var(--cg-radius-sm);
   }
   .recent li:hover { background: var(--cg-bg); }
@@ -339,24 +396,38 @@
   .date { font-size: 0.82rem; color: var(--cg-text-muted); }
   .amount { font-size: 0.9rem; font-weight: 600; color: var(--cg-green); }
   .amount.negative { color: var(--cg-text); }
-  .pill {
-    font-size: 0.72rem; font-weight: 600;
-    padding: 0.2rem 0.6rem; border-radius: 999px;
-  }
-  .pill-amber { background: rgba(214,143,30,0.14); color: #b96e0c; }
 
-  .help { padding: 1.5rem; background: linear-gradient(180deg, #e9efe9 0%, #f0f4f0 100%); }
-  .help h3 { margin: 0 0 0.4rem; font-size: 1rem; font-weight: 600; }
-  .help p { margin: 0 0 1rem; color: var(--cg-text-muted); font-size: 0.9rem; }
-  .primary-btn {
-    width: 100%;
-    display: inline-flex; align-items: center; gap: 0.4rem; justify-content: center;
-    padding: 0.65rem 1rem;
-    background: var(--cg-surface); color: var(--cg-text);
-    border: 1px solid var(--cg-border); border-radius: var(--cg-radius-sm);
-    cursor: pointer; font-weight: 500;
+  .footer {
+    border-top: 1px solid var(--cg-border);
+    background: var(--cg-surface);
+    padding: 1.5rem 1.75rem;
+    text-align: center;
   }
-  .primary-btn:hover { border-color: var(--cg-green); }
+  .footer-links {
+    list-style: none; padding: 0; margin: 0 0 0.75rem;
+    display: flex; flex-wrap: wrap; justify-content: center;
+    gap: 0.4rem 0.85rem;
+    font-size: 0.88rem;
+  }
+  .footer-links a, .footer-disabled { color: var(--cg-text-muted); }
+  .footer-links a:hover { color: var(--cg-green); }
+  .footer-disabled {
+    background: transparent;
+    border: none;
+    padding: 0;
+    font-size: inherit;
+    font-family: inherit;
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+  .footer-links li:not(:last-child)::after {
+    content: '|';
+    color: var(--cg-border);
+    margin-left: 0.85rem;
+  }
+  .copyright {
+    margin: 0; font-size: 0.8rem; color: var(--cg-text-muted);
+  }
 
   .modal-backdrop {
     position: fixed; inset: 0;
@@ -366,11 +437,36 @@
   }
   .modal {
     position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    max-width: 420px; width: calc(100% - 2rem);
+    max-width: 460px; width: calc(100% - 2rem);
     padding: 1.5rem;
     background: var(--cg-surface);
     z-index: 101;
+    max-height: 80vh;
+    overflow-y: auto;
   }
-  .modal h3 { margin: 0 0 0.5rem; font-size: 1.1rem; font-weight: 600; }
-  .modal p { margin: 0 0 1.25rem; color: var(--cg-text-muted); font-size: 0.9rem; }
+  .modal h3 { margin: 0 0 0.4rem; font-size: 1.15rem; font-weight: 600; }
+  .modal p { margin: 0 0 1rem; color: var(--cg-text-muted); font-size: 0.9rem; }
+  .modal-sub { margin-bottom: 0.75rem; }
+  .modal-list { list-style: none; padding: 0; margin: 0 0 1.25rem; display: grid; gap: 0.6rem; }
+  .modal-list li {
+    padding: 0.7rem 0.85rem;
+    background: var(--cg-bg);
+    border-radius: var(--cg-radius-sm);
+    display: grid; gap: 0.2rem;
+  }
+  .modal-row { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
+  .modal-cp { font-weight: 600; font-size: 0.92rem; color: var(--cg-text); }
+  .modal-amt { font-weight: 700; font-size: 0.95rem; color: var(--cg-text); }
+  .modal-amt.receive { color: var(--cg-green); }
+  .modal-desc { font-size: 0.85rem; color: var(--cg-text-muted); }
+  .modal-date { font-size: 0.78rem; color: var(--cg-text-muted); }
+  .primary-btn {
+    width: 100%;
+    display: inline-flex; align-items: center; gap: 0.4rem; justify-content: center;
+    padding: 0.65rem 1rem;
+    background: var(--cg-surface); color: var(--cg-text);
+    border: 1px solid var(--cg-border); border-radius: var(--cg-radius-sm);
+    cursor: pointer; font-weight: 500;
+  }
+  .primary-btn:hover { border-color: var(--cg-green); }
 </style>

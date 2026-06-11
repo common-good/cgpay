@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation'
+  import Brand from '$lib/components/Brand.svelte'
 
   let name = $state('')
   let password = $state('')
@@ -34,9 +35,8 @@
 
 <main>
   <div class="card">
-    <div class="brand">
-      <span class="brand-mark" aria-hidden="true">G</span>
-      <span class="brand-name">Common Good</span>
+    <div class="brand-wrap">
+      <Brand size={36} />
     </div>
 
     <h1>Sign in</h1>
@@ -94,31 +94,7 @@
     padding: 2.5rem;
   }
 
-  .brand {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    margin-bottom: 2rem;
-  }
-  .brand-mark {
-    display: grid;
-    place-items: center;
-    width: 2rem;
-    height: 2rem;
-    background: var(--cg-green);
-    color: white;
-    border-radius: 50%;
-    font-weight: 700;
-    font-size: 1rem;
-    letter-spacing: -0.02em;
-  }
-  .brand-name {
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    font-size: 0.85rem;
-    color: var(--cg-text-muted);
-  }
+  .brand-wrap { margin-bottom: 2rem; }
 
   h1 {
     margin: 0 0 0.5rem;

@@ -31,8 +31,10 @@ export type InfoTx = {
 }
 
 export type InfoSummary = {
-  pendingDeposits: number     // sum of pending receivables ($)
-  pendingRequestsCount: number // count of pending payables
+  pendingPay: number          // $ I owe (sum of pending tx_requests where I'm payer)
+  pendingReceive: number      // $ owed to me (sum of pending tx_requests where I'm payee)
+  pendingTransferIn: number   // $ coming to my bank (sum of txs2 where payee=me, completed=0)
+  pendingTransferOut: number  // $ leaving my bank (sum of txs2 where payer=me, completed=0)
 }
 
 export type InfoResponse = {
@@ -61,6 +63,7 @@ type TxRow = RowDataPacket & {
   created: number
 }
 type NameRow = RowDataPacket & { uid: number; fullName: string | null; name: string }
+type TransferSumRow = RowDataPacket & { transfer_in: string | null; transfer_out: string | null }
 
 export const GET: RequestHandler = async ({ request, url }) => {
   const token = bearerFromRequest(request)
@@ -146,14 +149,36 @@ export const GET: RequestHandler = async ({ request, url }) => {
     }))
   ].sort((a, b) => b.created - a.created).slice(0, limit)
 
-  // Summary aggregates — derived from pendingRows so they reflect all pending, not just the
-  // first `limit`. For a strict count we'd run a separate COUNT(*) query, but at typical
-  // pending volumes (handful per member) the LIMIT and the true count agree.
+  // Bank-side pending (from txs2) — per William's note: the bank ledger uses a `completed`
+  // flag, payer/payee are the two sides. Failures (table missing, etc) downgrade to zeros
+  // rather than 500-ing the whole dashboard.
+  let pendingTransferIn = 0
+  let pendingTransferOut = 0
+  try {
+    const [transferRows] = await pool.query<TransferSumRow[]>(
+      `SELECT
+         COALESCE(SUM(CASE WHEN payee = ? THEN amount ELSE 0 END), 0) AS transfer_in,
+         COALESCE(SUM(CASE WHEN payer = ? THEN amount ELSE 0 END), 0) AS transfer_out
+       FROM txs2
+       WHERE (payee = ? OR payer = ?) AND completed = 0`,
+      [claims.uid, claims.uid, claims.uid, claims.uid]
+    )
+    pendingTransferIn = Number(transferRows[0]?.transfer_in ?? 0)
+    pendingTransferOut = Number(transferRows[0]?.transfer_out ?? 0)
+  } catch {
+    // txs2 absent or schema-different — leave at 0; UI will simply hide Transfer pending.
+  }
+
+  // pendingRows are signed: positive = receivable, negative = payable.
   const summary: InfoSummary = {
-    pendingDeposits: pendingRows
+    pendingPay: pendingRows
+      .filter(r => Number(r.amount) < 0)
+      .reduce((sum, r) => sum + Math.abs(Number(r.amount)), 0),
+    pendingReceive: pendingRows
       .filter(r => Number(r.amount) > 0)
       .reduce((sum, r) => sum + Number(r.amount), 0),
-    pendingRequestsCount: pendingRows.filter(r => Number(r.amount) < 0).length
+    pendingTransferIn,
+    pendingTransferOut
   }
 
   const body: InfoResponse = {
