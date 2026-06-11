@@ -123,7 +123,7 @@
         <article class="card action">
           <button type="button" class="action-btn" onclick={() => openSoon('Pay')}>
             <div class="action-head">
-              <div class="icon-wrap tone-green"><Icon name="upload" size={20} /></div>
+              <div class="icon-wrap tone-rose"><Icon name="upload" size={20} /></div>
               <h2>Pay</h2>
             </div>
             <p class="action-desc">Send funds to another member.</p>
@@ -153,7 +153,7 @@
         <article class="card action">
           <button type="button" class="action-btn" onclick={() => openSoon('Transfer')}>
             <div class="action-head">
-              <div class="icon-wrap tone-green"><Icon name="bank" size={20} /></div>
+              <div class="icon-wrap tone-blue"><Icon name="bank" size={20} /></div>
               <h2>Transfer</h2>
             </div>
             <p class="action-desc">Move funds in or out of your account.</p>
@@ -172,7 +172,7 @@
           <ul>
             {#each info.txs.filter(t => !t.pending) as tx (tx.xid)}
               <li>
-                <div class="icon-wrap tone-soft">
+                <div class="icon-wrap tx-icon {tx.amount >= 0 ? 'tone-green' : 'tone-rose'}">
                   <Icon name={tx.amount >= 0 ? 'download' : 'upload'} size={18} />
                 </div>
                 <span class="text">
@@ -337,8 +337,15 @@
 
   .actions {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: 1rem;
+  }
+  @media (max-width: 560px) {
+    .actions { gap: 0.5rem; }
+    .action-btn { padding: 0.85rem 0.75rem 0.6rem !important; }
+    .action h2 { font-size: 1rem !important; }
+    .action-desc { font-size: 0.78rem !important; }
+    .pending-link, .pending-static { padding: 0.55rem 0.75rem !important; font-size: 0.78rem !important; }
   }
   .action {
     display: flex; flex-direction: column;
@@ -361,7 +368,8 @@
     border-radius: 50%; display: grid; place-items: center;
   }
   .tone-green { background: rgba(30,122,58,0.1); color: var(--cg-green); }
-  .tone-soft  { background: var(--cg-bg); color: var(--cg-text-muted); }
+  .tone-rose  { background: rgba(185,76,102,0.12); color: #b94c66; }
+  .tone-blue  { background: rgba(45,108,189,0.10); color: #2d6cbd; }
 
   .pending-link, .pending-static {
     border-top: 1px solid var(--cg-border);
