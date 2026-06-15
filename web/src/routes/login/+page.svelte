@@ -22,8 +22,9 @@
         error = body.message ?? `Sign in failed (${res.status})`
         return
       }
-      const { token } = await res.json()
+      const { token, menu } = await res.json()
       localStorage.setItem('cg_token', token)
+      if (Array.isArray(menu)) localStorage.setItem('cg_menu', JSON.stringify(menu))
       await goto('/')
     } catch {
       error = 'Network error — please try again.'

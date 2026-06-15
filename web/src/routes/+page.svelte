@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import { goto } from '$app/navigation'
+  import { env } from '$env/dynamic/public'
   import Brand from '$lib/components/Brand.svelte'
   import Icon from '$lib/components/Icon.svelte'
   import type { InfoResponse, InfoTx } from './api/me/info/+server'
@@ -8,10 +9,31 @@
   let loading = $state(true)
   let error = $state<string | null>(null)
   let info = $state<InfoResponse | null>(null)
+  let menu = $state<string[]>(['Dashboard', 'History', 'Community', 'Settings'])
 
   type ModalKind = 'pay' | 'receive' | 'transfer' | 'soon' | null
   let modal = $state<ModalKind>(null)
   let soonAction = $state('')
+
+  // Where the PHP member site lives. Menu items link to /<lowercased category> on this host.
+  // Empty string = no PHP target configured; we render the menu as disabled.
+  const phpBase = env.PUBLIC_PHP_BASE_URL ?? ''
+
+  // PHP top-level routes don't always match the menu label verbatim — these are
+  // the ones that diverge (Company → /co, Admin → /sadmin per cg-menu.inc).
+  const PHP_PATH: Record<string, string> = {
+    Dashboard: '/dashboard',
+    History: '/history',
+    Community: '/community',
+    Settings: '/settings',
+    Company: '/co',
+    Admin: '/sadmin'
+  }
+
+  function menuHref(label: string): string {
+    if (!phpBase) return ''
+    return phpBase.replace(/\/$/, '') + (PHP_PATH[label] ?? `/${label.toLowerCase()}`)
+  }
 
   onMount(async () => {
     const token = localStorage.getItem('cg_token')
@@ -19,12 +41,20 @@
       await goto('/login')
       return
     }
+    const storedMenu = localStorage.getItem('cg_menu')
+    if (storedMenu) {
+      try {
+        const parsed = JSON.parse(storedMenu)
+        if (Array.isArray(parsed) && parsed.every(s => typeof s === 'string')) menu = parsed
+      } catch { /* ignore — fall back to default */ }
+    }
     try {
       const res = await fetch('/api/me/info?limit=20', {
         headers: { authorization: `Bearer ${token}` }
       })
       if (res.status === 401) {
         localStorage.removeItem('cg_token')
+        localStorage.removeItem('cg_menu')
         await goto('/login')
         return
       }
@@ -43,6 +73,7 @@
 
   function signOut() {
     localStorage.removeItem('cg_token')
+    localStorage.removeItem('cg_menu')
     goto('/login')
   }
 
@@ -90,10 +121,15 @@
   <nav class="topnav">
     <Brand size={32} />
     <ul class="nav-links">
-      <li><a class="active" href="/">Dashboard</a></li>
-      <li><button type="button" class="nav-disabled" title="Coming soon">History</button></li>
-      <li><button type="button" class="nav-disabled" title="Coming soon">Community</button></li>
-      <li><button type="button" class="nav-disabled" title="Coming soon">Settings</button></li>
+      {#each menu as label}
+        {#if label === 'Dashboard'}
+          <li><a class="active" href="/">Dashboard</a></li>
+        {:else if menuHref(label)}
+          <li><a href={menuHref(label)}>{label}</a></li>
+        {:else}
+          <li><button type="button" class="nav-disabled" title="Member site link not configured">{label}</button></li>
+        {/if}
+      {/each}
     </ul>
     {#if info}
       <div class="account">
