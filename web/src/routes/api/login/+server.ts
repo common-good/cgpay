@@ -37,9 +37,6 @@ async function phpSso(uid: number): Promise<SsoResponse | null> {
     return null
   }
 
-  const body = JSON.stringify({ uid })
-  console.log(`[login] phpSso uid=${uid} typeof=${typeof uid} body=${body}`)
-
   let res: Response
   try {
     res = await fetch(url, {
@@ -48,23 +45,19 @@ async function phpSso(uid: number): Promise<SsoResponse | null> {
         'content-type': 'application/json',
         'x-cg-internal-token': secret
       },
-      body
+      body: JSON.stringify({ uid })
     })
   } catch (e) {
     console.error('[login] PHP SSO network error:', e)
     throw error(502, 'Unable to complete sign-in — please try again.')
   }
 
-  const text = await res.text()
-  console.log(`[login] phpSso response status=${res.status} body=${text.slice(0, 200)}`)
-
   if (!res.ok) {
     console.error(`[login] PHP SSO returned ${res.status}`)
     throw error(502, 'Unable to complete sign-in — please try again.')
   }
 
-  let data: any = null
-  try { data = JSON.parse(text) } catch { /* leave null */ }
+  const data = await res.json().catch(() => null)
   if (!data || typeof data.cookieName !== 'string' || typeof data.ssid !== 'string') {
     console.error('[login] PHP SSO returned unexpected body:', data)
     throw error(502, 'Unable to complete sign-in — please try again.')
