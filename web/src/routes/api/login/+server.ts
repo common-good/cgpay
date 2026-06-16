@@ -93,9 +93,21 @@ export const POST: RequestHandler = async ({ request, getClientAddress, cookies 
   // Hand off to PHP — this also resolves the user's menu categories
   const sso = await phpSso(user.uid)
 
-  // Set the PHP session cookie scoped to the shared parent domain so it reaches
-  // the PHP host as well. Drupal HTTPS sessions use the ssid value.
   if (sso) {
+    // If the user ever signed in directly on the PHP host before, their browser
+    // has a cookie of this name scoped to that subdomain (e.g.
+    // .demo.commongood.earth). Without proactively expiring it, the browser
+    // sends BOTH cookies to the PHP host and Drupal picks one non-deterministically
+    // — usually the wrong one, treating the user as anonymous. Expire it first.
+    try {
+      const phpHost = new URL(env.PHP_SSO_URL ?? '').hostname
+      if (phpHost) {
+        cookies.delete(sso.cookieName, { path: '/', domain: '.' + phpHost })
+      }
+    } catch { /* PHP_SSO_URL missing/malformed — skip */ }
+
+    // Set the PHP session cookie scoped to the shared parent domain so it reaches
+    // the PHP host as well. Drupal HTTPS sessions use the ssid value.
     cookies.set(sso.cookieName, sso.ssid, {
       path: '/',
       domain: env.PHP_COOKIE_DOMAIN || undefined,
