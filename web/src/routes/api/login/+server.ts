@@ -94,27 +94,36 @@ export const POST: RequestHandler = async ({ request, getClientAddress, cookies 
   const sso = await phpSso(user.uid)
 
   if (sso) {
-    // If the user ever signed in directly on the PHP host before, their browser
-    // has a cookie of this name scoped to that subdomain (e.g.
-    // .demo.commongood.earth). Without proactively expiring it, the browser
-    // sends BOTH cookies to the PHP host and Drupal picks one non-deterministically
-    // — usually the wrong one, treating the user as anonymous. Expire it first.
-    try {
-      const phpHost = new URL(env.PHP_SSO_URL ?? '').hostname
-      if (phpHost) {
-        cookies.delete(sso.cookieName, { path: '/', domain: '.' + phpHost })
-      }
-    } catch { /* PHP_SSO_URL missing/malformed — skip */ }
-
-    // Set the PHP session cookie scoped to the shared parent domain so it reaches
-    // the PHP host as well. Drupal HTTPS sessions use the ssid value.
-    cookies.set(sso.cookieName, sso.ssid, {
+    const cookieOpts = {
       path: '/',
-      domain: env.PHP_COOKIE_DOMAIN || undefined,
       httpOnly: true,
       secure: true,
-      sameSite: 'lax'
+      sameSite: 'lax' as const
+    }
+
+    // Primary cookie: scoped to the shared parent domain so it reaches every
+    // subdomain (including the PHP host).
+    cookies.set(sso.cookieName, sso.ssid, {
+      ...cookieOpts,
+      domain: env.PHP_COOKIE_DOMAIN || undefined
     })
+
+    // Secondary cookie: scoped to the PHP host subdomain with the SAME value.
+    // If the user ever signed in directly on that subdomain (e.g. demo) the
+    // browser has a stale cookie scoped to it. Setting one with matching
+    // name+domain+path OVERWRITES that stale cookie. Without this, the browser
+    // sends two cookies of the same name to PHP and Drupal's lookup is
+    // non-deterministic — for affected users, it usually picks the stale one
+    // and treats them as anonymous.
+    try {
+      const phpHost = new URL(env.PHP_SSO_URL ?? '').hostname
+      if (phpHost && phpHost !== env.PHP_COOKIE_DOMAIN?.replace(/^\./, '')) {
+        cookies.set(sso.cookieName, sso.ssid, {
+          ...cookieOpts,
+          domain: '.' + phpHost
+        })
+      }
+    } catch { /* PHP_SSO_URL missing/malformed — skip */ }
   }
 
   const token = signToken({ uid: user.uid, name: user.name })
