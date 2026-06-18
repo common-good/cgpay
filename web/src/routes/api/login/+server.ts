@@ -21,6 +21,8 @@ type SsoResponse = {
   sid: string
   ssid: string
   menu: string[]
+  boxCookieName?: string
+  boxCookieValue?: string
 }
 
 /**
@@ -124,6 +126,18 @@ export const POST: RequestHandler = async ({ request, getClientAddress, cookies 
         })
       }
     } catch { /* PHP_SSO_URL missing/malformed — skip */ }
+
+    // Device tracking cookie (box-<QID>) — cgmembers uses this to recognise the
+    // browser as a registered device for this member. Without it, downstream
+    // PHP features that look the device up in r_boxes won't recognise the
+    // user's machine. Scoped to the same parent domain so it reaches the PHP
+    // host.
+    if (sso.boxCookieName && sso.boxCookieValue) {
+      cookies.set(sso.boxCookieName, sso.boxCookieValue, {
+        ...cookieOpts,
+        domain: env.PHP_COOKIE_DOMAIN || undefined
+      })
+    }
   }
 
   const token = signToken({ uid: user.uid, name: user.name })
