@@ -15,11 +15,15 @@
     --cg-green: #1e7a3a;
     --cg-green-hover: #155a2b;
     --cg-green-soft: rgba(30, 122, 58, 0.08);
+    --cg-navy: #0a2540;            /* matches the commongood.earth header */
+    --cg-navy-soft: rgba(255, 255, 255, 0.1);
     --cg-bg: #f5f7f4;
     --cg-surface: #ffffff;
     --cg-border: #e4e8e4;
     --cg-text: #1a1f1c;
     --cg-text-muted: #5a615e;
+    --cg-on-navy: #ffffff;
+    --cg-on-navy-muted: rgba(255, 255, 255, 0.7);
     --cg-error: #b3261e;
     --cg-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.06);
     --cg-radius: 12px;

@@ -35,6 +35,14 @@
     return phpBase.replace(/\/$/, '') + (PHP_PATH[label] ?? `/${label.toLowerCase()}`)
   }
 
+  // PHP URLs for the primary dashboard actions + footer placeholders. Until the
+  // action flows are rebuilt in SvelteKit, clicking lands the (already-signed-in)
+  // member on the existing PHP page.
+  function phpUrl(path: string): string {
+    if (!phpBase) return ''
+    return phpBase.replace(/\/$/, '') + path
+  }
+
   onMount(async () => {
     const token = localStorage.getItem('cg_token')
     if (!token) {
@@ -157,13 +165,13 @@
 
       <section class="actions">
         <article class="card action">
-          <button type="button" class="action-btn" onclick={() => openSoon('Pay')}>
+          <a class="action-btn" href={phpUrl('/tx/pay') || '#'} aria-disabled={!phpBase || undefined}>
             <div class="action-head">
               <div class="icon-wrap tone-rose"><Icon name="upload" size={20} /></div>
               <h2>Pay</h2>
             </div>
             <p class="action-desc">Send funds to another member.</p>
-          </button>
+          </a>
           {#if info.summary.pendingPay > 0}
             <button type="button" class="pending-link" onclick={openPayPending}>
               Pending: {fmtMoney(info.summary.pendingPay)}
@@ -172,13 +180,13 @@
         </article>
 
         <article class="card action">
-          <button type="button" class="action-btn" onclick={() => openSoon('Receive')}>
+          <a class="action-btn" href={phpUrl('/tx/charge') || '#'} aria-disabled={!phpBase || undefined}>
             <div class="action-head">
               <div class="icon-wrap tone-green"><Icon name="download" size={20} /></div>
               <h2>Receive</h2>
             </div>
             <p class="action-desc">Request funds from another member.</p>
-          </button>
+          </a>
           {#if info.summary.pendingReceive > 0}
             <button type="button" class="pending-link" onclick={openReceivePending}>
               Pending: {fmtMoney(info.summary.pendingReceive)}
@@ -187,13 +195,13 @@
         </article>
 
         <article class="card action">
-          <button type="button" class="action-btn" onclick={() => openSoon('Transfer')}>
+          <a class="action-btn" href={phpUrl('/get') || '#'} aria-disabled={!phpBase || undefined}>
             <div class="action-head">
               <div class="icon-wrap tone-blue"><Icon name="bank" size={20} /></div>
               <h2>Transfer</h2>
             </div>
             <p class="action-desc">Move funds in or out of your account.</p>
-          </button>
+          </a>
           {#if transferLabel(info)}
             <span class="pending-static">{transferLabel(info)}</span>
           {/if}
@@ -225,12 +233,12 @@
 
     <footer class="footer">
       <ul class="footer-links">
-        <li><button type="button" class="footer-disabled" title="Coming soon">Donate</button></li>
-        <li><button type="button" class="footer-disabled" title="Coming soon">Invite Someone</button></li>
+        <li><a href={phpUrl('/community/donate') || '#'}>Donate</a></li>
+        <li><a href={phpUrl('/community/invite') || '#'}>Invite Someone</a></li>
         <li><a href="https://commongood.earth/about-us" target="_blank" rel="noopener">About Us</a></li>
-        <li><button type="button" class="footer-disabled" title="Coming soon">The Agreement</button></li>
+        <li><a href={phpUrl('/community/agreement') || '#'}>The Agreement</a></li>
         <li><a href="https://commongood.earth/about-us/privacy-and-security" target="_blank" rel="noopener">Security</a></li>
-        <li><a href="mailto:support@commongood.earth">Help</a></li>
+        <li><a href={phpUrl('/help') || 'mailto:support@commongood.earth'}>Help</a></li>
       </ul>
       <p class="copyright">copyright &copy; {new Date().getFullYear()} Common Good&reg;, a nonprofit organization</p>
     </footer>
@@ -292,27 +300,28 @@
     align-items: center;
     gap: 2rem;
     padding: 0.85rem 1.75rem;
-    background: var(--cg-surface);
-    border-bottom: 1px solid var(--cg-border);
+    background: var(--cg-navy);
+    color: var(--cg-on-navy);
+    border-bottom: none;
   }
   .nav-links {
     list-style: none; padding: 0; margin: 0;
     display: flex; gap: 1.5rem; flex: 1;
   }
   .nav-links a {
-    color: var(--cg-text-muted);
+    color: var(--cg-on-navy-muted);
     font-size: 0.92rem;
     font-weight: 500;
     padding: 0.4rem 0.1rem;
     border-bottom: 2px solid transparent;
   }
-  .nav-links a:hover { color: var(--cg-text); text-decoration: none; }
-  .nav-links a.active { color: var(--cg-text); border-bottom-color: var(--cg-green); }
+  .nav-links a:hover { color: var(--cg-on-navy); text-decoration: none; }
+  .nav-links a.active { color: var(--cg-on-navy); border-bottom-color: var(--cg-green); }
   .nav-disabled {
     background: transparent;
     border: none;
     padding: 0.4rem 0.1rem;
-    color: var(--cg-text-muted);
+    color: var(--cg-on-navy-muted);
     font-size: 0.92rem;
     font-weight: 500;
     opacity: 0.55;
@@ -321,15 +330,15 @@
   }
 
   .account { display: flex; align-items: center; gap: 1rem; }
-  .hi { color: var(--cg-text); font-size: 0.95rem; }
+  .hi { color: var(--cg-on-navy); font-size: 0.95rem; }
   .ghost {
     padding: 0.45rem 0.85rem;
-    background: transparent; color: var(--cg-text);
-    border: 1px solid var(--cg-border); border-radius: var(--cg-radius-sm);
+    background: transparent; color: var(--cg-on-navy);
+    border: 1px solid var(--cg-navy-soft); border-radius: var(--cg-radius-sm);
     font-size: 0.9rem; cursor: pointer;
     transition: background 0.15s, border-color 0.15s;
   }
-  .ghost:hover { background: var(--cg-green-soft); border-color: var(--cg-green); }
+  .ghost:hover { background: var(--cg-navy-soft); border-color: var(--cg-on-navy-muted); }
 
   .centered { flex: 1; display: grid; place-items: center; padding: 2rem 1.5rem; }
   .state { color: var(--cg-text-muted); }
@@ -390,11 +399,13 @@
   .action-btn {
     text-align: left; width: 100%;
     background: var(--cg-surface); color: inherit;
+    text-decoration: none;
     border: none; padding: 1.25rem 1.25rem 1rem;
     cursor: pointer; display: flex; flex-direction: column; gap: 0.4rem;
     transition: background 0.15s;
   }
-  .action-btn:hover { background: var(--cg-green-soft); }
+  .action-btn:hover { background: var(--cg-green-soft); text-decoration: none; }
+  .action-btn[aria-disabled="true"] { opacity: 0.55; cursor: not-allowed; pointer-events: none; }
   .action-head { display: flex; align-items: center; gap: 0.75rem; }
   .action h2 { margin: 0; font-size: 1.15rem; font-weight: 600; }
   .action-desc { margin: 0; color: var(--cg-text-muted); font-size: 0.88rem; line-height: 1.4; }
@@ -453,17 +464,8 @@
     gap: 0.4rem 0.85rem;
     font-size: 0.88rem;
   }
-  .footer-links a, .footer-disabled { color: var(--cg-text-muted); }
+  .footer-links a { color: var(--cg-text-muted); }
   .footer-links a:hover { color: var(--cg-green); }
-  .footer-disabled {
-    background: transparent;
-    border: none;
-    padding: 0;
-    font-size: inherit;
-    font-family: inherit;
-    opacity: 0.55;
-    cursor: not-allowed;
-  }
   .footer-links li:not(:last-child)::after {
     content: '|';
     color: var(--cg-border);
