@@ -1,9 +1,17 @@
-import st from'#store.js'
+// Break the store.js <-> utils.js circular import by reading the store at call time,
+// not at module-load time. A direct default-import binds `st` while store.js is
+// still mid-load, leaving it undefined for vitest. The proxy defers the lookup until
+// each property access, by which point store.js's default export is fully populated.
+import * as _storeMod from '#store.js'
 import c from '#constants.js'
 import queryString from 'query-string'
 import { navigateTo } from 'svelte-router-spa'
 import u0 from '../utils0.js' // utilities shared with tests
 import QRCode from 'qrcode'
+
+const st = new Proxy({}, {
+  get(_target, prop) { return _storeMod.default?.[prop] }
+})
 
 const dig36 = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 const regionLens = '111111112222222233333333333344444444'

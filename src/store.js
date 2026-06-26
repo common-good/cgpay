@@ -4,10 +4,29 @@
  * We used this example for setv() and get(): https://svelte.dev/repl/ccbc94cb1b4c493a9cf8f117badaeb31?version=3.16.7
  */
 import { writable } from 'svelte/store'
-import u from '#utils.js'
+// Break the store.js <-> utils.js circular import: createStore() runs at module-load
+// and needs u.empty / u.justNot / u.clone immediately, but the default import would
+// bind `u` to an incomplete module if utils.js is still loading. We proxy `u` so it
+// falls back to utils0.js (pure helpers, no cycle) until the full utils.js default
+// export is available; afterwards, property access uses the full `u`.
+import * as _utilsMod from '#utils.js'
+import u0 from '../utils0.js'
 import c from '#constants.js'
 import cache0 from '#cache.js'
 import { getst, save } from '#db.js'
+
+const u = new Proxy(u0, {
+  get(target, prop) {
+    try {
+      const full = _utilsMod.default
+      if (full && prop in full) return full[prop]
+    } catch { /* mocked module may not have default; fall through */ }
+    try {
+      if (prop in _utilsMod) return _utilsMod[prop]
+    } catch { /* same */ }
+    return target[prop]
+  }
+})
 
 export const createStore = () => {
   const lostMsg = `Tell the customer "I'm sorry, that QR Code is marked "LOST or STOLEN".`

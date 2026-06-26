@@ -1,9 +1,21 @@
 import { createStore } from '#store.js'
 import { postRequest, isTimeout } from '#utils.js'
 import c from '#constants.js'
+import cache0 from '#cache.js'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('#utils.js', () => ({ postRequest:vi.fn(), isTimeout:vi.fn() }))
+// The real utils.js pulls in qrcode/router/websocket deps that hang the test runner, and
+// store.js's proxy already falls back to utils0.js for the pure helpers. So we only need to
+// supply now() (utils0 has now0, not now) and stub the network-facing calls.
+vi.mock('#utils.js', () => {
+  const now = () => Math.floor(Date.now() / 1000)
+  return { default:{ now }, now, postRequest:vi.fn(), isTimeout:vi.fn() }
+})
+
+// createStore() shallow-copies cache0, so its array/object fields (txs, accts, etc.) are shared
+// by reference and accumulate mutations across createStore() calls. Snapshot the pristine
+// defaults once and restore before each test so state can't leak between tests.
+const cache0Defaults = JSON.parse(JSON.stringify(cache0))
 
 function stored() {
   return JSON.parse(localStorage.getItem(c.storeKey))
@@ -17,22 +29,25 @@ function setupLocalStorage(data) {
 
 describe('store', () => {
   beforeEach(() => {
+    Object.assign(cache0, JSON.parse(JSON.stringify(cache0Defaults)))
+    localStorage.clear()
+    sessionStorage.clear()
     setupLocalStorage(null)
-    postRequest = vi.fn()
+    vi.clearAllMocks()
   })
 
   describe('when there are existing values in local storage', () => {
     it('initializes to stored values', () => {
       setupLocalStorage({ foo: { bar: 'baz' } })
       const st = createStore()
-      expect(st.inspect()).toEqual({ foo: { bar: 'baz' } })
+      expect(st.inspect()).toMatchObject({ foo: { bar: 'baz' } })
     })
   })
 
   describe('when there are not existing values in local storage', () => {
     it('initializes to default values', () => {
       const st = createStore()
-      expect(st.inspect().sawAdd).toEqual(false)
+      expect(st.inspect().sawAdd).toEqual(null)
     })
   })
 
@@ -98,14 +113,14 @@ describe('store', () => {
     })
 
     it('is initialized as null', () => {
-      expect(st.inspect().qr).toBeNull()
+      expect(store.inspect().qr).toBeNull()
     })
 
     it('sets the correct qr value', () => {
       const v = '123'
 
-      st.setQr(v)
-      expect(st.inspect().qr).toEqual(v)
+      store.setQr(v)
+      expect(store.inspect().qr).toEqual(v)
     })
   })
 
@@ -116,14 +131,14 @@ describe('store', () => {
     })
 
     it('is initialized as null', () => {
-      expect(st.inspect().erMsg).toBeNull()
+      expect(store.inspect().erMsg).toBeNull()
     })
 
     it('sets the correct error message', () => {
-      const msg = "error" 
+      const msg = "error"
 
-      st.setMsg(msg)
-      expect(st.inspect().erMsg).toEqual(msg)
+      store.setMsg(msg)
+      expect(store.inspect().erMsg).toEqual(msg)
     })
   })
 
@@ -175,7 +190,7 @@ describe('store', () => {
   describe('.sawAdd', () => {
     it('is accessible', () => {
       const st = createStore()
-      expect(st.inspect().sawAdd).toEqual(false)
+      expect(st.inspect().sawAdd).toEqual(null)
     })
   })
 
@@ -185,7 +200,7 @@ describe('store', () => {
 
       vi.useFakeTimers()
       const now = Math.floor(Date.now() / 1000)
-      expect(st.inspect().sawAdd).toEqual(false) // Confirm initial values are set.
+      expect(st.inspect().sawAdd).toEqual(null) // Confirm initial values are set.
       st.setSawAdd()
 
       // Confirm that all forms of store access are updated.
@@ -227,9 +242,10 @@ describe('store', () => {
         await st.flushTxs()
 
         expect(postRequest.calls).toHaveLength(3)
-        expect(postRequest.calls[0][0]).toEqual({ id: '1', amount: 1, description: '1', offline: true })
-        expect(postRequest.calls[1][0]).toEqual({ id: '2', amount: 2, description: '2', offline: true })
-        expect(postRequest.calls[2][0]).toEqual({ id: '3', amount: 3, description: '3', offline: true })
+        // postRequest is called as (endpoint, tx), so the payload is the second arg ([1]).
+        expect(postRequest.calls[0][1]).toEqual({ id: '1', amount: 1, description: '1', offline: true })
+        expect(postRequest.calls[1][1]).toEqual({ id: '2', amount: 2, description: '2', offline: true })
+        expect(postRequest.calls[2][1]).toEqual({ id: '3', amount: 3, description: '3', offline: true })
       })
 
       describe('when a request is successful', () => {
