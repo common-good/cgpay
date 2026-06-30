@@ -235,6 +235,8 @@
       <ul class="footer-links">
         <li><a href={phpUrl('/community/donate') || '#'}>Donate</a></li>
         <li><a href={phpUrl('/community/invite') || '#'}>Invite Someone</a></li>
+        <li><a href={phpUrl('/signup-co/relate=1') || '#'}>Open a Company Account</a></li>
+        <li><a href={phpUrl('/prejoin') || '#'}>Make Joint Account</a></li>
         <li><a href="https://commongood.earth/about-us" target="_blank" rel="noopener">About Us</a></li>
         <li><a href={phpUrl('/community/agreement') || '#'}>The Agreement</a></li>
         <li><a href="https://commongood.earth/about-us/privacy-and-security" target="_blank" rel="noopener">Security</a></li>
