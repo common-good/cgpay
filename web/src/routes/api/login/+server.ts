@@ -26,6 +26,52 @@ type SsoResponse = {
 }
 
 /**
+ * Resolve a user-supplied identifier (account code, username, full name, email,
+ * or phone) to a uid via the PHP /cgpay-lookup endpoint. cgmembers owns the
+ * matching logic (including the encrypted-email path), so we don't reimplement
+ * it here. Returns null if no match — caller still runs checkPassword against
+ * DUMMY_HASH for timing parity.
+ */
+async function phpLookup(identifier: string): Promise<number | null> {
+  const ssoUrl = env.PHP_SSO_URL
+  const secret = env.PHP_SSO_SECRET
+  if (!ssoUrl || !secret) return null
+
+  // /cgpay-lookup lives at the same host as /cgpay-sso. Derive its URL by
+  // replacing the path so config stays single-knob.
+  let lookupUrl: string
+  try {
+    const u = new URL(ssoUrl)
+    u.pathname = '/cgpay-lookup'
+    lookupUrl = u.toString()
+  } catch {
+    return null
+  }
+
+  try {
+    const res = await fetch(lookupUrl, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-cg-internal-token': secret
+      },
+      body: JSON.stringify({ identifier })
+    })
+    if (res.status === 404) return null
+    if (!res.ok) {
+      console.error(`[login] PHP lookup returned ${res.status}`)
+      return null
+    }
+    const data = await res.json().catch(() => null)
+    if (!data || typeof data.uid !== 'number') return null
+    return data.uid
+  } catch (e) {
+    console.error('[login] PHP lookup network error:', e)
+    return null
+  }
+}
+
+/**
  * Hand off the verified login to the PHP cgmembers site so menu links land
  * pre-authenticated. Returns the session cookie info + the user's menu
  * categories, or null if SSO is not configured (we degrade gracefully — login
@@ -75,21 +121,34 @@ export const POST: RequestHandler = async ({ request, getClientAddress, cookies 
   }
 
   const body = await request.json().catch(() => null)
-  if (!body || typeof body.name !== 'string' || typeof body.password !== 'string') {
-    throw error(400, 'name and password required')
+  // Accept `identifier` (new field name — works for account code / name / email
+  // / phone) and the legacy `name` for backwards compat with older clients.
+  const identifier = body?.identifier ?? body?.name
+  if (!body || typeof identifier !== 'string' || typeof body.password !== 'string') {
+    throw error(400, 'identifier and password required')
   }
 
-  // Drupal usernames are case-insensitive on lookup.
-  const [rows] = await pool.query<UserRow[]>(
-    'SELECT uid, name, pass FROM users WHERE LOWER(name) = LOWER(?) LIMIT 1',
-    [body.name]
-  )
-  const user = rows[0]
+  // PHP owns the identifier-resolution rules (encrypted email, QID translation,
+  // short codes, phone). Returns the uid (or null on no match).
+  const uid = await phpLookup(identifier)
 
-  // Always run checkPassword so timing doesn't reveal whether the user exists.
+  // Lookup the user record by uid. Skipped (and the dummy hash used) when the
+  // lookup didn't find anyone — keeps response time roughly constant whether
+  // the identifier is real or not.
+  let user: UserRow | undefined
+  if (uid !== null) {
+    const [rows] = await pool.query<UserRow[]>(
+      'SELECT uid, name, pass FROM users WHERE uid = ? LIMIT 1',
+      [uid]
+    )
+    user = rows[0]
+  }
+
+  // Always run checkPassword so timing doesn't reveal whether the identifier
+  // matched anyone.
   const ok = checkPassword(body.password, user?.pass ?? DUMMY_HASH)
   if (!user || !ok) {
-    throw error(401, 'Invalid username or password.')
+    throw error(401, 'Invalid account ID or password.')
   }
 
   // Hand off to PHP — this also resolves the user's menu categories
