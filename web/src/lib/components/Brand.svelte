@@ -26,6 +26,9 @@
     letter-spacing: 0.04em;
     text-transform: uppercase;
     font-size: 0.85rem;
-    color: var(--cg-text-muted);
+    /* inherit from parent so the same Brand works on both the white login card
+       and the dark navy dashboard topnav */
+    color: inherit;
+    opacity: 0.85;
   }
 </style>
