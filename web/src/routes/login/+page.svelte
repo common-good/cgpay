@@ -2,7 +2,7 @@
   import { goto } from '$app/navigation'
   import Brand from '$lib/components/Brand.svelte'
 
-  let name = $state('')
+  let identifier = $state('')
   let password = $state('')
   let error = $state<string | null>(null)
   let submitting = $state(false)
@@ -15,7 +15,7 @@
       const res = await fetch('/api/login', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ name, password })
+        body: JSON.stringify({ identifier, password })
       })
       if (!res.ok) {
         const body = await res.json().catch(() => ({}))
@@ -45,12 +45,12 @@
 
     <form onsubmit={submit} novalidate>
       <label>
-        <span>Username</span>
+        <span>Account ID</span>
         <input
           type="text"
-          bind:value={name}
+          bind:value={identifier}
           autocomplete="username"
-          placeholder="your-username"
+          placeholder="account code, name, email, or phone"
           required
         />
       </label>
