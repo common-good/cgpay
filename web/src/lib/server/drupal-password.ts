@@ -1,7 +1,8 @@
 // Port of Drupal 7's user_check_password / _password_crypt from cgmembers/includes/password.inc.
-// Supports the $S$ (sha512), $P$ (md5 phpass), and $H$ (phpBB3-style md5) prefixes that Drupal
-// produces and accepts. Used to verify passwords against the existing users.pass column without
-// requiring members to reset.
+// Handles only the $S$ (sha512 phpass) prefix — that's what every Common Good account uses.
+// Company accounts have an empty pass column and can't be signed in with any password.
+// The upstream Drupal port also handles $P$, $H$, and U$ prefixes; those aren't in use here
+// so we don't carry the code (per William, 2026-07-06).
 
 import { createHash } from 'node:crypto'
 
@@ -26,7 +27,7 @@ function passwordBase64Encode(input: Buffer, count: number): string {
   return output
 }
 
-function passwordCrypt(algo: 'sha512' | 'md5', password: string, setting: string): string | null {
+function passwordCryptSha512(password: string, setting: string): string | null {
   if (Buffer.byteLength(password, 'utf8') > 512) return null
   if (setting.length < 12) return null
   const settingHead = setting.slice(0, 12)
@@ -40,10 +41,10 @@ function passwordCrypt(algo: 'sha512' | 'md5', password: string, setting: string
   const passwordBuf = Buffer.from(password, 'utf8')
   const saltBuf = Buffer.from(salt, 'utf8')
 
-  let hash = createHash(algo).update(Buffer.concat([saltBuf, passwordBuf])).digest()
+  let hash = createHash('sha512').update(Buffer.concat([saltBuf, passwordBuf])).digest()
   let count = 1 << countLog2
   do {
-    hash = createHash(algo).update(Buffer.concat([hash, passwordBuf])).digest()
+    hash = createHash('sha512').update(Buffer.concat([hash, passwordBuf])).digest()
   } while (--count)
 
   const output = settingHead + passwordBase64Encode(hash, hash.length)
@@ -53,24 +54,11 @@ function passwordCrypt(algo: 'sha512' | 'md5', password: string, setting: string
 }
 
 /**
- * Verify a plaintext password against a Drupal-style stored hash.
- * Returns true if the password matches.
+ * Verify a plaintext password against a stored `$S$` hash from users.pass.
+ * Returns false for empty hashes (company accounts) and anything not `$S$`.
  */
 export function checkPassword(password: string, storedHash: string): boolean {
-  let hashToCheck = storedHash
-  let pw = password
-
-  // Legacy: 'U$' prefix indicates a hash that's been double-hashed via md5() during D6→D7 upgrade.
-  if (storedHash.startsWith('U$')) {
-    hashToCheck = storedHash.slice(1)
-    pw = createHash('md5').update(password, 'utf8').digest('hex')
-  }
-
-  const type = hashToCheck.slice(0, 3)
-  let computed: string | null = null
-  if (type === '$S$') computed = passwordCrypt('sha512', pw, hashToCheck)
-  else if (type === '$P$' || type === '$H$') computed = passwordCrypt('md5', pw, hashToCheck)
-  else return false
-
-  return computed !== null && computed === hashToCheck
+  if (!storedHash.startsWith('$S$')) return false
+  const computed = passwordCryptSha512(password, storedHash)
+  return computed !== null && computed === storedHash
 }
