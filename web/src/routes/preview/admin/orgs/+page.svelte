@@ -98,7 +98,7 @@
           </dl>
           <div class="org-actions">
             <a href="/preview/admin/orgs/{o.slug}"><Icon name="eye" size={14} /> View profile</a>
-            <a href="/preview/grants"><Icon name="download" size={14} /> Grants</a>
+            <a href="/grants"><Icon name="download" size={14} /> Grants</a>
             <a href="/preview"><Icon name="chat" size={14} /> Message</a>
           </div>
         </li>

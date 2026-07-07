@@ -6,7 +6,7 @@
   const overview = [
     { label: 'Users',            value: '342',      delta: '+12 this week', icon: 'user',      tone: 'green',  href: '/preview/admin/users' },
     { label: 'Organizations',    value: '48',       delta: '+2 this month', icon: 'bank',      tone: 'blue',   href: '/preview/admin/orgs' },
-    { label: 'Pending Deposits', value: '$248,750', delta: '14 grants',     icon: 'clock',     tone: 'amber',  href: '/preview/grants' },
+    { label: 'Pending Deposits', value: '$248,750', delta: '14 grants',     icon: 'clock',     tone: 'amber',  href: '/grants' },
     { label: 'Alerts',           value: '5',        delta: 'Action needed', icon: 'shield',    tone: 'red',    href: '/preview/admin/alerts' }
   ]
 
@@ -14,7 +14,7 @@
   const actions = [
     { title: 'Users',                 desc: 'Manage individual members, invite, and assign roles.',          icon: 'user',      href: '/preview/admin/users' },
     { title: 'Sponsored Organizations', desc: 'View sponsees, applications, and compliance status.',         icon: 'bank',      href: '/preview/admin/orgs' },
-    { title: 'Expected Grants',       desc: 'Add expected grants, view incoming funding notifications.',     icon: 'download',  href: '/preview/grants' },
+    { title: 'Expected Grants',       desc: 'Add expected grants, view incoming funding notifications.',     icon: 'download',  href: '/grants' },
     { title: 'Reports',               desc: 'Financial, sponsorship, and activity reports.',                 icon: 'folder',    href: '/preview/admin/reports' },
     { title: 'Settings',              desc: 'System configuration, branding, and policy.',                   icon: 'shield',    href: '/preview/admin/settings' },
     { title: 'Communications',        desc: 'Member email, broadcasts, and notification preferences.',       icon: 'chat',      href: '/preview/admin/comms' }
