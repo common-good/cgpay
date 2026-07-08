@@ -158,6 +158,11 @@
     </main>
   {:else if info}
     <main class="container">
+      <section class="hero">
+        <h1>Hi, {info.name.split(' ')[0]}!</h1>
+        <p class="hero-sub">Here's what's happening with your account.</p>
+      </section>
+
       <section class="balance card">
         <span class="balance-label">Available Balance</span>
         <span class="balance-amount">{fmtMoney(info.balance)}</span>
@@ -208,6 +213,39 @@
         </article>
       </section>
 
+      <section class="quick-actions card">
+        <h2>Quick Actions</h2>
+        <ul>
+          <li>
+            <a href="/grants/new">
+              <div class="qa-icon tone-green"><Icon name="plus" size={18} /></div>
+              <div class="qa-body">
+                <span class="qa-title">Report Expected Grant</span>
+                <span class="qa-desc">Notify us about incoming funding.</span>
+              </div>
+            </a>
+          </li>
+          <li>
+            <a href={phpUrl('/community/message') || '#'} aria-disabled={!phpBase || undefined}>
+              <div class="qa-icon tone-blue"><Icon name="chat" size={18} /></div>
+              <div class="qa-body">
+                <span class="qa-title">Messages</span>
+                <span class="qa-desc">Message Common Good staff.</span>
+              </div>
+            </a>
+          </li>
+          <li>
+            <a href={phpUrl('/settings') || '#'} aria-disabled={!phpBase || undefined}>
+              <div class="qa-icon tone-rose"><Icon name="user" size={18} /></div>
+              <div class="qa-body">
+                <span class="qa-title">Profile & Settings</span>
+                <span class="qa-desc">Update your account details.</span>
+              </div>
+            </a>
+          </li>
+        </ul>
+      </section>
+
       <section class="recent card">
         <h2>Recent Activity</h2>
         {#if info.txs.filter(t => !t.pending).length === 0}
@@ -228,6 +266,15 @@
             {/each}
           </ul>
         {/if}
+      </section>
+
+      <section class="help-card card">
+        <div class="help-icon"><Icon name="help" size={22} /></div>
+        <div class="help-body">
+          <strong>Need help?</strong>
+          <p>Our team is here to help — reach out any time.</p>
+        </div>
+        <a class="help-cta" href="mailto:support@commongood.earth">Contact Support</a>
       </section>
     </main>
 
@@ -359,6 +406,69 @@
     max-width: 1080px; width: 100%; margin: 0 auto;
     padding: 2rem 1.75rem 3rem;
     display: grid; gap: 1.5rem;
+  }
+
+  .hero { padding: 0.25rem 0.25rem 0.5rem; }
+  .hero h1 {
+    margin: 0 0 0.35rem;
+    font-size: 1.85rem; font-weight: 700;
+    letter-spacing: -0.02em; color: var(--cg-text);
+  }
+  .hero-sub { margin: 0; color: var(--cg-text-muted); font-size: 0.98rem; }
+
+  .quick-actions { padding: 1.5rem; }
+  .quick-actions h2 {
+    margin: 0 0 1rem; font-size: 1rem; font-weight: 600; color: var(--cg-text);
+  }
+  .quick-actions ul {
+    list-style: none; padding: 0; margin: 0;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.75rem;
+  }
+  .quick-actions li a {
+    display: flex; gap: 0.85rem; align-items: flex-start;
+    padding: 0.95rem 1rem;
+    border: 1px solid var(--cg-border);
+    border-radius: var(--cg-radius-sm);
+    text-decoration: none; color: inherit;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .quick-actions li a:hover { border-color: var(--cg-green); background: var(--cg-green-soft); }
+  .quick-actions li a[aria-disabled="true"] { opacity: 0.55; cursor: not-allowed; pointer-events: none; }
+  .qa-icon {
+    flex-shrink: 0; width: 2.2rem; height: 2.2rem;
+    border-radius: 50%; display: grid; place-items: center;
+  }
+  .qa-body { display: flex; flex-direction: column; gap: 0.15rem; }
+  .qa-title { font-weight: 600; font-size: 0.92rem; color: var(--cg-text); }
+  .qa-desc { font-size: 0.82rem; color: var(--cg-text-muted); line-height: 1.35; }
+
+  .help-card {
+    display: flex; align-items: center; gap: 1rem;
+    padding: 1.25rem 1.5rem;
+  }
+  .help-icon {
+    flex-shrink: 0; width: 2.6rem; height: 2.6rem;
+    border-radius: 50%;
+    background: rgba(30,122,58,0.1); color: var(--cg-green);
+    display: grid; place-items: center;
+  }
+  .help-body { flex: 1; }
+  .help-body strong {
+    display: block; font-size: 0.95rem; margin-bottom: 0.15rem; color: var(--cg-text);
+  }
+  .help-body p { margin: 0; font-size: 0.85rem; color: var(--cg-text-muted); }
+  .help-cta {
+    padding: 0.55rem 1rem;
+    background: var(--cg-green); color: white;
+    border-radius: var(--cg-radius-sm);
+    font-size: 0.88rem; font-weight: 500;
+    text-decoration: none;
+    transition: background 0.15s;
+  }
+  .help-cta:hover { background: #166432; text-decoration: none; }
+  @media (max-width: 500px) {
+    .help-card { flex-direction: column; text-align: center; }
   }
 
   .card {
