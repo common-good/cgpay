@@ -121,6 +121,14 @@
     if (outAmt > 0 && inAmt === 0) return `Pending: ${fmtMoney(outAmt)} out`
     return `Pending: ${fmtMoney(inAmt)} in / ${fmtMoney(outAmt)} out`
   }
+
+  function pendingRequestsCount(i: InfoResponse): number {
+    return i.txs.filter(t => t.pending).length
+  }
+
+  function firstName(fullName: string): string {
+    return fullName.split(' ')[0]
+  }
 </script>
 
 <svelte:window onkeydown={onKeydown} />
@@ -157,15 +165,47 @@
       </div>
     </main>
   {:else if info}
-    <main class="container">
-      <section class="hero">
-        <h1>Hi, {info.name.split(' ')[0]}!</h1>
-        <p class="hero-sub">Here's what's happening with your account.</p>
-      </section>
+    <div class="hero">
+      <div class="hero-inner">
+        <h1>Welcome back, {firstName(info.name)}!</h1>
+        <p>Here's what's happening with your account.</p>
+      </div>
+    </div>
 
-      <section class="balance card">
-        <span class="balance-label">Available Balance</span>
-        <span class="balance-amount">{fmtMoney(info.balance)}</span>
+    <main class="container">
+      <section class="summary">
+        <article class="card summary-card">
+          <div class="icon-wrap tone-green"><Icon name="bank" size={20} /></div>
+          <div class="card-body">
+            <span class="s-label">Available Funds</span>
+            <span class="s-value">{fmtMoney(info.balance)}</span>
+          </div>
+        </article>
+
+        <article class="card summary-card">
+          <div class="icon-wrap tone-blue"><Icon name="clock" size={20} /></div>
+          <div class="card-body">
+            <span class="s-label">Pending Deposits</span>
+            <span class="s-value">{fmtMoney(info.summary.pendingTransferIn)}</span>
+          </div>
+        </article>
+
+        <article class="card summary-card">
+          <div class="icon-wrap tone-amber"><Icon name="clipboard" size={20} /></div>
+          <div class="card-body">
+            <span class="s-label">Pending Requests</span>
+            <span class="s-value">{pendingRequestsCount(info)}</span>
+          </div>
+        </article>
+
+        <article class="card summary-card muted">
+          <div class="icon-wrap tone-purple"><Icon name="chat" size={20} /></div>
+          <div class="card-body">
+            <span class="s-label">Unread Messages</span>
+            <span class="s-value">0</span>
+            <span class="s-note">Coming soon</span>
+          </div>
+        </article>
       </section>
 
       <section class="actions">
@@ -226,8 +266,17 @@
             </a>
           </li>
           <li>
+            <a href={phpUrl('/settings') || '#'} aria-disabled={!phpBase || undefined}>
+              <div class="qa-icon tone-blue"><Icon name="folder" size={18} /></div>
+              <div class="qa-body">
+                <span class="qa-title">Documents</span>
+                <span class="qa-desc">Upload and manage your documents.</span>
+              </div>
+            </a>
+          </li>
+          <li>
             <a href={phpUrl('/community/message') || '#'} aria-disabled={!phpBase || undefined}>
-              <div class="qa-icon tone-blue"><Icon name="chat" size={18} /></div>
+              <div class="qa-icon tone-amber"><Icon name="chat" size={18} /></div>
               <div class="qa-body">
                 <span class="qa-title">Messages</span>
                 <span class="qa-desc">Message Common Good staff.</span>
@@ -236,7 +285,7 @@
           </li>
           <li>
             <a href={phpUrl('/settings') || '#'} aria-disabled={!phpBase || undefined}>
-              <div class="qa-icon tone-rose"><Icon name="user" size={18} /></div>
+              <div class="qa-icon tone-purple"><Icon name="user" size={18} /></div>
               <div class="qa-body">
                 <span class="qa-title">Profile & Settings</span>
                 <span class="qa-desc">Update your account details.</span>
@@ -246,35 +295,36 @@
         </ul>
       </section>
 
-      <section class="recent card">
-        <h2>Recent Activity</h2>
-        {#if info.txs.filter(t => !t.pending).length === 0}
-          <p class="empty">No transactions yet.</p>
-        {:else}
-          <ul>
-            {#each info.txs.filter(t => !t.pending) as tx (tx.xid)}
-              <li>
-                <div class="icon-wrap tx-icon {tx.amount >= 0 ? 'tone-green' : 'tone-rose'}">
-                  <Icon name={tx.amount >= 0 ? 'download' : 'upload'} size={18} />
-                </div>
-                <span class="text">
-                  {tx.amount >= 0 ? 'Received from' : 'Paid to'} {tx.counterparty}{tx.description ? ` — ${tx.description}` : ''}
-                </span>
-                <span class="amount" class:negative={tx.amount < 0}>{fmtMoney(tx.amount)}</span>
-                <span class="date">{fmtDate(tx.created)}</span>
-              </li>
-            {/each}
-          </ul>
-        {/if}
-      </section>
-
-      <section class="help-card card">
-        <div class="help-icon"><Icon name="help" size={22} /></div>
-        <div class="help-body">
-          <strong>Need help?</strong>
-          <p>Our team is here to help — reach out any time.</p>
+      <section class="bottom">
+        <div class="recent card">
+          <h2>Recent Actions</h2>
+          {#if info.txs.filter(t => !t.pending).length === 0}
+            <p class="empty">No activity yet.</p>
+          {:else}
+            <ul>
+              {#each info.txs.filter(t => !t.pending) as tx (tx.xid)}
+                <li>
+                  <div class="icon-wrap {tx.amount >= 0 ? 'tone-green' : 'tone-rose'}">
+                    <Icon name={tx.amount >= 0 ? 'download' : 'upload'} size={18} />
+                  </div>
+                  <span class="r-text">
+                    {tx.amount >= 0 ? 'Received from' : 'Paid to'} {tx.counterparty}{tx.description ? ` — ${tx.description}` : ''}
+                  </span>
+                  <span class="r-pill pill-green">Completed</span>
+                  <span class="r-date">{fmtDate(tx.created)}</span>
+                </li>
+              {/each}
+            </ul>
+          {/if}
         </div>
-        <a class="help-cta" href="mailto:support@commongood.earth">Contact Support</a>
+
+        <aside class="help card">
+          <h3>Need help?</h3>
+          <p>Our team is here for you.</p>
+          <a class="help-btn" href="mailto:support@commongood.earth">
+            <Icon name="help" size={16} /> Contact Support
+          </a>
+        </aside>
       </section>
     </main>
 
@@ -401,20 +451,43 @@
   .error-card strong { color: var(--cg-error); }
   .error-card span { color: var(--cg-text-muted); font-size: 0.9rem; }
 
+  .hero {
+    background:
+      linear-gradient(to right, rgba(245,247,244,1) 0%, rgba(245,247,244,0.6) 60%, rgba(245,247,244,0) 100%),
+      linear-gradient(180deg, #eaf1ea 0%, #f5f7f4 100%);
+    padding: 2.5rem 0 3.5rem;
+    border-bottom: 1px solid var(--cg-border);
+  }
+  .hero-inner { max-width: 1280px; margin: 0 auto; padding: 0 1.75rem; }
+  .hero h1 { margin: 0 0 0.4rem; font-size: 2rem; font-weight: 600; letter-spacing: -0.01em; color: var(--cg-text); }
+  .hero p { margin: 0; color: var(--cg-text-muted); }
+
   .container {
     flex: 1;
-    max-width: 1080px; width: 100%; margin: 0 auto;
-    padding: 2rem 1.75rem 3rem;
+    max-width: 1280px; width: 100%; margin: -2rem auto 3rem;
+    padding: 0 1.75rem;
     display: grid; gap: 1.5rem;
   }
 
-  .hero { padding: 0.25rem 0.25rem 0.5rem; }
-  .hero h1 {
-    margin: 0 0 0.35rem;
-    font-size: 1.85rem; font-weight: 700;
-    letter-spacing: -0.02em; color: var(--cg-text);
+  .summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
   }
-  .hero-sub { margin: 0; color: var(--cg-text-muted); font-size: 0.98rem; }
+  .summary-card {
+    display: flex; gap: 1rem; padding: 1.25rem; align-items: flex-start;
+  }
+  .summary-card.muted { opacity: 0.75; }
+  .summary-card .icon-wrap {
+    flex-shrink: 0; width: 2.75rem; height: 2.75rem;
+    border-radius: 50%; display: grid; place-items: center;
+  }
+  .card-body { display: grid; gap: 0.25rem; }
+  .s-label { font-size: 0.85rem; color: var(--cg-text-muted); font-weight: 500; }
+  .s-value { font-size: 1.4rem; font-weight: 700; color: var(--cg-text); letter-spacing: -0.01em; }
+  .s-note { font-size: 0.75rem; color: var(--cg-text-muted); font-style: italic; margin-top: 0.15rem; }
+  .tone-purple { background: rgba(120,80,180,0.1); color: #785ab4; }
+  .tone-amber { background: rgba(214,143,30,0.12); color: #b96e0c; }
 
   .quick-actions { padding: 1.5rem; }
   .quick-actions h2 {
@@ -422,12 +495,12 @@
   }
   .quick-actions ul {
     list-style: none; padding: 0; margin: 0;
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 0.75rem;
   }
   .quick-actions li a {
     display: flex; gap: 0.85rem; align-items: flex-start;
-    padding: 0.95rem 1rem;
+    padding: 1rem;
     border: 1px solid var(--cg-border);
     border-radius: var(--cg-radius-sm);
     text-decoration: none; color: inherit;
@@ -436,60 +509,51 @@
   .quick-actions li a:hover { border-color: var(--cg-green); background: var(--cg-green-soft); }
   .quick-actions li a[aria-disabled="true"] { opacity: 0.55; cursor: not-allowed; pointer-events: none; }
   .qa-icon {
-    flex-shrink: 0; width: 2.2rem; height: 2.2rem;
+    flex-shrink: 0; width: 2.4rem; height: 2.4rem;
     border-radius: 50%; display: grid; place-items: center;
   }
   .qa-body { display: flex; flex-direction: column; gap: 0.15rem; }
-  .qa-title { font-weight: 600; font-size: 0.92rem; color: var(--cg-text); }
-  .qa-desc { font-size: 0.82rem; color: var(--cg-text-muted); line-height: 1.35; }
+  .qa-title { font-weight: 600; font-size: 0.9rem; color: var(--cg-text); }
+  .qa-desc { font-size: 0.8rem; color: var(--cg-text-muted); line-height: 1.35; }
 
-  .help-card {
-    display: flex; align-items: center; gap: 1rem;
-    padding: 1.25rem 1.5rem;
+  .bottom {
+    display: grid; grid-template-columns: 1fr 320px; gap: 1.5rem;
   }
-  .help-icon {
-    flex-shrink: 0; width: 2.6rem; height: 2.6rem;
-    border-radius: 50%;
-    background: rgba(30,122,58,0.1); color: var(--cg-green);
-    display: grid; place-items: center;
+  @media (max-width: 900px) { .bottom { grid-template-columns: 1fr; } }
+
+  .r-text { font-size: 0.9rem; color: var(--cg-text); }
+  .r-date { font-size: 0.82rem; color: var(--cg-text-muted); }
+  .r-pill { font-size: 0.72rem; font-weight: 600; padding: 0.2rem 0.6rem; border-radius: 999px; }
+  .pill-green { background: rgba(30,122,58,0.12); color: var(--cg-green); }
+
+  .recent li {
+    grid-template-columns: auto 1fr auto auto !important;
   }
-  .help-body { flex: 1; }
-  .help-body strong {
-    display: block; font-size: 0.95rem; margin-bottom: 0.15rem; color: var(--cg-text);
+
+  .help {
+    padding: 1.5rem;
+    background: linear-gradient(180deg, #e9efe9 0%, #f0f4f0 100%);
   }
-  .help-body p { margin: 0; font-size: 0.85rem; color: var(--cg-text-muted); }
-  .help-cta {
-    padding: 0.55rem 1rem;
-    background: var(--cg-green); color: white;
+  .help h3 { margin: 0 0 0.4rem; font-size: 1rem; font-weight: 600; color: var(--cg-text); }
+  .help p { margin: 0 0 1rem; color: var(--cg-text-muted); font-size: 0.9rem; }
+  .help-btn {
+    width: 100%;
+    display: inline-flex; align-items: center; gap: 0.4rem; justify-content: center;
+    padding: 0.65rem 1rem;
+    background: var(--cg-surface); color: var(--cg-text);
+    border: 1px solid var(--cg-border);
     border-radius: var(--cg-radius-sm);
-    font-size: 0.88rem; font-weight: 500;
+    font-weight: 500;
     text-decoration: none;
-    transition: background 0.15s;
+    transition: border-color 0.15s;
   }
-  .help-cta:hover { background: #166432; text-decoration: none; }
-  @media (max-width: 500px) {
-    .help-card { flex-direction: column; text-align: center; }
-  }
+  .help-btn:hover { border-color: var(--cg-green); text-decoration: none; }
 
   .card {
     background: var(--cg-surface);
     border: 1px solid var(--cg-border);
     border-radius: var(--cg-radius);
     box-shadow: var(--cg-shadow);
-  }
-
-  .balance {
-    padding: 1.75rem 2rem;
-    display: flex; flex-direction: column; gap: 0.3rem;
-    align-items: flex-start;
-  }
-  .balance-label {
-    font-size: 0.78rem; color: var(--cg-text-muted);
-    text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600;
-  }
-  .balance-amount {
-    font-size: 2.4rem; font-weight: 700; letter-spacing: -0.02em;
-    color: var(--cg-text);
   }
 
   .actions {
@@ -559,10 +623,6 @@
     border-radius: var(--cg-radius-sm);
   }
   .recent li:hover { background: var(--cg-bg); }
-  .text { font-size: 0.9rem; color: var(--cg-text); }
-  .date { font-size: 0.82rem; color: var(--cg-text-muted); }
-  .amount { font-size: 0.9rem; font-weight: 600; color: var(--cg-green); }
-  .amount.negative { color: var(--cg-text); }
 
   .footer {
     border-top: 1px solid var(--cg-border);
