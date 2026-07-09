@@ -22,7 +22,7 @@
       previews: [
         {
           title: 'Report Expected Grant',
-          href: '/preview/grants/new',
+          href: '/grants/new',
           note: 'Single-grant form with donor autocomplete, required-field validation, and confirmations checklist.'
         }
       ]
@@ -38,7 +38,7 @@
         },
         {
           title: 'Grants Dashboard',
-          href: '/preview/grants',
+          href: '/grants',
           note: 'Admin view of expected vs received grants with matching status (Matched / Needs Review / Unmatched).'
         }
       ]

@@ -14,7 +14,7 @@
 
   const active = $derived.by(() => {
     const path = page.url.pathname
-    if (path.startsWith('/preview/grants')) return 'Funds'
+    if (path.startsWith('/grants')) return 'Funds'
     return 'Dashboard'
   })
 </script>

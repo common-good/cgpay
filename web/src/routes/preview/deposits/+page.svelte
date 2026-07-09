@@ -30,7 +30,7 @@
       <h1>Pending deposits</h1>
       <p>Expected grants not yet received. Click a row to view or update.</p>
     </div>
-    <a class="primary" href="/preview/grants/new"><Icon name="plus" size={16} /> Report Expected Grant</a>
+    <a class="primary" href="/grants/new"><Icon name="plus" size={16} /> Report Expected Grant</a>
   </header>
 
   <div class="summary card">

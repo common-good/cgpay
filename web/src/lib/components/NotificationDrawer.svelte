@@ -27,16 +27,16 @@
     return [
       { id: '1', icon: 'shield', tone: 'red',   title: 'Deposit needs review',
         body: 'CL+P Distribution received $26,949.53 vs $26,000.00 expected.',
-        when: '9:57 AM',  unread: true,  href: '/preview/grants' },
+        when: '9:57 AM',  unread: true,  href: '/grants' },
       { id: '2', icon: 'clock', tone: 'amber', title: 'Grant overdue',
         body: 'Enterprise for Youth — $49,500 expected May 19.',
-        when: '8:14 AM',  unread: true,  href: '/preview/grants' },
+        when: '8:14 AM',  unread: true,  href: '/grants' },
       { id: '3', icon: 'user',  tone: 'blue',  title: 'New sponsee application',
         body: 'Pacific Forest Coalition is awaiting review.',
         when: 'Yesterday', unread: false, href: '/preview/admin/orgs' },
       { id: '4', icon: 'check', tone: 'green', title: 'Grant matched',
         body: 'Verizon Foundation $25,000 matched to expected.',
-        when: 'May 21',   unread: false, href: '/preview/grants' }
+        when: 'May 21',   unread: false, href: '/grants' }
     ]
   }
 </script>

@@ -9,7 +9,7 @@
   ]
 
   const actions = [
-    { title: 'Report Expected Grant', desc: 'Notify us about incoming funding.', icon: 'plus', href: '/preview/grants/new' },
+    { title: 'Report Expected Grant', desc: 'Notify us about incoming funding.', icon: 'plus', href: '/grants/new' },
     { title: 'Request Transfer', desc: 'Request funds be transferred.', icon: 'bank', href: '/preview' },
     { title: 'Documents', desc: 'Upload and manage your documents.', icon: 'folder', href: '/preview' },
     { title: 'Messages', desc: 'Message Common Good staff.', icon: 'chat', href: '/preview' },
