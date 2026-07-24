@@ -2,14 +2,12 @@
   import { onMount } from 'svelte'
   import { goto } from '$app/navigation'
   import { env } from '$env/dynamic/public'
-  import Brand from '$lib/components/Brand.svelte'
   import Icon from '$lib/components/Icon.svelte'
   import type { InfoResponse, InfoTx } from './api/me/info/+server'
 
   let loading = $state(true)
   let error = $state<string | null>(null)
   let info = $state<InfoResponse | null>(null)
-  let menu = $state<string[]>(['Dashboard', 'History', 'Community', 'Settings'])
 
   type ModalKind = 'pay' | 'receive' | 'transfer' | 'soon' | null
   let modal = $state<ModalKind>(null)
@@ -18,22 +16,6 @@
   // Where the PHP member site lives. Menu items link to /<lowercased category> on this host.
   // Empty string = no PHP target configured; we render the menu as disabled.
   const phpBase = env.PUBLIC_PHP_BASE_URL ?? ''
-
-  // PHP top-level routes don't always match the menu label verbatim — these are
-  // the ones that diverge (Company → /co, Admin → /sadmin per cg-menu.inc).
-  const PHP_PATH: Record<string, string> = {
-    Dashboard: '/dashboard',
-    History: '/history',
-    Community: '/community',
-    Settings: '/settings',
-    Company: '/co',
-    Admin: '/sadmin'
-  }
-
-  function menuHref(label: string): string {
-    if (!phpBase) return ''
-    return phpBase.replace(/\/$/, '') + (PHP_PATH[label] ?? `/${label.toLowerCase()}`)
-  }
 
   // PHP URLs for the primary dashboard actions + footer placeholders. Until the
   // action flows are rebuilt in SvelteKit, clicking lands the (already-signed-in)
@@ -49,20 +31,12 @@
       await goto('/login')
       return
     }
-    const storedMenu = localStorage.getItem('cg_menu')
-    if (storedMenu) {
-      try {
-        const parsed = JSON.parse(storedMenu)
-        if (Array.isArray(parsed) && parsed.every(s => typeof s === 'string')) menu = parsed
-      } catch { /* ignore — fall back to default */ }
-    }
     try {
       const res = await fetch('/api/me/info?limit=20', {
         headers: { authorization: `Bearer ${token}` }
       })
       if (res.status === 401) {
         localStorage.removeItem('cg_token')
-        localStorage.removeItem('cg_menu')
         await goto('/login')
         return
       }
@@ -78,12 +52,6 @@
       loading = false
     }
   })
-
-  function signOut() {
-    localStorage.removeItem('cg_token')
-    localStorage.removeItem('cg_menu')
-    goto('/login')
-  }
 
   function fmtMoney(n: number) {
     return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -134,27 +102,6 @@
 <svelte:window onkeydown={onKeydown} />
 
 <div class="page">
-  <nav class="topnav">
-    <Brand size={32} />
-    <ul class="nav-links">
-      {#each menu as label}
-        {#if label === 'Dashboard'}
-          <li><a class="active" href="/">Dashboard</a></li>
-        {:else if menuHref(label)}
-          <li><a href={menuHref(label)}>{label}</a></li>
-        {:else}
-          <li><button type="button" class="nav-disabled" title="Member site link not configured">{label}</button></li>
-        {/if}
-      {/each}
-    </ul>
-    {#if info}
-      <div class="account">
-        <span class="hi">Hi, {info.name}</span>
-        <button class="ghost" onclick={signOut}>Sign out</button>
-      </div>
-    {/if}
-  </nav>
-
   {#if loading}
     <main class="centered"><p class="state">Loading…</p></main>
   {:else if error}
@@ -394,50 +341,7 @@
 <style>
   .page { min-height: 100vh; display: flex; flex-direction: column; }
 
-  .topnav {
-    display: flex;
-    align-items: center;
-    gap: 2rem;
-    padding: 0.85rem 1.75rem;
-    background: var(--cg-navy);
-    color: var(--cg-on-navy);
-    border-bottom: none;
-  }
-  .nav-links {
-    list-style: none; padding: 0; margin: 0;
-    display: flex; gap: 1.5rem; flex: 1;
-  }
-  .nav-links a {
-    color: var(--cg-on-navy-muted);
-    font-size: 0.92rem;
-    font-weight: 500;
-    padding: 0.4rem 0.1rem;
-    border-bottom: 2px solid transparent;
-  }
-  .nav-links a:hover { color: var(--cg-on-navy); text-decoration: none; }
-  .nav-links a.active { color: var(--cg-on-navy); border-bottom-color: var(--cg-green); }
-  .nav-disabled {
-    background: transparent;
-    border: none;
-    padding: 0.4rem 0.1rem;
-    color: var(--cg-on-navy-muted);
-    font-size: 0.92rem;
-    font-weight: 500;
-    opacity: 0.55;
-    cursor: not-allowed;
-    font-family: inherit;
-  }
 
-  .account { display: flex; align-items: center; gap: 1rem; }
-  .hi { color: var(--cg-on-navy); font-size: 0.95rem; }
-  .ghost {
-    padding: 0.45rem 0.85rem;
-    background: transparent; color: var(--cg-on-navy);
-    border: 1px solid var(--cg-navy-soft); border-radius: var(--cg-radius-sm);
-    font-size: 0.9rem; cursor: pointer;
-    transition: background 0.15s, border-color 0.15s;
-  }
-  .ghost:hover { background: var(--cg-navy-soft); border-color: var(--cg-on-navy-muted); }
 
   .centered { flex: 1; display: grid; place-items: center; padding: 2rem 1.5rem; }
   .state { color: var(--cg-text-muted); }
