@@ -98,7 +98,7 @@
     --cg-green: #1e7a3a;
     --cg-green-hover: #155a2b;
     --cg-green-soft: rgba(30, 122, 58, 0.08);
-    --cg-navy: #0a2540;            /* matches the commongood.earth header */
+    --cg-navy: #0946A6;            /* matches the commongood.earth promo-site header */
     --cg-navy-soft: rgba(255, 255, 255, 0.1);
     --cg-bg: #f5f7f4;
     --cg-surface: #ffffff;
