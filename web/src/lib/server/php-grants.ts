@@ -60,8 +60,12 @@ export async function createGrant(input: CreateGrantInput): Promise<number> {
 
   const data = await res.json().catch(() => null)
   if (!res.ok) {
-    const msg = (data && typeof data.error === 'string') ? data.error : `PHP /cgpay-grants create returned ${res.status}`
-    throw new PhpGrantError(msg, res.status)
+    // PHP now returns { message, errors: { fieldName: "message", ... }, error } — see cgpaygrants.inc
+    const msg = (data && typeof data.message === 'string') ? data.message
+             : (data && typeof data.error === 'string') ? data.error
+             : `PHP /cgpay-grants create returned ${res.status}`
+    const fieldErrors = (data && data.errors && typeof data.errors === 'object') ? data.errors as Record<string, string> : undefined
+    throw new PhpGrantError(msg, res.status, fieldErrors)
   }
   if (!data || typeof data.id !== 'number') throw new Error('PHP /cgpay-grants create: unexpected body')
   return data.id
@@ -69,9 +73,11 @@ export async function createGrant(input: CreateGrantInput): Promise<number> {
 
 export class PhpGrantError extends Error {
   status: number
-  constructor(message: string, status: number) {
+  fieldErrors?: Record<string, string>
+  constructor(message: string, status: number, fieldErrors?: Record<string, string>) {
     super(message)
     this.name = 'PhpGrantError'
     this.status = status
+    this.fieldErrors = fieldErrors
   }
 }
