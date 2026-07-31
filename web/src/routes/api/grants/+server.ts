@@ -40,7 +40,7 @@ export const POST: RequestHandler = async ({ request }) => {
   const body = await request.json().catch(() => null)
   if (!body) throw error(400, 'invalid request body')
 
-  // Client-side (pre-PHP) validation of the top-level grant fields.
+  // Client-side (pre-PHP) validation of grant + grantor fields.
   // Collect ALL problems into one payload so the UI highlights them together.
   const preErrors: Record<string, string> = {}
 
@@ -51,6 +51,17 @@ export const POST: RequestHandler = async ({ request }) => {
   if (!fullName) preErrors.fullName = "Please enter the grantor's name."
   if (!Number.isFinite(amount) || amount <= 0) preErrors.amount = 'Please enter an amount greater than zero.'
   if (!ALLOWED_BY.has(by)) preErrors.by = 'Please choose a payment method (ACH, check, or wire).'
+
+  // Grantor mailing address (per William 2026-07-31 — address required).
+  const address = typeof body.address === 'string' ? body.address.trim() : ''
+  const city = typeof body.city === 'string' ? body.city.trim() : ''
+  const zip = typeof body.zip === 'string' ? body.zip.trim() : ''
+  const state = Number(body.state)
+
+  if (!address) preErrors.address = "Please enter the grantor's street address."
+  if (!city) preErrors.city = "Please enter the grantor's city."
+  if (!Number.isFinite(state) || state <= 0) preErrors.state = "Please select the grantor's state."
+  if (!zip) preErrors.zip = "Please enter the grantor's zip code."
 
   if (Object.keys(preErrors).length > 0) return fieldErrorResponse(preErrors)
 

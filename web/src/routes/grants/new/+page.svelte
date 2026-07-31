@@ -24,8 +24,15 @@
   let fieldErrors = $state<Record<string, string>>({})
 
   const amountNum = $derived(Number(amount.replace(/[$,\s]/g, '')))
+  const stateNum = $derived(Number(stateCode))
   const canSubmit = $derived(
-    !submitting && fullName.trim().length > 0 && Number.isFinite(amountNum) && amountNum > 0
+    !submitting
+    && fullName.trim().length > 0
+    && Number.isFinite(amountNum) && amountNum > 0
+    && address.trim().length > 0
+    && city.trim().length > 0
+    && stateCode.trim().length > 0 && Number.isFinite(stateNum) && stateNum > 0
+    && zip.trim().length > 0
   )
 
   async function submit() {
@@ -150,37 +157,37 @@
         </fieldset>
 
         <fieldset>
-          <legend>Grantor contact <span class="opt">(optional — helps us match faster)</span></legend>
+          <legend>Grantor Contact Information</legend>
           <div class="grid-2">
-            <div class="field" class:has-err={fe('email')}>
-              <label for="email">Email</label>
-              <input id="email" type="email" bind:value={email} autocomplete="off" aria-invalid={!!fe('email')} />
-              {#if fe('email')}<span class="field-err">{fe('email')}</span>{/if}
-            </div>
-            <div class="field" class:has-err={fe('phone')}>
-              <label for="phone">Phone</label>
-              <input id="phone" type="tel" bind:value={phone} autocomplete="off" aria-invalid={!!fe('phone')} />
-              {#if fe('phone')}<span class="field-err">{fe('phone')}</span>{/if}
-            </div>
             <div class="field span-2" class:has-err={fe('address')}>
-              <label for="address">Street address</label>
+              <label for="address">Street Address <span class="req">*</span></label>
               <input id="address" type="text" bind:value={address} autocomplete="off" aria-invalid={!!fe('address')} />
               {#if fe('address')}<span class="field-err">{fe('address')}</span>{/if}
             </div>
             <div class="field" class:has-err={fe('city')}>
-              <label for="city">City</label>
+              <label for="city">City <span class="req">*</span></label>
               <input id="city" type="text" bind:value={city} autocomplete="off" aria-invalid={!!fe('city')} />
               {#if fe('city')}<span class="field-err">{fe('city')}</span>{/if}
             </div>
             <div class="field" class:has-err={fe('state')}>
-              <label for="state">State</label>
+              <label for="state">State <span class="req">*</span></label>
               <input id="state" type="text" bind:value={stateCode} placeholder="State id" autocomplete="off" aria-invalid={!!fe('state')} />
               {#if fe('state')}<span class="field-err">{fe('state')}</span>{/if}
             </div>
             <div class="field" class:has-err={fe('zip')}>
-              <label for="zip">ZIP</label>
+              <label for="zip">ZIP <span class="req">*</span></label>
               <input id="zip" type="text" bind:value={zip} autocomplete="off" aria-invalid={!!fe('zip')} />
               {#if fe('zip')}<span class="field-err">{fe('zip')}</span>{/if}
+            </div>
+            <div class="field" class:has-err={fe('email')}>
+              <label for="email">Email <span class="opt">(optional)</span></label>
+              <input id="email" type="email" bind:value={email} autocomplete="off" aria-invalid={!!fe('email')} />
+              {#if fe('email')}<span class="field-err">{fe('email')}</span>{/if}
+            </div>
+            <div class="field" class:has-err={fe('phone')}>
+              <label for="phone">Phone <span class="opt">(optional)</span></label>
+              <input id="phone" type="tel" bind:value={phone} autocomplete="off" aria-invalid={!!fe('phone')} />
+              {#if fe('phone')}<span class="field-err">{fe('phone')}</span>{/if}
             </div>
           </div>
         </fieldset>
