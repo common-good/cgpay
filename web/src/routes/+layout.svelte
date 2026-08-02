@@ -80,6 +80,7 @@
             <li><button type="button" class="nav-disabled" title="Member site link not configured">{label}</button></li>
           {/if}
         {/each}
+        <li><a class:active={activeLabel === 'Grants'} href="/grants">Grants</a></li>
       </ul>
       <div class="account">
         <span class="hi">Hi, {userInfo.name ?? ''}</span>
