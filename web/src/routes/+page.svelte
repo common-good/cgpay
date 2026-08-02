@@ -90,10 +90,6 @@
     return `Pending: ${fmtMoney(inAmt)} in / ${fmtMoney(outAmt)} out`
   }
 
-  function pendingRequestsCount(i: InfoResponse): number {
-    return i.txs.filter(t => t.pending).length
-  }
-
   function firstName(fullName: string): string {
     return fullName.split(' ')[0]
   }
@@ -126,22 +122,6 @@
           <div class="card-body">
             <span class="s-label">Available Funds</span>
             <span class="s-value">{fmtMoney(info.balance)}</span>
-          </div>
-        </article>
-
-        <article class="card summary-card">
-          <div class="icon-wrap tone-blue"><Icon name="clock" size={20} /></div>
-          <div class="card-body">
-            <span class="s-label">Pending Deposits</span>
-            <span class="s-value">{fmtMoney(info.summary.pendingTransferIn)}</span>
-          </div>
-        </article>
-
-        <article class="card summary-card">
-          <div class="icon-wrap tone-amber"><Icon name="clipboard" size={20} /></div>
-          <div class="card-body">
-            <span class="s-label">Pending Requests</span>
-            <span class="s-value">{pendingRequestsCount(info)}</span>
           </div>
         </article>
 
@@ -203,33 +183,17 @@
       <section class="quick-actions card">
         <h2>Quick Actions</h2>
         <ul>
-          <li>
-            <a href="/grants">
-              <div class="qa-icon tone-green"><Icon name="plus" size={18} /></div>
-              <div class="qa-body">
-                <span class="qa-title">Expected Grants</span>
-                <span class="qa-desc">View reported grants or notify us about incoming funding.</span>
-              </div>
-            </a>
-          </li>
-          <li>
-            <a href={phpUrl('/settings') || '#'} aria-disabled={!phpBase || undefined}>
-              <div class="qa-icon tone-blue"><Icon name="folder" size={18} /></div>
-              <div class="qa-body">
-                <span class="qa-title">Documents</span>
-                <span class="qa-desc">Upload and manage your documents.</span>
-              </div>
-            </a>
-          </li>
-          <li>
-            <a href={phpUrl('/community/message') || '#'} aria-disabled={!phpBase || undefined}>
-              <div class="qa-icon tone-amber"><Icon name="chat" size={18} /></div>
-              <div class="qa-body">
-                <span class="qa-title">Messages</span>
-                <span class="qa-desc">Message Common Good staff.</span>
-              </div>
-            </a>
-          </li>
+          {#if info.sponsored}
+            <li>
+              <a href="/grants">
+                <div class="qa-icon tone-green"><Icon name="plus" size={18} /></div>
+                <div class="qa-body">
+                  <span class="qa-title">Expected Grants</span>
+                  <span class="qa-desc">View reported grants or notify us about incoming funding.</span>
+                </div>
+              </a>
+            </li>
+          {/if}
           <li>
             <a href={phpUrl('/settings') || '#'} aria-disabled={!phpBase || undefined}>
               <div class="qa-icon tone-purple"><Icon name="user" size={18} /></div>
@@ -268,7 +232,7 @@
         <aside class="help card">
           <h3>Need help?</h3>
           <p>Our team is here for you.</p>
-          <a class="help-btn" href="mailto:support@commongood.earth">
+          <a class="help-btn" href={phpUrl('/help') || 'mailto:support@commongood.earth'}>
             <Icon name="help" size={16} /> Contact Support
           </a>
         </aside>
