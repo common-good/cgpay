@@ -42,13 +42,14 @@ export type InfoResponse = {
   name: string       // bestName: fullName falling back to login name
   loginName: string  // raw users.name (the login handle)
   balance: number
+  sponsored: boolean // true when this is a fiscally sponsored partner (u_company.coFlags bit CO_SPONSORED)
   summary: InfoSummary
   txs: InfoTx[]
 }
 
 // ---- Row shapes ----
 
-type UserRow = RowDataPacket & { balance: string | null; fullName: string | null; name: string }
+type UserRow = RowDataPacket & { balance: string | null; fullName: string | null; name: string; sponsored: number | null }
 type PendingRow = RowDataPacket & {
   amount: string
   other_uid: number
@@ -72,15 +73,20 @@ export const GET: RequestHandler = async ({ request, url }) => {
 
   const limit = Math.min(MAX_LIMIT, Math.max(1, Number(url.searchParams.get('limit') ?? DEFAULT_LIMIT)))
 
-  // 1) Balance + bestName for the user
+  // 1) Balance + bestName + sponsored-status for the user.
+  // sponsored comes from u_company.coFlags bit 2 (CO_SPONSORED); persons have no u_company row -> 0.
   const [userRows] = await pool.query<UserRow[]>(
-    'SELECT balance, fullName, name FROM users WHERE uid = ? LIMIT 1',
+    `SELECT u.balance, u.fullName, u.name,
+            CASE WHEN (c.coFlags & 4) > 0 THEN 1 ELSE 0 END AS sponsored
+       FROM users u LEFT JOIN u_company c ON c.uid = u.uid
+       WHERE u.uid = ? LIMIT 1`,
     [claims.uid]
   )
   if (!userRows[0]) throw error(404, 'user not found')
   const balance = userRows[0].balance === null ? 0 : Number(userRows[0].balance)
   const loginName = userRows[0].name
   const bestName = userRows[0].fullName || userRows[0].name
+  const sponsored = Number(userRows[0].sponsored) === 1
 
   // 2) Pending invoices (from tx_requests) — direction depends on who's the payer/payee
   // amount is signed: positive when we'd receive, negative when we'd pay
@@ -186,6 +192,7 @@ export const GET: RequestHandler = async ({ request, url }) => {
     name: bestName,
     loginName,
     balance,
+    sponsored,
     summary,
     txs
   }
