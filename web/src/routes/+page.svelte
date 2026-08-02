@@ -204,11 +204,11 @@
         <h2>Quick Actions</h2>
         <ul>
           <li>
-            <a href="/grants/new">
+            <a href="/grants">
               <div class="qa-icon tone-green"><Icon name="plus" size={18} /></div>
               <div class="qa-body">
-                <span class="qa-title">Report Expected Grant</span>
-                <span class="qa-desc">Notify us about incoming funding.</span>
+                <span class="qa-title">Expected Grants</span>
+                <span class="qa-desc">View reported grants or notify us about incoming funding.</span>
               </div>
             </a>
           </li>
