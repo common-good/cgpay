@@ -39,15 +39,25 @@ test.describe('grants create form — client contract', () => {
     await expect(submit).toBeDisabled()
 
     await page.getByLabel(/grantor name/i).fill('Ada Lovelace Foundation')
-    await expect(submit).toBeDisabled() // amount still missing
+    await expect(submit).toBeDisabled() // amount + address still missing
 
     await page.getByLabel(/expected amount/i).fill('1500.00')
+    await expect(submit).toBeDisabled() // address fields still missing (William 2026-07-31)
+
+    await page.getByLabel(/street address/i).fill('123 Main St')
+    await page.getByLabel(/city/i).fill('Ashfield')
+    await page.getByLabel(/^state/i).fill('26')
+    await page.getByLabel(/zip/i).fill('01330')
     await expect(submit).toBeEnabled()
   })
 
   test('submitting with an invalid token surfaces an error and stays on /grants/new', async ({ page }) => {
     await page.getByLabel(/grantor name/i).fill('Ada Lovelace Foundation')
     await page.getByLabel(/expected amount/i).fill('1500')
+    await page.getByLabel(/street address/i).fill('123 Main St')
+    await page.getByLabel(/city/i).fill('Ashfield')
+    await page.getByLabel(/^state/i).fill('26')
+    await page.getByLabel(/zip/i).fill('01330')
     await page.getByRole('button', { name: /report grant/i }).click()
 
     // With a bogus token, /api/grants returns 401 → client wipes token and
