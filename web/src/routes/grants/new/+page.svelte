@@ -20,16 +20,26 @@
 
   let submitting = $state(false)
   let error = $state<string | null>(null)
+  // Per-field validation errors from the server. Cleared on each submit attempt.
+  let fieldErrors = $state<Record<string, string>>({})
 
   const amountNum = $derived(Number(amount.replace(/[$,\s]/g, '')))
+  const stateNum = $derived(Number(stateCode))
   const canSubmit = $derived(
-    !submitting && fullName.trim().length > 0 && Number.isFinite(amountNum) && amountNum > 0
+    !submitting
+    && fullName.trim().length > 0
+    && Number.isFinite(amountNum) && amountNum > 0
+    && address.trim().length > 0
+    && city.trim().length > 0
+    && stateCode.trim().length > 0 && Number.isFinite(stateNum) && stateNum > 0
+    && zip.trim().length > 0
   )
 
   async function submit() {
     if (!canSubmit) return
     submitting = true
     error = null
+    fieldErrors = {}
 
     const token = localStorage.getItem('cg_token')
     if (!token) {
@@ -67,7 +77,11 @@
       }
       if (!res.ok) {
         const body = await res.json().catch(() => ({}))
-        error = body.message ?? `Could not save the grant (${res.status})`
+        // Server returns { message, errors: { fieldName: "…" } } for validation failures.
+        if (body && typeof body.errors === 'object' && body.errors) {
+          fieldErrors = body.errors as Record<string, string>
+        }
+        error = body?.message ?? body?.error ?? `Could not save the grant (${res.status})`
         submitting = false
         return
       }
@@ -76,6 +90,11 @@
       error = 'Network error — please try again.'
       submitting = false
     }
+  }
+
+  // Helper for cleaner template — returns the field-error message or '' (falsy).
+  function fe(name: string): string {
+    return fieldErrors[name] ?? ''
   }
 </script>
 
@@ -109,57 +128,66 @@
         <div class="err" role="alert">{error}</div>
       {/if}
 
-      <form class="form-card" onsubmit={(e) => { e.preventDefault(); submit() }}>
+      <form class="form-card" onsubmit={(e) => { e.preventDefault(); submit() }} novalidate>
         <fieldset>
           <legend>Grant details</legend>
           <div class="grid-2">
-            <div class="field span-2">
+            <div class="field span-2" class:has-err={fe('fullName')}>
               <label for="grantor">Grantor Name <span class="req">*</span></label>
-              <input id="grantor" type="text" bind:value={fullName} placeholder="Full name of donor / funder" autocomplete="off" required />
+              <input id="grantor" type="text" bind:value={fullName} placeholder="Full name of donor / funder" autocomplete="off" aria-invalid={!!fe('fullName')} />
+              {#if fe('fullName')}<span class="field-err">{fe('fullName')}</span>{/if}
             </div>
 
-            <div class="field">
+            <div class="field" class:has-err={fe('amount')}>
               <label for="amount">Expected Amount <span class="req">*</span></label>
-              <div class="input-wrap"><span class="prefix">$</span><input id="amount" type="text" inputmode="decimal" bind:value={amount} placeholder="25,000.00" required /></div>
+              <div class="input-wrap"><span class="prefix">$</span><input id="amount" type="text" inputmode="decimal" bind:value={amount} placeholder="25,000.00" aria-invalid={!!fe('amount')} /></div>
+              {#if fe('amount')}<span class="field-err">{fe('amount')}</span>{/if}
             </div>
 
-            <div class="field">
+            <div class="field" class:has-err={fe('by')}>
               <label for="by">Payment Method <span class="req">*</span></label>
-              <select id="by" bind:value={by}>
+              <select id="by" bind:value={by} aria-invalid={!!fe('by')}>
                 <option value="ach">ACH</option>
                 <option value="check">Check</option>
                 <option value="wire">Wire</option>
               </select>
+              {#if fe('by')}<span class="field-err">{fe('by')}</span>{/if}
             </div>
           </div>
         </fieldset>
 
         <fieldset>
-          <legend>Grantor contact <span class="opt">(optional — helps us match faster)</span></legend>
+          <legend>Grantor Contact Information</legend>
           <div class="grid-2">
-            <div class="field">
-              <label for="email">Email</label>
-              <input id="email" type="email" bind:value={email} autocomplete="off" />
+            <div class="field span-2" class:has-err={fe('address')}>
+              <label for="address">Street Address <span class="req">*</span></label>
+              <input id="address" type="text" bind:value={address} autocomplete="off" aria-invalid={!!fe('address')} />
+              {#if fe('address')}<span class="field-err">{fe('address')}</span>{/if}
             </div>
-            <div class="field">
-              <label for="phone">Phone</label>
-              <input id="phone" type="tel" bind:value={phone} autocomplete="off" />
+            <div class="field" class:has-err={fe('city')}>
+              <label for="city">City <span class="req">*</span></label>
+              <input id="city" type="text" bind:value={city} autocomplete="off" aria-invalid={!!fe('city')} />
+              {#if fe('city')}<span class="field-err">{fe('city')}</span>{/if}
             </div>
-            <div class="field span-2">
-              <label for="address">Street address</label>
-              <input id="address" type="text" bind:value={address} autocomplete="off" />
+            <div class="field" class:has-err={fe('state')}>
+              <label for="state">State <span class="req">*</span></label>
+              <input id="state" type="text" bind:value={stateCode} placeholder="State id" autocomplete="off" aria-invalid={!!fe('state')} />
+              {#if fe('state')}<span class="field-err">{fe('state')}</span>{/if}
             </div>
-            <div class="field">
-              <label for="city">City</label>
-              <input id="city" type="text" bind:value={city} autocomplete="off" />
+            <div class="field" class:has-err={fe('zip')}>
+              <label for="zip">ZIP <span class="req">*</span></label>
+              <input id="zip" type="text" bind:value={zip} autocomplete="off" aria-invalid={!!fe('zip')} />
+              {#if fe('zip')}<span class="field-err">{fe('zip')}</span>{/if}
             </div>
-            <div class="field">
-              <label for="state">State</label>
-              <input id="state" type="text" bind:value={stateCode} placeholder="State id" autocomplete="off" />
+            <div class="field" class:has-err={fe('email')}>
+              <label for="email">Email <span class="opt">(optional)</span></label>
+              <input id="email" type="email" bind:value={email} autocomplete="off" aria-invalid={!!fe('email')} />
+              {#if fe('email')}<span class="field-err">{fe('email')}</span>{/if}
             </div>
-            <div class="field">
-              <label for="zip">ZIP</label>
-              <input id="zip" type="text" bind:value={zip} autocomplete="off" />
+            <div class="field" class:has-err={fe('phone')}>
+              <label for="phone">Phone <span class="opt">(optional)</span></label>
+              <input id="phone" type="tel" bind:value={phone} autocomplete="off" aria-invalid={!!fe('phone')} />
+              {#if fe('phone')}<span class="field-err">{fe('phone')}</span>{/if}
             </div>
           </div>
         </fieldset>
@@ -219,6 +247,12 @@
     width: 100%; padding: 0.55rem 0.75rem; box-sizing: border-box;
     border: 1px solid var(--cg-border); border-radius: var(--cg-radius-sm);
     font-size: 0.95rem; background: white; color: var(--cg-text);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .field input:focus, .field select:focus {
+    outline: none;
+    border-color: var(--cg-green);
+    box-shadow: 0 0 0 3px rgba(30, 122, 58, 0.15);
   }
   .field.span-2 { grid-column: span 2; }
   @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } .field.span-2 { grid-column: auto; } }
@@ -227,9 +261,30 @@
     display: flex; align-items: center; gap: 0.5rem;
     border: 1px solid var(--cg-border); border-radius: var(--cg-radius-sm);
     padding-left: 0.75rem; background: white;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
   }
   .input-wrap input { border: 0; padding: 0.55rem 0.5rem; }
+  .input-wrap input:focus { box-shadow: none; }
   .input-wrap .prefix { color: var(--cg-text-muted); }
+
+  /* Field-error highlighting */
+  .field.has-err input,
+  .field.has-err select {
+    border-color: #b91c1c;
+    background: #fef2f2;
+  }
+  .field.has-err .input-wrap {
+    border-color: #b91c1c;
+    background: #fef2f2;
+  }
+  .field.has-err label {
+    color: #991b1b;
+  }
+  .field-err {
+    color: #991b1b;
+    font-size: 0.8rem;
+    margin-top: 0.15rem;
+  }
 
   .form-footer {
     display: flex; justify-content: flex-end; gap: 0.5rem;

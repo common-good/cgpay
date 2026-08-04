@@ -8,7 +8,7 @@
 
   let { children } = $props()
 
-  type UserInfo = { name?: string } | null
+  type UserInfo = { name?: string; sponsored?: boolean } | null
   let userInfo = $state<UserInfo>(null)
   let menu = $state<string[]>(['Dashboard', 'History', 'Community', 'Settings'])
   let mounted = $state(false)
@@ -80,6 +80,9 @@
             <li><button type="button" class="nav-disabled" title="Member site link not configured">{label}</button></li>
           {/if}
         {/each}
+        {#if userInfo.sponsored}
+          <li><a class:active={activeLabel === 'Grants'} href="/grants">Grants</a></li>
+        {/if}
       </ul>
       <div class="account">
         <span class="hi">Hi, {userInfo.name ?? ''}</span>
