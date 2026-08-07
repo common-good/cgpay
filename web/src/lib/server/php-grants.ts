@@ -25,6 +25,8 @@ export type CreateGrantInput = {
   city?: string
   state?: number
   zip?: string
+  ckNum?: string   // required when by === 'check'
+  ckDate?: string  // required when by === 'check'; ISO date string or anything strtotime-parseable
 }
 
 function config() {

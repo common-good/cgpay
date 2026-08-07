@@ -63,6 +63,14 @@ export const POST: RequestHandler = async ({ request }) => {
   if (!Number.isFinite(state) || state <= 0) preErrors.state = "Please select the grantor's state."
   if (!zip) preErrors.zip = "Please enter the grantor's zip code."
 
+  // Check-specific fields (per William 2026-08-04): required when by === 'check'.
+  const ckNum = typeof body.ckNum === 'string' ? body.ckNum.trim() : ''
+  const ckDate = typeof body.ckDate === 'string' ? body.ckDate.trim() : ''
+  if (by === 'check') {
+    if (!ckNum) preErrors.ckNum = 'Please enter the check number.'
+    if (!ckDate) preErrors.ckDate = 'Please enter the check date.'
+  }
+
   if (Object.keys(preErrors).length > 0) return fieldErrorResponse(preErrors)
 
   const input: CreateGrantInput = {
@@ -75,6 +83,10 @@ export const POST: RequestHandler = async ({ request }) => {
     if (typeof body[k] === 'string' && body[k].trim()) input[k] = body[k].trim()
   }
   if (body.state != null && Number.isFinite(Number(body.state))) input.state = Number(body.state)
+  if (by === 'check') {
+    input.ckNum = ckNum
+    input.ckDate = ckDate
+  }
 
   try {
     const id = await createGrant(input)

@@ -18,6 +18,10 @@
   let stateCode = $state('')
   let zip = $state('')
 
+  // Check-specific fields (per William 2026-08-04): only required when by === 'check'.
+  let ckNum = $state('')
+  let ckDate = $state('')
+
   let submitting = $state(false)
   let error = $state<string | null>(null)
   // Per-field validation errors from the server. Cleared on each submit attempt.
@@ -33,6 +37,7 @@
     && city.trim().length > 0
     && stateCode.trim().length > 0 && Number.isFinite(stateNum) && stateNum > 0
     && zip.trim().length > 0
+    && (by !== 'check' || (ckNum.trim().length > 0 && ckDate.trim().length > 0))
   )
 
   async function submit() {
@@ -57,6 +62,10 @@
     }
     if (stateCode.trim() && Number.isFinite(Number(stateCode))) {
       payload.state = Number(stateCode)
+    }
+    if (by === 'check') {
+      payload.ckNum = ckNum.trim()
+      payload.ckDate = ckDate.trim()
     }
 
     try {
@@ -153,6 +162,19 @@
               </select>
               {#if fe('by')}<span class="field-err">{fe('by')}</span>{/if}
             </div>
+
+            {#if by === 'check'}
+              <div class="field" class:has-err={fe('ckNum')}>
+                <label for="ckNum">Check Number <span class="req">*</span></label>
+                <input id="ckNum" type="text" bind:value={ckNum} placeholder="e.g. 1234" autocomplete="off" aria-invalid={!!fe('ckNum')} />
+                {#if fe('ckNum')}<span class="field-err">{fe('ckNum')}</span>{/if}
+              </div>
+              <div class="field" class:has-err={fe('ckDate')}>
+                <label for="ckDate">Check Date <span class="req">*</span></label>
+                <input id="ckDate" type="date" bind:value={ckDate} autocomplete="off" aria-invalid={!!fe('ckDate')} />
+                {#if fe('ckDate')}<span class="field-err">{fe('ckDate')}</span>{/if}
+              </div>
+            {/if}
           </div>
         </fieldset>
 
