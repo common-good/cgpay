@@ -58,9 +58,15 @@ namespace :deploy do
         # half, causing "pm2: command not found" on first deploy to any
         # environment (confirmed on test). Explicit Ruby check instead, so the
         # wrapper only ever runs one simple command at a time.
+        #
+        # PORT must be passed on BOTH branches, not just `start` — a stale
+        # process entry from an earlier deploy attempt caused `reload` to run
+        # with no PORT set, so the app fell back to its own hardcoded default
+        # (3000) and collided with an unrelated process already on that port
+        # (confirmed on dev/staging).
         running = capture(:pm2, 'jlist', raise_on_non_zero_exit: false).include?('"name":"pay"')
         if running
-          execute :pm2, 'reload pay --update-env'
+          execute :pm2, 'reload pay --update-env', env: { PORT: fetch(:pay_port) }
         else
           execute :pm2, "start build/index.js --name pay", env: { PORT: fetch(:pay_port) }
         end
