@@ -1,0 +1,2 @@
+---
+BUNDLE_BUILD__ED25519: "--with-cflags=-Wno-error=incompatible-pointer-types"

@@ -1,0 +1,100 @@
+  INFO ---------------------------------------------------------------------------
+  INFO START 2026-08-09 20:43:22 -0400 cap dev deploy
+  INFO ---------------------------------------------------------------------------
+  INFO [07f728e7] Running /usr/bin/env mkdir -p /home/dev/tmp/cgpay/ as dev@dev.commongood.earth
+ DEBUG [07f728e7] Command: /usr/bin/env mkdir -p /home/dev/tmp/cgpay/
+  INFO ---------------------------------------------------------------------------
+  INFO START 2026-08-09 20:46:05 -0400 cap test deploy
+  INFO ---------------------------------------------------------------------------
+  INFO [a6e4e87e] Running /usr/bin/env mkdir -p /home/test/tmp/cgpay/ as test@test.commongood.earth
+ DEBUG [a6e4e87e] Command: /usr/bin/env mkdir -p /home/test/tmp/cgpay/
+  INFO ---------------------------------------------------------------------------
+  INFO START 2026-08-09 20:51:43 -0400 cap test deploy
+  INFO ---------------------------------------------------------------------------
+  INFO [38d6de36] Running /usr/bin/env mkdir -p /home/test/tmp/cgpay/ as test@test.commongood.earth
+ DEBUG [38d6de36] Command: /usr/bin/env mkdir -p /home/test/tmp/cgpay/
+  INFO [38d6de36] Finished in 1.312 seconds with exit status 0 (successful).
+ DEBUG Uploading /home/test/tmp/cgpay/nvm-exec.sh 0.0%
+  INFO Uploading /home/test/tmp/cgpay/nvm-exec.sh 100.0%
+  INFO [c26f8723] Running /usr/bin/env chmod +x /home/test/tmp/cgpay/nvm-exec.sh as test@test.commongood.earth
+ DEBUG [c26f8723] Command: /usr/bin/env chmod +x /home/test/tmp/cgpay/nvm-exec.sh
+  INFO [c26f8723] Finished in 0.318 seconds with exit status 0 (successful).
+ DEBUG [bab124e8] Running [ -d $HOME/.nvm/v20.20.2 ] || [ -d $HOME/.nvm/versions/node/v20.20.2 ] as test@test.commongood.earth
+ DEBUG [bab124e8] Command: [ -d $HOME/.nvm/v20.20.2 ] || [ -d $HOME/.nvm/versions/node/v20.20.2 ]
+ DEBUG [bab124e8] Finished in 0.301 seconds with exit status 1 (failed).
+ ERROR nvm: v20.20.2 is not installed or not found in any of $HOME/.nvm/v20.20.2 $HOME/.nvm/versions/node/v20.20.2
+  INFO ---------------------------------------------------------------------------
+  INFO START 2026-08-09 20:53:32 -0400 cap test deploy
+  INFO ---------------------------------------------------------------------------
+  INFO [49946feb] Running /usr/bin/env mkdir -p /home/test/tmp/cgpay/ as test@test.commongood.earth
+ DEBUG [49946feb] Command: /usr/bin/env mkdir -p /home/test/tmp/cgpay/
+  INFO [49946feb] Finished in 1.261 seconds with exit status 0 (successful).
+ DEBUG Uploading /home/test/tmp/cgpay/nvm-exec.sh 0.0%
+  INFO Uploading /home/test/tmp/cgpay/nvm-exec.sh 100.0%
+  INFO [ac169455] Running /usr/bin/env chmod +x /home/test/tmp/cgpay/nvm-exec.sh as test@test.commongood.earth
+ DEBUG [ac169455] Command: /usr/bin/env chmod +x /home/test/tmp/cgpay/nvm-exec.sh
+  INFO [ac169455] Finished in 0.369 seconds with exit status 0 (successful).
+ DEBUG [e8187b8e] Running [ -d $HOME/.nvm/v20.20.2 ] || [ -d $HOME/.nvm/versions/node/v20.20.2 ] as test@test.commongood.earth
+ DEBUG [e8187b8e] Command: [ -d $HOME/.nvm/v20.20.2 ] || [ -d $HOME/.nvm/versions/node/v20.20.2 ]
+ DEBUG [e8187b8e] Finished in 0.319 seconds with exit status 0 (successful).
+  INFO [6d892c65] Running /usr/bin/env mkdir -p /home/test/tmp as test@test.commongood.earth
+ DEBUG [6d892c65] Command: ( export NODE_VERSION="v20.20.2" ; /usr/bin/env mkdir -p /home/test/tmp )
+  INFO [6d892c65] Finished in 0.339 seconds with exit status 0 (successful).
+ DEBUG Uploading /home/test/tmp/git-ssh-d9603597e5c535c3d226.sh 0.0%
+  INFO Uploading /home/test/tmp/git-ssh-d9603597e5c535c3d226.sh 100.0%
+  INFO [88b9cdfc] Running /usr/bin/env chmod 700 /home/test/tmp/git-ssh-d9603597e5c535c3d226.sh as test@test.commongood.earth
+ DEBUG [88b9cdfc] Command: ( export NODE_VERSION="v20.20.2" ; /usr/bin/env chmod 700 /home/test/tmp/git-ssh-d9603597e5c535c3d226.sh )
+  INFO [88b9cdfc] Finished in 0.339 seconds with exit status 0 (successful).
+  INFO [370b5a58] Running /usr/bin/env git ls-remote git@github-pay:common-good/cgpay.git HEAD as test@test.commongood.earth
+ DEBUG [370b5a58] Command: ( export NODE_VERSION="v20.20.2" GIT_ASKPASS="/bin/echo" GIT_SSH="/home/test/tmp/git-ssh-d9603597e5c535c3d226.sh" ; /usr/bin/env git ls-remote git@github-pay:common-good/cgpay.git HEAD )
+ DEBUG [370b5a58] 	578a94d6e96537999ee5d0576762a48721824d39	HEAD
+  INFO [370b5a58] Finished in 1.226 seconds with exit status 0 (successful).
+  INFO [1b313ae8] Running /usr/bin/env mkdir -p /home/test/pay/shared /home/test/pay/releases as test@test.commongood.earth
+ DEBUG [1b313ae8] Command: ( export NODE_VERSION="v20.20.2" ; /usr/bin/env mkdir -p /home/test/pay/shared /home/test/pay/releases )
+  INFO [1b313ae8] Finished in 0.315 seconds with exit status 0 (successful).
+  INFO [c27a925a] Running /usr/bin/env mkdir -p /home/test/pay/shared/web/node_modules as test@test.commongood.earth
+ DEBUG [c27a925a] Command: ( export NODE_VERSION="v20.20.2" ; /usr/bin/env mkdir -p /home/test/pay/shared/web/node_modules )
+  INFO [c27a925a] Finished in 0.331 seconds with exit status 0 (successful).
+  INFO [527f9ffb] Running /usr/bin/env mkdir -p /home/test/pay/shared/web as test@test.commongood.earth
+ DEBUG [527f9ffb] Command: ( export NODE_VERSION="v20.20.2" ; /usr/bin/env mkdir -p /home/test/pay/shared/web )
+  INFO [527f9ffb] Finished in 0.297 seconds with exit status 0 (successful).
+ DEBUG [c5fd67ba] Running [ -f /home/test/pay/shared/web/.env ] as test@test.commongood.earth
+ DEBUG [c5fd67ba] Command: [ -f /home/test/pay/shared/web/.env ]
+ DEBUG [c5fd67ba] Finished in 0.318 seconds with exit status 0 (successful).
+ DEBUG [d3de5ebf] Running [ -f /home/test/pay/current/REVISION ] as test@test.commongood.earth
+ DEBUG [d3de5ebf] Command: [ -f /home/test/pay/current/REVISION ]
+ DEBUG [d3de5ebf] Finished in 0.362 seconds with exit status 1 (failed).
+ DEBUG [1dbb002b] Running [ -f /home/test/pay/current/REVISION_TIME ] as test@test.commongood.earth
+ DEBUG [1dbb002b] Command: [ -f /home/test/pay/current/REVISION_TIME ]
+ DEBUG [1dbb002b] Finished in 0.303 seconds with exit status 1 (failed).
+ DEBUG [0d29e161] Running [ -f /home/test/pay/repo/HEAD ] as test@test.commongood.earth
+ DEBUG [0d29e161] Command: [ -f /home/test/pay/repo/HEAD ]
+ DEBUG [0d29e161] Finished in 0.379 seconds with exit status 1 (failed).
+ DEBUG [ce8b3485] Running if test ! -d /home/test/pay; then echo "Directory does not exist '/home/test/pay'" 1>&2; false; fi as test@test.commongood.earth
+ DEBUG [ce8b3485] Command: if test ! -d /home/test/pay; then echo "Directory does not exist '/home/test/pay'" 1>&2; false; fi
+ DEBUG [ce8b3485] Finished in 0.320 seconds with exit status 0 (successful).
+  INFO [b5fb01ba] Running /usr/bin/env git clone --mirror git@github-pay:common-good/cgpay.git /home/test/pay/repo as test@test.commongood.earth
+ DEBUG [b5fb01ba] Command: cd /home/test/pay && ( export NODE_VERSION="v20.20.2" GIT_ASKPASS="/bin/echo" GIT_SSH="/home/test/tmp/git-ssh-d9603597e5c535c3d226.sh" ; /usr/bin/env git clone --mirror git@github-pay:common-good/cgpay.git /home/test/pay/repo )
+ DEBUG [b5fb01ba] 	Cloning into bare repository '/home/test/pay/repo'...
+  INFO [b5fb01ba] Finished in 1.964 seconds with exit status 0 (successful).
+ DEBUG [4cb3b2f2] Running if test ! -d /home/test/pay/repo; then echo "Directory does not exist '/home/test/pay/repo'" 1>&2; false; fi as test@test.commongood.earth
+ DEBUG [4cb3b2f2] Command: if test ! -d /home/test/pay/repo; then echo "Directory does not exist '/home/test/pay/repo'" 1>&2; false; fi
+ DEBUG [4cb3b2f2] Finished in 0.319 seconds with exit status 0 (successful).
+  INFO [3ff03973] Running /usr/bin/env git remote set-url origin git@github-pay:common-good/cgpay.git as test@test.commongood.earth
+ DEBUG [3ff03973] Command: cd /home/test/pay/repo && ( export NODE_VERSION="v20.20.2" GIT_ASKPASS="/bin/echo" GIT_SSH="/home/test/tmp/git-ssh-d9603597e5c535c3d226.sh" ; /usr/bin/env git remote set-url origin git@github-pay:common-good/cgpay.git )
+  INFO [3ff03973] Finished in 0.351 seconds with exit status 0 (successful).
+  INFO [acb77aa0] Running /usr/bin/env git remote update --prune as test@test.commongood.earth
+ DEBUG [acb77aa0] Command: cd /home/test/pay/repo && ( export NODE_VERSION="v20.20.2" GIT_ASKPASS="/bin/echo" GIT_SSH="/home/test/tmp/git-ssh-d9603597e5c535c3d226.sh" ; /usr/bin/env git remote update --prune )
+ DEBUG [acb77aa0] 	Fetching origin
+  INFO [acb77aa0] Finished in 1.308 seconds with exit status 0 (successful).
+ DEBUG [dc93402c] Running if test ! -d /home/test/pay/repo; then echo "Directory does not exist '/home/test/pay/repo'" 1>&2; false; fi as test@test.commongood.earth
+ DEBUG [dc93402c] Command: if test ! -d /home/test/pay/repo; then echo "Directory does not exist '/home/test/pay/repo'" 1>&2; false; fi
+ DEBUG [dc93402c] Finished in 0.350 seconds with exit status 0 (successful).
+  INFO [557378ee] Running /usr/bin/env mkdir -p /home/test/pay/releases/20260810005359 as test@test.commongood.earth
+ DEBUG [557378ee] Command: cd /home/test/pay/repo && ( export NODE_VERSION="v20.20.2" GIT_ASKPASS="/bin/echo" GIT_SSH="/home/test/tmp/git-ssh-d9603597e5c535c3d226.sh" ; /usr/bin/env mkdir -p /home/test/pay/releases/20260810005359 )
+  INFO [557378ee] Finished in 0.336 seconds with exit status 0 (successful).
+  INFO [ca012653] Running /usr/bin/env git archive feat/capistrano | /usr/bin/env tar -x -f - -C /home/test/pay/releases/20260810005359 as test@test.commongood.earth
+ DEBUG [ca012653] Command: cd /home/test/pay/repo && ( export NODE_VERSION="v20.20.2" GIT_ASKPASS="/bin/echo" GIT_SSH="/home/test/tmp/git-ssh-d9603597e5c535c3d226.sh" ; /usr/bin/env git archive feat/capistrano | /usr/bin/env tar -x -f - -C /home/test/pay/releases/20260810005359 )
+ DEBUG [ca012653] 	fatal: not a valid object name: feat/capistrano
+ DEBUG [ca012653] 	tar: This does not look like a tar archive
+ DEBUG [ca012653] 	tar: Exiting with failure status due to previous errors

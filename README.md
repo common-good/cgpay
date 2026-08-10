@@ -127,3 +127,22 @@ Before deploying a new release, remember to:
 
 We use semantic versioning and [github tags](https://github.com/common-good/cg-pay-pwa/releases/new) on the `main` branch to track releases.  
 The first release of CGPay, "Release A", is v4.0.0.
+
+## Code Tour (in src/)
+
+CGPay is a Progressive Web App (PWA) written in Svelte, which is based on Vite
+
+- app.js: top level code under index.html
+- modules/: Svelte modules organized around major functionality
+- tests/
+    - features/: Cucumber behavioral feature regression tests
+    - features/background.txt: Description of implicit setup for each test
+    - support/: support code for feature tests
+    - unit-tests/: tests organized mostly around Svelte modules
+- cache.js: data structure definitions
+- db.js: low-level data manipulation functions
+- store.js: higher-level data management functions
+- utils.js: low-level utility functions
+- constants.js: constants used by both app and tests
+- utils0.js: low-level utility functions used by both app and tests
+- vite.config.js: contains some include file aliases and global literals
