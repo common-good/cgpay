@@ -53,7 +53,17 @@ namespace :deploy do
   task :restart do
     on roles(:app) do
       within release_path.join('web') do
-        execute :pm2, "reload pay --update-env || PORT=#{fetch(:pay_port)} pm2 start build/index.js --name pay"
+        # NOT `reload ... || start ...` as a single shell command — the
+        # capistrano-nvm wrapper (nvm-exec.sh) loses PATH on the `||` fallback
+        # half, causing "pm2: command not found" on first deploy to any
+        # environment (confirmed on test). Explicit Ruby check instead, so the
+        # wrapper only ever runs one simple command at a time.
+        running = capture(:pm2, 'jlist', raise_on_non_zero_exit: false).include?('"name":"pay"')
+        if running
+          execute :pm2, 'reload pay --update-env'
+        else
+          execute :pm2, "start build/index.js --name pay", env: { PORT: fetch(:pay_port) }
+        end
       end
     end
   end

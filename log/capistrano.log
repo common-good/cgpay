@@ -98,3 +98,752 @@
  DEBUG [ca012653] 	fatal: not a valid object name: feat/capistrano
  DEBUG [ca012653] 	tar: This does not look like a tar archive
  DEBUG [ca012653] 	tar: Exiting with failure status due to previous errors
+  INFO ---------------------------------------------------------------------------
+  INFO START 2026-08-09 21:05:02 -0400 cap test deploy
+  INFO ---------------------------------------------------------------------------
+  INFO [99671133] Running /usr/bin/env mkdir -p /home/test/tmp/cgpay/ as test@test.commongood.earth
+ DEBUG [99671133] Command: /usr/bin/env mkdir -p /home/test/tmp/cgpay/
+  INFO [99671133] Finished in 1.232 seconds with exit status 0 (successful).
+ DEBUG Uploading /home/test/tmp/cgpay/nvm-exec.sh 0.0%
+  INFO Uploading /home/test/tmp/cgpay/nvm-exec.sh 100.0%
+  INFO [d27c4bbd] Running /usr/bin/env chmod +x /home/test/tmp/cgpay/nvm-exec.sh as test@test.commongood.earth
+ DEBUG [d27c4bbd] Command: /usr/bin/env chmod +x /home/test/tmp/cgpay/nvm-exec.sh
+  INFO [d27c4bbd] Finished in 0.292 seconds with exit status 0 (successful).
+ DEBUG [32b1b6b0] Running [ -d $HOME/.nvm/v20.20.2 ] || [ -d $HOME/.nvm/versions/node/v20.20.2 ] as test@test.commongood.earth
+ DEBUG [32b1b6b0] Command: [ -d $HOME/.nvm/v20.20.2 ] || [ -d $HOME/.nvm/versions/node/v20.20.2 ]
+ DEBUG [32b1b6b0] Finished in 0.304 seconds with exit status 0 (successful).
+  INFO [28723140] Running /usr/bin/env mkdir -p /home/test/tmp as test@test.commongood.earth
+ DEBUG [28723140] Command: ( export NODE_VERSION="v20.20.2" ; /usr/bin/env mkdir -p /home/test/tmp )
+  INFO [28723140] Finished in 0.288 seconds with exit status 0 (successful).
+ DEBUG Uploading /home/test/tmp/git-ssh-af42ffa439738979e8f5.sh 0.0%
+  INFO Uploading /home/test/tmp/git-ssh-af42ffa439738979e8f5.sh 100.0%
+  INFO [7521014c] Running /usr/bin/env chmod 700 /home/test/tmp/git-ssh-af42ffa439738979e8f5.sh as test@test.commongood.earth
+ DEBUG [7521014c] Command: ( export NODE_VERSION="v20.20.2" ; /usr/bin/env chmod 700 /home/test/tmp/git-ssh-af42ffa439738979e8f5.sh )
+  INFO [7521014c] Finished in 0.340 seconds with exit status 0 (successful).
+  INFO [a2e68b76] Running /usr/bin/env git ls-remote git@github-pay:common-good/cgpay.git HEAD as test@test.commongood.earth
+ DEBUG [a2e68b76] Command: ( export NODE_VERSION="v20.20.2" GIT_ASKPASS="/bin/echo" GIT_SSH="/home/test/tmp/git-ssh-af42ffa439738979e8f5.sh" ; /usr/bin/env git ls-remote git@github-pay:common-good/cgpay.git HEAD )
+ DEBUG [a2e68b76] 	578a94d6e96537999ee5d0576762a48721824d39	HEAD
+  INFO [a2e68b76] Finished in 5.352 seconds with exit status 0 (successful).
+  INFO [e6feab13] Running /usr/bin/env mkdir -p /home/test/pay/shared /home/test/pay/releases as test@test.commongood.earth
+ DEBUG [e6feab13] Command: ( export NODE_VERSION="v20.20.2" ; /usr/bin/env mkdir -p /home/test/pay/shared /home/test/pay/releases )
+  INFO [e6feab13] Finished in 0.329 seconds with exit status 0 (successful).
+  INFO [27a73053] Running /usr/bin/env mkdir -p /home/test/pay/shared/web/node_modules as test@test.commongood.earth
+ DEBUG [27a73053] Command: ( export NODE_VERSION="v20.20.2" ; /usr/bin/env mkdir -p /home/test/pay/shared/web/node_modules )
+  INFO [27a73053] Finished in 0.348 seconds with exit status 0 (successful).
+  INFO [4d762fcb] Running /usr/bin/env mkdir -p /home/test/pay/shared/web as test@test.commongood.earth
+ DEBUG [4d762fcb] Command: ( export NODE_VERSION="v20.20.2" ; /usr/bin/env mkdir -p /home/test/pay/shared/web )
+  INFO [4d762fcb] Finished in 0.332 seconds with exit status 0 (successful).
+ DEBUG [7c233920] Running [ -f /home/test/pay/shared/web/.env ] as test@test.commongood.earth
+ DEBUG [7c233920] Command: [ -f /home/test/pay/shared/web/.env ]
+ DEBUG [7c233920] Finished in 0.320 seconds with exit status 0 (successful).
+ DEBUG [ac6d9792] Running [ -f /home/test/pay/current/REVISION ] as test@test.commongood.earth
+ DEBUG [ac6d9792] Command: [ -f /home/test/pay/current/REVISION ]
+ DEBUG [ac6d9792] Finished in 0.304 seconds with exit status 1 (failed).
+ DEBUG [f8381eed] Running [ -f /home/test/pay/current/REVISION_TIME ] as test@test.commongood.earth
+ DEBUG [f8381eed] Command: [ -f /home/test/pay/current/REVISION_TIME ]
+ DEBUG [f8381eed] Finished in 0.336 seconds with exit status 1 (failed).
+ DEBUG [d7ed1a96] Running [ -f /home/test/pay/repo/HEAD ] as test@test.commongood.earth
+ DEBUG [d7ed1a96] Command: [ -f /home/test/pay/repo/HEAD ]
+ DEBUG [d7ed1a96] Finished in 0.350 seconds with exit status 0 (successful).
+  INFO The repository mirror is at /home/test/pay/repo
+ DEBUG [53a8dce4] Running if test ! -d /home/test/pay/repo; then echo "Directory does not exist '/home/test/pay/repo'" 1>&2; false; fi as test@test.commongood.earth
+ DEBUG [53a8dce4] Command: if test ! -d /home/test/pay/repo; then echo "Directory does not exist '/home/test/pay/repo'" 1>&2; false; fi
+ DEBUG [53a8dce4] Finished in 0.318 seconds with exit status 0 (successful).
+  INFO [9079e539] Running /usr/bin/env git remote set-url origin git@github-pay:common-good/cgpay.git as test@test.commongood.earth
+ DEBUG [9079e539] Command: cd /home/test/pay/repo && ( export NODE_VERSION="v20.20.2" GIT_ASKPASS="/bin/echo" GIT_SSH="/home/test/tmp/git-ssh-af42ffa439738979e8f5.sh" ; /usr/bin/env git remote set-url origin git@github-pay:common-good/cgpay.git )
+  INFO [9079e539] Finished in 0.302 seconds with exit status 0 (successful).
+  INFO [d76148d4] Running /usr/bin/env git remote update --prune as test@test.commongood.earth
+ DEBUG [d76148d4] Command: cd /home/test/pay/repo && ( export NODE_VERSION="v20.20.2" GIT_ASKPASS="/bin/echo" GIT_SSH="/home/test/tmp/git-ssh-af42ffa439738979e8f5.sh" ; /usr/bin/env git remote update --prune )
+ DEBUG [d76148d4] 	Fetching origin
+ DEBUG [d76148d4] 	From github-pay:common-good/cgpay
+ * [new branch]      feat/capistrano -> feat/capistrano
+  INFO [d76148d4] Finished in 5.790 seconds with exit status 0 (successful).
+ DEBUG [a49a3fdc] Running if test ! -d /home/test/pay/repo; then echo "Directory does not exist '/home/test/pay/repo'" 1>&2; false; fi as test@test.commongood.earth
+ DEBUG [a49a3fdc] Command: if test ! -d /home/test/pay/repo; then echo "Directory does not exist '/home/test/pay/repo'" 1>&2; false; fi
+ DEBUG [a49a3fdc] Finished in 0.288 seconds with exit status 0 (successful).
+  INFO [d7ed3eb7] Running /usr/bin/env mkdir -p /home/test/pay/releases/20260810010515 as test@test.commongood.earth
+ DEBUG [d7ed3eb7] Command: cd /home/test/pay/repo && ( export NODE_VERSION="v20.20.2" GIT_ASKPASS="/bin/echo" GIT_SSH="/home/test/tmp/git-ssh-af42ffa439738979e8f5.sh" ; /usr/bin/env mkdir -p /home/test/pay/releases/20260810010515 )
+  INFO [d7ed3eb7] Finished in 0.351 seconds with exit status 0 (successful).
+  INFO [9b961442] Running /usr/bin/env git archive feat/capistrano | /usr/bin/env tar -x -f - -C /home/test/pay/releases/20260810010515 as test@test.commongood.earth
+ DEBUG [9b961442] Command: cd /home/test/pay/repo && ( export NODE_VERSION="v20.20.2" GIT_ASKPASS="/bin/echo" GIT_SSH="/home/test/tmp/git-ssh-af42ffa439738979e8f5.sh" ; /usr/bin/env git archive feat/capistrano | /usr/bin/env tar -x -f - -C /home/test/pay/releases/20260810010515 )
+  INFO [9b961442] Finished in 0.350 seconds with exit status 0 (successful).
+ DEBUG [9a6ed618] Running if test ! -d /home/test/pay/repo; then echo "Directory does not exist '/home/test/pay/repo'" 1>&2; false; fi as test@test.commongood.earth
+ DEBUG [9a6ed618] Command: if test ! -d /home/test/pay/repo; then echo "Directory does not exist '/home/test/pay/repo'" 1>&2; false; fi
+ DEBUG [9a6ed618] Finished in 0.347 seconds with exit status 0 (successful).
+ DEBUG [567fa338] Running /usr/bin/env git rev-list --max-count=1 feat/capistrano as test@test.commongood.earth
+ DEBUG [567fa338] Command: cd /home/test/pay/repo && ( export NODE_VERSION="v20.20.2" GIT_ASKPASS="/bin/echo" GIT_SSH="/home/test/tmp/git-ssh-af42ffa439738979e8f5.sh" ; /usr/bin/env git rev-list --max-count=1 feat/capistrano )
+ DEBUG [567fa338] 	25ede6853ac5a4c2ce04ddd5dd473b92cbf8760b
+ DEBUG [567fa338] Finished in 0.320 seconds with exit status 0 (successful).
+ DEBUG [cc11a1b5] Running if test ! -d /home/test/pay/releases/20260810010515; then echo "Directory does not exist '/home/test/pay/releases/20260810010515'" 1>&2; false; fi as test@test.commongood.earth
+ DEBUG [cc11a1b5] Command: if test ! -d /home/test/pay/releases/20260810010515; then echo "Directory does not exist '/home/test/pay/releases/20260810010515'" 1>&2; false; fi
+ DEBUG [cc11a1b5] Finished in 0.305 seconds with exit status 0 (successful).
+  INFO [c23bd14a] Running /usr/bin/env echo "25ede6853ac5a4c2ce04ddd5dd473b92cbf8760b" > REVISION as test@test.commongood.earth
+ DEBUG [c23bd14a] Command: cd /home/test/pay/releases/20260810010515 && ( export NODE_VERSION="v20.20.2" ; /usr/bin/env echo "25ede6853ac5a4c2ce04ddd5dd473b92cbf8760b" > REVISION )
+  INFO [c23bd14a] Finished in 0.334 seconds with exit status 0 (successful).
+ DEBUG [d29fbaf5] Running if test ! -d /home/test/pay/repo; then echo "Directory does not exist '/home/test/pay/repo'" 1>&2; false; fi as test@test.commongood.earth
+ DEBUG [d29fbaf5] Command: if test ! -d /home/test/pay/repo; then echo "Directory does not exist '/home/test/pay/repo'" 1>&2; false; fi
+ DEBUG [d29fbaf5] Finished in 0.333 seconds with exit status 0 (successful).
+ DEBUG [5f09bf95] Running /usr/bin/env git --no-pager log -1 --pretty=format:"%ct" feat/capistrano as test@test.commongood.earth
+ DEBUG [5f09bf95] Command: cd /home/test/pay/repo && ( export NODE_VERSION="v20.20.2" GIT_ASKPASS="/bin/echo" GIT_SSH="/home/test/tmp/git-ssh-af42ffa439738979e8f5.sh" ; /usr/bin/env git --no-pager log -1 --pretty=format:"%ct" feat/capistrano )
+ DEBUG [5f09bf95] 	1786323848
+ DEBUG [5f09bf95] Finished in 0.711 seconds with exit status 0 (successful).
+ DEBUG [0738326a] Running if test ! -d /home/test/pay/releases/20260810010515; then echo "Directory does not exist '/home/test/pay/releases/20260810010515'" 1>&2; false; fi as test@test.commongood.earth
+ DEBUG [0738326a] Command: if test ! -d /home/test/pay/releases/20260810010515; then echo "Directory does not exist '/home/test/pay/releases/20260810010515'" 1>&2; false; fi
+ DEBUG [0738326a] Finished in 0.395 seconds with exit status 0 (successful).
+  INFO [8174b187] Running /usr/bin/env echo "1786323848" > REVISION_TIME as test@test.commongood.earth
+ DEBUG [8174b187] Command: cd /home/test/pay/releases/20260810010515 && ( export NODE_VERSION="v20.20.2" ; /usr/bin/env echo "1786323848" > REVISION_TIME )
+  INFO [8174b187] Finished in 0.305 seconds with exit status 0 (successful).
+  INFO [3a7f3b77] Running /usr/bin/env mkdir -p /home/test/pay/releases/20260810010515/web as test@test.commongood.earth
+ DEBUG [3a7f3b77] Command: ( export NODE_VERSION="v20.20.2" ; /usr/bin/env mkdir -p /home/test/pay/releases/20260810010515/web )
+  INFO [3a7f3b77] Finished in 0.381 seconds with exit status 0 (successful).
+ DEBUG [0066631f] Running [ -L /home/test/pay/releases/20260810010515/web/.env ] as test@test.commongood.earth
+ DEBUG [0066631f] Command: [ -L /home/test/pay/releases/20260810010515/web/.env ]
+ DEBUG [0066631f] Finished in 0.290 seconds with exit status 1 (failed).
+ DEBUG [62c4fcd3] Running [ -f /home/test/pay/releases/20260810010515/web/.env ] as test@test.commongood.earth
+ DEBUG [62c4fcd3] Command: [ -f /home/test/pay/releases/20260810010515/web/.env ]
+ DEBUG [62c4fcd3] Finished in 0.336 seconds with exit status 1 (failed).
+  INFO [b7a1c1bb] Running /usr/bin/env ln -s /home/test/pay/shared/web/.env /home/test/pay/releases/20260810010515/web/.env as test@test.commongood.earth
+ DEBUG [b7a1c1bb] Command: ( export NODE_VERSION="v20.20.2" ; /usr/bin/env ln -s /home/test/pay/shared/web/.env /home/test/pay/releases/20260810010515/web/.env )
+  INFO [b7a1c1bb] Finished in 0.300 seconds with exit status 0 (successful).
+  INFO [48850928] Running /usr/bin/env mkdir -p /home/test/pay/releases/20260810010515/web as test@test.commongood.earth
+ DEBUG [48850928] Command: ( export NODE_VERSION="v20.20.2" ; /usr/bin/env mkdir -p /home/test/pay/releases/20260810010515/web )
+  INFO [48850928] Finished in 0.335 seconds with exit status 0 (successful).
+ DEBUG [e45900ae] Running [ -L /home/test/pay/releases/20260810010515/web/node_modules ] as test@test.commongood.earth
+ DEBUG [e45900ae] Command: [ -L /home/test/pay/releases/20260810010515/web/node_modules ]
+ DEBUG [e45900ae] Finished in 0.321 seconds with exit status 1 (failed).
+ DEBUG [fdf7b139] Running [ -d /home/test/pay/releases/20260810010515/web/node_modules ] as test@test.commongood.earth
+ DEBUG [fdf7b139] Command: [ -d /home/test/pay/releases/20260810010515/web/node_modules ]
+ DEBUG [fdf7b139] Finished in 0.334 seconds with exit status 1 (failed).
+  INFO [4334a42c] Running /usr/bin/env ln -s /home/test/pay/shared/web/node_modules /home/test/pay/releases/20260810010515/web/node_modules as test@test.commongood.earth
+ DEBUG [4334a42c] Command: ( export NODE_VERSION="v20.20.2" ; /usr/bin/env ln -s /home/test/pay/shared/web/node_modules /home/test/pay/releases/20260810010515/web/node_modules )
+  INFO [4334a42c] Finished in 0.335 seconds with exit status 0 (successful).
+ DEBUG [1c44c833] Running if test ! -d /home/test/pay/releases/20260810010515/web; then echo "Directory does not exist '/home/test/pay/releases/20260810010515/web'" 1>&2; false; fi as test@test.commongood.earth
+ DEBUG [1c44c833] Command: if test ! -d /home/test/pay/releases/20260810010515/web; then echo "Directory does not exist '/home/test/pay/releases/20260810010515/web'" 1>&2; false; fi
+ DEBUG [1c44c833] Finished in 0.337 seconds with exit status 0 (successful).
+  INFO [9fb0fb71] Running /home/test/tmp/cgpay/nvm-exec.sh npm ci as test@test.commongood.earth
+ DEBUG [9fb0fb71] Command: cd /home/test/pay/releases/20260810010515/web && ( export NODE_VERSION="v20.20.2" ; /home/test/tmp/cgpay/nvm-exec.sh npm ci )
+ DEBUG [9fb0fb71] 	Now using node v20.20.2 (npm v10.8.2)
+ DEBUG [9fb0fb71] 	npm warn reify Removing non-directory /home/test/pay/releases/20260810010515/web/node_modules
+ DEBUG [9fb0fb71] 	
+> web@0.0.1 prepare
+> svelte-kit sync || echo ''
+
+ DEBUG [9fb0fb71] 	
+added 202 packages, and audited 203 packages in 9s
+ DEBUG [9fb0fb71] 	
+ DEBUG [9fb0fb71] 	38 packages are looking for funding
+ DEBUG [9fb0fb71] 	  run `npm fund` for details
+ DEBUG [9fb0fb71] 	
+7 vulnerabilities (2 low, 1 moderate, 4 high)
+
+To address all issues, run:
+  npm audit fix
+
+Run `npm audit` for details.
+  INFO [9fb0fb71] Finished in 9.767 seconds with exit status 0 (successful).
+  INFO [6144ad1a] Running /home/test/tmp/cgpay/nvm-exec.sh npm run build as test@test.commongood.earth
+ DEBUG [6144ad1a] Command: cd /home/test/pay/releases/20260810010515/web && ( export NODE_VERSION="v20.20.2" ; /home/test/tmp/cgpay/nvm-exec.sh npm run build )
+ DEBUG [6144ad1a] 	Now using node v20.20.2 (npm v10.8.2)
+ DEBUG [6144ad1a] 	
+> web@0.0.1 build
+> vite build
+
+ DEBUG [6144ad1a] 	vite v8.0.14 building ssr environment for production...
+ DEBUG [6144ad1a] 	[2Ktransforming...
+ DEBUG [6144ad1a] 	1:05:42 AM [vite-plugin-svelte] src/routes/+page.svelte:358:2 Unused CSS selector ".tone-amber"
+https://svelte.dev/e/css_unused_selector
+ DEBUG [6144ad1a] 	356:   .s-note { font-size: 0.75rem; color: var(--cg-text-muted); font-style: italic; margin-top: 0.15rem; }
+357:   .tone-purple { background: rgba(120,80,180,0.1); color: #785ab4; }
+358:   .tone-amber { background: rgba(214,143,30,0.12); color: #b96e0c; }
+                  ^
+359: 
+360:   .quick-actions { padding: 1.5rem; }
+ DEBUG [6144ad1a] 	✓ 221 modules transformed.
+ DEBUG [6144ad1a] 	rendering chunks...
+ DEBUG [6144ad1a] 	vite v8.0.14 building client environment for production...
+ DEBUG [6144ad1a] 	[2Ktransforming...
+ DEBUG [6144ad1a] 	1:05:45 AM [vite-plugin-svelte] src/routes/+page.svelte:358:2 Unused CSS selector ".tone-amber"
+https://svelte.dev/e/css_unused_selector
+ DEBUG [6144ad1a] 	356:   .s-note { font-size: 0.75rem; color: var(--cg-text-muted); font-style: italic; margin-top: 0.15rem; }
+357:   .tone-purple { background: rgba(120,80,180,0.1); color: #785ab4; }
+358:   .tone-amber { background: rgba(214,143,30,0.12); color: #b96e0c; }
+                  ^
+359: 
+360:   .quick-actions { padding: 1.5rem; }
+ DEBUG [6144ad1a] 	✓ 245 modules transformed.
+ DEBUG [6144ad1a] 	rendering chunks...
+ DEBUG [6144ad1a] 	computing gzip size...
+ DEBUG [6144ad1a] 	.svelte-kit/output/client/_app/version.json                            0.02 kB │ gzip:  0.04 kB
+.svelte-kit/output/client/_app/immutable/assets/cg-logo.DGUrWsfF.png  15.34 kB
+.svelte-kit/output/client/.vite/manifest.json                         15.56 kB │ gzip:  1.71 kB
+.svelte-kit/output/client/_app/immutable/assets/Brand.0u2yqB_A.css     0.27 kB │ gzip:  0.19 kB
+.svelte-kit/output/client/_app/immutable/assets/Tooltip.C_HK8Jq4.css   1.41 kB │ gzip:  0.49 kB
+.svelte-kit/output/client/_app/immutable/assets/8.DpKU2AOc.css         1.47 kB │ gzip:  0.54 kB
+.svelte-kit/output/client/_app/immutable/assets/7.YDdZRQ9d.css         1.57 kB │ gzip:  0.57 kB
+.svelte-kit/output/client/_app/immutable/assets/0.CZIwRaYT.css         1.93 kB │ gzip:  0.72 kB
+.svelte-kit/output/client/_app/immutable/assets/5.0HywcBxy.css         2.35 kB │ gzip:  0.72 kB
+.svelte-kit/output/client/_app/immutable/assets/27.ByyK-W_M.css        2.75 kB │ gzip:  0.80 kB
+.svelte-kit/output/client/_app/immutable/assets/18.BsnCOihU.css        2.99 kB │ gzip:  0.85 kB
+.svelte-kit/output/client/_app/immutable/assets/17.C8HHbS9V.css        3.15 kB │ gzip:  0.89 kB
+.svelte-kit/output/client/_app/immutable/assets/23.DV9eoH1c.css        3.34 kB │ gzip:  0.85 kB
+.svelte-kit/output/client/_app/immutable/assets/24.6ozxB0Nj.css        3.49 kB │ gzip:  0.91 kB
+.svelte-kit/output/client/_app/immutable/assets/10.DEgGqWZf.css        3.68 kB │ gzip:  0.90 kB
+.svelte-kit/output/client/_app/immutable/assets/22.BmF7PbkC.css        3.73 kB │ gzip:  1.07 kB
+.svelte-kit/output/client/_app/immutable/assets/12.C-Rk4KQI.css        4.06 kB │ gzip:  1.06 kB
+.svelte-kit/output/client/_app/immutable/assets/6.DAKNTlG9.css         4.15 kB │ gzip:  1.02 kB
+.svelte-kit/output/client/_app/immutable/assets/19.Coe-ELpV.css        4.35 kB │ gzip:  1.07 kB
+.svelte-kit/output/client/_app/immutable/assets/15.BChQ5wOQ.css        4.50 kB │ gzip:  1.05 kB
+.svelte-kit/output/client/_app/immutable/assets/2.BFjEletq.css         4.56 kB │ gzip:  1.23 kB
+.svelte-kit/output/client/_app/immutable/assets/28.BA98tdps.css        4.66 kB │ gzip:  1.13 kB
+.svelte-kit/output/client/_app/immutable/assets/13.izwiKfpk.css        4.75 kB │ gzip:  1.12 kB
+.svelte-kit/output/client/_app/immutable/assets/21.TeQJSeuQ.css        4.91 kB │ gzip:  1.18 kB
+.svelte-kit/output/client/_app/immutable/assets/16.CEusn4JO.css        4.97 kB │ gzip:  1.06 kB
+.svelte-kit/output/client/_app/immutable/assets/26.DOM5_xpS.css        5.06 kB │ gzip:  1.22 kB
+.svelte-kit/output/client/_app/immutable/assets/9.DH-3eSBW.css         5.25 kB │ gzip:  1.31 kB
+.svelte-kit/output/client/_app/immutable/assets/25.CBYFLN3E.css        5.99 kB │ gzip:  1.38 kB
+.svelte-kit/output/client/_app/immutable/assets/11.Cdtt15mG.css        6.16 kB │ gzip:  1.32 kB
+.svelte-kit/output/client/_app/immutable/assets/14.6bUNHpEj.css        6.47 kB │ gzip:  1.42 kB
+.svelte-kit/output/client/_app/immutable/assets/20.CJO179Ca.css        6.64 kB │ gzip:  1.49 kB
+.svelte-kit/output/client/_app/immutable/assets/3.DxiIABSY.css         9.58 kB │ gzip:  1.99 kB
+.svelte-kit/output/client/_app/immutable/chunks/BvRk9kiK.js            0.00 kB │ gzip:  0.02 kB
+.svelte-kit/output/client/_app/immutable/chunks/CEdXcgSu.js            0.02 kB │ gzip:  0.04 kB
+.svelte-kit/output/client/_app/immutable/chunks/CpxFy-RC.js            0.05 kB │ gzip:  0.07 kB
+.svelte-kit/output/client/_app/immutable/chunks/xihTtKlq.js            0.06 kB │ gzip:  0.08 kB
+.svelte-kit/output/client/_app/immutable/entry/start.BIbNDcM8.js       0.08 kB │ gzip:  0.09 kB
+.svelte-kit/output/client/_app/immutable/chunks/CfwjffKw.js            0.33 kB │ gzip:  0.18 kB
+.svelte-kit/output/client/_app/immutable/nodes/1.tQ57WGzO.js           0.37 kB │ gzip:  0.26 kB
+.svelte-kit/output/client/_app/immutable/chunks/Dv1rDD_-.js            0.47 kB │ gzip:  0.33 kB
+.svelte-kit/output/client/_app/immutable/chunks/BVDruK1L.js            0.82 kB │ gzip:  0.52 kB
+.svelte-kit/output/client/_app/immutable/chunks/kNaey6uv.js            1.20 kB │ gzip:  0.68 kB
+.svelte-kit/output/client/_app/immutable/chunks/Axs7MY-0.js            1.74 kB │ gzip:  0.99 kB
+.svelte-kit/output/client/_app/immutable/nodes/7.C6y3HAAz.js           2.14 kB │ gzip:  1.11 kB
+.svelte-kit/output/client/_app/immutable/nodes/8.WYFnUVn3.js           2.42 kB │ gzip:  1.20 kB
+.svelte-kit/output/client/_app/immutable/nodes/27.DBVQOdn1.js          2.83 kB │ gzip:  1.27 kB
+.svelte-kit/output/client/_app/immutable/nodes/17.CznB6dq4.js          3.07 kB │ gzip:  1.33 kB
+.svelte-kit/output/client/_app/immutable/nodes/5.BhKIVkVR.js           4.21 kB │ gzip:  1.79 kB
+.svelte-kit/output/client/_app/immutable/nodes/22.U_JU6vF8.js          4.22 kB │ gzip:  1.64 kB
+.svelte-kit/output/client/_app/immutable/nodes/23.B5e4GDlR.js          4.29 kB │ gzip:  1.85 kB
+.svelte-kit/output/client/_app/immutable/nodes/10.B8WHM-gt.js          4.33 kB │ gzip:  1.84 kB
+.svelte-kit/output/client/_app/immutable/nodes/24.CGNCdwuv.js          4.39 kB │ gzip:  1.75 kB
+.svelte-kit/output/client/_app/immutable/nodes/28.DatHnxGm.js          4.63 kB │ gzip:  1.91 kB
+.svelte-kit/output/client/_app/immutable/nodes/21.C-Hj0EzE.js          4.68 kB │ gzip:  1.80 kB
+.svelte-kit/output/client/_app/immutable/nodes/26.BBdJWr-W.js          4.70 kB │ gzip:  2.13 kB
+.svelte-kit/output/client/_app/immutable/nodes/15.DilVnWSg.js          4.70 kB │ gzip:  1.89 kB
+.svelte-kit/output/client/_app/immutable/nodes/2.BEGZPhUR.js           4.86 kB │ gzip:  2.11 kB
+.svelte-kit/output/client/_app/immutable/nodes/0.CEeWicSq.js           5.04 kB │ gzip:  2.29 kB
+.svelte-kit/output/client/_app/immutable/nodes/25.Dp94M7mU.js          5.37 kB │ gzip:  2.11 kB
+.svelte-kit/output/client/_app/immutable/nodes/19.yOQPAWhI.js          5.61 kB │ gzip:  2.18 kB
+.svelte-kit/output/client/_app/immutable/nodes/9.CUNWWXfg.js           5.67 kB │ gzip:  2.25 kB
+.svelte-kit/output/client/_app/immutable/nodes/18.CjLDHSCD.js          5.83 kB │ gzip:  2.42 kB
+.svelte-kit/output/client/_app/immutable/nodes/12.DdC5Ncom.js          5.94 kB │ gzip:  2.38 kB
+.svelte-kit/output/client/_app/immutable/nodes/13.C1ukJ1iF.js          6.08 kB │ gzip:  2.37 kB
+.svelte-kit/output/client/_app/immutable/nodes/16.BI_q4e18.js          6.36 kB │ gzip:  2.58 kB
+.svelte-kit/output/client/_app/immutable/nodes/11.DaFOLGov.js          7.89 kB │ gzip:  2.72 kB
+.svelte-kit/output/client/_app/immutable/entry/app.DP_iXhtw.js         8.02 kB │ gzip:  2.48 kB
+.svelte-kit/output/client/_app/immutable/nodes/6.uIi27Pae.js           9.19 kB │ gzip:  3.03 kB
+.svelte-kit/output/client/_app/immutable/nodes/20.Bx0bk92p.js          9.54 kB │ gzip:  3.41 kB
+.svelte-kit/output/client/_app/immutable/nodes/14.DqZFpbkI.js         10.87 kB │ gzip:  3.54 kB
+.svelte-kit/output/client/_app/immutable/nodes/3.DZuYFLJ-.js          12.54 kB │ gzip:  3.98 kB
+.svelte-kit/output/client/_app/immutable/chunks/CfqzNO3w.js           31.61 kB │ gzip: 12.06 kB
+.svelte-kit/output/client/_app/immutable/chunks/BVe_yPVY.js           48.75 kB │ gzip: 18.63 kB
+
+ DEBUG [6144ad1a] 	✓ built in 1.35s
+ DEBUG [6144ad1a] 	computing gzip size...
+ DEBUG [6144ad1a] 	.svelte-kit/output/server/_app/immutable/assets/cg-logo.DGUrWsfF.png                            15.34 kB
+.svelte-kit/output/server/.vite/manifest.json                                                   15.96 kB │ gzip:  1.68 kB
+.svelte-kit/output/server/_app/immutable/assets/Brand.0u2yqB_A.css                               0.27 kB │ gzip:  0.19 kB
+.svelte-kit/output/server/_app/immutable/assets/Tooltip.C_HK8Jq4.css                             1.41 kB │ gzip:  0.49 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.DpKU2AOc.css                               1.47 kB │ gzip:  0.54 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.YDdZRQ9d.css                               1.57 kB │ gzip:  0.57 kB
+.svelte-kit/output/server/_app/immutable/assets/_layout.CZIwRaYT.css                             1.93 kB │ gzip:  0.72 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.0HywcBxy.css                               2.35 kB │ gzip:  0.72 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.ByyK-W_M.css                               2.75 kB │ gzip:  0.80 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.BsnCOihU.css                               2.99 kB │ gzip:  0.85 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.C8HHbS9V.css                               3.15 kB │ gzip:  0.89 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.DV9eoH1c.css                               3.34 kB │ gzip:  0.85 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.6ozxB0Nj.css                               3.49 kB │ gzip:  0.91 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.DEgGqWZf.css                               3.68 kB │ gzip:  0.90 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.BmF7PbkC.css                               3.73 kB │ gzip:  1.07 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.C-Rk4KQI.css                               4.06 kB │ gzip:  1.06 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.DAKNTlG9.css                               4.15 kB │ gzip:  1.02 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.Coe-ELpV.css                               4.35 kB │ gzip:  1.07 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.BChQ5wOQ.css                               4.50 kB │ gzip:  1.05 kB
+.svelte-kit/output/server/_app/immutable/assets/_layout.BFjEletq.css                             4.56 kB │ gzip:  1.23 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.BA98tdps.css                               4.66 kB │ gzip:  1.13 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.izwiKfpk.css                               4.75 kB │ gzip:  1.12 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.TeQJSeuQ.css                               4.91 kB │ gzip:  1.18 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.CEusn4JO.css                               4.97 kB │ gzip:  1.06 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.DOM5_xpS.css                               5.06 kB │ gzip:  1.22 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.DH-3eSBW.css                               5.25 kB │ gzip:  1.31 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.CBYFLN3E.css                               5.99 kB │ gzip:  1.38 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.Cdtt15mG.css                               6.16 kB │ gzip:  1.32 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.6bUNHpEj.css                               6.47 kB │ gzip:  1.42 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.CJO179Ca.css                               6.64 kB │ gzip:  1.49 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.DxiIABSY.css                               9.58 kB │ gzip:  1.99 kB
+.svelte-kit/output/server/chunks/navigation.js                                                   0.03 kB │ gzip:  0.05 kB
+.svelte-kit/output/server/entries/pages/dashboard/_page.server.ts.js                             0.16 kB │ gzip:  0.14 kB
+.svelte-kit/output/server/entries/fallbacks/error.svelte.js                                      0.41 kB │ gzip:  0.26 kB
+.svelte-kit/output/server/chunks/db.js                                                           0.44 kB │ gzip:  0.30 kB
+.svelte-kit/output/server/internal.js                                                            0.47 kB │ gzip:  0.21 kB
+.svelte-kit/output/server/chunks/Brand.js                                                        0.54 kB │ gzip:  0.33 kB
+.svelte-kit/output/server/chunks/shared-server.js                                                0.60 kB │ gzip:  0.26 kB
+.svelte-kit/output/server/chunks/Tooltip.js                                                      0.70 kB │ gzip:  0.41 kB
+.svelte-kit/output/server/entries/pages/_page.svelte.js                                          0.73 kB │ gzip:  0.36 kB
+.svelte-kit/output/server/entries/endpoints/api/me/balance/_server.ts.js                         0.74 kB │ gzip:  0.43 kB
+.svelte-kit/output/server/chunks/auth.js                                                         1.05 kB │ gzip:  0.58 kB
+.svelte-kit/output/server/entries/pages/grants/_page.svelte.js                                   1.16 kB │ gzip:  0.51 kB
+.svelte-kit/output/server/entries/pages/login/_page.svelte.js                                    1.45 kB │ gzip:  0.63 kB
+.svelte-kit/output/server/chunks/Icon.js                                                         1.90 kB │ gzip:  1.02 kB
+.svelte-kit/output/server/chunks/state.js                                                        2.46 kB │ gzip:  1.05 kB
+.svelte-kit/output/server/entries/pages/preview/receive/_page.svelte.js                          2.60 kB │ gzip:  1.07 kB
+.svelte-kit/output/server/entries/pages/preview/_page.svelte.js                                  2.83 kB │ gzip:  1.21 kB
+.svelte-kit/output/server/entries/pages/preview/requests/_page.svelte.js                         3.08 kB │ gzip:  1.15 kB
+.svelte-kit/output/server/entries/pages/preview/admin/reports/new/_page.svelte.js                3.21 kB │ gzip:  1.12 kB
+.svelte-kit/output/server/entries/pages/preview/transfer/_page.svelte.js                         3.62 kB │ gzip:  1.24 kB
+.svelte-kit/output/server/entries/pages/_layout.svelte.js                                        3.65 kB │ gzip:  1.42 kB
+.svelte-kit/output/server/entries/pages/preview/admin/settings/_page.svelte.js                   3.65 kB │ gzip:  1.33 kB
+.svelte-kit/output/server/entries/endpoints/api/me/info/_server.ts.js                            4.03 kB │ gzip:  1.45 kB
+.svelte-kit/output/server/entries/pages/preview/_layout.svelte.js                                4.38 kB │ gzip:  1.53 kB
+.svelte-kit/output/server/entries/pages/preview/pay/_page.svelte.js                              4.54 kB │ gzip:  1.46 kB
+.svelte-kit/output/server/entries/pages/preview/admin/comms/new/_page.svelte.js                  4.62 kB │ gzip:  1.46 kB
+.svelte-kit/output/server/entries/pages/preview/deposits/_page.svelte.js                         5.06 kB │ gzip:  1.54 kB
+.svelte-kit/output/server/entries/pages/preview/dashboard-simple/_page.svelte.js                 5.11 kB │ gzip:  1.58 kB
+.svelte-kit/output/server/entries/pages/preview/dashboard-simple/transactions/_page.svelte.js    5.11 kB │ gzip:  1.72 kB
+.svelte-kit/output/server/entries/pages/preview/admin/comms/_page.svelte.js                      5.18 kB │ gzip:  1.63 kB
+.svelte-kit/output/server/entries/endpoints/api/grants/_server.ts.js                             5.23 kB │ gzip:  1.88 kB
+.svelte-kit/output/server/entries/pages/preview/admin/alerts/_page.svelte.js                     5.36 kB │ gzip:  1.76 kB
+.svelte-kit/output/server/chunks/internal.js                                                     5.43 kB │ gzip:  1.97 kB
+.svelte-kit/output/server/entries/pages/preview/admin/reports/_page.svelte.js                    5.46 kB │ gzip:  1.76 kB
+.svelte-kit/output/server/entries/pages/preview/dashboard/_page.svelte.js                        5.59 kB │ gzip:  1.73 kB
+.svelte-kit/output/server/entries/pages/preview/admin/_page.svelte.js                            5.84 kB │ gzip:  1.91 kB
+.svelte-kit/output/server/entries/pages/preview/admin/users/_id_/_page.svelte.js                 6.00 kB │ gzip:  1.84 kB
+.svelte-kit/output/server/entries/pages/preview/admin/orgs/_slug_/_page.svelte.js                6.64 kB │ gzip:  1.98 kB
+.svelte-kit/output/server/entries/pages/preview/admin/users/_page.svelte.js                      6.76 kB │ gzip:  1.96 kB
+.svelte-kit/output/server/entries/pages/preview/admin/orgs/_page.svelte.js                       7.20 kB │ gzip:  2.14 kB
+.svelte-kit/output/server/entries/endpoints/api/login/_server.ts.js                              7.26 kB │ gzip:  2.83 kB
+.svelte-kit/output/server/entries/pages/preview/admin/settings/_section_/_page.svelte.js         7.72 kB │ gzip:  2.30 kB
+.svelte-kit/output/server/entries/pages/grants/new/_page.svelte.js                               8.14 kB │ gzip:  1.74 kB
+.svelte-kit/output/server/chunks/shared.js                                                      10.29 kB │ gzip:  3.33 kB
+.svelte-kit/output/server/chunks/exports.js                                                     11.24 kB │ gzip:  3.51 kB
+.svelte-kit/output/server/chunks/internal2.js                                                   22.05 kB │ gzip:  6.61 kB
+.svelte-kit/output/server/chunks/utils.js                                                       30.98 kB │ gzip:  9.11 kB
+.svelte-kit/output/server/chunks/client.js                                                      48.30 kB │ gzip: 14.21 kB
+.svelte-kit/output/server/remote-entry.js                                                       54.60 kB │ gzip: 11.91 kB
+.svelte-kit/output/server/index.js                                                             123.39 kB │ gzip: 31.30 kB
+.svelte-kit/output/server/chunks/dev.js                                                        126.79 kB │ gzip: 32.92 kB
+
+ DEBUG [6144ad1a] 	[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugins. Here is a breakdown:
+  - vite-plugin-sveltekit-guard (72%)
+  - vite-plugin-svelte:compile (14%)
+  - vite-plugin-sveltekit-virtual-modules (5%)
+  - vite-plugin-sveltekit-compile (4%)
+See https://rolldown.rs/options/checks#plugintimings for more details.
+
+ DEBUG [6144ad1a] 	✓ built in 6.32s
+ DEBUG [6144ad1a] 	
+Run npm run preview to preview your production build locally.
+ DEBUG [6144ad1a] 	
+> Using @sveltejs/adapter-node
+ DEBUG [6144ad1a] 	  ✔ done
+  INFO [6144ad1a] Finished in 11.244 seconds with exit status 0 (successful).
+ DEBUG [eb7c6866] Running if test ! -d /home/test/pay/releases/20260810010515/web; then echo "Directory does not exist '/home/test/pay/releases/20260810010515/web'" 1>&2; false; fi as test@test.commongood.earth
+ DEBUG [eb7c6866] Command: if test ! -d /home/test/pay/releases/20260810010515/web; then echo "Directory does not exist '/home/test/pay/releases/20260810010515/web'" 1>&2; false; fi
+ DEBUG [eb7c6866] Finished in 0.319 seconds with exit status 0 (successful).
+  INFO [c67b1875] Running /home/test/tmp/cgpay/nvm-exec.sh pm2 reload pay --update-env || PORT=3001 pm2 start build/index.js --name pay as test@test.commongood.earth
+ DEBUG [c67b1875] Command: cd /home/test/pay/releases/20260810010515/web && ( export NODE_VERSION="v20.20.2" ; /home/test/tmp/cgpay/nvm-exec.sh pm2 reload pay --update-env || PORT=3001 pm2 start build/index.js --name pay )
+ DEBUG [c67b1875] 	Now using node v20.20.2 (npm v10.8.2)
+ DEBUG [c67b1875] 	/home/test/tmp/cgpay/nvm-exec.sh: line 4: exec: pm2: not found
+ DEBUG [c67b1875] 	bash: line 1: pm2: command not found
+  INFO ---------------------------------------------------------------------------
+  INFO START 2026-08-09 21:09:11 -0400 cap test deploy
+  INFO ---------------------------------------------------------------------------
+  INFO [b3f1df85] Running /usr/bin/env mkdir -p /home/test/tmp/cgpay/ as test@test.commongood.earth
+ DEBUG [b3f1df85] Command: /usr/bin/env mkdir -p /home/test/tmp/cgpay/
+  INFO [b3f1df85] Finished in 1.129 seconds with exit status 0 (successful).
+ DEBUG Uploading /home/test/tmp/cgpay/nvm-exec.sh 0.0%
+  INFO Uploading /home/test/tmp/cgpay/nvm-exec.sh 100.0%
+  INFO [e49911e0] Running /usr/bin/env chmod +x /home/test/tmp/cgpay/nvm-exec.sh as test@test.commongood.earth
+ DEBUG [e49911e0] Command: /usr/bin/env chmod +x /home/test/tmp/cgpay/nvm-exec.sh
+  INFO [e49911e0] Finished in 0.336 seconds with exit status 0 (successful).
+ DEBUG [ef539320] Running [ -d $HOME/.nvm/v20.20.2 ] || [ -d $HOME/.nvm/versions/node/v20.20.2 ] as test@test.commongood.earth
+ DEBUG [ef539320] Command: [ -d $HOME/.nvm/v20.20.2 ] || [ -d $HOME/.nvm/versions/node/v20.20.2 ]
+ DEBUG [ef539320] Finished in 0.287 seconds with exit status 0 (successful).
+  INFO [04cf1ac2] Running /usr/bin/env mkdir -p /home/test/tmp as test@test.commongood.earth
+ DEBUG [04cf1ac2] Command: ( export NODE_VERSION="v20.20.2" ; /usr/bin/env mkdir -p /home/test/tmp )
+  INFO [04cf1ac2] Finished in 0.303 seconds with exit status 0 (successful).
+ DEBUG Uploading /home/test/tmp/git-ssh-cb126bee8c312ce7025f.sh 0.0%
+  INFO Uploading /home/test/tmp/git-ssh-cb126bee8c312ce7025f.sh 100.0%
+  INFO [660ab852] Running /usr/bin/env chmod 700 /home/test/tmp/git-ssh-cb126bee8c312ce7025f.sh as test@test.commongood.earth
+ DEBUG [660ab852] Command: ( export NODE_VERSION="v20.20.2" ; /usr/bin/env chmod 700 /home/test/tmp/git-ssh-cb126bee8c312ce7025f.sh )
+  INFO [660ab852] Finished in 0.758 seconds with exit status 0 (successful).
+  INFO [697ca546] Running /usr/bin/env git ls-remote git@github-pay:common-good/cgpay.git HEAD as test@test.commongood.earth
+ DEBUG [697ca546] Command: ( export NODE_VERSION="v20.20.2" GIT_ASKPASS="/bin/echo" GIT_SSH="/home/test/tmp/git-ssh-cb126bee8c312ce7025f.sh" ; /usr/bin/env git ls-remote git@github-pay:common-good/cgpay.git HEAD )
+ DEBUG [697ca546] 	578a94d6e96537999ee5d0576762a48721824d39	HEAD
+  INFO [697ca546] Finished in 1.165 seconds with exit status 0 (successful).
+  INFO [271798c4] Running /usr/bin/env mkdir -p /home/test/pay/shared /home/test/pay/releases as test@test.commongood.earth
+ DEBUG [271798c4] Command: ( export NODE_VERSION="v20.20.2" ; /usr/bin/env mkdir -p /home/test/pay/shared /home/test/pay/releases )
+  INFO [271798c4] Finished in 0.376 seconds with exit status 0 (successful).
+  INFO [57909ac7] Running /usr/bin/env mkdir -p /home/test/pay/shared/web/node_modules as test@test.commongood.earth
+ DEBUG [57909ac7] Command: ( export NODE_VERSION="v20.20.2" ; /usr/bin/env mkdir -p /home/test/pay/shared/web/node_modules )
+  INFO [57909ac7] Finished in 0.302 seconds with exit status 0 (successful).
+  INFO [5f110c65] Running /usr/bin/env mkdir -p /home/test/pay/shared/web as test@test.commongood.earth
+ DEBUG [5f110c65] Command: ( export NODE_VERSION="v20.20.2" ; /usr/bin/env mkdir -p /home/test/pay/shared/web )
+  INFO [5f110c65] Finished in 0.298 seconds with exit status 0 (successful).
+ DEBUG [de80194c] Running [ -f /home/test/pay/shared/web/.env ] as test@test.commongood.earth
+ DEBUG [de80194c] Command: [ -f /home/test/pay/shared/web/.env ]
+ DEBUG [de80194c] Finished in 0.332 seconds with exit status 0 (successful).
+ DEBUG [c4050a45] Running [ -f /home/test/pay/current/REVISION ] as test@test.commongood.earth
+ DEBUG [c4050a45] Command: [ -f /home/test/pay/current/REVISION ]
+ DEBUG [c4050a45] Finished in 0.284 seconds with exit status 1 (failed).
+ DEBUG [e58aa0af] Running [ -f /home/test/pay/current/REVISION_TIME ] as test@test.commongood.earth
+ DEBUG [e58aa0af] Command: [ -f /home/test/pay/current/REVISION_TIME ]
+ DEBUG [e58aa0af] Finished in 0.348 seconds with exit status 1 (failed).
+ DEBUG [6ee2d4da] Running [ -f /home/test/pay/repo/HEAD ] as test@test.commongood.earth
+ DEBUG [6ee2d4da] Command: [ -f /home/test/pay/repo/HEAD ]
+ DEBUG [6ee2d4da] Finished in 0.316 seconds with exit status 0 (successful).
+  INFO The repository mirror is at /home/test/pay/repo
+ DEBUG [baab04ff] Running if test ! -d /home/test/pay/repo; then echo "Directory does not exist '/home/test/pay/repo'" 1>&2; false; fi as test@test.commongood.earth
+ DEBUG [baab04ff] Command: if test ! -d /home/test/pay/repo; then echo "Directory does not exist '/home/test/pay/repo'" 1>&2; false; fi
+ DEBUG [baab04ff] Finished in 0.319 seconds with exit status 0 (successful).
+  INFO [c5372204] Running /usr/bin/env git remote set-url origin git@github-pay:common-good/cgpay.git as test@test.commongood.earth
+ DEBUG [c5372204] Command: cd /home/test/pay/repo && ( export NODE_VERSION="v20.20.2" GIT_ASKPASS="/bin/echo" GIT_SSH="/home/test/tmp/git-ssh-cb126bee8c312ce7025f.sh" ; /usr/bin/env git remote set-url origin git@github-pay:common-good/cgpay.git )
+  INFO [c5372204] Finished in 0.368 seconds with exit status 0 (successful).
+  INFO [8e6ab7b2] Running /usr/bin/env git remote update --prune as test@test.commongood.earth
+ DEBUG [8e6ab7b2] Command: cd /home/test/pay/repo && ( export NODE_VERSION="v20.20.2" GIT_ASKPASS="/bin/echo" GIT_SSH="/home/test/tmp/git-ssh-cb126bee8c312ce7025f.sh" ; /usr/bin/env git remote update --prune )
+ DEBUG [8e6ab7b2] 	Fetching origin
+  INFO [8e6ab7b2] Finished in 1.334 seconds with exit status 0 (successful).
+ DEBUG [3cf8cca6] Running if test ! -d /home/test/pay/repo; then echo "Directory does not exist '/home/test/pay/repo'" 1>&2; false; fi as test@test.commongood.earth
+ DEBUG [3cf8cca6] Command: if test ! -d /home/test/pay/repo; then echo "Directory does not exist '/home/test/pay/repo'" 1>&2; false; fi
+ DEBUG [3cf8cca6] Finished in 0.346 seconds with exit status 0 (successful).
+  INFO [5d005835] Running /usr/bin/env mkdir -p /home/test/pay/releases/20260810010920 as test@test.commongood.earth
+ DEBUG [5d005835] Command: cd /home/test/pay/repo && ( export NODE_VERSION="v20.20.2" GIT_ASKPASS="/bin/echo" GIT_SSH="/home/test/tmp/git-ssh-cb126bee8c312ce7025f.sh" ; /usr/bin/env mkdir -p /home/test/pay/releases/20260810010920 )
+  INFO [5d005835] Finished in 0.320 seconds with exit status 0 (successful).
+  INFO [9e578473] Running /usr/bin/env git archive feat/capistrano | /usr/bin/env tar -x -f - -C /home/test/pay/releases/20260810010920 as test@test.commongood.earth
+ DEBUG [9e578473] Command: cd /home/test/pay/repo && ( export NODE_VERSION="v20.20.2" GIT_ASKPASS="/bin/echo" GIT_SSH="/home/test/tmp/git-ssh-cb126bee8c312ce7025f.sh" ; /usr/bin/env git archive feat/capistrano | /usr/bin/env tar -x -f - -C /home/test/pay/releases/20260810010920 )
+  INFO [9e578473] Finished in 0.366 seconds with exit status 0 (successful).
+ DEBUG [1043480f] Running if test ! -d /home/test/pay/repo; then echo "Directory does not exist '/home/test/pay/repo'" 1>&2; false; fi as test@test.commongood.earth
+ DEBUG [1043480f] Command: if test ! -d /home/test/pay/repo; then echo "Directory does not exist '/home/test/pay/repo'" 1>&2; false; fi
+ DEBUG [1043480f] Finished in 0.304 seconds with exit status 0 (successful).
+ DEBUG [eb60b5e6] Running /usr/bin/env git rev-list --max-count=1 feat/capistrano as test@test.commongood.earth
+ DEBUG [eb60b5e6] Command: cd /home/test/pay/repo && ( export NODE_VERSION="v20.20.2" GIT_ASKPASS="/bin/echo" GIT_SSH="/home/test/tmp/git-ssh-cb126bee8c312ce7025f.sh" ; /usr/bin/env git rev-list --max-count=1 feat/capistrano )
+ DEBUG [eb60b5e6] 	25ede6853ac5a4c2ce04ddd5dd473b92cbf8760b
+ DEBUG [eb60b5e6] Finished in 0.307 seconds with exit status 0 (successful).
+ DEBUG [dbe287da] Running if test ! -d /home/test/pay/releases/20260810010920; then echo "Directory does not exist '/home/test/pay/releases/20260810010920'" 1>&2; false; fi as test@test.commongood.earth
+ DEBUG [dbe287da] Command: if test ! -d /home/test/pay/releases/20260810010920; then echo "Directory does not exist '/home/test/pay/releases/20260810010920'" 1>&2; false; fi
+ DEBUG [dbe287da] Finished in 0.334 seconds with exit status 0 (successful).
+  INFO [0b6d71f5] Running /usr/bin/env echo "25ede6853ac5a4c2ce04ddd5dd473b92cbf8760b" > REVISION as test@test.commongood.earth
+ DEBUG [0b6d71f5] Command: cd /home/test/pay/releases/20260810010920 && ( export NODE_VERSION="v20.20.2" ; /usr/bin/env echo "25ede6853ac5a4c2ce04ddd5dd473b92cbf8760b" > REVISION )
+  INFO [0b6d71f5] Finished in 0.306 seconds with exit status 0 (successful).
+ DEBUG [2b2a007b] Running if test ! -d /home/test/pay/repo; then echo "Directory does not exist '/home/test/pay/repo'" 1>&2; false; fi as test@test.commongood.earth
+ DEBUG [2b2a007b] Command: if test ! -d /home/test/pay/repo; then echo "Directory does not exist '/home/test/pay/repo'" 1>&2; false; fi
+ DEBUG [2b2a007b] Finished in 0.323 seconds with exit status 0 (successful).
+ DEBUG [85172ec3] Running /usr/bin/env git --no-pager log -1 --pretty=format:"%ct" feat/capistrano as test@test.commongood.earth
+ DEBUG [85172ec3] Command: cd /home/test/pay/repo && ( export NODE_VERSION="v20.20.2" GIT_ASKPASS="/bin/echo" GIT_SSH="/home/test/tmp/git-ssh-cb126bee8c312ce7025f.sh" ; /usr/bin/env git --no-pager log -1 --pretty=format:"%ct" feat/capistrano )
+ DEBUG [85172ec3] 	1786323848
+ DEBUG [85172ec3] Finished in 0.309 seconds with exit status 0 (successful).
+ DEBUG [95e1a65b] Running if test ! -d /home/test/pay/releases/20260810010920; then echo "Directory does not exist '/home/test/pay/releases/20260810010920'" 1>&2; false; fi as test@test.commongood.earth
+ DEBUG [95e1a65b] Command: if test ! -d /home/test/pay/releases/20260810010920; then echo "Directory does not exist '/home/test/pay/releases/20260810010920'" 1>&2; false; fi
+ DEBUG [95e1a65b] Finished in 0.321 seconds with exit status 0 (successful).
+  INFO [a8bec2ba] Running /usr/bin/env echo "1786323848" > REVISION_TIME as test@test.commongood.earth
+ DEBUG [a8bec2ba] Command: cd /home/test/pay/releases/20260810010920 && ( export NODE_VERSION="v20.20.2" ; /usr/bin/env echo "1786323848" > REVISION_TIME )
+  INFO [a8bec2ba] Finished in 0.321 seconds with exit status 0 (successful).
+  INFO [1c3cc4db] Running /usr/bin/env mkdir -p /home/test/pay/releases/20260810010920/web as test@test.commongood.earth
+ DEBUG [1c3cc4db] Command: ( export NODE_VERSION="v20.20.2" ; /usr/bin/env mkdir -p /home/test/pay/releases/20260810010920/web )
+  INFO [1c3cc4db] Finished in 0.336 seconds with exit status 0 (successful).
+ DEBUG [27d742a6] Running [ -L /home/test/pay/releases/20260810010920/web/.env ] as test@test.commongood.earth
+ DEBUG [27d742a6] Command: [ -L /home/test/pay/releases/20260810010920/web/.env ]
+ DEBUG [27d742a6] Finished in 0.352 seconds with exit status 1 (failed).
+ DEBUG [608125ae] Running [ -f /home/test/pay/releases/20260810010920/web/.env ] as test@test.commongood.earth
+ DEBUG [608125ae] Command: [ -f /home/test/pay/releases/20260810010920/web/.env ]
+ DEBUG [608125ae] Finished in 0.324 seconds with exit status 1 (failed).
+  INFO [333a4ae8] Running /usr/bin/env ln -s /home/test/pay/shared/web/.env /home/test/pay/releases/20260810010920/web/.env as test@test.commongood.earth
+ DEBUG [333a4ae8] Command: ( export NODE_VERSION="v20.20.2" ; /usr/bin/env ln -s /home/test/pay/shared/web/.env /home/test/pay/releases/20260810010920/web/.env )
+  INFO [333a4ae8] Finished in 0.335 seconds with exit status 0 (successful).
+  INFO [63df9b1f] Running /usr/bin/env mkdir -p /home/test/pay/releases/20260810010920/web as test@test.commongood.earth
+ DEBUG [63df9b1f] Command: ( export NODE_VERSION="v20.20.2" ; /usr/bin/env mkdir -p /home/test/pay/releases/20260810010920/web )
+  INFO [63df9b1f] Finished in 0.336 seconds with exit status 0 (successful).
+ DEBUG [260c01dd] Running [ -L /home/test/pay/releases/20260810010920/web/node_modules ] as test@test.commongood.earth
+ DEBUG [260c01dd] Command: [ -L /home/test/pay/releases/20260810010920/web/node_modules ]
+ DEBUG [260c01dd] Finished in 0.337 seconds with exit status 1 (failed).
+ DEBUG [5e1092db] Running [ -d /home/test/pay/releases/20260810010920/web/node_modules ] as test@test.commongood.earth
+ DEBUG [5e1092db] Command: [ -d /home/test/pay/releases/20260810010920/web/node_modules ]
+ DEBUG [5e1092db] Finished in 0.444 seconds with exit status 1 (failed).
+  INFO [acd257c1] Running /usr/bin/env ln -s /home/test/pay/shared/web/node_modules /home/test/pay/releases/20260810010920/web/node_modules as test@test.commongood.earth
+ DEBUG [acd257c1] Command: ( export NODE_VERSION="v20.20.2" ; /usr/bin/env ln -s /home/test/pay/shared/web/node_modules /home/test/pay/releases/20260810010920/web/node_modules )
+  INFO [acd257c1] Finished in 0.334 seconds with exit status 0 (successful).
+ DEBUG [43493e92] Running if test ! -d /home/test/pay/releases/20260810010920/web; then echo "Directory does not exist '/home/test/pay/releases/20260810010920/web'" 1>&2; false; fi as test@test.commongood.earth
+ DEBUG [43493e92] Command: if test ! -d /home/test/pay/releases/20260810010920/web; then echo "Directory does not exist '/home/test/pay/releases/20260810010920/web'" 1>&2; false; fi
+ DEBUG [43493e92] Finished in 0.319 seconds with exit status 0 (successful).
+  INFO [e06252c2] Running /home/test/tmp/cgpay/nvm-exec.sh npm ci as test@test.commongood.earth
+ DEBUG [e06252c2] Command: cd /home/test/pay/releases/20260810010920/web && ( export NODE_VERSION="v20.20.2" ; /home/test/tmp/cgpay/nvm-exec.sh npm ci )
+ DEBUG [e06252c2] 	Now using node v20.20.2 (npm v10.8.2)
+ DEBUG [e06252c2] 	npm warn reify Removing non-directory /home/test/pay/releases/20260810010920/web/node_modules
+ DEBUG [e06252c2] 	
+> web@0.0.1 prepare
+> svelte-kit sync || echo ''
+
+ DEBUG [e06252c2] 	
+added 202 packages, and audited 203 packages in 6s
+ DEBUG [e06252c2] 	
+38 packages are looking for funding
+ DEBUG [e06252c2] 	  run `npm fund` for details
+ DEBUG [e06252c2] 	
+7 vulnerabilities (2 low, 1 moderate, 4 high)
+
+To address all issues, run:
+  npm audit fix
+
+Run `npm audit` for details.
+  INFO [e06252c2] Finished in 6.890 seconds with exit status 0 (successful).
+  INFO [43702204] Running /home/test/tmp/cgpay/nvm-exec.sh npm run build as test@test.commongood.earth
+ DEBUG [43702204] Command: cd /home/test/pay/releases/20260810010920/web && ( export NODE_VERSION="v20.20.2" ; /home/test/tmp/cgpay/nvm-exec.sh npm run build )
+ DEBUG [43702204] 	Now using node v20.20.2 (npm v10.8.2)
+ DEBUG [43702204] 	
+> web@0.0.1 build
+> vite build
+
+ DEBUG [43702204] 	vite v8.0.14 building ssr environment for production...
+ DEBUG [43702204] 	[2Ktransforming...
+ DEBUG [43702204] 	1:09:39 AM [vite-plugin-svelte] src/routes/+page.svelte:358:2 Unused CSS selector ".tone-amber"
+https://svelte.dev/e/css_unused_selector
+ DEBUG [43702204] 	356:   .s-note { font-size: 0.75rem; color: var(--cg-text-muted); font-style: italic; margin-top: 0.15rem; }
+357:   .tone-purple { background: rgba(120,80,180,0.1); color: #785ab4; }
+358:   .tone-amber { background: rgba(214,143,30,0.12); color: #b96e0c; }
+                  ^
+359: 
+360:   .quick-actions { padding: 1.5rem; }
+ DEBUG [43702204] 	✓ 221 modules transformed.
+ DEBUG [43702204] 	rendering chunks...
+ DEBUG [43702204] 	vite v8.0.14 building client environment for production...
+ DEBUG [43702204] 	[2Ktransforming...
+ DEBUG [43702204] 	1:09:43 AM [vite-plugin-svelte] src/routes/+page.svelte:358:2 Unused CSS selector ".tone-amber"
+https://svelte.dev/e/css_unused_selector
+ DEBUG [43702204] 	356:   .s-note { font-size: 0.75rem; color: var(--cg-text-muted); font-style: italic; margin-top: 0.15rem; }
+357:   .tone-purple { background: rgba(120,80,180,0.1); color: #785ab4; }
+358:   .tone-amber { background: rgba(214,143,30,0.12); color: #b96e0c; }
+                  ^
+359: 
+360:   .quick-actions { padding: 1.5rem; }
+ DEBUG [43702204] 	✓ 245 modules transformed.
+ DEBUG [43702204] 	rendering chunks...
+ DEBUG [43702204] 	computing gzip size...
+ DEBUG [43702204] 	.svelte-kit/output/client/_app/version.json                            0.02 kB │ gzip:  0.04 kB
+.svelte-kit/output/client/_app/immutable/assets/cg-logo.DGUrWsfF.png  15.34 kB
+.svelte-kit/output/client/.vite/manifest.json                         15.56 kB │ gzip:  1.70 kB
+.svelte-kit/output/client/_app/immutable/assets/Brand.0u2yqB_A.css     0.27 kB │ gzip:  0.19 kB
+.svelte-kit/output/client/_app/immutable/assets/Tooltip.C_HK8Jq4.css   1.41 kB │ gzip:  0.49 kB
+.svelte-kit/output/client/_app/immutable/assets/8.DpKU2AOc.css         1.47 kB │ gzip:  0.54 kB
+.svelte-kit/output/client/_app/immutable/assets/7.YDdZRQ9d.css         1.57 kB │ gzip:  0.57 kB
+.svelte-kit/output/client/_app/immutable/assets/0.CZIwRaYT.css         1.93 kB │ gzip:  0.72 kB
+.svelte-kit/output/client/_app/immutable/assets/5.0HywcBxy.css         2.35 kB │ gzip:  0.72 kB
+.svelte-kit/output/client/_app/immutable/assets/27.ByyK-W_M.css        2.75 kB │ gzip:  0.80 kB
+.svelte-kit/output/client/_app/immutable/assets/18.BsnCOihU.css        2.99 kB │ gzip:  0.85 kB
+.svelte-kit/output/client/_app/immutable/assets/17.C8HHbS9V.css        3.15 kB │ gzip:  0.89 kB
+.svelte-kit/output/client/_app/immutable/assets/23.DV9eoH1c.css        3.34 kB │ gzip:  0.85 kB
+.svelte-kit/output/client/_app/immutable/assets/24.6ozxB0Nj.css        3.49 kB │ gzip:  0.91 kB
+.svelte-kit/output/client/_app/immutable/assets/10.DEgGqWZf.css        3.68 kB │ gzip:  0.90 kB
+.svelte-kit/output/client/_app/immutable/assets/22.BmF7PbkC.css        3.73 kB │ gzip:  1.07 kB
+.svelte-kit/output/client/_app/immutable/assets/12.C-Rk4KQI.css        4.06 kB │ gzip:  1.06 kB
+.svelte-kit/output/client/_app/immutable/assets/6.DAKNTlG9.css         4.15 kB │ gzip:  1.02 kB
+.svelte-kit/output/client/_app/immutable/assets/19.Coe-ELpV.css        4.35 kB │ gzip:  1.07 kB
+.svelte-kit/output/client/_app/immutable/assets/15.BChQ5wOQ.css        4.50 kB │ gzip:  1.05 kB
+.svelte-kit/output/client/_app/immutable/assets/2.BFjEletq.css         4.56 kB │ gzip:  1.23 kB
+.svelte-kit/output/client/_app/immutable/assets/28.BA98tdps.css        4.66 kB │ gzip:  1.13 kB
+.svelte-kit/output/client/_app/immutable/assets/13.izwiKfpk.css        4.75 kB │ gzip:  1.12 kB
+.svelte-kit/output/client/_app/immutable/assets/21.TeQJSeuQ.css        4.91 kB │ gzip:  1.18 kB
+.svelte-kit/output/client/_app/immutable/assets/16.CEusn4JO.css        4.97 kB │ gzip:  1.06 kB
+.svelte-kit/output/client/_app/immutable/assets/26.DOM5_xpS.css        5.06 kB │ gzip:  1.22 kB
+.svelte-kit/output/client/_app/immutable/assets/9.DH-3eSBW.css         5.25 kB │ gzip:  1.31 kB
+.svelte-kit/output/client/_app/immutable/assets/25.CBYFLN3E.css        5.99 kB │ gzip:  1.38 kB
+.svelte-kit/output/client/_app/immutable/assets/11.Cdtt15mG.css        6.16 kB │ gzip:  1.32 kB
+.svelte-kit/output/client/_app/immutable/assets/14.6bUNHpEj.css        6.47 kB │ gzip:  1.42 kB
+.svelte-kit/output/client/_app/immutable/assets/20.CJO179Ca.css        6.64 kB │ gzip:  1.49 kB
+.svelte-kit/output/client/_app/immutable/assets/3.DxiIABSY.css         9.58 kB │ gzip:  1.99 kB
+.svelte-kit/output/client/_app/immutable/chunks/BvRk9kiK.js            0.00 kB │ gzip:  0.02 kB
+.svelte-kit/output/client/_app/immutable/chunks/BakUrZWG.js            0.02 kB │ gzip:  0.04 kB
+.svelte-kit/output/client/_app/immutable/chunks/BvtKsCoD.js            0.05 kB │ gzip:  0.07 kB
+.svelte-kit/output/client/_app/immutable/chunks/xihTtKlq.js            0.06 kB │ gzip:  0.08 kB
+.svelte-kit/output/client/_app/immutable/entry/start.C9_RPq6V.js       0.08 kB │ gzip:  0.09 kB
+.svelte-kit/output/client/_app/immutable/chunks/7YoZ-Aqu.js            0.33 kB │ gzip:  0.18 kB
+.svelte-kit/output/client/_app/immutable/nodes/1.BA3e8T7p.js           0.37 kB │ gzip:  0.26 kB
+.svelte-kit/output/client/_app/immutable/chunks/Dv1rDD_-.js            0.47 kB │ gzip:  0.33 kB
+.svelte-kit/output/client/_app/immutable/chunks/BVDruK1L.js            0.82 kB │ gzip:  0.52 kB
+.svelte-kit/output/client/_app/immutable/chunks/kNaey6uv.js            1.20 kB │ gzip:  0.68 kB
+.svelte-kit/output/client/_app/immutable/chunks/Axs7MY-0.js            1.74 kB │ gzip:  0.99 kB
+.svelte-kit/output/client/_app/immutable/nodes/7.CwLR1CJM.js           2.14 kB │ gzip:  1.11 kB
+.svelte-kit/output/client/_app/immutable/nodes/8.WYFnUVn3.js           2.42 kB │ gzip:  1.20 kB
+.svelte-kit/output/client/_app/immutable/nodes/27.DBVQOdn1.js          2.83 kB │ gzip:  1.27 kB
+.svelte-kit/output/client/_app/immutable/nodes/17.CznB6dq4.js          3.07 kB │ gzip:  1.33 kB
+.svelte-kit/output/client/_app/immutable/nodes/5.CvrJ7HIn.js           4.21 kB │ gzip:  1.79 kB
+.svelte-kit/output/client/_app/immutable/nodes/22.U_JU6vF8.js          4.22 kB │ gzip:  1.64 kB
+.svelte-kit/output/client/_app/immutable/nodes/23.B5e4GDlR.js          4.29 kB │ gzip:  1.85 kB
+.svelte-kit/output/client/_app/immutable/nodes/10.B8WHM-gt.js          4.33 kB │ gzip:  1.84 kB
+.svelte-kit/output/client/_app/immutable/nodes/24.CGNCdwuv.js          4.39 kB │ gzip:  1.75 kB
+.svelte-kit/output/client/_app/immutable/nodes/28.B2kShe8v.js          4.63 kB │ gzip:  1.91 kB
+.svelte-kit/output/client/_app/immutable/nodes/21.C-Hj0EzE.js          4.68 kB │ gzip:  1.80 kB
+.svelte-kit/output/client/_app/immutable/nodes/26.BBdJWr-W.js          4.70 kB │ gzip:  2.13 kB
+.svelte-kit/output/client/_app/immutable/nodes/15.DilVnWSg.js          4.70 kB │ gzip:  1.89 kB
+.svelte-kit/output/client/_app/immutable/nodes/2.DAwTOWB-.js           4.86 kB │ gzip:  2.11 kB
+.svelte-kit/output/client/_app/immutable/nodes/0.1yhHNfKu.js           5.04 kB │ gzip:  2.29 kB
+.svelte-kit/output/client/_app/immutable/nodes/25.CTDZhgxH.js          5.37 kB │ gzip:  2.11 kB
+.svelte-kit/output/client/_app/immutable/nodes/19.yOQPAWhI.js          5.61 kB │ gzip:  2.18 kB
+.svelte-kit/output/client/_app/immutable/nodes/9.CUNWWXfg.js           5.67 kB │ gzip:  2.25 kB
+.svelte-kit/output/client/_app/immutable/nodes/18.ArG4k6qx.js          5.83 kB │ gzip:  2.42 kB
+.svelte-kit/output/client/_app/immutable/nodes/12.DDFoDhLG.js          5.94 kB │ gzip:  2.38 kB
+.svelte-kit/output/client/_app/immutable/nodes/13.C1ukJ1iF.js          6.08 kB │ gzip:  2.37 kB
+.svelte-kit/output/client/_app/immutable/nodes/16.CYS7nAKo.js          6.36 kB │ gzip:  2.58 kB
+.svelte-kit/output/client/_app/immutable/nodes/11.DaFOLGov.js          7.89 kB │ gzip:  2.72 kB
+.svelte-kit/output/client/_app/immutable/entry/app.D3dDoyeB.js         8.02 kB │ gzip:  2.48 kB
+.svelte-kit/output/client/_app/immutable/nodes/6.BgbiwMS2.js           9.19 kB │ gzip:  3.03 kB
+.svelte-kit/output/client/_app/immutable/nodes/20.0vIBOlQx.js          9.54 kB │ gzip:  3.41 kB
+.svelte-kit/output/client/_app/immutable/nodes/14.Pzv1ei8S.js         10.87 kB │ gzip:  3.54 kB
+.svelte-kit/output/client/_app/immutable/nodes/3.BABIBxek.js          12.54 kB │ gzip:  3.98 kB
+.svelte-kit/output/client/_app/immutable/chunks/BvZftR1V.js           31.61 kB │ gzip: 12.05 kB
+.svelte-kit/output/client/_app/immutable/chunks/BVe_yPVY.js           48.75 kB │ gzip: 18.63 kB
+
+ DEBUG [43702204] 	✓ built in 1.26s
+ DEBUG [43702204] 	computing gzip size...
+ DEBUG [43702204] 	.svelte-kit/output/server/_app/immutable/assets/cg-logo.DGUrWsfF.png                            15.34 kB
+.svelte-kit/output/server/.vite/manifest.json                                                   15.96 kB │ gzip:  1.68 kB
+.svelte-kit/output/server/_app/immutable/assets/Brand.0u2yqB_A.css                               0.27 kB │ gzip:  0.19 kB
+.svelte-kit/output/server/_app/immutable/assets/Tooltip.C_HK8Jq4.css                             1.41 kB │ gzip:  0.49 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.DpKU2AOc.css                               1.47 kB │ gzip:  0.54 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.YDdZRQ9d.css                               1.57 kB │ gzip:  0.57 kB
+.svelte-kit/output/server/_app/immutable/assets/_layout.CZIwRaYT.css                             1.93 kB │ gzip:  0.72 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.0HywcBxy.css                               2.35 kB │ gzip:  0.72 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.ByyK-W_M.css                               2.75 kB │ gzip:  0.80 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.BsnCOihU.css                               2.99 kB │ gzip:  0.85 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.C8HHbS9V.css                               3.15 kB │ gzip:  0.89 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.DV9eoH1c.css                               3.34 kB │ gzip:  0.85 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.6ozxB0Nj.css                               3.49 kB │ gzip:  0.91 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.DEgGqWZf.css                               3.68 kB │ gzip:  0.90 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.BmF7PbkC.css                               3.73 kB │ gzip:  1.07 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.C-Rk4KQI.css                               4.06 kB │ gzip:  1.06 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.DAKNTlG9.css                               4.15 kB │ gzip:  1.02 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.Coe-ELpV.css                               4.35 kB │ gzip:  1.07 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.BChQ5wOQ.css                               4.50 kB │ gzip:  1.05 kB
+.svelte-kit/output/server/_app/immutable/assets/_layout.BFjEletq.css                             4.56 kB │ gzip:  1.23 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.BA98tdps.css                               4.66 kB │ gzip:  1.13 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.izwiKfpk.css                               4.75 kB │ gzip:  1.12 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.TeQJSeuQ.css                               4.91 kB │ gzip:  1.18 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.CEusn4JO.css                               4.97 kB │ gzip:  1.06 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.DOM5_xpS.css                               5.06 kB │ gzip:  1.22 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.DH-3eSBW.css                               5.25 kB │ gzip:  1.31 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.CBYFLN3E.css                               5.99 kB │ gzip:  1.38 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.Cdtt15mG.css                               6.16 kB │ gzip:  1.32 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.6bUNHpEj.css                               6.47 kB │ gzip:  1.42 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.CJO179Ca.css                               6.64 kB │ gzip:  1.49 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.DxiIABSY.css                               9.58 kB │ gzip:  1.99 kB
+.svelte-kit/output/server/chunks/navigation.js                                                   0.03 kB │ gzip:  0.05 kB
+.svelte-kit/output/server/entries/pages/dashboard/_page.server.ts.js                             0.16 kB │ gzip:  0.14 kB
+.svelte-kit/output/server/entries/fallbacks/error.svelte.js                                      0.41 kB │ gzip:  0.26 kB
+.svelte-kit/output/server/chunks/db.js                                                           0.44 kB │ gzip:  0.30 kB
+.svelte-kit/output/server/internal.js                                                            0.47 kB │ gzip:  0.21 kB
+.svelte-kit/output/server/chunks/Brand.js                                                        0.54 kB │ gzip:  0.33 kB
+.svelte-kit/output/server/chunks/shared-server.js                                                0.60 kB │ gzip:  0.26 kB
+.svelte-kit/output/server/chunks/Tooltip.js                                                      0.70 kB │ gzip:  0.41 kB
+.svelte-kit/output/server/entries/pages/_page.svelte.js                                          0.73 kB │ gzip:  0.36 kB
+.svelte-kit/output/server/entries/endpoints/api/me/balance/_server.ts.js                         0.74 kB │ gzip:  0.43 kB
+.svelte-kit/output/server/chunks/auth.js                                                         1.05 kB │ gzip:  0.58 kB
+.svelte-kit/output/server/entries/pages/grants/_page.svelte.js                                   1.16 kB │ gzip:  0.51 kB
+.svelte-kit/output/server/entries/pages/login/_page.svelte.js                                    1.45 kB │ gzip:  0.63 kB
+.svelte-kit/output/server/chunks/Icon.js                                                         1.90 kB │ gzip:  1.02 kB
+.svelte-kit/output/server/chunks/state.js                                                        2.46 kB │ gzip:  1.05 kB
+.svelte-kit/output/server/entries/pages/preview/receive/_page.svelte.js                          2.60 kB │ gzip:  1.07 kB
+.svelte-kit/output/server/entries/pages/preview/_page.svelte.js                                  2.83 kB │ gzip:  1.21 kB
+.svelte-kit/output/server/entries/pages/preview/requests/_page.svelte.js                         3.08 kB │ gzip:  1.15 kB
+.svelte-kit/output/server/entries/pages/preview/admin/reports/new/_page.svelte.js                3.21 kB │ gzip:  1.12 kB
+.svelte-kit/output/server/entries/pages/preview/transfer/_page.svelte.js                         3.62 kB │ gzip:  1.24 kB
+.svelte-kit/output/server/entries/pages/_layout.svelte.js                                        3.65 kB │ gzip:  1.42 kB
+.svelte-kit/output/server/entries/pages/preview/admin/settings/_page.svelte.js                   3.65 kB │ gzip:  1.33 kB
+.svelte-kit/output/server/entries/endpoints/api/me/info/_server.ts.js                            4.03 kB │ gzip:  1.45 kB
+.svelte-kit/output/server/entries/pages/preview/_layout.svelte.js                                4.38 kB │ gzip:  1.53 kB
+.svelte-kit/output/server/entries/pages/preview/pay/_page.svelte.js                              4.54 kB │ gzip:  1.46 kB
+.svelte-kit/output/server/entries/pages/preview/admin/comms/new/_page.svelte.js                  4.62 kB │ gzip:  1.46 kB
+.svelte-kit/output/server/entries/pages/preview/deposits/_page.svelte.js                         5.06 kB │ gzip:  1.54 kB
+.svelte-kit/output/server/entries/pages/preview/dashboard-simple/_page.svelte.js                 5.11 kB │ gzip:  1.58 kB
+.svelte-kit/output/server/entries/pages/preview/dashboard-simple/transactions/_page.svelte.js    5.11 kB │ gzip:  1.72 kB
+.svelte-kit/output/server/entries/pages/preview/admin/comms/_page.svelte.js                      5.18 kB │ gzip:  1.63 kB
+.svelte-kit/output/server/entries/endpoints/api/grants/_server.ts.js                             5.23 kB │ gzip:  1.88 kB
+.svelte-kit/output/server/entries/pages/preview/admin/alerts/_page.svelte.js                     5.36 kB │ gzip:  1.76 kB
+.svelte-kit/output/server/chunks/internal.js                                                     5.43 kB │ gzip:  1.97 kB
+.svelte-kit/output/server/entries/pages/preview/admin/reports/_page.svelte.js                    5.46 kB │ gzip:  1.76 kB
+.svelte-kit/output/server/entries/pages/preview/dashboard/_page.svelte.js                        5.59 kB │ gzip:  1.73 kB
+.svelte-kit/output/server/entries/pages/preview/admin/_page.svelte.js                            5.84 kB │ gzip:  1.91 kB
+.svelte-kit/output/server/entries/pages/preview/admin/users/_id_/_page.svelte.js                 6.00 kB │ gzip:  1.84 kB
+.svelte-kit/output/server/entries/pages/preview/admin/orgs/_slug_/_page.svelte.js                6.64 kB │ gzip:  1.98 kB
+.svelte-kit/output/server/entries/pages/preview/admin/users/_page.svelte.js                      6.76 kB │ gzip:  1.96 kB
+.svelte-kit/output/server/entries/pages/preview/admin/orgs/_page.svelte.js                       7.20 kB │ gzip:  2.14 kB
+.svelte-kit/output/server/entries/endpoints/api/login/_server.ts.js                              7.26 kB │ gzip:  2.83 kB
+.svelte-kit/output/server/entries/pages/preview/admin/settings/_section_/_page.svelte.js         7.72 kB │ gzip:  2.30 kB
+.svelte-kit/output/server/entries/pages/grants/new/_page.svelte.js                               8.14 kB │ gzip:  1.74 kB
+.svelte-kit/output/server/chunks/shared.js                                                      10.29 kB │ gzip:  3.33 kB
+.svelte-kit/output/server/chunks/exports.js                                                     11.24 kB │ gzip:  3.51 kB
+.svelte-kit/output/server/chunks/internal2.js                                                   22.05 kB │ gzip:  6.61 kB
+.svelte-kit/output/server/chunks/utils.js                                                       30.98 kB │ gzip:  9.11 kB
+.svelte-kit/output/server/chunks/client.js                                                      48.30 kB │ gzip: 14.21 kB
+.svelte-kit/output/server/remote-entry.js                                                       54.60 kB │ gzip: 11.91 kB
+.svelte-kit/output/server/index.js                                                             123.39 kB │ gzip: 31.30 kB
+.svelte-kit/output/server/chunks/dev.js                                                        126.79 kB │ gzip: 32.92 kB
+
+ DEBUG [43702204] 	[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugins. Here is a breakdown:
+  - vite-plugin-sveltekit-guard (57%)
+  - vite-plugin-svelte:compile (18%)
+  - vite-plugin-sveltekit-virtual-modules (15%)
+  - vite-plugin-sveltekit-compile (4%)
+See https://rolldown.rs/options/checks#plugintimings for more details.
+
+ DEBUG [43702204] 	✓ built in 5.98s
+ DEBUG [43702204] 	
+Run npm run preview to preview your production build locally.
+ DEBUG [43702204] 	
+> Using @sveltejs/adapter-node
+ DEBUG [43702204] 	  ✔ done
+  INFO [43702204] Finished in 11.126 seconds with exit status 0 (successful).
+ DEBUG [93b21932] Running if test ! -d /home/test/pay/releases/20260810010920/web; then echo "Directory does not exist '/home/test/pay/releases/20260810010920/web'" 1>&2; false; fi as test@test.commongood.earth
+ DEBUG [93b21932] Command: if test ! -d /home/test/pay/releases/20260810010920/web; then echo "Directory does not exist '/home/test/pay/releases/20260810010920/web'" 1>&2; false; fi
+ DEBUG [93b21932] Finished in 0.304 seconds with exit status 0 (successful).
+  INFO [23ec631c] Running /home/test/tmp/cgpay/nvm-exec.sh pm2 reload pay --update-env || PORT=3001 pm2 start build/index.js --name pay as test@test.commongood.earth
+ DEBUG [23ec631c] Command: cd /home/test/pay/releases/20260810010920/web && ( export NODE_VERSION="v20.20.2" ; /home/test/tmp/cgpay/nvm-exec.sh pm2 reload pay --update-env || PORT=3001 pm2 start build/index.js --name pay )
+ DEBUG [23ec631c] 	Now using node v20.20.2 (npm v10.8.2)
+ DEBUG [23ec631c] 	
+                        -------------
+
+__/\\\\\\\\\\\\\____/\\\\____________/\\\\____/\\\\\\\\\_____
+ _\/\\\/////////\\\_\/\\\\\\________/\\\\\\__/\\\///////\\\___
+  _\/\\\_______\/\\\_\/\\\//\\\____/\\\//\\\_\///______\//\\\__
+   _\/\\\\\\\\\\\\\/__\/\\\\///\\\/\\\/_\/\\\___________/\\\/___
+    _\/\\\/////////____\/\\\__\///\\\/___\/\\\________/\\\//_____
+     _\/\\\_____________\/\\\____\///_____\/\\\_____/\\\//________
+      _\/\\\_____________\/\\\_____________\/\\\___/\\\/___________
+       _\/\\\_____________\/\\\_____________\/\\\__/\\\\\\\\\\\\\\\_
+        _\///______________\///______________\///__\///////////////__
+
+
+                          Runtime Edition
+
+        PM2 is a Production Process Manager for Node.js applications
+                     with a built-in Load Balancer.
+
+                Start and Daemonize any application:
+                $ pm2 start app.js
+
+                Load Balance 4 instances of api.js:
+                $ pm2 start api.js -i 4
+
+                Monitor in production:
+                $ pm2 monitor
+
+                Make pm2 auto-boot at server restart:
+                $ pm2 startup
+
+                To go further checkout:
+                http://pm2.io/
+
+
+                        -------------
+
+ DEBUG [23ec631c] 	[PM2] Spawning PM2 daemon with pm2_home=/home/test/.pm2
+ DEBUG [23ec631c] 	[PM2] PM2 Successfully daemonized
+ DEBUG [23ec631c] 	[PM2][ERROR] Process or Namespace pay not found
+ DEBUG [23ec631c] 	bash: line 1: pm2: command not found
