@@ -355,7 +355,6 @@
   .s-value { font-size: 1.4rem; font-weight: 700; color: var(--cg-text); letter-spacing: -0.01em; }
   .s-note { font-size: 0.75rem; color: var(--cg-text-muted); font-style: italic; margin-top: 0.15rem; }
   .tone-purple { background: rgba(120,80,180,0.1); color: #785ab4; }
-  .tone-amber { background: rgba(214,143,30,0.12); color: #b96e0c; }
 
   .quick-actions { padding: 1.5rem; }
   .quick-actions h2 {
