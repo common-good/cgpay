@@ -64,11 +64,29 @@ namespace :deploy do
         # with no PORT set, so the app fell back to its own hardcoded default
         # (3000) and collided with an unrelated process already on that port
         # (confirmed on dev/staging).
-        running = capture(:pm2, 'jlist', raise_on_non_zero_exit: false).include?('"name":"pay"')
-        if running
-          execute :pm2, 'reload pay --update-env', env: { PORT: fetch(:pay_port) }
+        #
+        # `--node-args="--env-file=..."` (Node 20.6+, we're on 20.20.2) tells the
+        # node process to load the shared .env at startup — pm2 doesn't do this
+        # itself, and SvelteKit's adapter-node doesn't either. Without it, the
+        # process comes up with only PORT in its env; DB_*, PHP_SSO_URL,
+        # JWT_SECRET, etc. are all undefined at runtime and every login 401s
+        # because phpLookup can't reach the SSO endpoint. (Confirmed on test
+        # before this fix.)
+        #
+        # pm2 stores node-args with the process on `start`, so subsequent
+        # reloads preserve them. To transition an existing process that was
+        # started WITHOUT --env-file, we detect the missing flag in the current
+        # jlist and force a delete + fresh start once; subsequent deploys go
+        # through the normal reload path.
+        env_file = shared_path.join('web/.env')
+        jlist = capture(:pm2, 'jlist', raise_on_non_zero_exit: false)
+        running = jlist.include?('"name":"pay"')
+        needs_fresh_start = !running || !jlist.include?("--env-file=#{env_file}")
+        if needs_fresh_start
+          execute :pm2, 'delete pay', raise_on_non_zero_exit: false if running
+          execute :pm2, %Q{start build/index.js --name pay --node-args="--env-file=#{env_file}"}, env: { PORT: fetch(:pay_port) }
         else
-          execute :pm2, "start build/index.js --name pay", env: { PORT: fetch(:pay_port) }
+          execute :pm2, 'reload pay --update-env', env: { PORT: fetch(:pay_port) }
         end
       end
     end
