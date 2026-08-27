@@ -114,6 +114,11 @@ export const POST: RequestHandler = async ({ request }) => {
     input.ckNum = ckNum
     input.ckDate = ckDate
   }
+  // Grantor pid from autocomplete selection - PHP uses it to reuse the existing
+  // people row (or, if the fullName changed after selection, treat it as a new entity).
+  if (body.grantorPid != null && Number.isFinite(Number(body.grantorPid)) && Number(body.grantorPid) > 0) {
+    input.grantorPid = Number(body.grantorPid)
+  }
 
   // Upload agreement file to Drive if present. Non-fatal if it fails or is
   // silently skipped (no creds configured) - grant record still gets created.
