@@ -6,6 +6,7 @@ import { json, error } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
 import { bearerFromRequest, verifyToken } from '$lib/server/auth'
 import { listGrants, createGrant, PhpGrantError, type CreateGrantInput } from '$lib/server/php-grants'
+import { uploadFileToDrive, driveFileName, UNDOC_GRANT_MAX } from '$lib/server/drive'
 
 function requireClaims(request: Request) {
   const token = bearerFromRequest(request)
@@ -37,8 +38,24 @@ function fieldErrorResponse(errors: Record<string, string>, message = FORM_ERROR
 export const POST: RequestHandler = async ({ request }) => {
   const claims = requireClaims(request)
 
-  const body = await request.json().catch(() => null)
-  if (!body) throw error(400, 'invalid request body')
+  // Accept either JSON (backward-compatible, no file) or multipart/form-data (with agreement file).
+  // Grants over UNDOC_GRANT_MAX ($5k) should include an agreement PDF (per William, Phase 3.5 PR B).
+  const contentType = request.headers.get('content-type') || ''
+  let body: Record<string, unknown> | null = null
+  let file: File | null = null
+
+  if (contentType.startsWith('multipart/form-data')) {
+    const form = await request.formData().catch(() => null)
+    if (!form) throw error(400, 'invalid request body')
+    body = {}
+    for (const [k, v] of form.entries()) {
+      if (v instanceof File) file = v
+      else body[k] = v
+    }
+  } else {
+    body = await request.json().catch(() => null)
+    if (!body) throw error(400, 'invalid request body')
+  }
 
   // Client-side (pre-PHP) validation of grant + grantor fields.
   // Collect ALL problems into one payload so the UI highlights them together.
@@ -71,6 +88,16 @@ export const POST: RequestHandler = async ({ request }) => {
     if (!ckDate) preErrors.ckDate = 'Please enter the check date.'
   }
 
+  // Agreement file required for grants > UNDOC_GRANT_MAX (per William, PR B).
+  // File itself is optional at submission time when the sponsee doesn't have one yet;
+  // admin can attach later. So we only enforce the "need something" rule for large grants.
+  const MAX_FILE_BYTES = 10 * 1024 * 1024 // 10 MB
+  if (file) {
+    if (file.size > MAX_FILE_BYTES) {
+      preErrors.agreement = 'File is too large (max 10 MB).'
+    }
+  }
+
   if (Object.keys(preErrors).length > 0) return fieldErrorResponse(preErrors)
 
   const input: CreateGrantInput = {
@@ -86,6 +113,29 @@ export const POST: RequestHandler = async ({ request }) => {
   if (by === 'check') {
     input.ckNum = ckNum
     input.ckDate = ckDate
+  }
+
+  // Upload agreement file to Drive if present. Non-fatal if it fails or is
+  // silently skipped (no creds configured) - grant record still gets created.
+  if (file) {
+    try {
+      const buf = Buffer.from(await file.arrayBuffer())
+      const uploaded = await uploadFileToDrive({
+        fileName: driveFileName({
+          createdSec: Math.floor(Date.now() / 1000),
+          grantorName: fullName,
+          amount,
+          sponseeName: claims.name || `uid ${claims.uid}`,
+          originalName: file.name
+        }),
+        mimeType: file.type || 'application/octet-stream',
+        fileBuffer: buf
+      })
+      if (uploaded) input.driveFileId = uploaded.fileId
+    } catch (e) {
+      // Log but don't block grant creation - admin can attach the file later.
+      console.error('[grants] Drive upload failed:', e)
+    }
   }
 
   try {

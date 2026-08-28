@@ -22,12 +22,18 @@
   let ckNum = $state('')
   let ckDate = $state('')
 
+  // Grant agreement PDF - only shown when amount > $5k (Phase 3.5 PR B).
+  // Optional at submit time (sponsee may not have signed agreement yet); admin can attach later.
+  let agreementFile = $state<File | null>(null)
+  const UNDOC_GRANT_MAX = 5000
+
   let submitting = $state(false)
   let error = $state<string | null>(null)
   // Per-field validation errors from the server. Cleared on each submit attempt.
   let fieldErrors = $state<Record<string, string>>({})
 
   const amountNum = $derived(Number(amount.replace(/[$,\s]/g, '')))
+  const showAgreementUpload = $derived(Number.isFinite(amountNum) && amountNum > UNDOC_GRANT_MAX)
   const stateNum = $derived(Number(stateCode))
   const canSubmit = $derived(
     !submitting
@@ -68,12 +74,28 @@
       payload.ckDate = ckDate.trim()
     }
 
-    try {
-      const res = await fetch('/api/grants', {
+    // When an agreement file is attached, submit as multipart/form-data.
+    // Otherwise stick with JSON (matches existing test coverage).
+    let fetchInit: RequestInit
+    if (agreementFile) {
+      const form = new FormData()
+      for (const [k, v] of Object.entries(payload)) form.append(k, String(v))
+      form.append('agreement', agreementFile, agreementFile.name)
+      fetchInit = {
+        method: 'POST',
+        headers: { authorization: `Bearer ${token}` }, // let the browser set content-type + boundary
+        body: form
+      }
+    } else {
+      fetchInit = {
         method: 'POST',
         headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
         body: JSON.stringify(payload)
-      })
+      }
+    }
+
+    try {
+      const res = await fetch('/api/grants', fetchInit)
       if (res.status === 401) {
         localStorage.removeItem('cg_token')
         await goto('/login')
@@ -175,6 +197,17 @@
                 {#if fe('ckDate')}<span class="field-err">{fe('ckDate')}</span>{/if}
               </div>
             {/if}
+
+            {#if showAgreementUpload}
+              <div class="field span-2" class:has-err={fe('agreement')}>
+                <label for="agreement">Grant Agreement <span class="opt">(PDF, optional)</span></label>
+                <input id="agreement" type="file" accept="application/pdf,image/*"
+                  onchange={(e) => { agreementFile = (e.currentTarget as HTMLInputElement).files?.[0] ?? null }}
+                  aria-invalid={!!fe('agreement')} />
+                <span class="hint">For grants over ${UNDOC_GRANT_MAX.toLocaleString()}, please attach the signed agreement if you have it. You can also send it later - an admin will file it when the funds arrive.</span>
+                {#if fe('agreement')}<span class="field-err">{fe('agreement')}</span>{/if}
+              </div>
+            {/if}
           </div>
         </fieldset>
 
@@ -260,6 +293,7 @@
   .form-card fieldset { border: 0; padding: 0; margin: 0; }
   .form-card legend { font-weight: 600; margin-bottom: 0.75rem; font-size: 0.95rem; }
   .opt { font-weight: 400; color: var(--cg-text-muted); font-size: 0.85rem; }
+  .hint { display: block; font-size: 0.8rem; color: var(--cg-text-muted); margin-top: 0.35rem; line-height: 1.4; }
   .req { color: #b91c1c; margin-left: 0.15rem; }
 
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
