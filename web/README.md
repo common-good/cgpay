@@ -58,9 +58,9 @@ Fill in:
 ```dotenv
 DB_HOST=127.0.0.1
 DB_PORT=3307
-DB_USER=cgweb_ro          # read-only user provisioned on staging
+DB_USER=<DB_NAME>_ro      # read-only user for now
 DB_PASSWORD=…
-DB_NAME=…
+DB_NAME=…                 # test, dev, staging, demo, beta, main, etc.
 JWT_SECRET=$(openssl rand -base64 48)
 ```
 
