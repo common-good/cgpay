@@ -287,11 +287,19 @@
 
   .form-card {
     background: var(--cg-surface); border: 1px solid var(--cg-border);
-    border-radius: var(--cg-radius); padding: 1.5rem;
-    display: grid; gap: 1.5rem;
+    border-radius: var(--cg-radius); padding: 1.75rem;
+    display: grid; gap: 1.75rem;
+    border-top: 3px solid var(--cg-navy);
+    box-shadow: var(--cg-shadow);
   }
   .form-card fieldset { border: 0; padding: 0; margin: 0; }
-  .form-card legend { font-weight: 600; margin-bottom: 0.75rem; font-size: 0.95rem; }
+  .form-card legend {
+    font-weight: 600; margin-bottom: 0.85rem; font-size: 1rem;
+    color: var(--cg-text);
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--cg-border);
+    width: 100%;
+  }
   .opt { font-weight: 400; color: var(--cg-text-muted); font-size: 0.85rem; }
   .hint { display: block; font-size: 0.8rem; color: var(--cg-text-muted); margin-top: 0.35rem; line-height: 1.4; }
   .req { color: #b91c1c; margin-left: 0.15rem; }
