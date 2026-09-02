@@ -84,9 +84,9 @@ namespace :deploy do
         needs_fresh_start = !running || !jlist.include?("--env-file=#{env_file}")
         if needs_fresh_start
           execute :pm2, 'delete pay', raise_on_non_zero_exit: false if running
-          execute :pm2, %Q{start build/index.js --name pay --node-args="--env-file=#{env_file}"}, env: { PORT: fetch(:pay_port) }
+          execute :pm2, %Q{start build/index.js --name pay --node-args="--env-file=#{env_file}"}
         else
-          execute :pm2, 'reload pay --update-env', env: { PORT: fetch(:pay_port) }
+          execute :pm2, 'reload pay --update-env'
         end
       end
     end
