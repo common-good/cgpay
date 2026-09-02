@@ -27,6 +27,76 @@
   let agreementFile = $state<File | null>(null)
   const UNDOC_GRANT_MAX = 5000
 
+  // Grantor autocomplete state (Phase 3.5 PR A follow-up):
+  //   - suggestions: current dropdown items
+  //   - suggestOpen: whether the dropdown is showing
+  //   - grantorPid: id from a picked existing grantor (cleared when user edits the name)
+  //   - suggestIndex: keyboard-highlighted row index (-1 = none)
+  type Person = { pid: number; fullName: string; email: string; phone: string; address: string; city: string; state: number | null; zip: string }
+  let suggestions = $state<Person[]>([])
+  let suggestOpen = $state(false)
+  let grantorPid = $state<number | null>(null)
+  let suggestIndex = $state(-1)
+  let suggestTimer: ReturnType<typeof setTimeout> | null = null
+
+  async function fetchSuggestions(q: string) {
+    const token = localStorage.getItem('cg_token')
+    if (!token) return
+    try {
+      const res = await fetch(`/api/people-autocomplete?q=${encodeURIComponent(q)}`, {
+        headers: { authorization: `Bearer ${token}` }
+      })
+      if (!res.ok) { suggestions = []; return }
+      const data = await res.json()
+      suggestions = Array.isArray(data.people) ? data.people : []
+      suggestOpen = suggestions.length > 0
+      suggestIndex = -1
+    } catch {
+      suggestions = []
+    }
+  }
+
+  function onGrantorInput(e: Event) {
+    const val = (e.currentTarget as HTMLInputElement).value
+    fullName = val
+    // Any manual edit clears a previously-picked pid - PHP treats a name change
+    // after selection as a new entity (per William's people-table edit rules).
+    grantorPid = null
+    if (suggestTimer) clearTimeout(suggestTimer)
+    if (val.trim().length < 2) {
+      suggestions = []
+      suggestOpen = false
+      return
+    }
+    suggestTimer = setTimeout(() => fetchSuggestions(val.trim()), 200)
+  }
+
+  function pickSuggestion(p: Person) {
+    fullName = p.fullName
+    grantorPid = p.pid
+    if (p.email) email = p.email
+    if (p.phone) phone = p.phone
+    if (p.address) address = p.address
+    if (p.city) city = p.city
+    if (p.state != null) stateCode = String(p.state)
+    if (p.zip) zip = p.zip
+    suggestOpen = false
+    suggestions = []
+  }
+
+  function onGrantorKeydown(e: KeyboardEvent) {
+    if (!suggestOpen || suggestions.length === 0) return
+    if (e.key === 'ArrowDown') { e.preventDefault(); suggestIndex = Math.min(suggestions.length - 1, suggestIndex + 1) }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); suggestIndex = Math.max(-1, suggestIndex - 1) }
+    else if (e.key === 'Enter' && suggestIndex >= 0) { e.preventDefault(); pickSuggestion(suggestions[suggestIndex]) }
+    else if (e.key === 'Escape') { suggestOpen = false }
+  }
+
+  function onGrantorBlur() {
+    // Close after a beat so a click on a suggestion lands first.
+    setTimeout(() => { suggestOpen = false }, 150)
+  }
+
   let submitting = $state(false)
   let error = $state<string | null>(null)
   // Per-field validation errors from the server. Cleared on each submit attempt.
@@ -72,6 +142,9 @@
     if (by === 'check') {
       payload.ckNum = ckNum.trim()
       payload.ckDate = ckDate.trim()
+    }
+    if (grantorPid != null) {
+      payload.grantorPid = grantorPid
     }
 
     // When an agreement file is attached, submit as multipart/form-data.
@@ -165,7 +238,31 @@
           <div class="grid-2">
             <div class="field span-2" class:has-err={fe('fullName')}>
               <label for="grantor">Grantor Name <span class="req">*</span></label>
-              <input id="grantor" type="text" bind:value={fullName} placeholder="Full name of donor / funder" autocomplete="off" aria-invalid={!!fe('fullName')} />
+              <div class="autocomplete">
+                <input id="grantor" type="text" value={fullName}
+                  oninput={onGrantorInput}
+                  onkeydown={onGrantorKeydown}
+                  onblur={onGrantorBlur}
+                  onfocus={() => { if (suggestions.length > 0) suggestOpen = true }}
+                  placeholder="Full name of donor / funder"
+                  autocomplete="off"
+                  aria-autocomplete="list"
+                  aria-expanded={suggestOpen}
+                  aria-invalid={!!fe('fullName')} />
+                {#if suggestOpen && suggestions.length > 0}
+                  <ul class="suggest-list" role="listbox">
+                    {#each suggestions as p, i}
+                      <li role="option" aria-selected={i === suggestIndex} class:active={i === suggestIndex}
+                        onmousedown={(e) => { e.preventDefault(); pickSuggestion(p) }}>
+                        <span class="suggest-name">{p.fullName}</span>
+                        {#if p.city || p.zip}
+                          <span class="suggest-meta">{[p.city, p.zip].filter(Boolean).join(' • ')}</span>
+                        {/if}
+                      </li>
+                    {/each}
+                  </ul>
+                {/if}
+              </div>
               {#if fe('fullName')}<span class="field-err">{fe('fullName')}</span>{/if}
             </div>
 
@@ -322,6 +419,26 @@
   .input-wrap input { border: 0; padding: 0.55rem 0.5rem; }
   .input-wrap input:focus { box-shadow: none; }
   .input-wrap .prefix { color: var(--cg-text-muted); }
+
+  /* Grantor autocomplete */
+  .autocomplete { position: relative; }
+  .suggest-list {
+    position: absolute; top: 100%; left: 0; right: 0; z-index: 20;
+    list-style: none; margin: 0.25rem 0 0; padding: 0.25rem 0;
+    background: white; border: 1px solid var(--cg-border);
+    border-radius: var(--cg-radius-sm); box-shadow: var(--cg-shadow);
+    max-height: 220px; overflow-y: auto;
+  }
+  .suggest-list li {
+    padding: 0.5rem 0.8rem; cursor: pointer;
+    display: flex; flex-direction: column; gap: 0.1rem;
+    font-size: 0.9rem;
+  }
+  .suggest-list li:hover, .suggest-list li.active {
+    background: var(--cg-green-soft);
+  }
+  .suggest-name { color: var(--cg-text); font-weight: 500; }
+  .suggest-meta { color: var(--cg-text-muted); font-size: 0.8rem; }
 
   /* Field-error highlighting */
   .field.has-err input,

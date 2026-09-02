@@ -28,6 +28,7 @@ export type CreateGrantInput = {
   ckNum?: string   // required when by === 'check'
   ckDate?: string  // required when by === 'check'; ISO date string or anything strtotime-parseable
   driveFileId?: string // Google Drive file id for the grant agreement PDF (PR B)
+  grantorPid?: number  // when the user picks an existing grantor from the autocomplete
 }
 
 function config() {
