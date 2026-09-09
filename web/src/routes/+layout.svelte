@@ -5,13 +5,9 @@
   import { env } from '$env/dynamic/public'
   import Brand from '$lib/components/Brand.svelte'
   import favicon from '$lib/assets/favicon.svg'
+  import { userState, setInfo, clearSession } from '$lib/state/user.svelte'
 
   let { children } = $props()
-
-  type UserInfo = { name?: string; sponsored?: boolean } | null
-  let userInfo = $state<UserInfo>(null)
-  let menu = $state<string[]>(['Dashboard', 'History', 'Community', 'Settings'])
-  let mounted = $state(false)
 
   // Hide the app header on preview routes (they use their own layout + white-bg TopNav).
   const isPreview = $derived(page.url.pathname.startsWith('/preview'))
@@ -35,31 +31,21 @@
     return ''
   })
 
+  // Hydrate identity from /api/me/info on page load (page refresh / initial visit
+  // with an existing token). The login page pre-fetches on successful sign-in
+  // so the header renders immediately after SPA nav to '/'.
   onMount(async () => {
-    mounted = true
-    const token = typeof localStorage !== 'undefined' ? localStorage.getItem('cg_token') : null
-    if (!token) return
-
-    const storedMenu = localStorage.getItem('cg_menu')
-    if (storedMenu) {
-      try {
-        const parsed = JSON.parse(storedMenu)
-        if (Array.isArray(parsed) && parsed.every(s => typeof s === 'string')) menu = parsed
-      } catch { /* ignore */ }
-    }
-
+    if (!userState.token || userState.info) return
     try {
       const res = await fetch('/api/me/info?limit=1', {
-        headers: { authorization: `Bearer ${token}` }
+        headers: { authorization: `Bearer ${userState.token}` }
       })
-      if (res.ok) userInfo = await res.json()
+      if (res.ok) setInfo(await res.json())
     } catch { /* header just shows Brand if fetch fails */ }
   })
 
   function signOut() {
-    localStorage.removeItem('cg_token')
-    localStorage.removeItem('cg_menu')
-    userInfo = null
+    clearSession()
     goto('/login')
   }
 </script>
@@ -71,21 +57,21 @@
 {#if showHeader}
   <nav class="topnav">
     <Brand size={32} />
-    {#if userInfo && !isLogin}
+    {#if userState.info && !isLogin}
       <ul class="nav-links">
-        {#each menu as label}
+        {#each userState.menu as label}
           {#if menuHref(label)}
             <li><a class:active={label === activeLabel} href={label === 'Dashboard' ? '/' : menuHref(label)}>{label}</a></li>
           {:else}
             <li><button type="button" class="nav-disabled" title="Member site link not configured">{label}</button></li>
           {/if}
         {/each}
-        {#if userInfo.sponsored}
+        {#if userState.info.sponsored}
           <li><a class:active={activeLabel === 'Grants'} href="/grants">Grants</a></li>
         {/if}
       </ul>
       <div class="account">
-        <span class="hi">Hi, {userInfo.name ?? ''}</span>
+        <span class="hi">Hi, {userState.info.name ?? ''}</span>
         <button class="ghost" onclick={signOut}>Sign out</button>
       </div>
     {:else}
