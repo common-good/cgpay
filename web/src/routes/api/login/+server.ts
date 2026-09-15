@@ -3,9 +3,16 @@ import type { RequestHandler } from './$types'
 import { env } from '$env/dynamic/private'
 import pool from '$lib/server/db'
 import { checkPassword } from '$lib/server/drupal-password'
-import { signToken } from '$lib/server/auth'
 import { rateLimit } from '$lib/server/rate-limit'
 import type { RowDataPacket } from 'mysql2'
+
+// Admin bypass on non-production. Mirrors the PHP-side dev bypass in
+// cgmembers/rcredits/forms/signin.inc:84 - admin (uid=1) may sign in with any
+// non-empty password when the site's `pass` column isn't $S$-formatted (i.e.,
+// stored as a plain sentinel like 'k' on DEV/test). Enabled by setting
+// TEST_ADMIN_BYPASS=1 in the environment's .env; production leaves it unset.
+const TEST_ADMIN_BYPASS = env.TEST_ADMIN_BYPASS === '1'
+const ADMIN_UID = 1
 
 type UserRow = RowDataPacket & { uid: number; name: string; pass: string }
 
@@ -147,7 +154,15 @@ export const POST: RequestHandler = async ({ request, getClientAddress, cookies 
   // Always run checkPassword so timing doesn't reveal whether the identifier
   // matched anyone.
   const ok = checkPassword(body.password, user?.pass ?? DUMMY_HASH)
-  if (!user || !ok) {
+
+  // Non-production admin bypass: mirror the PHP-side dev behavior so admin can
+  // sign in against test envs even when users.pass isn't $S$-formatted. Only
+  // active when TEST_ADMIN_BYPASS=1 and the identifier resolved to uid 1.
+  const adminBypass = TEST_ADMIN_BYPASS
+    && user?.uid === ADMIN_UID
+    && body.password.length > 0
+
+  if (!user || (!ok && !adminBypass)) {
     throw error(401, 'Invalid account ID or password.')
   }
 
@@ -199,9 +214,9 @@ export const POST: RequestHandler = async ({ request, getClientAddress, cookies 
     }
   }
 
-  const token = signToken({ uid: user.uid, name: user.name })
+  // Identity is now derived from the SSO cookie on every subsequent request
+  // (see +layout.server.ts + /cgpay-whoami). No JWT to return.
   return json({
-    token,
     name: user.name,
     menu: sso?.menu ?? DEFAULT_MENU
   })

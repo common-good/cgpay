@@ -3,9 +3,8 @@
   import { goto } from '$app/navigation'
   import Icon from '$lib/components/Icon.svelte'
 
-  onMount(() => {
-    if (!localStorage.getItem('cg_token')) goto('/login')
-  })
+  // No client-side auth check here - +layout.server.ts fails 401 for anonymous
+  // callers to /api/grants below, at which point we redirect.
 
   let fullName = $state('')
   let amount = $state('')
@@ -40,12 +39,8 @@
   let suggestTimer: ReturnType<typeof setTimeout> | null = null
 
   async function fetchSuggestions(q: string) {
-    const token = localStorage.getItem('cg_token')
-    if (!token) return
     try {
-      const res = await fetch(`/api/people-autocomplete?q=${encodeURIComponent(q)}`, {
-        headers: { authorization: `Bearer ${token}` }
-      })
+      const res = await fetch(`/api/people-autocomplete?q=${encodeURIComponent(q)}`)
       if (!res.ok) { suggestions = []; return }
       const data = await res.json()
       suggestions = Array.isArray(data.people) ? data.people : []
@@ -122,12 +117,6 @@
     error = null
     fieldErrors = {}
 
-    const token = localStorage.getItem('cg_token')
-    if (!token) {
-      await goto('/login')
-      return
-    }
-
     const payload: Record<string, unknown> = {
       fullName: fullName.trim(),
       amount: amountNum,
@@ -156,13 +145,12 @@
       form.append('agreement', agreementFile, agreementFile.name)
       fetchInit = {
         method: 'POST',
-        headers: { authorization: `Bearer ${token}` }, // let the browser set content-type + boundary
-        body: form
+        body: form // browser sets content-type + boundary
       }
     } else {
       fetchInit = {
         method: 'POST',
-        headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
+        headers: { 'content-type': 'application/json' },
         body: JSON.stringify(payload)
       }
     }
@@ -170,7 +158,6 @@
     try {
       const res = await fetch('/api/grants', fetchInit)
       if (res.status === 401) {
-        localStorage.removeItem('cg_token')
         await goto('/login')
         return
       }
