@@ -4,21 +4,14 @@
 
 import { json, error } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
-import { bearerFromRequest, verifyToken } from '$lib/server/auth'
+import { requireUser } from '$lib/server/auth'
 import { listGrants, createGrant, PhpGrantError, type CreateGrantInput } from '$lib/server/php-grants'
 import { uploadFileToDrive, driveFileName, UNDOC_GRANT_MAX } from '$lib/server/drive'
 
-function requireClaims(request: Request) {
-  const token = bearerFromRequest(request)
-  const claims = token ? verifyToken(token) : null
-  if (!claims) throw error(401, 'unauthorized')
-  return claims
-}
-
-export const GET: RequestHandler = async ({ request }) => {
-  const claims = requireClaims(request)
+export const GET: RequestHandler = async ({ cookies }) => {
+  const me = await requireUser(cookies)
   try {
-    const grants = await listGrants(claims.uid)
+    const grants = await listGrants(me.uid)
     return json({ grants })
   } catch (e) {
     if (e instanceof PhpGrantError && e.status === 403) throw error(403, 'not a sponsored partner')
@@ -35,8 +28,8 @@ function fieldErrorResponse(errors: Record<string, string>, message = FORM_ERROR
   return json({ message, errors, error: message }, { status: 400 })
 }
 
-export const POST: RequestHandler = async ({ request }) => {
-  const claims = requireClaims(request)
+export const POST: RequestHandler = async ({ request, cookies }) => {
+  const me = await requireUser(cookies)
 
   // Accept either JSON (backward-compatible, no file) or multipart/form-data (with agreement file).
   // Grants over UNDOC_GRANT_MAX ($5k) should include an agreement PDF (per William, Phase 3.5 PR B).
@@ -101,7 +94,7 @@ export const POST: RequestHandler = async ({ request }) => {
   if (Object.keys(preErrors).length > 0) return fieldErrorResponse(preErrors)
 
   const input: CreateGrantInput = {
-    uid: claims.uid,
+    uid: me.uid,
     fullName,
     amount,
     by: by as 'ach' | 'check' | 'wire'
@@ -130,7 +123,7 @@ export const POST: RequestHandler = async ({ request }) => {
           createdSec: Math.floor(Date.now() / 1000),
           grantorName: fullName,
           amount,
-          sponseeName: claims.name || `uid ${claims.uid}`,
+          sponseeName: me.name || `uid ${me.uid}`,
           originalName: file.name
         }),
         mimeType: file.type || 'application/octet-stream',

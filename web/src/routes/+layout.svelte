@@ -31,13 +31,6 @@
 
   async function signOut() {
     try { await fetch('/api/logout', { method: 'POST' }) } catch { /* still navigate */ }
-    // Clear the legacy JWT so remaining Bearer-auth code paths log out too.
-    // Retire once every client-side page + /api endpoint reads identity from
-    // the SSO cookie via +layout.server.ts.
-    try {
-      localStorage.removeItem('cg_token')
-      localStorage.removeItem('cg_menu')
-    } catch { /* private mode / blocked */ }
     await invalidateAll()
     goto('/login')
   }
