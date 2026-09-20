@@ -1,17 +1,11 @@
 <script lang="ts">
-  import { onMount } from 'svelte'
-  import { goto } from '$app/navigation'
+  import { goto, invalidateAll } from '$app/navigation'
   import { page } from '$app/state'
   import { env } from '$env/dynamic/public'
   import Brand from '$lib/components/Brand.svelte'
   import favicon from '$lib/assets/favicon.svg'
 
-  let { children } = $props()
-
-  type UserInfo = { name?: string; sponsored?: boolean } | null
-  let userInfo = $state<UserInfo>(null)
-  let menu = $state<string[]>(['Dashboard', 'History', 'Community', 'Settings'])
-  let mounted = $state(false)
+  let { data, children } = $props()
 
   // Hide the app header on preview routes (they use their own layout + white-bg TopNav).
   const isPreview = $derived(page.url.pathname.startsWith('/preview'))
@@ -35,31 +29,16 @@
     return ''
   })
 
-  onMount(async () => {
-    mounted = true
-    const token = typeof localStorage !== 'undefined' ? localStorage.getItem('cg_token') : null
-    if (!token) return
-
-    const storedMenu = localStorage.getItem('cg_menu')
-    if (storedMenu) {
-      try {
-        const parsed = JSON.parse(storedMenu)
-        if (Array.isArray(parsed) && parsed.every(s => typeof s === 'string')) menu = parsed
-      } catch { /* ignore */ }
-    }
-
+  async function signOut() {
+    try { await fetch('/api/logout', { method: 'POST' }) } catch { /* still navigate */ }
+    // Clear the legacy JWT so remaining Bearer-auth code paths log out too.
+    // Retire once every client-side page + /api endpoint reads identity from
+    // the SSO cookie via +layout.server.ts.
     try {
-      const res = await fetch('/api/me/info?limit=1', {
-        headers: { authorization: `Bearer ${token}` }
-      })
-      if (res.ok) userInfo = await res.json()
-    } catch { /* header just shows Brand if fetch fails */ }
-  })
-
-  function signOut() {
-    localStorage.removeItem('cg_token')
-    localStorage.removeItem('cg_menu')
-    userInfo = null
+      localStorage.removeItem('cg_token')
+      localStorage.removeItem('cg_menu')
+    } catch { /* private mode / blocked */ }
+    await invalidateAll()
     goto('/login')
   }
 </script>
@@ -71,21 +50,21 @@
 {#if showHeader}
   <nav class="topnav">
     <Brand size={32} />
-    {#if userInfo && !isLogin}
+    {#if data.user && !isLogin}
       <ul class="nav-links">
-        {#each menu as label}
+        {#each data.user.menu as label}
           {#if menuHref(label)}
             <li><a class:active={label === activeLabel} href={label === 'Dashboard' ? '/' : menuHref(label)}>{label}</a></li>
           {:else}
             <li><button type="button" class="nav-disabled" title="Member site link not configured">{label}</button></li>
           {/if}
         {/each}
-        {#if userInfo.sponsored}
+        {#if data.user.sponsored}
           <li><a class:active={activeLabel === 'Grants'} href="/grants">Grants</a></li>
         {/if}
       </ul>
       <div class="account">
-        <span class="hi">Hi, {userInfo.name ?? ''}</span>
+        <span class="hi">Hi, {data.user.name}</span>
         <button class="ghost" onclick={signOut}>Sign out</button>
       </div>
     {:else}
