@@ -8,12 +8,15 @@ import { phpWhoami, type WhoamiUser } from './php-whoami'
 /**
  * Resolve the current session to a user, or return null if not signed in.
  * Endpoints that permit anonymous callers use this; endpoints that require
- * a signed-in user should use `requireUser` instead.
+ * a signed-in user should use `requireUser` instead. A PHP-side backend
+ * failure is treated as "not signed in" for behavior but is logged upstream
+ * in `phpWhoami`, so the app degrades to anonymous without hiding the error.
  */
 export async function currentUser(cookies: Cookies): Promise<WhoamiUser | null> {
   const cookieName = env.PHP_SSO_COOKIE_NAME
   if (!cookieName) return null
-  return phpWhoami(cookies.get(cookieName))
+  const result = await phpWhoami(cookies.get(cookieName))
+  return result.ok ? result.user : null
 }
 
 /**

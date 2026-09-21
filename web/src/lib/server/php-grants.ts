@@ -1,8 +1,8 @@
 // Server-to-server client for the PHP /cgpay-grants endpoint.
-// Auth: X-CG-Internal-Token: <PHP_SSO_SECRET> — same shared secret used by
-// /cgpay-sso and /cgpay-lookup (see cgmembers/rcredits/forms/cgpaygrants.inc).
+// Uses `callPhp` for URL resolution, shared-secret injection, and error shaping;
+// see cgmembers/rcredits/forms/cgpaygrants.inc for the PHP side.
 
-import { env } from '$env/dynamic/private'
+import { callPhp, describeFailure } from './php-client'
 
 export type GrantSummary = {
   id: number
@@ -31,48 +31,51 @@ export type CreateGrantInput = {
   grantorPid?: number  // when the user picks an existing grantor from the autocomplete
 }
 
-function config() {
-  const url = env.PHP_GRANTS_URL
-  const secret = env.PHP_SSO_SECRET
-  if (!url || !secret) throw new Error('PHP_GRANTS_URL / PHP_SSO_SECRET not configured')
-  return { url, secret }
+export async function listGrants(uid: number): Promise<GrantSummary[]> {
+  const result = await callPhp<{ grants: unknown }>('/cgpay-grants', {
+    baseUrlEnv: 'PHP_GRANTS_URL',
+    method: 'GET',
+    query: { uid }
+  })
+  if (!result.ok) {
+    if (result.kind === 'http') throw new PhpGrantError(`PHP /cgpay-grants list returned ${result.status}`, result.status)
+    throw new Error(`PHP /cgpay-grants list: ${describeFailure(result.kind)}`)
+  }
+  if (!Array.isArray(result.data.grants)) throw new Error('PHP /cgpay-grants list: unexpected body')
+  return result.data.grants as GrantSummary[]
 }
 
-export async function listGrants(uid: number): Promise<GrantSummary[]> {
-  const { url, secret } = config()
-  const target = url + (url.includes('?') ? '&' : '?') + 'uid=' + encodeURIComponent(String(uid))
-  const res = await fetch(target, {
-    method: 'GET',
-    headers: { 'x-cg-internal-token': secret }
-  })
-  if (!res.ok) throw new PhpGrantError(`PHP /cgpay-grants list returned ${res.status}`, res.status)
-  const data = await res.json()
-  if (!Array.isArray(data?.grants)) throw new Error('PHP /cgpay-grants list: unexpected body')
-  return data.grants as GrantSummary[]
+type CreateGrantResponse = {
+  id?: number
+  message?: string
+  error?: string
+  errors?: Record<string, string>
 }
 
 export async function createGrant(input: CreateGrantInput): Promise<number> {
-  const { url, secret } = config()
-  const res = await fetch(url, {
+  const result = await callPhp<CreateGrantResponse>('/cgpay-grants', {
+    baseUrlEnv: 'PHP_GRANTS_URL',
     method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-cg-internal-token': secret
-    },
-    body: JSON.stringify(input)
+    body: input
   })
 
-  const data = await res.json().catch(() => null)
-  if (!res.ok) {
-    // PHP now returns { message, errors: { fieldName: "message", ... }, error } — see cgpaygrants.inc
-    const msg = (data && typeof data.message === 'string') ? data.message
-             : (data && typeof data.error === 'string') ? data.error
-             : `PHP /cgpay-grants create returned ${res.status}`
-    const fieldErrors = (data && data.errors && typeof data.errors === 'object') ? data.errors as Record<string, string> : undefined
-    throw new PhpGrantError(msg, res.status, fieldErrors)
+  if (!result.ok) {
+    if (result.kind === 'http') {
+      // PHP now returns { message, errors: { fieldName: "message", ... }, error } - see cgpaygrants.inc
+      const body = result.body as CreateGrantResponse | null
+      const msg = (body && typeof body.message === 'string') ? body.message
+               : (body && typeof body.error === 'string') ? body.error
+               : `PHP /cgpay-grants create returned ${result.status}`
+      const fieldErrors = (body && body.errors && typeof body.errors === 'object')
+        ? body.errors as Record<string, string>
+        : undefined
+      throw new PhpGrantError(msg, result.status, fieldErrors)
+    }
+    throw new Error(`PHP /cgpay-grants create: ${describeFailure(result.kind)}`)
   }
-  if (!data || typeof data.id !== 'number') throw new Error('PHP /cgpay-grants create: unexpected body')
-  return data.id
+
+  if (typeof result.data.id !== 'number') throw new Error('PHP /cgpay-grants create: unexpected body')
+  return result.data.id
 }
 
 export class PhpGrantError extends Error {
