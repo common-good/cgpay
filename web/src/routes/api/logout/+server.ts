@@ -18,7 +18,11 @@ export const POST: RequestHandler = async ({ cookies }) => {
       if (phpHost && phpHost !== cookieDomain?.replace(/^\./, '')) {
         cookies.delete(cookieName, { path: '/', domain: '.' + phpHost })
       }
-    } catch { /* PHP_SSO_URL missing/malformed - nothing more to clear */ }
+    } catch (e) {
+      // PHP_SSO_URL missing/malformed - the secondary-scope cookie can't be cleared,
+      // but the primary-scope one already was. Log for config debugging.
+      console.warn('[logout] PHP_SSO_URL not a valid URL; skipping host-scoped cookie clear:', e)
+    }
   }
   return json({ ok: true })
 }
