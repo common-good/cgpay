@@ -2,7 +2,7 @@
 // Given a session id (the value of the SSESS... cookie), return who owns it.
 // See cgmembers/rcredits/forms/cgpaywhoami.inc for the PHP side.
 
-import { env } from '$env/dynamic/private'
+import { callPhp, PhpCallError } from './php-client'
 
 export type WhoamiUser = {
   uid: number
@@ -12,49 +12,53 @@ export type WhoamiUser = {
 }
 
 /**
- * Ask PHP who this session belongs to. Returns null when there's no session,
- * the endpoint isn't configured, or the call fails - callers treat null as
- * "not signed in" and the layout renders the Brand-only header.
- *
- * PHP is the single source of truth: if the user switched accounts on the
- * PHP side, the next call to this reflects the new identity. Node keeps no
- * local claim about who the user is.
+ * Whoami results carry their failure mode: `no_session` means "the ssid was
+ * missing or PHP said 401 - the user is not signed in", while `php_error`
+ * covers configuration, network, and unexpected-response cases. Callers can
+ * render as anonymous in both cases; the split gives logs enough signal to
+ * tell "everything's fine, user isn't signed in" from "PHP is unreachable".
  */
-export async function phpWhoami(ssid: string | undefined | null): Promise<WhoamiUser | null> {
-  if (!ssid) return null
+export type WhoamiResult =
+  | { ok: true; user: WhoamiUser }
+  | { ok: false; reason: 'no_session' | 'php_error' }
 
-  const ssoUrl = env.PHP_SSO_URL
-  const secret = env.PHP_SSO_SECRET
-  if (!ssoUrl || !secret) return null
+type WhoamiRaw = { uid: unknown; name: unknown; sponsored?: unknown; menu?: unknown }
 
-  let whoamiUrl: string
-  try {
-    const u = new URL(ssoUrl)
-    u.pathname = '/cgpay-whoami'
-    whoamiUrl = u.toString()
-  } catch {
-    return null
-  }
+export async function phpWhoami(ssid: string | undefined | null): Promise<WhoamiResult> {
+  if (!ssid) return { ok: false, reason: 'no_session' }
 
   try {
-    const res = await fetch(whoamiUrl, {
+    const result = await callPhp<WhoamiRaw>('/cgpay-whoami', {
       method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-cg-internal-token': secret
-      },
-      body: JSON.stringify({ ssid })
+      body: { ssid }
     })
-    if (!res.ok) return null
-    const data = await res.json().catch(() => null)
-    if (!data || typeof data.uid !== 'number' || typeof data.name !== 'string') return null
-    return {
-      uid: data.uid,
-      name: data.name,
-      sponsored: !!data.sponsored,
-      menu: Array.isArray(data.menu) ? data.menu.filter((s: unknown) => typeof s === 'string') : []
+
+    if (!result.ok) {
+      // 401 from PHP = valid response, just no session for this ssid.
+      return { ok: false, reason: result.status === 401 ? 'no_session' : 'php_error' }
     }
-  } catch {
-    return null
+
+    const data = result.data
+    if (typeof data.uid !== 'number' || typeof data.name !== 'string') {
+      console.warn('[php-whoami] response missing uid or name:', data)
+      return { ok: false, reason: 'php_error' }
+    }
+
+    return {
+      ok: true,
+      user: {
+        uid: data.uid,
+        name: data.name,
+        sponsored: !!data.sponsored,
+        menu: Array.isArray(data.menu) ? data.menu.filter((s: unknown): s is string => typeof s === 'string') : []
+      }
+    }
+  } catch (e) {
+    if (e instanceof PhpCallError) {
+      console.warn(`[php-whoami] ${e.kind}: ${e.message}`)
+    } else {
+      console.error('[php-whoami] unexpected error:', e)
+    }
+    return { ok: false, reason: 'php_error' }
   }
 }

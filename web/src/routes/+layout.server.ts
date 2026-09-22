@@ -10,7 +10,6 @@ export const load: LayoutServerLoad = async ({ cookies }) => {
   const ssoCookieName = env.PHP_SSO_COOKIE_NAME
   if (!ssoCookieName) return { user: null as WhoamiUser | null }
 
-  const ssid = cookies.get(ssoCookieName)
-  const user = await phpWhoami(ssid)
-  return { user }
+  const result = await phpWhoami(cookies.get(ssoCookieName))
+  return { user: result.ok ? result.user : null }
 }

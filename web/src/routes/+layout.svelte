@@ -30,7 +30,14 @@
   })
 
   async function signOut() {
-    try { await fetch('/api/logout', { method: 'POST' }) } catch { /* still navigate */ }
+    try {
+      await fetch('/api/logout', { method: 'POST' })
+    } catch (e) {
+      // Network failure clearing the server-side cookie. Still navigate to /login so
+      // the UI reflects the user's intent; the stale cookie will expire, or the next
+      // successful logout call will clear it. Logged so a repro shows up in devtools.
+      console.warn('[signOut] /api/logout failed; proceeding to /login anyway:', e)
+    }
     await invalidateAll()
     goto('/login')
   }
