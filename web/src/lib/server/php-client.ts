@@ -2,32 +2,21 @@
 // Consolidates URL resolution + shared-secret injection + fetch + JSON-shape
 // checks that were duplicated across php-whoami, php-grants, php-people.
 //
-// Callers pattern-match on the discriminated result rather than catching
-// exceptions - keeps failure modes explicit.
+// Failure modes:
+//   - Config missing, network error, malformed response body -> THROWN as
+//     `PhpCallError`. These aren't things the caller can meaningfully decide
+//     about; they're infrastructure bugs. Callers that want to survive them
+//     (e.g. the layout load, which should still render as anonymous when PHP
+//     is unreachable) wrap this in try/catch.
+//   - HTTP 4xx/5xx from PHP -> RETURNED as `{ok:false, status, body}`.
+//     The caller cares about the specific status (401 = no session,
+//     403 = not sponsored, 400 = validation errors, etc.) so we surface it.
 
 import { env } from '$env/dynamic/private'
 
 export type PhpResult<T> =
   | { ok: true; data: T }
-  | { ok: false; kind: 'not_configured' }
-  | { ok: false; kind: 'network'; error: unknown }
-  | { ok: false; kind: 'http'; status: number; body: unknown }
-  | { ok: false; kind: 'bad_response'; body: unknown }
-
-export type PhpFailureKind = 'not_configured' | 'network' | 'http' | 'bad_response'
-
-/**
- * Human-readable label for a failure kind - used when a caller wants to
- * include the reason in an Error message.
- */
-export function describeFailure(kind: PhpFailureKind): string {
-  switch (kind) {
-    case 'not_configured': return 'not configured'
-    case 'network': return 'network error'
-    case 'http': return 'HTTP error'
-    case 'bad_response': return 'malformed response'
-  }
-}
+  | { ok: false; status: number; body: unknown }
 
 export type PhpCallOptions = {
   method?: 'GET' | 'POST'
@@ -37,11 +26,21 @@ export type PhpCallOptions = {
   baseUrlEnv?: 'PHP_SSO_URL' | 'PHP_GRANTS_URL'
 }
 
+export class PhpCallError extends Error {
+  kind: 'not_configured' | 'network' | 'bad_response'
+  cause?: unknown
+  constructor(kind: 'not_configured' | 'network' | 'bad_response', message: string, cause?: unknown) {
+    super(message)
+    this.name = 'PhpCallError'
+    this.kind = kind
+    this.cause = cause
+  }
+}
+
 /**
  * Call a /cgpay-* server-to-server endpoint on cgmembers-frame.
- * Returns a discriminated PhpResult so the caller can distinguish
- * "config missing" from "network error" from "HTTP 4xx/5xx" from
- * "response body malformed".
+ * Returns `{ok, data}` on success, `{ok:false, status, body}` on HTTP error,
+ * throws `PhpCallError` on infrastructure failure (config, network, malformed body).
  */
 export async function callPhp<T = unknown>(
   pathname: string,
@@ -51,8 +50,7 @@ export async function callPhp<T = unknown>(
   const baseUrl = env[baseEnvName]
   const secret = env.PHP_SSO_SECRET
   if (!baseUrl || !secret) {
-    console.warn(`[php-client] ${baseEnvName} or PHP_SSO_SECRET not configured; skipping ${pathname}`)
-    return { ok: false, kind: 'not_configured' }
+    throw new PhpCallError('not_configured', `${baseEnvName} or PHP_SSO_SECRET is not configured`)
   }
 
   let url: URL
@@ -60,8 +58,7 @@ export async function callPhp<T = unknown>(
     url = new URL(baseUrl)
     url.pathname = pathname
   } catch (e) {
-    console.warn(`[php-client] ${baseEnvName} malformed:`, e)
-    return { ok: false, kind: 'not_configured' }
+    throw new PhpCallError('not_configured', `${baseEnvName} is not configured with a valid URL`, e)
   }
 
   if (opts.query) {
@@ -83,21 +80,34 @@ export async function callPhp<T = unknown>(
       headers,
       body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined
     })
-  } catch (error) {
-    console.error(`[php-client] ${pathname} network error:`, error)
-    return { ok: false, kind: 'network', error }
+  } catch (e) {
+    throw new PhpCallError('network', `${pathname} fetch failed`, e)
   }
 
-  const body = await res.json().catch(() => null)
+  // Read the body as text first so we can distinguish "PHP returned literal null"
+  // from "response body wasn't valid JSON" (per @egwynn on #166). Error responses
+  // are allowed to return a non-JSON payload (e.g. a PHP fatal, an nginx error
+  // page) - we still surface the status. Only OK responses must be valid JSON.
+  const rawBody = await res.text().catch(() => '')
+  let body: unknown = null
+  let parseError: unknown = null
+  if (rawBody.length > 0) {
+    try {
+      body = JSON.parse(rawBody)
+    } catch (e) {
+      parseError = e
+    }
+  }
 
   if (!res.ok) {
-    return { ok: false, kind: 'http', status: res.status, body }
+    return { ok: false, status: res.status, body: parseError ? rawBody : body }
   }
 
+  if (parseError) {
+    throw new PhpCallError('bad_response', `${pathname} returned non-JSON body: ${rawBody.slice(0, 200)}`, parseError)
+  }
   if (body === null || typeof body !== 'object') {
-    console.warn(`[php-client] ${pathname} returned unexpected body:`, body)
-    return { ok: false, kind: 'bad_response', body }
+    throw new PhpCallError('bad_response', `${pathname} returned unexpected body: ${rawBody.slice(0, 200)}`)
   }
-
   return { ok: true, data: body as T }
 }
