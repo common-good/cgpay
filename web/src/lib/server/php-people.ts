@@ -5,7 +5,7 @@
 // grantor-name typeahead on /grants/new - filtering the people table to prior
 // grantors, with prior donors to the current sponsee ranked first.
 
-import { callPhp, describeFailure } from './php-client'
+import { callPhp } from './php-client'
 
 export type PersonSuggestion = {
   pid: number
@@ -26,11 +26,8 @@ export async function autocompletePeople(uid: number, query: string, limit = 20)
   })
 
   if (!result.ok) {
-    if (result.kind === 'http') {
-      if (result.status === 403) throw new PhpPeopleError('not a sponsored partner', 403)
-      throw new PhpPeopleError(`PHP autocomplete returned ${result.status}`, result.status)
-    }
-    throw new Error(`PHP autocomplete: ${describeFailure(result.kind)}`)
+    if (result.status === 403) throw new PhpPeopleError('not a sponsored partner', 403)
+    throw new PhpPeopleError(`PHP autocomplete returned ${result.status}`, result.status)
   }
 
   if (!Array.isArray(result.data.people)) throw new Error('PHP autocomplete: unexpected body')

@@ -2,7 +2,7 @@
 // Given a session id (the value of the SSESS... cookie), return who owns it.
 // See cgmembers/rcredits/forms/cgpaywhoami.inc for the PHP side.
 
-import { callPhp } from './php-client'
+import { callPhp, PhpCallError } from './php-client'
 
 export type WhoamiUser = {
   uid: number
@@ -27,33 +27,38 @@ type WhoamiRaw = { uid: unknown; name: unknown; sponsored?: unknown; menu?: unkn
 export async function phpWhoami(ssid: string | undefined | null): Promise<WhoamiResult> {
   if (!ssid) return { ok: false, reason: 'no_session' }
 
-  const result = await callPhp<WhoamiRaw>('/cgpay-whoami', {
-    method: 'POST',
-    body: { ssid }
-  })
+  try {
+    const result = await callPhp<WhoamiRaw>('/cgpay-whoami', {
+      method: 'POST',
+      body: { ssid }
+    })
 
-  if (!result.ok) {
-    // 401 from PHP = valid response, just no session for this ssid.
-    // Everything else = infrastructure problem worth logging.
-    if (result.kind === 'http' && result.status === 401) {
-      return { ok: false, reason: 'no_session' }
+    if (!result.ok) {
+      // 401 from PHP = valid response, just no session for this ssid.
+      return { ok: false, reason: result.status === 401 ? 'no_session' : 'php_error' }
+    }
+
+    const data = result.data
+    if (typeof data.uid !== 'number' || typeof data.name !== 'string') {
+      console.warn('[php-whoami] response missing uid or name:', data)
+      return { ok: false, reason: 'php_error' }
+    }
+
+    return {
+      ok: true,
+      user: {
+        uid: data.uid,
+        name: data.name,
+        sponsored: !!data.sponsored,
+        menu: Array.isArray(data.menu) ? data.menu.filter((s: unknown): s is string => typeof s === 'string') : []
+      }
+    }
+  } catch (e) {
+    if (e instanceof PhpCallError) {
+      console.warn(`[php-whoami] ${e.kind}: ${e.message}`)
+    } else {
+      console.error('[php-whoami] unexpected error:', e)
     }
     return { ok: false, reason: 'php_error' }
-  }
-
-  const data = result.data
-  if (typeof data.uid !== 'number' || typeof data.name !== 'string') {
-    console.warn('[php-whoami] response missing uid or name:', data)
-    return { ok: false, reason: 'php_error' }
-  }
-
-  return {
-    ok: true,
-    user: {
-      uid: data.uid,
-      name: data.name,
-      sponsored: !!data.sponsored,
-      menu: Array.isArray(data.menu) ? data.menu.filter((s: unknown): s is string => typeof s === 'string') : []
-    }
   }
 }
