@@ -2,6 +2,7 @@
   import { goto } from '$app/navigation'
   import { env } from '$env/dynamic/public'
   import Brand from '$lib/components/Brand.svelte'
+  import { setSession, setInfo } from '$lib/state/user.svelte'
 
   let identifier = $state('')
   let password = $state('')
@@ -27,8 +28,18 @@
         return
       }
       const { token, menu } = await res.json()
-      localStorage.setItem('cg_token', token)
-      if (Array.isArray(menu)) localStorage.setItem('cg_menu', JSON.stringify(menu))
+      setSession(token, menu)
+
+      // Pre-fetch identity so the header renders "Hi, <name>" on the first paint
+      // after login. Without this, the header would stay empty until the next
+      // navigation triggers +layout's fallback fetch.
+      try {
+        const info = await fetch('/api/me/info?limit=1', {
+          headers: { authorization: `Bearer ${token}` }
+        })
+        if (info.ok) setInfo(await info.json())
+      } catch { /* header falls back to layout's own fetch */ }
+
       await goto('/')
     } catch {
       error = 'Network error - please try again.'
