@@ -4,6 +4,7 @@
   import { page } from '$app/state'
   import { env } from '$env/dynamic/public'
   import Brand from '$lib/components/Brand.svelte'
+  import { appVersion } from '$lib/version'
   import favicon from '$lib/assets/favicon.svg'
 
   let { children } = $props()
@@ -96,6 +97,16 @@
 
 {@render children()}
 
+<footer class="app-version" title="Currently deployed build">
+  <span class="ver-branch">{appVersion.branch}</span>
+  <span class="ver-sep">·</span>
+  <span class="ver-sha">{appVersion.sha}</span>
+  {#if appVersion.builtAt}
+    <span class="ver-sep">·</span>
+    <span class="ver-time">{new Date(appVersion.builtAt).toLocaleString()}</span>
+  {/if}
+</footer>
+
 <style>
   :global(:root) {
     --cg-green: #1e7a3a;
@@ -181,4 +192,23 @@
   }
   .ghost:hover { background: var(--cg-navy-soft); }
   .spacer { flex: 1; }
+
+  .app-version {
+    position: fixed;
+    right: 0.75rem;
+    bottom: 0.5rem;
+    z-index: 5;
+    padding: 0.15rem 0.55rem;
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid var(--cg-border);
+    border-radius: 999px;
+    font-size: 0.7rem;
+    color: var(--cg-text-muted);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    line-height: 1.2;
+    pointer-events: none;
+    user-select: text;
+  }
+  .app-version .ver-sep { margin: 0 0.35rem; opacity: 0.5; }
+  .app-version .ver-branch { color: var(--cg-text); font-weight: 500; }
 </style>
