@@ -26,9 +26,8 @@
         error = body.message ?? `Sign in failed (${res.status})`
         return
       }
-      const { token, menu } = await res.json()
-      localStorage.setItem('cg_token', token)
-      if (Array.isArray(menu)) localStorage.setItem('cg_menu', JSON.stringify(menu))
+      // Identity is now derived from the SSO cookie server-side on every
+      // request (see +layout.server.ts). No token to store.
       await goto('/')
     } catch {
       error = 'Network error - please try again.'

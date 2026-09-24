@@ -1,7 +1,7 @@
 import { json, error } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
 import pool from '$lib/server/db'
-import { bearerFromRequest, verifyToken } from '$lib/server/auth'
+import { requireUser } from '$lib/server/auth'
 import type { RowDataPacket } from 'mysql2'
 
 // MariaDB DECIMAL columns come back as strings to preserve precision.
@@ -10,14 +10,12 @@ import type { RowDataPacket } from 'mysql2'
 // switch to a Decimal type on the wire.
 type BalanceRow = RowDataPacket & { balance: string | null }
 
-export const GET: RequestHandler = async ({ request }) => {
-  const token = bearerFromRequest(request)
-  const claims = token ? verifyToken(token) : null
-  if (!claims) throw error(401, 'unauthorized')
+export const GET: RequestHandler = async ({ cookies }) => {
+  const me = await requireUser(cookies)
 
   const [rows] = await pool.query<BalanceRow[]>(
     'SELECT balance FROM users WHERE uid = ? LIMIT 1',
-    [claims.uid]
+    [me.uid]
   )
   if (!rows[0]) throw error(404, 'user not found')
 
@@ -26,5 +24,5 @@ export const GET: RequestHandler = async ({ request }) => {
   const raw = rows[0].balance
   const balance = raw === null ? 0 : Number(raw)
 
-  return json({ uid: claims.uid, name: claims.name, balance })
+  return json({ uid: me.uid, name: me.name, balance })
 }
