@@ -4,7 +4,7 @@
 <div class="stub">
   <p>
     This is a placeholder screen. The full sponsees list will render here once
-    we have a `/cgpay-admin-sponsees` endpoint on the PHP side that returns
+    we have a `/cgpay/admin-sponsees` endpoint on the PHP side that returns
     each sponsored account with its recent grant activity + outstanding balances.
   </p>
   <p>
