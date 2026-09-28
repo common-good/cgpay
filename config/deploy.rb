@@ -1,7 +1,7 @@
 # config/deploy.rb
 lock '~> 3.20.1'
 set :application, 'cgpay'
-set :repo_url, 'git@github-pay:common-good/cgpay.git'
+set :repo_url, 'https://github.com/common-good/cgpay.git'
 set :local_user, ENV['USER'] || ENV['USERNAME'] || `whoami`.chomp
 
 case (stage = fetch(:stage).to_s)
