@@ -3,26 +3,25 @@ lock '~> 3.20.1'
 set :application, 'cgpay'
 set :repo_url, 'https://github.com/common-good/cgpay.git'
 set :local_user, ENV['USER'] || ENV['USERNAME'] || `whoami`.chomp
+stage0 = fetch(:stage).to_s   # whatever was typed after `cap`
+set :stage, (stage = stage0.chomp("-standby"))
+raise "No pay setup for stage '#{stage}'" unless %w[test dev staging demo beta main].include?(stage)
+subdomain = stage0.include?("-standby") ? "standby" : stage 
 
-case (stage = fetch(:stage).to_s)
+case stage   # whatever was typed after `cap`
 when "test"
-  ask :branch, `git rev-parse --abbrev-ref HEAD`.chomp
+  ask :branch, `git rev-parse --abbrev-ref HEAD`.chomp # defaults to current checked-out branch
 when "dev"
   set :branch, "develop"
 when "staging"
   ask :branch, "main"
-else # demo, beta, main
-  set :branch, "main"
+when "main", "beta", "demo"
+  ask :branch, "main"   # ask temporarily while getting set up
 end
 
-# beta and main are on the production server, so no conflicts (collisions) with the other ports
-PAY_PORTS = { test: 3001, dev: 3002, staging: 3003, demo: 3004, beta: 3001, main: 3002 }
-port = PAY_PORTS[stage.to_sym]
-raise "No pay_port mapping for stage '#{stage}'" if port.nil?
-set :pay_port, port
+server "#{subdomain}.commongood.earth", roles: %w{app db web}, user: stage, port: 7822
 
 set :deploy_to, "/home/#{stage}/pay"
-server "#{stage}.commongood.earth", roles: %w{app db web}, user: stage, port: 7822
 set :tmp_dir, "/home/#{stage}/tmp"
 set :ssh_options, {
   forward_agent: false,
@@ -56,28 +55,20 @@ namespace :deploy do
         # NOT `reload ... || start ...` as a single shell command — the
         # capistrano-nvm wrapper (nvm-exec.sh) loses PATH on the `||` fallback
         # half, causing "pm2: command not found" on first deploy to any
-        # environment (confirmed on test). Explicit Ruby check instead, so the
-        # wrapper only ever runs one simple command at a time.
+        # environment. Explicit Ruby check instead, so the wrapper only ever
+        # runs one simple command at a time.
         #
-        # PORT must be passed on BOTH branches, not just `start` — a stale
-        # process entry from an earlier deploy attempt caused `reload` to run
-        # with no PORT set, so the app fell back to its own hardcoded default
-        # (3000) and collided with an unrelated process already on that port
-        # (confirmed on dev/staging).
+        # `--node-args="--env-file=..."` (Node 20.6+) loads the shared .env at
+        # startup — pm2 doesn't do this itself, and SvelteKit's adapter-node
+        # doesn't either. Without it, DB_*/JWT_SECRET/PHP_SSO_URL etc. are all
+        # undefined at runtime and every login 401s.
         #
-        # `--node-args="--env-file=..."` (Node 20.6+, we're on 20.20.2) tells the
-        # node process to load the shared .env at startup — pm2 doesn't do this
-        # itself, and SvelteKit's adapter-node doesn't either. Without it, the
-        # process comes up with only PORT in its env; DB_*, PHP_SSO_URL,
-        # JWT_SECRET, etc. are all undefined at runtime and every login 401s
-        # because phpLookup can't reach the SSO endpoint. (Confirmed on test
-        # before this fix.)
-        #
-        # pm2 stores node-args with the process on `start`, so subsequent
-        # reloads preserve them. To transition an existing process that was
-        # started WITHOUT --env-file, we detect the missing flag in the current
-        # jlist and force a delete + fresh start once; subsequent deploys go
-        # through the normal reload path.
+        # PORT is NOT passed via SSHKit's `env:` hash — confirmed (via `pm2 env`)
+        # that it silently never reaches the process when combined with the
+        # quoted --node-args argument above; exact interaction unclear, evidence
+        # was unambiguous either way. Fix: PORT lives in .env itself instead,
+        # loaded the same way as every other variable — see the .env generation
+        # below, which now includes it.
         env_file = shared_path.join('web/.env')
         jlist = capture(:pm2, 'jlist', raise_on_non_zero_exit: false)
         running = jlist.include?('"name":"pay"')
