@@ -1,14 +1,12 @@
 <script lang="ts">
-  import { onMount } from 'svelte'
-  import { goto } from '$app/navigation'
+  import { goto, invalidateAll } from '$app/navigation'
   import { page } from '$app/state'
   import { env } from '$env/dynamic/public'
   import Brand from '$lib/components/Brand.svelte'
   import { appVersion } from '$lib/version'
   import favicon from '$lib/assets/favicon.svg'
-  import { userState, setInfo, clearSession } from '$lib/state/user.svelte'
 
-  let { children } = $props()
+  let { data, children } = $props()
 
   // Hide the app header on preview routes (they use their own layout + white-bg TopNav).
   const isPreview = $derived(page.url.pathname.startsWith('/preview'))
@@ -32,21 +30,9 @@
     return ''
   })
 
-  // Hydrate identity from /api/me/info on page load (page refresh / initial visit
-  // with an existing token). The login page pre-fetches on successful sign-in
-  // so the header renders immediately after SPA nav to '/'.
-  onMount(async () => {
-    if (!userState.token || userState.info) return
-    try {
-      const res = await fetch('/api/me/info?limit=1', {
-        headers: { authorization: `Bearer ${userState.token}` }
-      })
-      if (res.ok) setInfo(await res.json())
-    } catch { /* header just shows Brand if fetch fails */ }
-  })
-
-  function signOut() {
-    clearSession()
+  async function signOut() {
+    try { await fetch('/api/logout', { method: 'POST' }) } catch { /* still navigate */ }
+    await invalidateAll()
     goto('/login')
   }
 </script>
@@ -58,21 +44,21 @@
 {#if showHeader}
   <nav class="topnav">
     <Brand size={32} />
-    {#if userState.info && !isLogin}
+    {#if data.user && !isLogin}
       <ul class="nav-links">
-        {#each userState.menu as label}
+        {#each data.user.menu as label}
           {#if menuHref(label)}
             <li><a class:active={label === activeLabel} href={label === 'Dashboard' ? '/' : menuHref(label)}>{label}</a></li>
           {:else}
             <li><button type="button" class="nav-disabled" title="Member site link not configured">{label}</button></li>
           {/if}
         {/each}
-        {#if userState.info.sponsored}
+        {#if data.user.sponsored}
           <li><a class:active={activeLabel === 'Grants'} href="/grants">Grants</a></li>
         {/if}
       </ul>
       <div class="account">
-        <span class="hi">Hi, {userState.info.name ?? ''}</span>
+        <span class="hi">Hi, {data.user.name}</span>
         <button class="ghost" onclick={signOut}>Sign out</button>
       </div>
     {:else}
