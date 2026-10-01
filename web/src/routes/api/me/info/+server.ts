@@ -9,7 +9,7 @@
 import { json, error } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
 import pool from '$lib/server/db'
-import { bearerFromRequest, verifyToken } from '$lib/server/auth'
+import { requireUser } from '$lib/server/auth'
 import type { RowDataPacket } from 'mysql2'
 
 // Drupal/CG constants from cgmembers/rcredits/defs.inc
@@ -66,17 +66,15 @@ type TxRow = RowDataPacket & {
 type NameRow = RowDataPacket & { uid: number; fullName: string | null; name: string }
 type TransferSumRow = RowDataPacket & { transfer_in: string | null; transfer_out: string | null }
 
-export const GET: RequestHandler = async ({ request, url }) => {
-  const token = bearerFromRequest(request)
-  const claims = token ? verifyToken(token) : null
-  if (!claims) throw error(401, 'unauthorized')
+export const GET: RequestHandler = async ({ cookies, url }) => {
+  const me = await requireUser(cookies)
 
   const limit = Math.min(MAX_LIMIT, Math.max(1, Number(url.searchParams.get('limit') ?? DEFAULT_LIMIT)))
 
   // 1) Balance + bestName for the user.
   const [userRows] = await pool.query<UserRow[]>(
     'SELECT balance, fullName, name FROM users WHERE uid = ? LIMIT 1',
-    [claims.uid]
+    [me.uid]
   )
   if (!userRows[0]) throw error(404, 'user not found')
   const balance = userRows[0].balance === null ? 0 : Number(userRows[0].balance)
@@ -90,7 +88,7 @@ export const GET: RequestHandler = async ({ request, url }) => {
   try {
     const [coRows] = await pool.query<RowDataPacket[]>(
       'SELECT (coFlags & 4) > 0 AS sponsored FROM u_company WHERE uid = ? LIMIT 1',
-      [claims.uid]
+      [me.uid]
     )
     sponsored = Number(coRows[0]?.sponsored ?? 0) === 1
   } catch {
@@ -110,7 +108,7 @@ export const GET: RequestHandler = async ({ request, url }) => {
      WHERE (payer = ? OR payee = ?) AND status = ?
      ORDER BY created DESC
      LIMIT ?`,
-    [claims.uid, claims.uid, claims.uid, claims.uid, TX_PENDING, limit]
+    [me.uid, me.uid, me.uid, me.uid, TX_PENDING, limit]
   )
 
   // 3) Recent completed transactions (from txs) — main pair only (type = E_PRIME)
@@ -126,7 +124,7 @@ export const GET: RequestHandler = async ({ request, url }) => {
      WHERE (uid1 = ? OR uid2 = ?) AND type = ?
      ORDER BY created DESC
      LIMIT ?`,
-    [claims.uid, claims.uid, claims.uid, claims.uid, claims.uid, E_PRIME, limit]
+    [me.uid, me.uid, me.uid, me.uid, me.uid, E_PRIME, limit]
   )
 
   // 4) Look up counterparty names in one query
@@ -177,7 +175,7 @@ export const GET: RequestHandler = async ({ request, url }) => {
          COALESCE(SUM(CASE WHEN payer = ? THEN amount ELSE 0 END), 0) AS transfer_out
        FROM txs2
        WHERE (payee = ? OR payer = ?) AND completed = 0`,
-      [claims.uid, claims.uid, claims.uid, claims.uid]
+      [me.uid, me.uid, me.uid, me.uid]
     )
     pendingTransferIn = Number(transferRows[0]?.transfer_in ?? 0)
     pendingTransferOut = Number(transferRows[0]?.transfer_out ?? 0)
@@ -198,7 +196,7 @@ export const GET: RequestHandler = async ({ request, url }) => {
   }
 
   const body: InfoResponse = {
-    uid: claims.uid,
+    uid: me.uid,
     name: bestName,
     loginName,
     balance,

@@ -19,17 +19,9 @@
   let grants = $state<Grant[]>([])
 
   onMount(async () => {
-    const token = localStorage.getItem('cg_token')
-    if (!token) {
-      await goto('/login')
-      return
-    }
     try {
-      const res = await fetch('/api/grants', {
-        headers: { authorization: `Bearer ${token}` }
-      })
+      const res = await fetch('/api/grants')
       if (res.status === 401) {
-        localStorage.removeItem('cg_token')
         await goto('/login')
         return
       }
@@ -45,7 +37,7 @@
       const data = await res.json()
       grants = Array.isArray(data.grants) ? data.grants : []
     } catch {
-      error = 'Network error — please try again.'
+      error = 'Network error - please try again.'
     } finally {
       loading = false
     }
