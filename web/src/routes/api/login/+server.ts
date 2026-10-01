@@ -4,6 +4,7 @@ import { env } from '$env/dynamic/private'
 import pool from '$lib/server/db'
 import { checkPassword } from '$lib/server/drupal-password'
 import { signToken } from '$lib/server/auth'
+import { phpUrl } from '$lib/utils'
 import { rateLimit } from '$lib/server/rate-limit'
 import type { RowDataPacket } from 'mysql2'
 
@@ -33,23 +34,12 @@ type SsoResponse = {
  * DUMMY_HASH for timing parity.
  */
 async function phpLookup(identifier: string): Promise<number | null> {
-  const ssoUrl = env.PHP_SSO_URL
   const secret = env.PHP_SSO_SECRET
-  if (!ssoUrl || !secret) return null
-
-  // /cgpay-lookup lives at the same host as /cgpay-sso. Derive its URL by
-  // replacing the path so config stays single-knob.
-  let lookupUrl: string
-  try {
-    const u = new URL(ssoUrl)
-    u.pathname = '/cgpay-lookup'
-    lookupUrl = u.toString()
-  } catch {
-    return null
-  }
+  if (!secret) return null
 
   try {
-    const res = await fetch(lookupUrl, {
+    console.log('lookup', phpUrl('cgpay-lookup'))
+    const res = await fetch(phpUrl('cgpay-lookup'), {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
@@ -78,16 +68,15 @@ async function phpLookup(identifier: string): Promise<number | null> {
  * still succeeds, but PHP links will require a second login).
  */
 async function phpSso(uid: number): Promise<SsoResponse | null> {
-  const url = env.PHP_SSO_URL
   const secret = env.PHP_SSO_SECRET
-  if (!url || !secret) {
-    console.warn('[login] PHP_SSO_URL / PHP_SSO_SECRET not configured — skipping PHP session handoff')
+  if (!secret) {
+    console.warn('[login] PHP_SSO_SECRET not configured — skipping PHP session handoff')
     return null
   }
 
   let res: Response
   try {
-    res = await fetch(url, {
+    res = await fetch(phpUrl('cgpay-sso'), {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
