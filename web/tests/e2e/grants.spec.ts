@@ -17,14 +17,17 @@ test.describe('grants list — protected route', () => {
   })
 })
 
-// TODO: rewrite for cookie-based auth (this PR retired the cg_token JWT so the
-// localStorage-seeding trick no longer bypasses the /grants redirect). The
-// follow-up PR adds an E2E fake-user bypass that lets these tests run again -
-// skipping temporarily so this PR's CI stays green.
-test.describe.skip('grants create form — client contract', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/login')
-    await page.evaluate(() => localStorage.setItem('cg_token', 'test-token-not-real'))
+test.describe('grants create form — client contract', () => {
+  // Uses the E2E escape hatch in `grants/+layout.server.ts` (E2E_FAKE_USER=1 env
+  // + `e2e-fake-user=sponsee` cookie) so we can render the form UI without a
+  // live PHP whoami backend. Form submissions still hit `/api/grants` for real
+  // and get a 401 (no PHP session) - the submit test relies on that.
+  test.beforeEach(async ({ context, page }) => {
+    await context.addCookies([{
+      name: 'e2e-fake-user',
+      value: 'sponsee',
+      url: 'http://127.0.0.1:4173'
+    }])
     await page.goto('/grants/new')
   })
 

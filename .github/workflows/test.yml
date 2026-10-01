@@ -39,6 +39,10 @@ jobs:
       # A throwaway JWT secret satisfies the >=32-char guard; the E2E tests
       # don't rely on the real one because they don't touch the DB either.
       JWT_SECRET: this-is-a-test-only-jwt-secret-32chars!
+      # Enables the E2E escape hatch in grants/+layout.server.ts so form-contract
+      # tests can render /grants/new without a live PHP whoami backend. Explicit
+      # cookie value still required. Never set in production.
+      E2E_FAKE_USER: '1'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
