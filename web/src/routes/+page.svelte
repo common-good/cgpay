@@ -3,11 +3,17 @@
   import { goto } from '$app/navigation'
   import { env } from '$env/dynamic/public'
   import Icon from '$lib/components/Icon.svelte'
+  import { isMobile } from '$lib/is-mobile'
   import type { InfoResponse, InfoTx } from './api/me/info/+server'
 
   let loading = $state(true)
   let error = $state<string | null>(null)
   let info = $state<InfoResponse | null>(null)
+
+  // On mobile, Pay/Receive buttons go to node-side /pay and /receive pages
+  // (QR + Scan + Type). On desktop they link straight to PHP as before.
+  // SSR default = false so initial HTML has the desktop link.
+  let onMobile = $state(false)
 
   type ModalKind = 'pay' | 'receive' | 'transfer' | 'soon' | null
   let modal = $state<ModalKind>(null)
@@ -26,6 +32,7 @@
   }
 
   onMount(async () => {
+    onMobile = isMobile()
     try {
       const res = await fetch('/api/me/info?limit=20')
       if (res.status === 401) {
@@ -129,7 +136,7 @@
 
       <section class="actions">
         <article class="card action">
-          <a class="action-btn" href={phpUrl('/tx/pay') || '#'} aria-disabled={!phpBase || undefined}>
+          <a class="action-btn" href={onMobile ? '/pay' : (phpUrl('/tx/pay') || '#')} aria-disabled={!phpBase || undefined}>
             <div class="action-head">
               <div class="icon-wrap tone-rose"><Icon name="upload" size={20} /></div>
               <h2>Pay</h2>
@@ -144,7 +151,7 @@
         </article>
 
         <article class="card action">
-          <a class="action-btn" href={phpUrl('/tx/charge') || '#'} aria-disabled={!phpBase || undefined}>
+          <a class="action-btn" href={onMobile ? '/receive' : (phpUrl('/tx/charge') || '#')} aria-disabled={!phpBase || undefined}>
             <div class="action-head">
               <div class="icon-wrap tone-green"><Icon name="download" size={20} /></div>
               <h2>Receive</h2>

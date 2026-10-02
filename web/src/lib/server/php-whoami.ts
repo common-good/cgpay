@@ -6,6 +6,7 @@ import { callPhp, PhpCallError } from './php-client'
 
 export type WhoamiUser = {
   uid: number
+  qid: string
   name: string
   sponsored: boolean
   menu: string[]
@@ -22,7 +23,7 @@ export type WhoamiResult =
   | { ok: true; user: WhoamiUser }
   | { ok: false; reason: 'no_session' | 'php_error' }
 
-type WhoamiRaw = { uid: unknown; name: unknown; sponsored?: unknown; menu?: unknown }
+type WhoamiRaw = { uid: unknown; qid?: unknown; name: unknown; sponsored?: unknown; menu?: unknown }
 
 export async function phpWhoami(ssid: string | undefined | null): Promise<WhoamiResult> {
   if (!ssid) return { ok: false, reason: 'no_session' }
@@ -48,6 +49,7 @@ export async function phpWhoami(ssid: string | undefined | null): Promise<Whoami
       ok: true,
       user: {
         uid: data.uid,
+        qid: typeof data.qid === 'string' ? data.qid : '',
         name: data.name,
         sponsored: !!data.sponsored,
         menu: Array.isArray(data.menu) ? data.menu.filter((s: unknown): s is string => typeof s === 'string') : []
