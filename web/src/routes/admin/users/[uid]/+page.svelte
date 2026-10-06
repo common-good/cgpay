@@ -42,9 +42,12 @@
       <div class="profile-legal">{data.user.fullName}</div>
     {/if}
   </div>
-  <div class="balance">
-    <div class="balance-label">Balance</div>
-    <div class="balance-value">{fmtMoney(data.user.balance)}</div>
+  <div class="profile-right">
+    <div class="balance">
+      <div class="balance-label">Balance</div>
+      <div class="balance-value">{fmtMoney(data.user.balance)}</div>
+    </div>
+    <a class="edit-btn" href={`/admin/users/${data.user.uid}/edit`}>Edit contact info</a>
   </div>
 </header>
 
@@ -152,6 +155,12 @@
   }
   .qid { color: var(--cg-text-muted); font-size: 0.95rem; letter-spacing: 0.06em; }
   .profile-legal { margin-top: 0.35rem; color: var(--cg-text-muted); font-size: 0.88rem; }
+  .profile-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+  }
   .balance {
     text-align: right;
     padding: 0.5rem 1rem;
@@ -161,6 +170,17 @@
     box-shadow: var(--cg-shadow);
     min-width: 160px;
   }
+  .edit-btn {
+    padding: 0.4rem 0.9rem;
+    background: transparent;
+    border: 1px solid var(--cg-border);
+    color: var(--cg-navy);
+    border-radius: var(--cg-radius-sm);
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .edit-btn:hover { background: rgba(9, 70, 166, 0.05); text-decoration: none; }
   .balance-label {
     font-size: 0.72rem;
     text-transform: uppercase;
@@ -264,6 +284,8 @@
 
   @media (max-width: 640px) {
     .profile { flex-direction: column; gap: 1rem; }
+    .profile-right { align-items: stretch; width: 100%; }
     .balance { text-align: left; min-width: 0; width: 100%; }
+    .edit-btn { text-align: center; }
   }
 </style>
