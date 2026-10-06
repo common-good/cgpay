@@ -62,7 +62,7 @@
       <tbody>
         {#each data.items as row (row.uid)}
           <tr>
-            <td>{row.name}</td>
+            <td><a class="row-link" href={`/admin/users/${row.uid}`}>{row.name}</a></td>
             <td class="mono">{row.qid}</td>
             <td>{fmtDate(row.created)}</td>
             <td class="num">{fmtMoney(row.balance)}</td>
@@ -179,6 +179,8 @@
   tbody tr:hover { background: rgba(0, 0, 0, 0.015); }
   .num { text-align: right; font-variant-numeric: tabular-nums; }
   .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.88rem; }
+  .row-link { color: var(--cg-navy); font-weight: 500; text-decoration: none; }
+  .row-link:hover { text-decoration: underline; }
 
   .pill {
     display: inline-block;
