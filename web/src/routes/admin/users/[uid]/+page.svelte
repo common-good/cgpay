@@ -1,5 +1,7 @@
 <script lang="ts">
-  let { data } = $props()
+  let { data, form } = $props()
+
+  const isActive = $derived((data.user.flags & 1) !== 0)
 
   function fmtMoney(n: number): string {
     return (n < 0 ? '-$' : '$') + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -48,8 +50,26 @@
       <div class="balance-value">{fmtMoney(data.user.balance)}</div>
     </div>
     <a class="edit-btn" href={`/admin/users/${data.user.uid}/edit`}>Edit contact info</a>
+    <form
+      method="POST"
+      action="?/action"
+      class="action-form"
+      onsubmit={(e) => {
+        const verb = isActive ? 'deactivate' : 'activate'
+        if (!confirm(`Are you sure you want to ${verb} this account?`)) e.preventDefault()
+      }}
+    >
+      <input type="hidden" name="action" value={isActive ? 'deactivate' : 'activate'} />
+      <button type="submit" class={isActive ? 'deactivate-btn' : 'activate-btn'}>
+        {isActive ? 'Deactivate account' : 'Activate account'}
+      </button>
+    </form>
   </div>
 </header>
+
+{#if form?.actionMessage}
+  <div class="action-banner" role="status">{form.actionMessage}</div>
+{/if}
 
 <section class="contact-grid">
   <div><dt>Login</dt><dd class="mono">{data.user.loginName || '-'}</dd></div>
@@ -181,6 +201,37 @@
     text-decoration: none;
   }
   .edit-btn:hover { background: rgba(9, 70, 166, 0.05); text-decoration: none; }
+  .action-form { margin: 0; }
+  .action-form button {
+    width: 100%;
+    padding: 0.4rem 0.9rem;
+    border-radius: var(--cg-radius-sm);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+  .deactivate-btn {
+    background: transparent;
+    border-color: var(--cg-error);
+    color: var(--cg-error);
+  }
+  .deactivate-btn:hover { background: rgba(179, 38, 30, 0.08); }
+  .activate-btn {
+    background: var(--cg-green);
+    border-color: var(--cg-green);
+    color: #fff;
+  }
+  .activate-btn:hover { filter: brightness(0.95); }
+  .action-banner {
+    padding: 0.6rem 1rem;
+    margin-bottom: 1.25rem;
+    background: rgba(9, 70, 166, 0.08);
+    border: 1px solid rgba(9, 70, 166, 0.2);
+    border-radius: var(--cg-radius-sm);
+    color: var(--cg-navy);
+    font-size: 0.9rem;
+  }
   .balance-label {
     font-size: 0.72rem;
     text-transform: uppercase;
