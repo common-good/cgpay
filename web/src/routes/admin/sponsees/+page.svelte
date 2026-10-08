@@ -41,7 +41,7 @@
         {#each data.items as row (row.uid)}
           <tr>
             <td>
-              <div class="sponsee-name">{row.name}</div>
+              <a class="sponsee-name" href={`/admin/sponsees/${row.uid}`}>{row.name}</a>
               {#if row.legalName && row.legalName !== row.name}
                 <div class="sponsee-legal">{row.legalName}</div>
               {/if}
@@ -131,7 +131,8 @@
   .num { text-align: right; font-variant-numeric: tabular-nums; }
   .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.88rem; }
 
-  .sponsee-name { font-weight: 500; }
+  .sponsee-name { font-weight: 500; color: var(--cg-navy); text-decoration: none; }
+  .sponsee-name:hover { text-decoration: underline; }
   .sponsee-legal { font-size: 0.8rem; color: var(--cg-text-muted); margin-top: 0.15rem; }
 
   .pager {
