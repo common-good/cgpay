@@ -19,17 +19,9 @@
   const phpBase = env.PUBLIC_PHP_BASE_URL ?? ''
 
   onMount(async () => {
-    const token = localStorage.getItem('cg_token')
-    if (!token) {
-      await goto('/login')
-      return
-    }
     try {
-      const res = await fetch('/api/me/info?limit=20', {
-        headers: { authorization: `Bearer ${token}` }
-      })
+      const res = await fetch('/api/me/info?limit=20')
       if (res.status === 401) {
-        localStorage.removeItem('cg_token')
         await goto('/login')
         return
       }
@@ -40,7 +32,7 @@
       }
       info = await res.json()
     } catch {
-      error = 'Network error — please try again.'
+      error = 'Network error - please try again.'
     } finally {
       loading = false
     }

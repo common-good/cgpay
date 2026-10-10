@@ -1,17 +1,12 @@
 <script lang="ts">
-  import { onMount } from 'svelte'
-  import { goto } from '$app/navigation'
+  import { goto, invalidateAll } from '$app/navigation'
   import { page } from '$app/state'
   import { env } from '$env/dynamic/public'
   import Brand from '$lib/components/Brand.svelte'
+  import { appVersion } from '$lib/version'
   import favicon from '$lib/assets/favicon.svg'
 
-  let { children } = $props()
-
-  type UserInfo = { name?: string; sponsored?: boolean } | null
-  let userInfo = $state<UserInfo>(null)
-  let menu = $state<string[]>(['Dashboard', 'History', 'Community', 'Settings'])
-  let mounted = $state(false)
+  let { data, children } = $props()
 
   // Hide the app header on preview routes (they use their own layout + white-bg TopNav).
   const isPreview = $derived(page.url.pathname.startsWith('/preview'))
@@ -35,31 +30,16 @@
     return ''
   })
 
-  onMount(async () => {
-    mounted = true
-    const token = typeof localStorage !== 'undefined' ? localStorage.getItem('cg_token') : null
-    if (!token) return
-
-    const storedMenu = localStorage.getItem('cg_menu')
-    if (storedMenu) {
-      try {
-        const parsed = JSON.parse(storedMenu)
-        if (Array.isArray(parsed) && parsed.every(s => typeof s === 'string')) menu = parsed
-      } catch { /* ignore */ }
-    }
-
+  async function signOut() {
     try {
-      const res = await fetch('/api/me/info?limit=1', {
-        headers: { authorization: `Bearer ${token}` }
-      })
-      if (res.ok) userInfo = await res.json()
-    } catch { /* header just shows Brand if fetch fails */ }
-  })
-
-  function signOut() {
-    localStorage.removeItem('cg_token')
-    localStorage.removeItem('cg_menu')
-    userInfo = null
+      await fetch('/api/logout', { method: 'POST' })
+    } catch (e) {
+      // Network failure clearing the server-side cookie. Still navigate to /login so
+      // the UI reflects the user's intent; the stale cookie will expire, or the next
+      // successful logout call will clear it. Logged so a repro shows up in devtools.
+      console.warn('[signOut] /api/logout failed; proceeding to /login anyway:', e)
+    }
+    await invalidateAll()
     goto('/login')
   }
 </script>
@@ -71,21 +51,21 @@
 {#if showHeader}
   <nav class="topnav">
     <Brand size={32} />
-    {#if userInfo && !isLogin}
+    {#if data.user && !isLogin}
       <ul class="nav-links">
-        {#each menu as label}
+        {#each data.user.menu as label}
           {#if menuHref(label)}
             <li><a class:active={label === activeLabel} href={label === 'Dashboard' ? '/' : menuHref(label)}>{label}</a></li>
           {:else}
             <li><button type="button" class="nav-disabled" title="Member site link not configured">{label}</button></li>
           {/if}
         {/each}
-        {#if userInfo.sponsored}
+        {#if data.user.sponsored}
           <li><a class:active={activeLabel === 'Grants'} href="/grants">Grants</a></li>
         {/if}
       </ul>
       <div class="account">
-        <span class="hi">Hi, {userInfo.name ?? ''}</span>
+        <span class="hi">Hi, {data.user.name}</span>
         <button class="ghost" onclick={signOut}>Sign out</button>
       </div>
     {:else}
@@ -95,6 +75,16 @@
 {/if}
 
 {@render children()}
+
+<footer class="app-version" title="Currently deployed build">
+  <span class="ver-branch">{appVersion.branch}</span>
+  <span class="ver-sep">·</span>
+  <span class="ver-sha">{appVersion.sha}</span>
+  {#if appVersion.builtAt}
+    <span class="ver-sep">·</span>
+    <span class="ver-time">{new Date(appVersion.builtAt).toLocaleString()}</span>
+  {/if}
+</footer>
 
 <style>
   :global(:root) {
@@ -181,4 +171,23 @@
   }
   .ghost:hover { background: var(--cg-navy-soft); }
   .spacer { flex: 1; }
+
+  .app-version {
+    position: fixed;
+    right: 0.75rem;
+    bottom: 0.5rem;
+    z-index: 5;
+    padding: 0.15rem 0.55rem;
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid var(--cg-border);
+    border-radius: 999px;
+    font-size: 0.7rem;
+    color: var(--cg-text-muted);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    line-height: 1.2;
+    pointer-events: none;
+    user-select: text;
+  }
+  .app-version .ver-sep { margin: 0 0.35rem; opacity: 0.5; }
+  .app-version .ver-branch { color: var(--cg-text); font-weight: 500; }
 </style>
