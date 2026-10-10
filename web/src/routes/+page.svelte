@@ -4,6 +4,7 @@
   import { env } from '$env/dynamic/public'
   import Icon from '$lib/components/Icon.svelte'
   import type { InfoResponse, InfoTx } from './api/me/info/+server'
+  import { phpUrl } from '$lib/utils'
 
   let loading = $state(true)
   let error = $state<string | null>(null)
@@ -16,14 +17,6 @@
   // Where the PHP member site lives. Menu items link to /<lowercased category> on this host.
   // Empty string = no PHP target configured; we render the menu as disabled.
   const phpBase = env.PUBLIC_PHP_BASE_URL ?? ''
-
-  // PHP URLs for the primary dashboard actions + footer placeholders. Until the
-  // action flows are rebuilt in SvelteKit, clicking lands the (already-signed-in)
-  // member on the existing PHP page.
-  function phpUrl(path: string): string {
-    if (!phpBase) return ''
-    return phpBase.replace(/\/$/, '') + path
-  }
 
   onMount(async () => {
     try {
@@ -129,7 +122,7 @@
 
       <section class="actions">
         <article class="card action">
-          <a class="action-btn" href={phpUrl('/tx/pay') || '#'} aria-disabled={!phpBase || undefined}>
+          <a class="action-btn" href={phpUrl('tx/pay') || '#'} aria-disabled={!phpBase || undefined}>
             <div class="action-head">
               <div class="icon-wrap tone-rose"><Icon name="upload" size={20} /></div>
               <h2>Pay</h2>
@@ -144,7 +137,7 @@
         </article>
 
         <article class="card action">
-          <a class="action-btn" href={phpUrl('/tx/charge') || '#'} aria-disabled={!phpBase || undefined}>
+          <a class="action-btn" href={phpUrl('tx/charge') || '#'} aria-disabled={!phpBase || undefined}>
             <div class="action-head">
               <div class="icon-wrap tone-green"><Icon name="download" size={20} /></div>
               <h2>Receive</h2>
@@ -159,7 +152,7 @@
         </article>
 
         <article class="card action">
-          <a class="action-btn" href={phpUrl('/get') || '#'} aria-disabled={!phpBase || undefined}>
+          <a class="action-btn" href={phpUrl('get') || '#'} aria-disabled={!phpBase || undefined}>
             <div class="action-head">
               <div class="icon-wrap tone-blue"><Icon name="bank" size={20} /></div>
               <h2>Transfer</h2>
@@ -187,7 +180,7 @@
             </li>
           {/if}
           <li>
-            <a href={phpUrl('/settings') || '#'} aria-disabled={!phpBase || undefined}>
+            <a href={phpUrl('settings') || '#'} aria-disabled={!phpBase || undefined}>
               <div class="qa-icon tone-purple"><Icon name="user" size={18} /></div>
               <div class="qa-body">
                 <span class="qa-title">Profile & Settings</span>
@@ -224,7 +217,7 @@
         <aside class="help card">
           <h3>Need help?</h3>
           <p>Our team is here for you.</p>
-          <a class="help-btn" href={phpUrl('/help') || 'mailto:support@commongood.earth'}>
+          <a class="help-btn" href={phpUrl('help') || 'mailto:support@commongood.earth'}>
             <Icon name="help" size={16} /> Contact Support
           </a>
         </aside>
@@ -233,14 +226,14 @@
 
     <footer class="footer">
       <ul class="footer-links">
-        <li><a href={phpUrl('/community/donate') || '#'}>Donate</a></li>
-        <li><a href={phpUrl('/community/invite') || '#'}>Invite Someone</a></li>
-        <li><a href={phpUrl('/signup-co/relate=1') || '#'}>Open a Company Account</a></li>
-        <li><a href={phpUrl('/prejoin') || '#'}>Make Joint Account</a></li>
+        <li><a href={phpUrl('community/donate') || '#'}>Donate</a></li>
+        <li><a href={phpUrl('community/invite') || '#'}>Invite Someone</a></li>
+        <li><a href={phpUrl('signup-co/relate=1') || '#'}>Open a Company Account</a></li>
+        <li><a href={phpUrl('prejoin') || '#'}>Make Joint Account</a></li>
         <li><a href="https://commongood.earth/about-us" target="_blank" rel="noopener">About Us</a></li>
-        <li><a href={phpUrl('/community/agreement') || '#'}>The Agreement</a></li>
+        <li><a href={phpUrl('community/agreement') || '#'}>The Agreement</a></li>
         <li><a href="https://commongood.earth/about-us/privacy-and-security" target="_blank" rel="noopener">Security</a></li>
-        <li><a href={phpUrl('/help') || 'mailto:support@commongood.earth'}>Help</a></li>
+        <li><a href={phpUrl('help') || 'mailto:support@commongood.earth'}>Help</a></li>
       </ul>
       <p class="copyright">copyright &copy; {new Date().getFullYear()} Common Good&reg;, a nonprofit organization</p>
     </footer>

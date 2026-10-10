@@ -3,6 +3,7 @@ import type { RequestHandler } from './$types'
 import { env } from '$env/dynamic/private'
 import pool from '$lib/server/db'
 import { checkPassword } from '$lib/server/drupal-password'
+import { phpUrl } from '$lib/utils'
 import { rateLimit } from '$lib/server/rate-limit'
 import type { RowDataPacket } from 'mysql2'
 
@@ -13,6 +14,12 @@ import type { RowDataPacket } from 'mysql2'
 // TEST_ADMIN_BYPASS=1 in the environment's .env; production leaves it unset.
 const TEST_ADMIN_BYPASS = env.TEST_ADMIN_BYPASS === '1'
 const ADMIN_UID = 1
+
+// DEBUG_LOGIN=1 in .env enables tracing. Never log the password or shared secret, only presence/length.
+const DEBUG_LOGIN = env.DEBUG_LOGIN === '1'
+function dbg(...args: unknown[]) {
+  if (DEBUG_LOGIN) console.log('[login:debug]', ...args)
+}
 
 type UserRow = RowDataPacket & { uid: number; name: string; pass: string }
 
@@ -40,23 +47,16 @@ type SsoResponse = {
  * DUMMY_HASH for timing parity.
  */
 async function phpLookup(identifier: string): Promise<number | null> {
-  const ssoUrl = env.PHP_SSO_URL
   const secret = env.PHP_SSO_SECRET
-  if (!ssoUrl || !secret) return null
-
-  // /cgpay-lookup lives at the same host as /cgpay-sso. Derive its URL by
-  // replacing the path so config stays single-knob.
-  let lookupUrl: string
-  try {
-    const u = new URL(ssoUrl)
-    u.pathname = '/cgpay-lookup'
-    lookupUrl = u.toString()
-  } catch {
+  if (!secret) {
+    dbg('lookup skipped: PHP_SSO_SECRET not set')
     return null
   }
 
   try {
-    const res = await fetch(lookupUrl, {
+    const url = phpUrl('cgpay-lookup')
+    dbg('lookup request:', { url, body: { identifier }, tokenLength: secret.length })
+    const res = await fetch(url, {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
@@ -64,13 +64,20 @@ async function phpLookup(identifier: string): Promise<number | null> {
       },
       body: JSON.stringify({ identifier })
     })
+    if (DEBUG_LOGIN) {
+      const text = await res.clone().text().catch(() => '<unreadable>')
+      dbg('lookup response:', res.status, text.slice(0, 500))
+    }
     if (res.status === 404) return null
     if (!res.ok) {
       console.error(`[login] PHP lookup returned ${res.status}`)
       return null
     }
     const data = await res.json().catch(() => null)
-    if (!data || typeof data.uid !== 'number') return null
+    if (!data || typeof data.uid !== 'number') {
+      dbg('lookup response missing numeric uid:', data)
+      return null
+    }
     return data.uid
   } catch (e) {
     console.error('[login] PHP lookup network error:', e)
@@ -85,15 +92,16 @@ async function phpLookup(identifier: string): Promise<number | null> {
  * still succeeds, but PHP links will require a second login).
  */
 async function phpSso(uid: number): Promise<SsoResponse | null> {
-  const url = env.PHP_SSO_URL
   const secret = env.PHP_SSO_SECRET
-  if (!url || !secret) {
-    console.warn('[login] PHP_SSO_URL / PHP_SSO_SECRET not configured — skipping PHP session handoff')
+  if (!secret) {
+    console.warn('[login] PHP_SSO_SECRET not configured — skipping PHP session handoff')
     return null
   }
 
   let res: Response
   try {
+    const url = phpUrl('cgpay-sso')
+    dbg('sso request:', { url, body: { uid }, tokenLength: secret.length })
     res = await fetch(url, {
       method: 'POST',
       headers: {
@@ -107,6 +115,7 @@ async function phpSso(uid: number): Promise<SsoResponse | null> {
     throw error(502, 'Unable to complete sign-in — please try again.')
   }
 
+  dbg('sso response status:', res.status)
   if (!res.ok) {
     console.error(`[login] PHP SSO returned ${res.status}`)
     throw error(502, 'Unable to complete sign-in — please try again.')
@@ -131,6 +140,12 @@ export const POST: RequestHandler = async ({ request, getClientAddress, cookies 
   // Accept `identifier` (new field name — works for account code / name / email
   // / phone) and the legacy `name` for backwards compat with older clients.
   const identifier = body?.identifier ?? body?.name
+  dbg('incoming request:', {
+    keys: body ? Object.keys(body) : null,
+    identifier,
+    passwordType: typeof body?.password,
+    passwordLength: typeof body?.password === 'string' ? body.password.length : null
+  })
   if (!body || typeof identifier !== 'string' || typeof body.password !== 'string') {
     throw error(400, 'identifier and password required')
   }
@@ -161,6 +176,15 @@ export const POST: RequestHandler = async ({ request, getClientAddress, cookies 
   const adminBypass = TEST_ADMIN_BYPASS
     && user?.uid === ADMIN_UID
     && body.password.length > 0
+
+  dbg('auth check:', {
+    uid,
+    userFound: !!user,
+    storedHashPrefix: user?.pass?.slice(0, 3),
+    storedHashLength: user?.pass?.length,
+    passwordOk: ok,
+    adminBypass
+  })
 
   if (!user || (!ok && !adminBypass)) {
     throw error(401, 'Invalid account ID or password.')
