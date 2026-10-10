@@ -6,6 +6,8 @@
   // No client-side auth check here - +layout.server.ts fails 401 for anonymous
   // callers to /api/grants below, at which point we redirect.
 
+  let { data } = $props()
+
   let fullName = $state('')
   let amount = $state('')
   let by = $state<'ach' | 'check' | 'wire'>('ach')
@@ -110,6 +112,17 @@
     && zip.trim().length > 0
     && (by !== 'check' || (ckNum.trim().length > 0 && ckDate.trim().length > 0))
   )
+  // Mirrors canSubmit so a disabled button says why.
+  const missing = $derived([
+    !fullName.trim() && 'grantor name',
+    !(Number.isFinite(amountNum) && amountNum > 0) && 'amount',
+    by === 'check' && !ckNum.trim() && 'check number',
+    by === 'check' && !ckDate.trim() && 'check date',
+    !address.trim() && 'street address',
+    !city.trim() && 'city',
+    !(Number.isFinite(stateNum) && stateNum > 0) && 'state',
+    !zip.trim() && 'ZIP',
+  ].filter(Boolean))
 
   async function submit() {
     if (!canSubmit) return
@@ -310,7 +323,12 @@
             </div>
             <div class="field" class:has-err={fe('state')}>
               <label for="state">State <span class="req">*</span></label>
-              <input id="state" type="text" bind:value={stateCode} placeholder="State id" autocomplete="off" aria-invalid={!!fe('state')} />
+              <select id="state" bind:value={stateCode} aria-invalid={!!fe('state')}>
+                <option value="">Select…</option>
+                {#each data.states as s}
+                  <option value={String(s.id)}>{s.abbrev}</option>
+                {/each}
+              </select>
               {#if fe('state')}<span class="field-err">{fe('state')}</span>{/if}
             </div>
             <div class="field" class:has-err={fe('zip')}>
@@ -332,6 +350,9 @@
         </fieldset>
 
         <div class="form-footer">
+          {#if !submitting && missing.length}
+            <span class="submit-hint">Still needed: {missing.join(', ')}</span>
+          {/if}
           <a class="ghost" href="/grants">Cancel</a>
           <button class="primary" type="submit" disabled={!canSubmit}>
             {submitting ? 'Saving…' : 'Report Grant'}
@@ -458,7 +479,9 @@
     display: flex; justify-content: flex-end; gap: 0.5rem;
     padding-top: 0.5rem; border-top: 1px solid var(--cg-border);
     margin-top: 0.5rem; padding-top: 1rem;
+    flex-wrap: wrap; align-items: center;
   }
+  .submit-hint { margin-right: auto; color: var(--cg-text-muted); font-size: 0.85rem; }
   .ghost {
     padding: 0.55rem 0.95rem; background: var(--cg-surface);
     border: 1px solid var(--cg-border); border-radius: var(--cg-radius-sm);
