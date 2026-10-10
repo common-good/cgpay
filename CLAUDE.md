@@ -52,7 +52,7 @@ lib/
 **PHP is the single source of truth for identity.** The two apps share a session via the `SSESS...` cookie scoped to `.commongood.earth` (see `.env` `PHP_COOKIE_DOMAIN`).
 
 - **Login flow:** `/api/login` verifies password against `users.pass` (via `drupal-password.ts`), calls PHP `/cgpay-sso` to create a session, sets the SSO cookie on the browser scoped to both the parent domain and the PHP host.
-- **Identity on every request:** `+layout.server.ts` reads the SSO cookie and calls PHP `/cgpay-whoami` to get `{uid, name, sponsored, menu}`. This runs on every SSR + SPA navigation, so switching accounts on PHP is reflected on node the next nav.
+- **Identity on every request:** `+layout.server.ts` reads the SSO cookie and calls PHP `/cgpay-whoami` to get `{uid, name, sponsored, menu}`. This runs on every full page load (SSR), but client-side navigation reuses the cached layout data unless something invalidates it (see Common gotchas), so a PHP account switch shows up on the next full load.
 - **Sign out:** `/api/logout` clears the SSO cookie on both domain scopes.
 
 **Legacy:** a `cg_token` JWT is still stored in localStorage and used by `/api/grants`, `/api/people-autocomplete`, `/api/me/*` for Bearer auth. Being retired in a follow-up - new code should not add JWT usage; new endpoints should use the SSO-cookie path.
@@ -118,7 +118,7 @@ Always run at least `svelte-check` + `npm run build` before opening a PR.
 - **PWA-era files at repo root** (`src/`, `constants.js`, `vite.config.js`) - do not confuse for the SvelteKit app. All new work goes in `web/`.
 - **`u_company` table lacks SELECT for `cgweb_ro`** in some environments - `/api/me/info` has a defensive fallback that treats `sponsored=false` when the query denies (see [PR #151](https://github.com/common-good/cgpay/pull/151)).
 - **Cookie double-write in login:** we set the SSO cookie under both `.commongood.earth` AND `.<phphost>` because stale host-scoped cookies from prior direct-PHP logins can shadow the parent-domain one. Don't remove either without testing.
-- **`+layout.server.ts` load reruns on every nav** because it calls `cookies.get()` (SvelteKit tracks this dependency). If you add other server data to the layout, be conscious of that reload rate.
+- **`+layout.server.ts` load does NOT rerun when cookies change.** SvelteKit doesn't track `cookies.get()` as a dependency; a server load reruns only on URL/param changes it uses, `depends()` keys, or an explicit `invalidate`/`invalidateAll`. So anything that sets or clears the SSO cookie client-side must then navigate with `goto(path, { invalidateAll: true })` (login) or call `invalidateAll()` (sign out), or the header keeps showing the old user.
 
 ## Cross-repo
 

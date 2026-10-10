@@ -1,6 +1,8 @@
-// Server-side identity: on every SSR + SPA nav, ask PHP who owns the SSO cookie.
-// PHP is the single source of truth, so switching accounts on the PHP side is
-// reflected on node the next time this load function runs. See lib/server/php-whoami.
+// Server-side identity: ask PHP who owns the SSO cookie. PHP is the single source
+// of truth, so switching accounts on the PHP side is reflected on node the next
+// time this load function runs. That's every full page load, but not client-side
+// navigation (SvelteKit doesn't track cookies) unless the caller invalidates.
+// See lib/server/php-whoami.
 
 import type { LayoutServerLoad } from './$types'
 import { env } from '$env/dynamic/private'
