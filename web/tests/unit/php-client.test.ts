@@ -73,9 +73,9 @@ describe('callPhp', () => {
     }) as unknown as typeof fetch
     await callPhp('/cgpay-people-autocomplete', {
       method: 'GET',
-      query: { uid: 42, q: 'ada', limit: 20 }
+      query: { uid: 42, search: 'ada', limit: 20 }
     })
-    expect(calledUrl).toBe('https://demo.example/cgpay-people-autocomplete?uid=42&q=ada&limit=20')
+    expect(calledUrl).toBe('https://demo.example/cgpay-people-autocomplete?uid=42&search=ada&limit=20')
   })
 
   it('returns {ok:true, data} on a successful JSON response', async () => {
