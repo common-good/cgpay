@@ -8,6 +8,12 @@ import { phpUrl } from '$lib/utils'
 import { rateLimit } from '$lib/server/rate-limit'
 import type { RowDataPacket } from 'mysql2'
 
+// DEBUG_LOGIN=1 in .env enables tracing. Never log the password or shared secret, only presence/length.
+const DEBUG_LOGIN = env.DEBUG_LOGIN === '1'
+function dbg(...args: unknown[]) {
+  if (DEBUG_LOGIN) console.log('[login:debug]', ...args)
+}
+
 type UserRow = RowDataPacket & { uid: number; name: string; pass: string }
 
 // A real-looking hash to verify against when the username doesn't exist.
@@ -35,11 +41,15 @@ type SsoResponse = {
  */
 async function phpLookup(identifier: string): Promise<number | null> {
   const secret = env.PHP_SSO_SECRET
-  if (!secret) return null
+  if (!secret) {
+    dbg('lookup skipped: PHP_SSO_SECRET not set')
+    return null
+  }
 
   try {
-    console.log('lookup', phpUrl('cgpay-lookup'))
-    const res = await fetch(phpUrl('cgpay-lookup'), {
+    const url = phpUrl('cgpay-lookup')
+    dbg('lookup request:', { url, body: { identifier }, tokenLength: secret.length })
+    const res = await fetch(url, {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
@@ -47,13 +57,20 @@ async function phpLookup(identifier: string): Promise<number | null> {
       },
       body: JSON.stringify({ identifier })
     })
+    if (DEBUG_LOGIN) {
+      const text = await res.clone().text().catch(() => '<unreadable>')
+      dbg('lookup response:', res.status, text.slice(0, 500))
+    }
     if (res.status === 404) return null
     if (!res.ok) {
       console.error(`[login] PHP lookup returned ${res.status}`)
       return null
     }
     const data = await res.json().catch(() => null)
-    if (!data || typeof data.uid !== 'number') return null
+    if (!data || typeof data.uid !== 'number') {
+      dbg('lookup response missing numeric uid:', data)
+      return null
+    }
     return data.uid
   } catch (e) {
     console.error('[login] PHP lookup network error:', e)
@@ -76,7 +93,9 @@ async function phpSso(uid: number): Promise<SsoResponse | null> {
 
   let res: Response
   try {
-    res = await fetch(phpUrl('cgpay-sso'), {
+    const url = phpUrl('cgpay-sso')
+    dbg('sso request:', { url, body: { uid }, tokenLength: secret.length })
+    res = await fetch(url, {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
@@ -89,6 +108,7 @@ async function phpSso(uid: number): Promise<SsoResponse | null> {
     throw error(502, 'Unable to complete sign-in — please try again.')
   }
 
+  dbg('sso response status:', res.status)
   if (!res.ok) {
     console.error(`[login] PHP SSO returned ${res.status}`)
     throw error(502, 'Unable to complete sign-in — please try again.')
@@ -113,6 +133,12 @@ export const POST: RequestHandler = async ({ request, getClientAddress, cookies 
   // Accept `identifier` (new field name — works for account code / name / email
   // / phone) and the legacy `name` for backwards compat with older clients.
   const identifier = body?.identifier ?? body?.name
+  dbg('incoming request:', {
+    keys: body ? Object.keys(body) : null,
+    identifier,
+    passwordType: typeof body?.password,
+    passwordLength: typeof body?.password === 'string' ? body.password.length : null
+  })
   if (!body || typeof identifier !== 'string' || typeof body.password !== 'string') {
     throw error(400, 'identifier and password required')
   }
@@ -136,6 +162,13 @@ export const POST: RequestHandler = async ({ request, getClientAddress, cookies 
   // Always run checkPassword so timing doesn't reveal whether the identifier
   // matched anyone.
   const ok = checkPassword(body.password, user?.pass ?? DUMMY_HASH)
+  dbg('auth check:', {
+    uid,
+    userFound: !!user,
+    storedHashPrefix: user?.pass?.slice(0, 3),
+    storedHashLength: user?.pass?.length,
+    passwordOk: ok
+  })
   if (!user || !ok) {
     throw error(401, 'Invalid account ID or password.')
   }
