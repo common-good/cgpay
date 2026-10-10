@@ -12,7 +12,7 @@ import type { LayoutServerLoad } from './$types'
 // whoami. Production leaves E2E_FAKE_USER unset, so this branch never fires.
 function fakeE2EUser(cookieValue: string | undefined) {
   if (env.E2E_FAKE_USER !== '1' || cookieValue !== 'sponsee') return null
-  return { uid: 999, name: 'Test Sponsee', sponsored: true, menu: ['Dashboard'] }
+  return { uid: 999, qid: 'TESTZZ', name: 'Test Sponsee', sponsored: true, menu: ['Dashboard'] }
 }
 
 export const load: LayoutServerLoad = async ({ parent, cookies }) => {
