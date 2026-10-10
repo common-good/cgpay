@@ -50,7 +50,7 @@ test.describe('grants create form — client contract', () => {
 
     await page.getByLabel(/street address/i).fill('123 Main St')
     await page.getByLabel(/city/i).fill('Ashfield')
-    await page.getByLabel(/^state/i).fill('26')
+    await page.getByLabel(/^state/i).selectOption({ label: 'MA' })
     await page.getByLabel(/zip/i).fill('01330')
     await expect(submit).toBeEnabled()
   })
@@ -60,7 +60,7 @@ test.describe('grants create form — client contract', () => {
     await page.getByLabel(/expected amount/i).fill('1500')
     await page.getByLabel(/street address/i).fill('123 Main St')
     await page.getByLabel(/city/i).fill('Ashfield')
-    await page.getByLabel(/^state/i).fill('26')
+    await page.getByLabel(/^state/i).selectOption({ label: 'MA' })
     await page.getByLabel(/zip/i).fill('01330')
     await page.getByRole('button', { name: /report grant/i }).click()
 

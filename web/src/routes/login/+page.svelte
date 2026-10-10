@@ -27,8 +27,9 @@
         return
       }
       // Identity is now derived from the SSO cookie server-side on every
-      // request (see +layout.server.ts). No token to store.
-      await goto('/')
+      // request (see +layout.server.ts). No token to store. invalidateAll so the
+      // layout load reruns with the new cookie; SvelteKit doesn't track cookies.
+      await goto('/', { invalidateAll: true })
     } catch {
       error = 'Network error - please try again.'
     } finally {

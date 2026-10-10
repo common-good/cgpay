@@ -53,10 +53,11 @@ export async function callPhp<T = unknown>(
     throw new PhpCallError('not_configured', `${baseEnvName} or PHP_SSO_SECRET is not configured`)
   }
 
+  // Resolve relative to the configured endpoint so a base path survives,
+  // e.g. http://localhost/cg/cgmembers/cgpay-sso -> http://localhost/cg/cgmembers/cgpay-whoami.
   let url: URL
   try {
-    url = new URL(baseUrl)
-    url.pathname = pathname
+    url = new URL(pathname.replace(/^\/+/, ''), baseUrl)
   } catch (e) {
     throw new PhpCallError('not_configured', `${baseEnvName} is not configured with a valid URL`, e)
   }
