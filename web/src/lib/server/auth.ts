@@ -1,48 +1,27 @@
-// JWT helpers — sign on login, verify on protected endpoints.
+// Cookie-based auth: read the shared SSO cookie and ask PHP who owns it.
+// PHP is the single source of truth for identity - see lib/server/php-whoami.
 
-import jwt from 'jsonwebtoken'
+import { error, type Cookies } from '@sveltejs/kit'
 import { env } from '$env/dynamic/private'
+import { phpWhoami, type WhoamiUser } from './php-whoami'
 
-const SECRET = env.JWT_SECRET
-const TTL = '8h'
-const MIN_SECRET_LENGTH = 32
-
-// Check the secret at first use rather than at import time. This way SvelteKit's
-// build-time module analysis doesn't fail when the env happens to be absent — we
-// still refuse to actually serve requests with a weak/missing secret.
-function ensureSecret(): string {
-  if (!SECRET) {
-    throw new Error('JWT_SECRET is not set — refusing to sign or verify tokens.')
-  }
-  if (SECRET.length < MIN_SECRET_LENGTH) {
-    throw new Error(
-      `JWT_SECRET is too short (${SECRET.length} chars; need >= ${MIN_SECRET_LENGTH}). ` +
-      `Generate one with: openssl rand -base64 48`
-    )
-  }
-  return SECRET
-}
-
-export type Claims = { uid: number; name: string }
-
-export function signToken(claims: Claims): string {
-  return jwt.sign(claims, ensureSecret(), { expiresIn: TTL })
-}
-
-export function verifyToken(token: string): Claims | null {
-  try {
-    const decoded = jwt.verify(token, ensureSecret()) as Claims
-    return decoded
-  } catch {
-    return null
-  }
+/**
+ * Resolve the current session to a user, or return null if not signed in.
+ * Endpoints that permit anonymous callers use this; endpoints that require
+ * a signed-in user should use `requireUser` instead.
+ */
+export async function currentUser(cookies: Cookies): Promise<WhoamiUser | null> {
+  const cookieName = env.PHP_SSO_COOKIE_NAME
+  if (!cookieName) return null
+  return phpWhoami(cookies.get(cookieName))
 }
 
 /**
- * Pull the bearer token from an Authorization header.
+ * Same as `currentUser`, but throws a 401 when no session is present.
+ * Use this in endpoints that MUST have a signed-in user.
  */
-export function bearerFromRequest(req: Request): string | null {
-  const h = req.headers.get('authorization') ?? ''
-  if (!h.toLowerCase().startsWith('bearer ')) return null
-  return h.slice(7).trim() || null
+export async function requireUser(cookies: Cookies): Promise<WhoamiUser> {
+  const user = await currentUser(cookies)
+  if (!user) throw error(401, 'Sign in required.')
+  return user
 }

@@ -2,7 +2,6 @@
   import { goto } from '$app/navigation'
   import { env } from '$env/dynamic/public'
   import Brand from '$lib/components/Brand.svelte'
-  import { setSession, setInfo } from '$lib/state/user.svelte'
 
   let identifier = $state('')
   let password = $state('')
@@ -27,19 +26,8 @@
         error = body.message ?? `Sign in failed (${res.status})`
         return
       }
-      const { token, menu } = await res.json()
-      setSession(token, menu)
-
-      // Pre-fetch identity so the header renders "Hi, <name>" on the first paint
-      // after login. Without this, the header would stay empty until the next
-      // navigation triggers +layout's fallback fetch.
-      try {
-        const info = await fetch('/api/me/info?limit=1', {
-          headers: { authorization: `Bearer ${token}` }
-        })
-        if (info.ok) setInfo(await info.json())
-      } catch { /* header falls back to layout's own fetch */ }
-
+      // Identity is now derived from the SSO cookie server-side on every
+      // request (see +layout.server.ts). No token to store.
       await goto('/')
     } catch {
       error = 'Network error - please try again.'
