@@ -13,6 +13,7 @@
 //     403 = not sponsored, 400 = validation errors, etc.) so we surface it.
 
 import { env } from '$env/dynamic/private'
+import { phpEndpointUrl } from './env'
 
 export type PhpResult<T> =
   | { ok: true; data: T }
@@ -22,8 +23,6 @@ export type PhpCallOptions = {
   method?: 'GET' | 'POST'
   body?: unknown
   query?: Record<string, string | number>
-  /** Which env var to use for the base URL. Defaults to PHP_SSO_URL. */
-  baseUrlEnv?: 'PHP_SSO_URL' | 'PHP_GRANTS_URL'
 }
 
 export class PhpCallError extends Error {
@@ -46,20 +45,18 @@ export async function callPhp<T = unknown>(
   pathname: string,
   opts: PhpCallOptions = {}
 ): Promise<PhpResult<T>> {
-  const baseEnvName = opts.baseUrlEnv ?? 'PHP_SSO_URL'
-  const baseUrl = env[baseEnvName]
   const secret = env.PHP_SSO_SECRET
-  if (!baseUrl || !secret) {
-    throw new PhpCallError('not_configured', `${baseEnvName} or PHP_SSO_SECRET is not configured`)
+  if (!secret) {
+    // Startup validation (hooks.server.ts) catches this at boot; this branch
+    // only fires if someone bypassed hooks or edited env after startup.
+    throw new PhpCallError('not_configured', 'PHP_SSO_SECRET is not configured')
   }
 
-  // Resolve relative to the configured endpoint so a base path survives,
-  // e.g. http://localhost/cg/cgmembers/cgpay-sso -> http://localhost/cg/cgmembers/cgpay-whoami.
   let url: URL
   try {
-    url = new URL(pathname.replace(/^\/+/, ''), baseUrl)
+    url = new URL(phpEndpointUrl(pathname))
   } catch (e) {
-    throw new PhpCallError('not_configured', `${baseEnvName} is not configured with a valid URL`, e)
+    throw new PhpCallError('not_configured', 'PUBLIC_PHP_BASE_URL is not configured with a valid URL', e)
   }
 
   if (opts.query) {
