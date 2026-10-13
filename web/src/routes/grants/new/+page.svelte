@@ -493,4 +493,25 @@
     border-radius: var(--cg-radius-sm); font-size: 0.9rem; font-weight: 500; cursor: pointer;
   }
   .primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* Phone-width tweaks (#183): tighten the container and form-card so the
+     content doesn't run off the right edge. Form-footer buttons go full-width
+     so they're reachable with a thumb. */
+  @media (max-width: 560px) {
+    .container { padding: 1.25rem 1rem 2.5rem; }
+    .form-card { padding: 1.25rem; }
+    .form-footer {
+      flex-direction: column-reverse;
+      align-items: stretch;
+      gap: 0.6rem;
+    }
+    .form-footer .ghost,
+    .form-footer .primary {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      text-align: center;
+      justify-content: center;
+    }
+    .submit-hint { margin-right: 0; text-align: center; }
+  }
 </style>

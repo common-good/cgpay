@@ -321,6 +321,12 @@
     padding: 0 1.75rem;
     display: grid; gap: 1.5rem;
   }
+  @media (max-width: 560px) {
+    .hero { padding: 1.5rem 0 2.5rem; }
+    .hero h1 { font-size: 1.5rem; }
+    .hero-inner { padding: 0 1rem; }
+    .container { padding: 0 1rem; }
+  }
 
   .summary {
     display: grid;
@@ -413,8 +419,10 @@
     grid-template-columns: repeat(3, 1fr);
     gap: 1rem;
   }
+  @media (max-width: 720px) {
+    .actions { grid-template-columns: 1fr; gap: 0.75rem; }
+  }
   @media (max-width: 560px) {
-    .actions { gap: 0.5rem; }
     .action-btn { padding: 0.85rem 0.75rem 0.6rem !important; }
     .action h2 { font-size: 1rem !important; }
     .action-desc { font-size: 0.78rem !important; }
@@ -475,12 +483,29 @@
     border-radius: var(--cg-radius-sm);
   }
   .recent li:hover { background: var(--cg-bg); }
+  /* On phones, swap the 4-column grid for a flex row that wraps so the pill
+     and date tuck under the description instead of running off-screen (#183). */
+  @media (max-width: 560px) {
+    .recent li {
+      display: flex !important;
+      flex-wrap: wrap;
+      row-gap: 0.3rem;
+      column-gap: 0.6rem;
+    }
+    .recent li .r-text { flex: 1 1 100%; }
+    .recent li .r-pill, .recent li .r-date { flex: 0 0 auto; }
+  }
 
   .footer {
     border-top: 1px solid var(--cg-border);
     background: var(--cg-surface);
     padding: 1.5rem 1.75rem;
     text-align: center;
+  }
+  @media (max-width: 560px) {
+    .footer { padding: 1.25rem 1rem; }
+    /* The | separators eat width when wrapped; hide them on narrow screens. */
+    .footer-links li:not(:last-child)::after { display: none; }
   }
   .footer-links {
     list-style: none; padding: 0; margin: 0 0 0.75rem;
