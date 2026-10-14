@@ -100,6 +100,7 @@ Set per environment in `.env` on the deploy target (see [PR #155](https://github
 - `cd web && npm run test:unit` - Vitest unit tests
 - `cd web && npm run test:e2e` - Playwright E2E (requires a running dev server)
 - `cd web && npm run build` - production build (verifies adapter-node output)
+- Test accounts (non-production PHP side): the standard accounts Abe One, Bea Two, Citre, ... Ida Nine (`.ZPA` ... `.ZPI`). The individual ones have password `k`; the companies (Citre, Gisette) have none.
 
 Always run at least `svelte-check` + `npm run build` before opening a PR.
 
@@ -108,7 +109,8 @@ Always run at least `svelte-check` + `npm run build` before opening a PR.
 - **No em-dashes** (`-`) anywhere in code, PRs, commit messages, or comments (per Chris's preference).
 - **Commit messages: title only, no body.** Details go in PR descriptions.
 - **No `Co-Authored-By: Claude` trailers** on commits.
-- **Comments:** default to none. Only add for non-obvious *why* - a hidden constraint, a subtle invariant, a workaround. Never explain *what* the code does.
+- **Comments:** default to none. Only add for non-obvious *why* - a hidden constraint, a subtle invariant, a workaround. Never explain *what* the code does. Exception, function headers: short functions get none; longer ones get a header that says informally what the function does and what it is good for.
+- **Code style:** keep code as short as possible without losing clarity and minimize non-blank lines (avoid visual clutter). Prefer conventional short names (`k` key, `v` value, `i` index, `a` account, `tx` transaction, `q` query) to long ones. Match the surrounding file.
 - **New endpoints:** return `throw error(status, msg)` for failures, `return json(...)` for successes. Never leak internal errors to the client.
 - **Server-only imports:** anything reading env vars, calling DB, or calling PHP must live under `lib/server/` and be imported only from `+server.ts` / `+*.server.ts` files.
 - **Preview routes** under `routes/preview/` are for design review only - they use isolated data and must not depend on real auth.
@@ -122,7 +124,13 @@ Always run at least `svelte-check` + `npm run build` before opening a PR.
 
 ## Cross-repo
 
-Companion repo: `cgmembers-frame` (Drupal-7-derived PHP - member site, admin, tx engine). See its `CLAUDE.md` for the PHP-side conventions. Local checkout typically at `/Users/admin/Work/CommonGood/cgmembers-frame`.
+Companion repo: `cgmembers-frame` (Drupal-7-derived PHP - member site, admin, tx engine). See its `CLAUDE.md` for the PHP-side conventions.
+
+### Local setup (varies by developer; clone the repos wherever suits you)
+
+- **Windows:** keep cgpay in WSL and run node/npm there (e.g. `wsl bash -ic "..."`). Keep cgmembers-frame on the Windows filesystem under WAMP, so the PHP side is reachable at a local URL such as `http://localhost/<folder>/cgmembers`. Files edited from Windows tools can end up with CRLF line endings in the WSL checkout; check diffs with WSL git.
+- **Mac:** TODO (Chris or another Mac developer): document how to run the PHP side locally and where the repos live.
+- Run the dev server from `web/` (`cd web && npm run dev`). Running it from the repo root starts the legacy PWA.
 
 ## People
 
