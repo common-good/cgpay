@@ -19,7 +19,12 @@
   let stateCode = $state('')
   let zip = $state('')
 
-  // Check-specific fields (per William 2026-08-04): only required when by === 'check'.
+  // Check-specific fields are admin-only (per William 2026-10-09, cgpay #180).
+  // A sponsee reporting an expected check grant doesn't have the check number
+  // or date yet - the admin fills them in when the check arrives. The form
+  // hides these inputs for non-admin callers; PHP's cgpayGrantsParseFlds no
+  // longer requires them for check-type grants.
+  const isAdmin = $derived(!!data.user?.admin)
   let ckNum = $state('')
   let ckDate = $state('')
 
@@ -110,14 +115,14 @@
     && city.trim().length > 0
     && stateCode.trim().length > 0 && Number.isFinite(stateNum) && stateNum > 0
     && zip.trim().length > 0
-    && (by !== 'check' || (ckNum.trim().length > 0 && ckDate.trim().length > 0))
+    && (by !== 'check' || !isAdmin || (ckNum.trim().length > 0 && ckDate.trim().length > 0))
   )
   // Mirrors canSubmit so a disabled button says why.
   const missing = $derived([
     !fullName.trim() && 'grantor name',
     !(Number.isFinite(amountNum) && amountNum > 0) && 'amount',
-    by === 'check' && !ckNum.trim() && 'check number',
-    by === 'check' && !ckDate.trim() && 'check date',
+    by === 'check' && isAdmin && !ckNum.trim() && 'check number',
+    by === 'check' && isAdmin && !ckDate.trim() && 'check date',
     !address.trim() && 'street address',
     !city.trim() && 'city',
     !(Number.isFinite(stateNum) && stateNum > 0) && 'state',
@@ -141,7 +146,7 @@
     if (stateCode.trim() && Number.isFinite(Number(stateCode))) {
       payload.state = Number(stateCode)
     }
-    if (by === 'check') {
+    if (by === 'check' && isAdmin) {
       payload.ckNum = ckNum.trim()
       payload.ckDate = ckDate.trim()
     }
@@ -282,7 +287,7 @@
               {#if fe('by')}<span class="field-err">{fe('by')}</span>{/if}
             </div>
 
-            {#if by === 'check'}
+            {#if by === 'check' && isAdmin}
               <div class="field" class:has-err={fe('ckNum')}>
                 <label for="ckNum">Check Number <span class="req">*</span></label>
                 <input id="ckNum" type="text" bind:value={ckNum} placeholder="e.g. 1234" autocomplete="off" aria-invalid={!!fe('ckNum')} />

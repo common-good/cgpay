@@ -8,6 +8,7 @@ export type WhoamiUser = {
   uid: number
   name: string
   sponsored: boolean
+  admin: boolean
   menu: string[]
 }
 
@@ -22,7 +23,7 @@ export type WhoamiResult =
   | { ok: true; user: WhoamiUser }
   | { ok: false; reason: 'no_session' | 'php_error' }
 
-type WhoamiRaw = { uid: unknown; name: unknown; sponsored?: unknown; menu?: unknown }
+type WhoamiRaw = { uid: unknown; name: unknown; sponsored?: unknown; admin?: unknown; menu?: unknown }
 
 export async function phpWhoami(ssid: string | undefined | null): Promise<WhoamiResult> {
   if (!ssid) return { ok: false, reason: 'no_session' }
@@ -50,6 +51,7 @@ export async function phpWhoami(ssid: string | undefined | null): Promise<Whoami
         uid: data.uid,
         name: data.name,
         sponsored: !!data.sponsored,
+        admin: !!data.admin,
         menu: Array.isArray(data.menu) ? data.menu.filter((s: unknown): s is string => typeof s === 'string') : []
       }
     }
