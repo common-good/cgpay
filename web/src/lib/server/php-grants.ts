@@ -38,7 +38,6 @@ export type CreateGrantInput = {
 
 export async function listGrants(uid: number): Promise<GrantSummary[]> {
   const result = await callPhp<{ grants: unknown }>('/cgpay-grants', {
-    baseUrlEnv: 'PHP_GRANTS_URL',
     method: 'GET',
     query: { uid }
   })
@@ -56,7 +55,6 @@ type CreateGrantResponse = {
 
 export async function createGrant(input: CreateGrantInput): Promise<number> {
   const result = await callPhp<CreateGrantResponse>('/cgpay-grants', {
-    baseUrlEnv: 'PHP_GRANTS_URL',
     method: 'POST',
     body: input
   })
