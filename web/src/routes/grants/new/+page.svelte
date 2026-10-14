@@ -279,7 +279,7 @@
 
             <div class="field" class:has-err={fe('by')}>
               <label for="by">Payment Method <span class="req">*</span></label>
-              <select id="by" bind:value={by} aria-invalid={!!fe('by')}>
+              <select id="by" data-testid="by" bind:value={by} aria-invalid={!!fe('by')}>
                 <option value="ach">ACH</option>
                 <option value="check">Check</option>
                 <option value="wire">Wire</option>
@@ -290,12 +290,12 @@
             {#if by === 'check' && isAdmin}
               <div class="field" class:has-err={fe('ckNum')}>
                 <label for="ckNum">Check Number <span class="req">*</span></label>
-                <input id="ckNum" type="text" bind:value={ckNum} placeholder="e.g. 1234" autocomplete="off" aria-invalid={!!fe('ckNum')} />
+                <input id="ckNum" data-testid="ckNum" type="text" bind:value={ckNum} placeholder="e.g. 1234" autocomplete="off" aria-invalid={!!fe('ckNum')} />
                 {#if fe('ckNum')}<span class="field-err">{fe('ckNum')}</span>{/if}
               </div>
               <div class="field" class:has-err={fe('ckDate')}>
                 <label for="ckDate">Check Date <span class="req">*</span></label>
-                <input id="ckDate" type="date" bind:value={ckDate} autocomplete="off" aria-invalid={!!fe('ckDate')} />
+                <input id="ckDate" data-testid="ckDate" type="date" bind:value={ckDate} autocomplete="off" aria-invalid={!!fe('ckDate')} />
                 {#if fe('ckDate')}<span class="field-err">{fe('ckDate')}</span>{/if}
               </div>
             {/if}
