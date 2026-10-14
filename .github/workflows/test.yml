@@ -40,6 +40,15 @@ jobs:
       # tests can render /grants/new without a live PHP whoami backend. Explicit
       # cookie value still required. Never set in production.
       E2E_FAKE_USER: '1'
+      # Dummy values so the startup env check passes. DB and PHP are deliberately unreachable.
+      DB_HOST: 127.0.0.1
+      DB_PORT: '1'
+      DB_USER: ci
+      DB_PASSWORD: ci
+      DB_NAME: ci
+      PHP_SSO_SECRET: ci-secret
+      PHP_SSO_COOKIE_NAME: SESSci
+      PUBLIC_PHP_BASE_URL: http://127.0.0.1:1/cgmembers
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
