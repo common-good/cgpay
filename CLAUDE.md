@@ -57,7 +57,9 @@ lib/
 
 **Legacy:** a `cg_token` JWT is still stored in localStorage and used by `/api/grants`, `/api/people-autocomplete`, `/api/me/*` for Bearer auth. Being retired in a follow-up - new code should not add JWT usage; new endpoints should use the SSO-cookie path.
 
-**Never re-implement password checks in node.** `drupal-password.ts` only supports `$S$`-prefixed hashes because that's all cgmembers uses (per William, 2026-07-06). If a user's `pass` column has any other format, `checkPassword` returns false - this is intentional.
+**Do not extend node-side password checking.** `drupal-password.ts` verifies only `$S$`-prefixed hashes, because that's all cgmembers uses (per William, 2026-07-06). For any other `pass` format `checkPassword` returns false - intentional, fail-closed. Do not add other Drupal hash formats.
+
+Known gap: `/api/login` verifies the password in node, then `/cgpay-sso` creates the PHP session after checking only that the account is `ok`. So PHP's MFA step and its DB-backed flood control are bypassed (node's rate limiter is in memory and resets on restart). The intended fix is a PHP endpoint that verifies the password and returns a session or "MFA required", leaving node a thin proxy. Once PHP no longer owns login, node should use a modern hash (argon2 or bcrypt, rehashed on login) rather than a port of Drupal's scheme.
 
 ## Working with the PHP side
 
