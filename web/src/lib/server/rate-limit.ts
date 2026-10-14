@@ -4,7 +4,8 @@
 type Bucket = { hits: number[]; blockedUntil: number }
 const buckets = new Map<string, Bucket>()
 
-const MAX_HITS = 5         // attempts allowed per window
+// E2E_RATE_LIMIT_MAX lets the local test server allow many sign-in attempts per minute. Production leaves it unset. (process.env, not $env, so the unit test can import this.)
+const MAX_HITS = Number(process.env.E2E_RATE_LIMIT_MAX) || 5 // attempts allowed per window
 const WINDOW_MS = 60_000   // rolling 60s window
 const BLOCK_MS = 5 * 60_000 // 5 min block after threshold
 

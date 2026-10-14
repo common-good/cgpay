@@ -54,6 +54,7 @@
           <label for="identifier">Account ID</label>
           <input
             id="identifier"
+            data-testid="identifier"
             type="text"
             bind:value={identifier}
             autocomplete="username"
@@ -66,6 +67,7 @@
           <label for="password">Password</label>
           <input
             id="password"
+            data-testid="password"
             type="password"
             bind:value={password}
             autocomplete="current-password"
@@ -78,7 +80,7 @@
           <p class="err" role="alert">{error}</p>
         {/if}
 
-        <button type="submit" class="primary" disabled={submitting}>
+        <button type="submit" class="primary" data-testid="btn-signin" disabled={submitting}>
           {submitting ? 'Signing in…' : 'Sign in'}
         </button>
       </form>
