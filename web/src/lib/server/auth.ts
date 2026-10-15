@@ -13,8 +13,8 @@ import { phpWhoami, type WhoamiUser } from './php-whoami'
  * in `phpWhoami`, so the app degrades to anonymous without hiding the error.
  */
 export async function currentUser(cookies: Cookies): Promise<WhoamiUser | null> {
-  const cookieName = env.PHP_SSO_COOKIE_NAME
-  if (!cookieName) return null
+  // Startup validation guarantees PHP_SSO_COOKIE_NAME is set.
+  const cookieName = env.PHP_SSO_COOKIE_NAME as string
   const result = await phpWhoami(cookies.get(cookieName))
   return result.ok ? result.user : null
 }

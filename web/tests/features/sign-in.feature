@@ -11,9 +11,8 @@ Rule: A member signs in with the right password and is turned away with a wrong 
 Scenario: Someone runs the app, not signed in
   Then on page "login"
   And I see "btn-signin"
-# lnk-signup and lnk-reset are not on the sign-in page yet
-#  And I see "lnk-signup"
-#  And I see "lnk-reset"
+  And I see "lnk-signup"
+  And I see "lnk-reset"
 
 Scenario: A member signs in
   When I input "Bea Two" as "identifier"
