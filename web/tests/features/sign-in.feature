@@ -28,3 +28,7 @@ Scenario: Someone tries to sign in with a wrong password
   Then I see error "Invalid account ID or password."
   And I am on page "login"
   And signed in as "nobody"
+
+Scenario: Someone who forgot their password asks for a new one
+  When I click "lnk-reset"
+  Then on PHP page "settings/password"

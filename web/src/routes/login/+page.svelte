@@ -12,12 +12,9 @@
   const helpHref   = phpBase ? phpBase + '/help' : 'mailto:support@commongood.earth'
   // Sign-up and password-reset live on the PHP member site today. These links
   // point there until the node redesign ships (cgpay member-features batch).
-  // The reset flow on PHP needs an account ID, so we hand off to /signin where
-  // the user enters their ID and clicks "Reset password" inline. A standalone
-  // request-password URL doesn't exist in this Drupal install (/user/password
-  // 404s).
+  // PHP's /settings/password is its Reset Password page; when signed out it asks for the account ID or email.
   const signupHref = phpBase ? phpBase + '/signup' : ''
-  const forgotHref = phpBase ? phpBase + '/signin'  : ''
+  const forgotHref = phpBase ? phpBase + '/settings/password' : ''
 
   async function submit(e: Event) {
     e.preventDefault()
