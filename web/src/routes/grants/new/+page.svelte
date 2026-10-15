@@ -244,7 +244,7 @@
             <div class="field span-2" class:has-err={fe('fullName')}>
               <label for="grantor">Grantor Name <span class="req">*</span></label>
               <div class="autocomplete">
-                <input id="grantor" type="text" value={fullName}
+                <input id="grantor" data-testid="grantor" type="text" value={fullName}
                   oninput={onGrantorInput}
                   onkeydown={onGrantorKeydown}
                   onblur={onGrantorBlur}
@@ -273,7 +273,7 @@
 
             <div class="field" class:has-err={fe('amount')}>
               <label for="amount">Expected Amount <span class="req">*</span></label>
-              <div class="input-wrap"><span class="prefix">$</span><input id="amount" type="text" inputmode="decimal" bind:value={amount} placeholder="25,000.00" aria-invalid={!!fe('amount')} /></div>
+              <div class="input-wrap"><span class="prefix">$</span><input id="amount" data-testid="amount" type="text" inputmode="decimal" bind:value={amount} placeholder="25,000.00" aria-invalid={!!fe('amount')} /></div>
               {#if fe('amount')}<span class="field-err">{fe('amount')}</span>{/if}
             </div>
 
@@ -318,17 +318,17 @@
           <div class="grid-2">
             <div class="field span-2" class:has-err={fe('address')}>
               <label for="address">Street Address <span class="req">*</span></label>
-              <input id="address" type="text" bind:value={address} autocomplete="off" aria-invalid={!!fe('address')} />
+              <input id="address" data-testid="address" type="text" bind:value={address} autocomplete="off" aria-invalid={!!fe('address')} />
               {#if fe('address')}<span class="field-err">{fe('address')}</span>{/if}
             </div>
             <div class="field" class:has-err={fe('city')}>
               <label for="city">City <span class="req">*</span></label>
-              <input id="city" type="text" bind:value={city} autocomplete="off" aria-invalid={!!fe('city')} />
+              <input id="city" data-testid="city" type="text" bind:value={city} autocomplete="off" aria-invalid={!!fe('city')} />
               {#if fe('city')}<span class="field-err">{fe('city')}</span>{/if}
             </div>
             <div class="field" class:has-err={fe('state')}>
               <label for="state">State <span class="req">*</span></label>
-              <select id="state" bind:value={stateCode} aria-invalid={!!fe('state')}>
+              <select id="state" data-testid="state" bind:value={stateCode} aria-invalid={!!fe('state')}>
                 <option value="">Select…</option>
                 {#each data.states as s}
                   <option value={String(s.id)}>{s.abbrev}</option>
@@ -338,7 +338,7 @@
             </div>
             <div class="field" class:has-err={fe('zip')}>
               <label for="zip">ZIP <span class="req">*</span></label>
-              <input id="zip" type="text" bind:value={zip} autocomplete="off" aria-invalid={!!fe('zip')} />
+              <input id="zip" data-testid="zip" type="text" bind:value={zip} autocomplete="off" aria-invalid={!!fe('zip')} />
               {#if fe('zip')}<span class="field-err">{fe('zip')}</span>{/if}
             </div>
             <div class="field" class:has-err={fe('email')}>
@@ -359,7 +359,7 @@
             <span class="submit-hint">Still needed: {missing.join(', ')}</span>
           {/if}
           <a class="ghost" href="/grants">Cancel</a>
-          <button class="primary" type="submit" disabled={!canSubmit}>
+          <button class="primary" type="submit" data-testid="btn-report" disabled={!canSubmit}>
             {submitting ? 'Saving…' : 'Report Grant'}
           </button>
         </div>
