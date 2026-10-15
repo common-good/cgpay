@@ -4,6 +4,7 @@
   import st from'#store.js'
   import u from '#utils.js'
   import c from '#constants.js'
+  import { returnFromHandoff } from '../handoff.js'
 
   import Empty from '#modules/_Empty.svelte' // for testing
   import AddToHomeScreen from '#modules/AddToHomeScreen.svelte'
@@ -18,6 +19,7 @@
   import Settings from '#modules/Settings.svelte'
   import LayoutIntro from '#modules/LayoutIntro.svelte'
   import Layout from '#modules/Layout.svelte'
+  import Handoff from '#modules/Handoff.svelte'
 
   st.fromTester().then() // we must check for tester instructions before doing anything
 
@@ -25,7 +27,7 @@
     st.fromTester().then()
     st.resetNetwork()
     setTimeout(timeOut, c.networkTimeoutMs)
-    if ($st.timeout && !st.setTimeout()) u.go('home')
+    if ($st.timeout && !st.setTimeout()) returnFromHandoff()
   }
 
   function onlyIf(condition, elseGoTo) { return { guard: condition, redirect: elseGoTo } }
@@ -47,6 +49,7 @@
     route('/scan', Scan, st.linked, '/'),
     route('/tx', Tx, gotIntent, '/'),
     route('/tx-start', TxStart, gotIntent, '/'),
+    route('/handoff', Handoff, true, null, LayoutIntro),
     route('txs', Txs),
     route('/comment', Comment, st.linked, '/'),
     route('/settings', Settings, () => !u.empty($st.choices), '/' ),

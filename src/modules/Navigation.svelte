@@ -5,6 +5,7 @@
   import st from'#store.js'
   import u from '#utils.js'
   import c from '#constants.js'
+  import { isHandoffVisit, returnFromHandoff } from '../handoff.js'
 
   let nav
 
@@ -28,7 +29,7 @@
     menuItems.push({text, callback, criteria, id})
   }
 
-  item('Go Home', () => u.go('home'), () => !u.atHome(), 'home')
+  item('Go Home', () => isHandoffVisit() ? returnFromHandoff() : u.go('home'), () => !u.atHome(), 'home')
   item('Scan Yourself In to Pay', scanIn, () => u.atHome() && $st.payOk == 'scan' && !$st.coPaying, 'scanIn') // for managers
   item('Use Rear Camera', rearCamera, () => !u.onPage('scan') && $st.frontCamera, 'rear')
   item('Use Front Camera', frontCamera, () => !u.onPage('scan') && !$st.frontCamera, 'front')

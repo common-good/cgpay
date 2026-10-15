@@ -2,13 +2,17 @@
   import { onMount } from 'svelte'
   import { goto } from '$app/navigation'
   import { env } from '$env/dynamic/public'
+  import type { PageData } from './$types'
   import Icon from '$lib/components/Icon.svelte'
   import type { InfoResponse, InfoTx } from './api/me/info/+server'
   import { phpUrl } from '$lib/utils'
 
+  let { data }: { data: PageData } = $props()
+
   let loading = $state(true)
   let error = $state<string | null>(null)
   let info = $state<InfoResponse | null>(null)
+  let hasCamera = $state(false)
 
   type ModalKind = 'pay' | 'receive' | 'transfer' | 'soon' | null
   let modal = $state<ModalKind>(null)
@@ -18,7 +22,25 @@
   // Empty string = no PHP target configured; we render the menu as disabled.
   const phpBase = env.PUBLIC_PHP_BASE_URL ?? ''
 
+  async function detectCamera(): Promise<boolean> {
+    if (!navigator.mediaDevices?.enumerateDevices) return false
+    try {
+      return (await navigator.mediaDevices.enumerateDevices()).some(device => device.kind === 'videoinput')
+    } catch (cameraError) {
+      console.warn('Could not detect a camera; keeping the PHP transaction links.', cameraError)
+      return false
+    }
+  }
+
+  function transactionUrl(intent: 'pay' | 'charge'): string {
+    const pwaBase = data.cgpayPwaUrl.replace(/\/+$/, '')
+    return hasCamera && pwaBase
+      ? `${pwaBase}/handoff#intent=${intent}`
+      : phpUrl(`tx/${intent}`)
+  }
+
   onMount(async () => {
+    hasCamera = await detectCamera()
     try {
       const res = await fetch('/api/me/info?limit=20')
       if (res.status === 401) {
@@ -122,7 +144,7 @@
 
       <section class="actions">
         <article class="card action">
-          <a class="action-btn" href={phpUrl('tx/pay') || '#'} aria-disabled={!phpBase || undefined}>
+          <a class="action-btn" href={transactionUrl('pay') || '#'} aria-disabled={!phpBase && !(hasCamera && data.cgpayPwaUrl) || undefined}>
             <div class="action-head">
               <div class="icon-wrap tone-rose"><Icon name="upload" size={20} /></div>
               <h2>Pay</h2>
@@ -137,7 +159,7 @@
         </article>
 
         <article class="card action">
-          <a class="action-btn" href={phpUrl('tx/charge') || '#'} aria-disabled={!phpBase || undefined}>
+          <a class="action-btn" href={transactionUrl('charge') || '#'} aria-disabled={!phpBase && !(hasCamera && data.cgpayPwaUrl) || undefined}>
             <div class="action-head">
               <div class="icon-wrap tone-green"><Icon name="download" size={20} /></div>
               <h2>Receive</h2>
