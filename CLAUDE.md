@@ -116,6 +116,7 @@ Plain specs (`web/tests/e2e/`) are being replaced gradually by Gherkin features 
 - Scenarios refer to the standard test accounts by first name (Abe, Bea, Cit, ...). These are the PHP accounts `.ZPA`, `.ZPB`, ... (`NEWZPA`...; the same accounts as the legacy app's `K6...` ids). cgmembers-frame's own features use other uids (`.ZZA`...); in cgpay features always use the names.
 - Write a BDD feature test for every new feature, and for existing functionality you touch.
 - Reuse existing steps as much as possible.
+- Avoid steps that match literal text (`I see text "..."`). Refer to a marker for the text instead (a `data-testid`), so the wording can be tweaked without changing the test or its purpose.
 - Test accounts: Bea is an individual account, Citre a company account, Dee a second individual account. Abe is an admin account, used only for admin actions. Gisette (managed by Flo) is the fiscally sponsored company; the other accounts, listed in `web/tests/support/accounts.ts`, are available if needed.
 - Tests should often run from the beginning to the middle of a process, from the middle to the end (or both), rather than start to finish every time. That clarifies the data structure strategy and reduces the number and complexity of tests needed.
 - Group scenarios under the business rule they illustrate with Gherkin's `Rule:` keyword.
