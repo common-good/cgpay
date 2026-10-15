@@ -11,9 +11,8 @@ Rule: A member signs in with the right password and is turned away with a wrong 
 Scenario: Someone runs the app, not signed in
   Then on page "login"
   And I see "btn-signin"
-# lnk-signup and lnk-reset are not on the sign-in page yet
-#  And I see "lnk-signup"
-#  And I see "lnk-reset"
+  And I see "lnk-signup"
+  And I see "lnk-reset"
 
 Scenario: A member signs in
   When I input "Bea Two" as "identifier"
@@ -29,3 +28,7 @@ Scenario: Someone tries to sign in with a wrong password
   Then I see error "Invalid account ID or password."
   And I am on page "login"
   And signed in as "nobody"
+
+Scenario: Someone who forgot their password asks for a new one
+  When I click "lnk-reset"
+  Then on PHP page "settings/password"

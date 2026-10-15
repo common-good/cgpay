@@ -40,6 +40,18 @@ jobs:
       # tests can render /grants/new without a live PHP whoami backend. Explicit
       # cookie value still required. Never set in production.
       E2E_FAKE_USER: '1'
+      # Stub values for the fail-fast env validator in hooks.server.ts (cgpay
+      # #178). The E2E suite never actually hits PHP or the DB (E2E_FAKE_USER
+      # short-circuits whoami, and the grants/new page returns a canned state
+      # list); these just satisfy the startup check so the server can boot.
+      DB_HOST: '127.0.0.1'
+      DB_PORT: '3306'
+      DB_USER: 'ci'
+      DB_PASSWORD: 'ci'
+      DB_NAME: 'ci'
+      PHP_SSO_SECRET: 'ci-dummy-secret'
+      PHP_SSO_COOKIE_NAME: 'SESSci'
+      PUBLIC_PHP_BASE_URL: 'http://localhost/cg/cgmembers'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

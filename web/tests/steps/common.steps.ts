@@ -15,6 +15,9 @@ When('I input {string} as {string}', async ({ page }, value: string, id: string)
 
 When('I click {string}', async ({ page }, id: string) => { await page.getByTestId(id).click() })
 
+// A page on the PHP member site, by its path below PUBLIC_PHP_BASE_URL.
+Then('(I am )on PHP page {string}', async ({ page }, path: string) => { await expect(page).toHaveURL(new RegExp(`/cgmembers/${path}$`), { timeout: 15_000 }) })
+
 Then('I see {string}', async ({ page }, id: string) => { await expect(page.getByTestId(id)).toBeVisible() })
 
 Then('I see error {string}', async ({ page }, message: string) => {

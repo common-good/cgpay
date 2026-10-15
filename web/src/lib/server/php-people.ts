@@ -20,7 +20,6 @@ export type PersonSuggestion = {
 
 export async function autocompletePeople(uid: number, query: string, limit = 20): Promise<PersonSuggestion[]> {
   const result = await callPhp<{ people: unknown }>('/cgpay-people-autocomplete', {
-    baseUrlEnv: 'PHP_GRANTS_URL',
     method: 'GET',
     // Not `q`: Drupal reads $_GET['q'] as the page path.
     query: { uid, search: query, limit }
