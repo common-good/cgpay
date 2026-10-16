@@ -117,8 +117,8 @@ Deploy branches to the following URLs:
 | `demo` | `staging` | https://cgpay-demo.commongood.earth | cg4.us/demo | new1.commongood.earth | prod |
 
 The node dashboard links camera-enabled transactions to this PWA using
-`CGPAY_PWA_URL`. Set `VITE_CGPAY_DASHBOARD_URL` when building the PWA so an
-expired handoff can send the member to the node dashboard login page.
+`CGPAY_PWA_URL`. Set `VITE_CGPAY_DASHBOARD_URL` when building the PWA (see
+`.env.example`) so an expired handoff can send the member to the node dashboard login page.
 
 ### Deployment Checklist
 
