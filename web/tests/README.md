@@ -10,10 +10,13 @@ Two harnesses, run separately:
 ```
 tests/
 ├── unit/       # Vitest tests — run with `npm run test:unit`
-│   ├── auth.test.ts               JWT sign/verify + bearer extraction
 │   ├── drupal-password.test.ts    phpass prefix dispatch + guard behaviour
+│   ├── env.test.ts                Required-env check, PHP URLs and cookie domain derived from PUBLIC_PHP_BASE_URL
+│   ├── php-client.test.ts         Server-to-server calls to PHP (config and error handling)
+│   ├── php-grants.test.ts         Grants client for PHP /cgpay-grants
 │   └── rate-limit.test.ts         Rolling window + lockout semantics
 └── e2e/        # Playwright tests — run with `npm run test:e2e`
+    ├── grants.spec.ts             Grants pages: protected-route redirect, form contract
     └── login.spec.ts              Login page contract + protected-route redirect
 ```
 
@@ -35,8 +38,9 @@ npm run test
 
 ## What's covered vs. what isn't
 
-The unit tests cover the pieces that don't touch external systems: JWT
-round-trip, phpass prefix dispatch and input guards, rate-limit window/lockout
+The unit tests cover the pieces that don't touch external systems: phpass
+prefix dispatch and input guards, env validation and derivation, the PHP client
+and grants client (with `fetch` mocked), rate-limit window/lockout
 semantics. They run in <1s and are safe in CI without any env.
 
 The E2E tests cover the login-page contract (labels, placeholder, error path)

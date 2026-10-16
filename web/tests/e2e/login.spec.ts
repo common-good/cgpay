@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 
-// Smoke tests for the login page. These don't require the DB, JWT_SECRET, or
-// the PHP SSO backend — they exercise the frontend contract only. Add a full
+// Smoke tests for the login page. These don't require the DB or the
+// PHP SSO backend — they exercise the frontend contract only. Add a full
 // round-trip test in dashboard.spec.ts (which does need env config).
 
 test.describe('login page', () => {

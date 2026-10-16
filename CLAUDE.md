@@ -37,7 +37,7 @@ lib/
   server/                  server-only code
     db.ts                  MySQL pool (READ-ONLY user - most reads work directly; writes go via PHP)
     drupal-password.ts     verifies $S$-prefixed Drupal 7 hashes
-    auth.ts                JWT sign/verify + Bearer header helper (being retired)
+    auth.ts                cookie auth: reads the SSO cookie and asks PHP who owns it (currentUser, requireUser)
     php-whoami.ts          server-to-server client for /cgpay-whoami
     php-grants.ts          server-to-server client for /cgpay-grants
     php-people.ts          server-to-server client for /cgpay-people-autocomplete
@@ -49,15 +49,17 @@ lib/
 
 ## Auth model
 
-**PHP is the single source of truth for identity.** The two apps share a session via the `SSESS...` cookie scoped to `.commongood.earth` (see `.env` `PHP_COOKIE_DOMAIN`).
+**PHP is the single source of truth for identity.** The two apps share a session via the `SSESS...` cookie scoped to `.commongood.earth` (derived from `PUBLIC_PHP_BASE_URL`; see `lib/server/env.ts`).
 
 - **Login flow:** `/api/login` verifies password against `users.pass` (via `drupal-password.ts`), calls PHP `/cgpay-sso` to create a session, sets the SSO cookie on the browser scoped to both the parent domain and the PHP host.
 - **Identity on every request:** `+layout.server.ts` reads the SSO cookie and calls PHP `/cgpay-whoami` to get `{uid, name, sponsored, menu}`. This runs on every full page load (SSR), but client-side navigation reuses the cached layout data unless something invalidates it (see Common gotchas), so a PHP account switch shows up on the next full load.
 - **Sign out:** `/api/logout` clears the SSO cookie on both domain scopes.
 
-**Legacy:** a `cg_token` JWT is still stored in localStorage and used by `/api/grants`, `/api/people-autocomplete`, `/api/me/*` for Bearer auth. Being retired in a follow-up - new code should not add JWT usage; new endpoints should use the SSO-cookie path.
+**No JWT:** endpoints authenticate with the SSO cookie. Use `requireUser(cookies)` (401 when signed out) or `currentUser(cookies)` (null when signed out) from `lib/server/auth.ts`.
 
-**Never re-implement password checks in node.** `drupal-password.ts` only supports `$S$`-prefixed hashes because that's all cgmembers uses (per William, 2026-07-06). If a user's `pass` column has any other format, `checkPassword` returns false - this is intentional.
+**Do not extend node-side password checking.** `drupal-password.ts` verifies only `$S$`-prefixed hashes, because that's all cgmembers uses (per William, 2026-07-06). For any other `pass` format `checkPassword` returns false - intentional, fail-closed. Do not add other Drupal hash formats.
+
+Known gap: `/api/login` verifies the password in node, then `/cgpay-sso` creates the PHP session after checking only that the account is `ok`. So PHP's MFA step and its DB-backed flood control are bypassed (node's rate limiter is in memory and resets on restart). The intended fix is a PHP endpoint that verifies the password and returns a session or "MFA required", leaving node a thin proxy. Once PHP no longer owns login, node should use a modern hash (argon2 or bcrypt, rehashed on login) rather than a port of Drupal's scheme.
 
 ## Working with the PHP side
 
@@ -79,12 +81,9 @@ Set per environment in `.env` on the deploy target (see [PR #155](https://github
 
 - `PORT` - pm2 port (per environment, e.g. 3001 for test)
 - `DB_HOST` / `DB_USER` / `DB_PASSWORD` / `DB_NAME` - MySQL (read-only user)
-- `JWT_SECRET` - signs `cg_token`
-- `PHP_SSO_URL` - `https://<phphost>/cgpay-sso`
 - `PHP_SSO_SECRET` - shared secret with PHP (matches `cgpaySsoSecret` in cgmembers config.json)
-- `PHP_COOKIE_DOMAIN` - `.commongood.earth`
 - `PHP_SSO_COOKIE_NAME` - the `SSESS...` cookie name PHP sets
-- `PUBLIC_PHP_BASE_URL` - PHP host base URL (exposed to browser)
+- `PUBLIC_PHP_BASE_URL` - PHP host base URL (exposed to browser). The `/cgpay-sso` and `/cgpay-grants` URLs and the parent cookie domain (e.g. `.commongood.earth`) are derived from it
 
 ## Branch / deploy flow
 
@@ -100,6 +99,7 @@ Set per environment in `.env` on the deploy target (see [PR #155](https://github
 - `cd web && npm run test:unit` - Vitest unit tests
 - `cd web && npm run test:e2e` - Playwright E2E (requires a running dev server)
 - `cd web && npm run build` - production build (verifies adapter-node output)
+- Test accounts (non-production PHP side): the standard accounts Abe One, Bea Two, Citre, ... Ida Nine (`.ZPA` ... `.ZPI`). The individual ones have password `k`; the companies (Citre, Gisette) have none.
 
 Always run at least `svelte-check` + `npm run build` before opening a PR.
 
@@ -108,7 +108,8 @@ Always run at least `svelte-check` + `npm run build` before opening a PR.
 - **No em-dashes** (`-`) anywhere in code, PRs, commit messages, or comments (per Chris's preference).
 - **Commit messages: title only, no body.** Details go in PR descriptions.
 - **No `Co-Authored-By: Claude` trailers** on commits.
-- **Comments:** default to none. Only add for non-obvious *why* - a hidden constraint, a subtle invariant, a workaround. Never explain *what* the code does.
+- **Comments:** default to none. Only add for non-obvious *why* - a hidden constraint, a subtle invariant, a workaround. Never explain *what* the code does. Exception, function headers: short functions get none; longer ones get a header that says informally what the function does and what it is good for.
+- **Code style:** keep code as short as possible without losing clarity and minimize non-blank lines (avoid visual clutter). Prefer conventional short names (`k` key, `v` value, `i` index, `a` account, `tx` transaction, `q` query) to long ones. Match the surrounding file.
 - **New endpoints:** return `throw error(status, msg)` for failures, `return json(...)` for successes. Never leak internal errors to the client.
 - **Server-only imports:** anything reading env vars, calling DB, or calling PHP must live under `lib/server/` and be imported only from `+server.ts` / `+*.server.ts` files.
 - **Preview routes** under `routes/preview/` are for design review only - they use isolated data and must not depend on real auth.
@@ -122,7 +123,13 @@ Always run at least `svelte-check` + `npm run build` before opening a PR.
 
 ## Cross-repo
 
-Companion repo: `cgmembers-frame` (Drupal-7-derived PHP - member site, admin, tx engine). See its `CLAUDE.md` for the PHP-side conventions. Local checkout typically at `/Users/admin/Work/CommonGood/cgmembers-frame`.
+Companion repo: `cgmembers-frame` (Drupal-7-derived PHP - member site, admin, tx engine). See its `CLAUDE.md` for the PHP-side conventions.
+
+### Local setup (varies by developer; clone the repos wherever suits you)
+
+- **Windows:** keep cgpay in WSL and run node/npm there (e.g. `wsl bash -ic "..."`). Keep cgmembers-frame on the Windows filesystem under WAMP, so the PHP side is reachable at a local URL such as `http://localhost/<folder>/cgmembers`. Files edited from Windows tools can end up with CRLF line endings in the WSL checkout; check diffs with WSL git.
+- **Mac:** TODO (Chris or another Mac developer): document how to run the PHP side locally and where the repos live.
+- Run the dev server from `web/` (`cd web && npm run dev`). Running it from the repo root starts the legacy PWA.
 
 ## People
 
