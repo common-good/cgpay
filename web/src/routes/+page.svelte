@@ -39,26 +39,39 @@
       : phpUrl(`tx/${intent}`)
   }
 
-  onMount(async () => {
-    hasCamera = await detectCamera()
+  /**
+   * Fetch the dashboard data from the server and display it.
+   * @param bool quiet: if true, keep showing the current data and ignore errors (a refresh)
+   */
+  async function loadInfo(quiet = false) {
     try {
-      const res = await fetch('/api/me/info?limit=20')
+      const res = await fetch('/api/me/info?limit=20', { cache: 'no-store' })
       if (res.status === 401) {
         await goto('/login')
         return
       }
       if (!res.ok) {
+        if (quiet) return
         const body = await res.json().catch(() => ({}))
         error = body.message ?? `Failed to load dashboard (${res.status})`
         return
       }
       info = await res.json()
     } catch {
-      error = 'Network error - please try again.'
+      if (!quiet) error = 'Network error - please try again.'
     } finally {
       loading = false
     }
+  }
+
+  onMount(async () => {
+    hasCamera = await detectCamera()
+    await loadInfo()
   })
+
+  // Returning from the legacy app (Back button, restored page): show current balance and transactions.
+  function onPageShow(e: PageTransitionEvent) { if (e.persisted) loadInfo(true) }
+  function onVisible() { if (document.visibilityState === 'visible' && info) loadInfo(true) }
 
   function fmtMoney(n: number) {
     return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -102,7 +115,7 @@
   }
 </script>
 
-<svelte:window onkeydown={onKeydown} />
+<svelte:window onkeydown={onKeydown} onpageshow={onPageShow} onvisibilitychange={onVisible} />
 
 <div class="page">
   {#if loading}
