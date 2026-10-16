@@ -1,10 +1,14 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
-// Mock the $env/dynamic/private import so we can flip config on/off per test.
-const envState = { PHP_GRANTS_URL: '', PHP_SSO_SECRET: '' }
+// Mock both env modules; env.ts (via php-client) reads from both.
+const privateEnvState = { PHP_SSO_SECRET: '' }
+const publicEnvState = { PUBLIC_PHP_BASE_URL: '' }
 
 vi.mock('$env/dynamic/private', () => ({
-  get env() { return envState }
+  get env() { return privateEnvState }
+}))
+vi.mock('$env/dynamic/public', () => ({
+  get env() { return publicEnvState }
 }))
 
 // Import after mocks — Vitest hoists vi.mock so this is safe.
@@ -14,18 +18,18 @@ describe('php-grants client', () => {
   const originalFetch = global.fetch
 
   beforeEach(() => {
-    envState.PHP_GRANTS_URL = 'https://demo.example/cgpay-grants'
-    envState.PHP_SSO_SECRET = 'test-secret'
+    publicEnvState.PUBLIC_PHP_BASE_URL = 'https://demo.example/cg/cgmembers'
+    privateEnvState.PHP_SSO_SECRET = 'test-secret'
     global.fetch = originalFetch
   })
 
-  it('throws when PHP_GRANTS_URL is not configured', async () => {
-    envState.PHP_GRANTS_URL = ''
+  it('throws when PUBLIC_PHP_BASE_URL is not configured', async () => {
+    publicEnvState.PUBLIC_PHP_BASE_URL = ''
     await expect(listGrants(1)).rejects.toThrow(/not configured/)
   })
 
   it('throws when PHP_SSO_SECRET is not configured', async () => {
-    envState.PHP_SSO_SECRET = ''
+    privateEnvState.PHP_SSO_SECRET = ''
     await expect(listGrants(1)).rejects.toThrow(/not configured/)
   })
 
@@ -39,7 +43,7 @@ describe('php-grants client', () => {
     await listGrants(42)
 
     expect(calls).toHaveLength(1)
-    expect(calls[0].url).toBe('https://demo.example/cgpay-grants?uid=42')
+    expect(calls[0].url).toBe('https://demo.example/cg/cgmembers/cgpay-grants?uid=42')
     expect((calls[0].init.headers as Record<string, string>)['x-cg-internal-token']).toBe('test-secret')
   })
 
@@ -61,7 +65,7 @@ describe('php-grants client', () => {
     const id = await createGrant({ uid: 5, amount: 500, by: 'ach', fullName: 'A Donor' })
 
     expect(id).toBe(99)
-    expect(received!.url).toBe('https://demo.example/cgpay-grants')
+    expect(received!.url).toBe('https://demo.example/cg/cgmembers/cgpay-grants')
     expect(received!.init.method).toBe('POST')
     const body = JSON.parse(received!.init.body as string)
     expect(body).toMatchObject({ uid: 5, amount: 500, by: 'ach', fullName: 'A Donor' })

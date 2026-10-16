@@ -11,8 +11,10 @@ Three kinds of tests:
 ```
 tests/
 ├── unit/       # Vitest tests — run with `npm run test:unit`
-│   ├── auth.test.ts               JWT sign/verify + bearer extraction
 │   ├── drupal-password.test.ts    phpass prefix dispatch + guard behaviour
+│   ├── env.test.ts                Required-env check, PHP URLs and cookie domain derived from PUBLIC_PHP_BASE_URL
+│   ├── php-client.test.ts         Server-to-server calls to PHP (config and error handling)
+│   ├── php-grants.test.ts         Grants client for PHP /cgpay-grants
 │   └── rate-limit.test.ts         Rolling window + lockout semantics
 ├── e2e/        # Legacy plain Playwright specs (project "chromium")
 │   ├── login.spec.ts              Login page contract + protected-route redirect
@@ -49,7 +51,7 @@ npm run test
 - The endpoint URL defaults to the local WAMP, `http://localhost/cg/cgmembers/api/`. Override with `TEST_API_URL`.
 - One worker only (`workers: 1`): the app's rate limiter is in-memory and the test DB is shared. Keep scenarios independent; set up state in fixtures, never rely on a previous scenario.
 - The BDD project is skipped when `CI` is set, because CI has no PHP test endpoint.
-- The BDD project browses `http://localhost:4173` (override with `E2E_BASE_URL`), not `127.0.0.1` like the plain specs: a signed-in flow needs the SSO cookie, whose domain (`PHP_COOKIE_DOMAIN`) is `localhost` locally.
+- The BDD project browses `http://localhost:4173` (override with `E2E_BASE_URL`), not `127.0.0.1` like the plain specs: a signed-in flow needs the SSO cookie, whose domain (derived from `PUBLIC_PHP_BASE_URL`) is `localhost` locally.
 - The login endpoint allows 5 attempts per minute per IP (in-memory limiter), so a run can contain at most 5 sign-in attempts per minute; spread more across minutes or raise the limit for test runs.
 - The plain grants specs need `E2E_FAKE_USER=1` in the server's environment (CI sets it); export it before `npm run test:e2e` locally, or put it in `.env`.
 - To skip the rebuild on each run, start `npm run build && npm run preview -- --host 127.0.0.1 --port 4173` once; local runs reuse a server already on that port.
@@ -57,8 +59,9 @@ npm run test
 
 ## What's covered vs. what isn't
 
-The unit tests cover the pieces that don't touch external systems: JWT
-round-trip, phpass prefix dispatch and input guards, rate-limit window/lockout
+The unit tests cover the pieces that don't touch external systems: phpass
+prefix dispatch and input guards, env validation and derivation, the PHP client
+and grants client (with `fetch` mocked), rate-limit window/lockout
 semantics. They run in <1s and are safe in CI without any env.
 
 The E2E tests cover the login-page contract (labels, placeholder, error path)

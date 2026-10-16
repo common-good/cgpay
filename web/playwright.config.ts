@@ -30,7 +30,7 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] }
     },
     // Skipped in CI: the testDb fixture needs the PHP test endpoint (local WAMP), which CI lacks.
-    // Uses localhost, not 127.0.0.1: a signed-in flow needs the SSO cookie, whose domain (PHP_COOKIE_DOMAIN) is 'localhost' locally.
+    // Uses localhost, not 127.0.0.1: a signed-in flow needs the SSO cookie, whose domain (derived from PUBLIC_PHP_BASE_URL) is 'localhost' locally.
     ...(process.env.CI ? [] : [{ ...bddProject, use: { ...devices['Desktop Chrome'], baseURL: process.env.E2E_BASE_URL ?? 'http://localhost:4173' } }])
   ],
   webServer: {
