@@ -5,24 +5,20 @@
 import { json } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
 import { env } from '$env/dynamic/private'
+import { phpCookieDomain, phpHostname } from '$lib/server/env'
 
 export const POST: RequestHandler = async ({ cookies }) => {
-  const cookieName = env.PHP_SSO_COOKIE_NAME
-  const cookieDomain = env.PHP_COOKIE_DOMAIN
-  if (cookieName) {
-    // Clear both scopes we set at login time (see /api/login): the parent
-    // domain and the PHP host itself, mirroring how it was written.
-    cookies.delete(cookieName, { path: '/', domain: cookieDomain || undefined })
-    try {
-      const phpHost = new URL(env.PHP_SSO_URL ?? '').hostname
-      if (phpHost && phpHost !== cookieDomain?.replace(/^\./, '')) {
-        cookies.delete(cookieName, { path: '/', domain: '.' + phpHost })
-      }
-    } catch (e) {
-      // PHP_SSO_URL missing/malformed - the secondary-scope cookie can't be cleared,
-      // but the primary-scope one already was. Log for config debugging.
-      console.warn('[logout] PHP_SSO_URL not a valid URL; skipping host-scoped cookie clear:', e)
-    }
+  // Startup validation guarantees PHP_SSO_COOKIE_NAME is set.
+  const cookieName = env.PHP_SSO_COOKIE_NAME as string
+  const parentDomain = phpCookieDomain()
+  const phpHost = phpHostname()
+
+  // Clear both scopes we set at login time (see /api/login): the parent
+  // domain and the PHP host itself, mirroring how it was written.
+  cookies.delete(cookieName, { path: '/', domain: parentDomain })
+  if (phpHost !== parentDomain.replace(/^\./, '')) {
+    cookies.delete(cookieName, { path: '/', domain: '.' + phpHost })
   }
+
   return json({ ok: true })
 }
