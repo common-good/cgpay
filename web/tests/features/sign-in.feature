@@ -16,14 +16,14 @@ Scenario: Someone runs the app, not signed in
 #  And I see "lnk-reset"
 
 Scenario: A member signs in
-  When I input "Abe One" as "identifier"
+  When I input "Bea Two" as "identifier"
   And I input "k" as "password"
   And I click "btn-signin"
   Then on page "dashboard"
-  And signed in as "Abe"
+  And signed in as "Bea"
 
 Scenario: Someone tries to sign in with a wrong password
-  When I input "Abe One" as "identifier"
+  When I input "Bea Two" as "identifier"
   And I input "badpw" as "password"
   And I click "btn-signin"
   Then I see error "Invalid account ID or password."

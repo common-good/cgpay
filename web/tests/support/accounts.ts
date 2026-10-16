@@ -1,6 +1,6 @@
 // The standard PHP test accounts (makeTestAccounts() in cgmembers admin.inc), by nickname.
 // Scenarios say "Abe", never a uid. identifier is what the sign-in form accepts.
-// Individuals have password k; companies (Cit, Gis) have none.
+// Individuals have password k; companies (Cit, Gis) have none. Abe is the admin; Bea manages Cit; Gis is sponsored and managed by Flo.
 type Acct = { fullName: string, identifier: string, password: string | null }
 
 const list = 'Abe One, Bea Two, Citre, Dee Four, Eli Five, Flo Six, Gisette, Hal Ate, Ida Nine'.split(', ')
