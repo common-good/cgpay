@@ -77,7 +77,7 @@ task :restart do
       #
       # `--node-args="--env-file=..."` (Node 20.6+) loads the shared .env at
       # startup — pm2 doesn't do this itself, and SvelteKit's adapter-node
-      # doesn't either. Without it, DB_*/JWT_SECRET/PHP_SSO_URL etc. are all
+      # doesn't either. Without it, DB_*/PHP_SSO_SECRET etc. are all
       # undefined at runtime and every login 401s.
       #
       # PORT is NOT passed via SSHKit's `env:` hash — confirmed (via `pm2 env`)
