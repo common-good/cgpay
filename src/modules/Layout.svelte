@@ -10,6 +10,7 @@
   import st from'#store.js'
   import u from '#utils.js'
   import c from '#constants.js'
+  import { isHandoffVisit, returnFromHandoff } from '../handoff.js'
 
   /**
    * Layout the standard page.
@@ -21,9 +22,16 @@
   let isNavOpen
 
   function toggleNav() { isNavOpen = !isNavOpen }
-  function goHome() { u.go('home') }
+  function goHome() {
+    if (isHandoffVisit()) returnFromHandoff()
+    else u.go('home')
+  }
   function setViewportHeight() { viewHeight = window.visualViewport.height }
-  function goBack() { if (u.pageUri() == 'tx' && $st.pending) u.undo.update(n => n + 1); else u.goBack() }
+  function goBack() {
+    if (u.pageUri() == 'tx' && $st.pending) u.undo.update(n => n + 1)
+    else if (u.onPage('tx-start') && isHandoffVisit()) returnFromHandoff()
+    else u.goBack()
+  }
 
   u.undo = writable(0)
   st.setSocket(u.socket())

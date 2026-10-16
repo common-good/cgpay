@@ -22,6 +22,7 @@ CGPay is a Progressive Web App (PWA) written in Svelte, which is based on Vite
     - support/: support code for feature tests
     - unit-tests/: tests organized mostly around Svelte modules
 - cache.js: data structure definitions
+- handoff.js: transient dashboard handoff state and return navigation
 - db.js: low-level data manipulation functions
 - store.js: higher-level data management functions
 - utils.js: low-level utility functions
@@ -114,6 +115,10 @@ Deploy branches to the following URLs:
 | `develop` | `dev` | https://cgpay-dev.commongood.earth | cg4.us/pay2 | new1.commongood.earth | dev |
 | `(other)` | `local` | https://localhost:3000 | (none) | localhost | dev or local |
 | `demo` | `staging` | https://cgpay-demo.commongood.earth | cg4.us/demo | new1.commongood.earth | prod |
+
+The node dashboard links camera-enabled transactions to this PWA using
+`CGPAY_PWA_URL`. Set `VITE_CGPAY_DASHBOARD_URL` when building the PWA (see
+`.env.example`) so an expired handoff can send the member to the node dashboard login page.
 
 ### Deployment Checklist
 
