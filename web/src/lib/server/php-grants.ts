@@ -1,6 +1,6 @@
-// Server-to-server client for the PHP /cgpay-grants endpoint.
+// Server-to-server client for the PHP /cgpay/grants endpoint.
 // Uses `callPhp` for URL resolution, shared-secret injection, and error shaping;
-// see cgmembers/rcredits/forms/cgpaygrants.inc for the PHP side.
+// see cgmembers/rcredits/forms/cgpay/grants.inc for the PHP side.
 //
 // `callPhp` throws `PhpCallError` for config/network/malformed-body failures.
 // We let those propagate to the /api handler, which logs + returns 502.
@@ -37,12 +37,12 @@ export type CreateGrantInput = {
 }
 
 export async function listGrants(uid: number): Promise<GrantSummary[]> {
-  const result = await callPhp<{ grants: unknown }>('/cgpay-grants', {
+  const result = await callPhp<{ grants: unknown }>('/cgpay/grants', {
     method: 'GET',
     query: { uid }
   })
-  if (!result.ok) throw new PhpGrantError(`PHP /cgpay-grants list returned ${result.status}`, result.status)
-  if (!Array.isArray(result.data.grants)) throw new Error('PHP /cgpay-grants list: unexpected body')
+  if (!result.ok) throw new PhpGrantError(`PHP /cgpay/grants list returned ${result.status}`, result.status)
+  if (!Array.isArray(result.data.grants)) throw new Error('PHP /cgpay/grants list: unexpected body')
   return result.data.grants as GrantSummary[]
 }
 
@@ -54,7 +54,7 @@ type CreateGrantResponse = {
 }
 
 export async function createGrant(input: CreateGrantInput): Promise<number> {
-  const result = await callPhp<CreateGrantResponse>('/cgpay-grants', {
+  const result = await callPhp<CreateGrantResponse>('/cgpay/grants', {
     method: 'POST',
     body: input
   })
@@ -64,14 +64,14 @@ export async function createGrant(input: CreateGrantInput): Promise<number> {
     const body = result.body as CreateGrantResponse | null
     const msg = (body && typeof body.message === 'string') ? body.message
              : (body && typeof body.error === 'string') ? body.error
-             : `PHP /cgpay-grants create returned ${result.status}`
+             : `PHP /cgpay/grants create returned ${result.status}`
     const fieldErrors = (body && body.errors && typeof body.errors === 'object')
       ? body.errors as Record<string, string>
       : undefined
     throw new PhpGrantError(msg, result.status, fieldErrors)
   }
 
-  if (typeof result.data.id !== 'number') throw new Error('PHP /cgpay-grants create: unexpected body')
+  if (typeof result.data.id !== 'number') throw new Error('PHP /cgpay/grants create: unexpected body')
   return result.data.id
 }
 
