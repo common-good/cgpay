@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 
 // Smoke tests for the Expected Grants pages. These don't require the DB or the
-// PHP /cgpay-grants backend — they exercise the frontend contract only:
+// PHP /cgpay/grants backend — they exercise the frontend contract only:
 // unauthenticated visitors are bounced to /login, the form structure is
 // correct, and the client-side validation prevents empty submits.
 

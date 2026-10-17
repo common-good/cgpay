@@ -1,4 +1,4 @@
-// Server-to-server client for the PHP /cgpay-people-autocomplete endpoint.
+// Server-to-server client for the PHP /cgpay/people-autocomplete endpoint.
 // Uses `callPhp` for URL resolution, shared-secret injection, and error shaping.
 //
 // Used by /api/people-autocomplete (proxied from the browser) to power the
@@ -19,7 +19,7 @@ export type PersonSuggestion = {
 }
 
 export async function autocompletePeople(uid: number, query: string, limit = 20): Promise<PersonSuggestion[]> {
-  const result = await callPhp<{ people: unknown }>('/cgpay-people-autocomplete', {
+  const result = await callPhp<{ people: unknown }>('/cgpay/people-autocomplete', {
     method: 'GET',
     // Not `q`: Drupal reads $_GET['q'] as the page path.
     query: { uid, search: query, limit }

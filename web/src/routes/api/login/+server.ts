@@ -42,7 +42,7 @@ type SsoResponse = {
 
 /**
  * Resolve a user-supplied identifier (account code, username, full name, email,
- * or phone) to a uid via the PHP /cgpay-lookup endpoint. cgmembers owns the
+ * or phone) to a uid via the PHP /cgpay/lookup endpoint. cgmembers owns the
  * matching logic (including the encrypted-email path), so we don't reimplement
  * it here. Returns null if no match — caller still runs checkPassword against
  * DUMMY_HASH for timing parity.
@@ -55,7 +55,7 @@ async function phpLookup(identifier: string): Promise<number | null> {
   }
 
   try {
-    const url = phpUrl('cgpay-lookup')
+    const url = phpUrl('cgpay/lookup')
     dbg('lookup request:', { url, body: { identifier }, tokenLength: secret.length })
     const res = await fetch(url, {
       method: 'POST',
@@ -101,7 +101,7 @@ async function phpSso(uid: number): Promise<SsoResponse | null> {
 
   let res: Response
   try {
-    const url = phpUrl('cgpay-sso')
+    const url = phpUrl('cgpay/sso')
     dbg('sso request:', { url, body: { uid }, tokenLength: secret.length })
     res = await fetch(url, {
       method: 'POST',
@@ -239,7 +239,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress, cookies 
   }
 
   // Identity is now derived from the SSO cookie on every subsequent request
-  // (see +layout.server.ts + /cgpay-whoami). No JWT to return.
+  // (see +layout.server.ts + /cgpay/whoami). No JWT to return.
   return json({
     name: user.name,
     menu: sso?.menu ?? DEFAULT_MENU

@@ -25,14 +25,14 @@ describe('callPhp', () => {
 
   it('throws PhpCallError(not_configured) when PHP_SSO_SECRET is missing', async () => {
     privateEnvState.PHP_SSO_SECRET = ''
-    const err = await callPhp('/cgpay-whoami').catch(e => e)
+    const err = await callPhp('/cgpay/whoami').catch(e => e)
     expect(err).toBeInstanceOf(PhpCallError)
     expect(err.kind).toBe('not_configured')
   })
 
   it('throws PhpCallError(not_configured) when PUBLIC_PHP_BASE_URL is missing', async () => {
     publicEnvState.PUBLIC_PHP_BASE_URL = ''
-    const err = await callPhp('/cgpay-whoami').catch(e => e)
+    const err = await callPhp('/cgpay/whoami').catch(e => e)
     expect(err).toBeInstanceOf(PhpCallError)
     expect(err.kind).toBe('not_configured')
   })
@@ -43,18 +43,18 @@ describe('callPhp', () => {
       calledUrl = url
       return new Response(JSON.stringify({ ok: 1 }), { status: 200 })
     }) as unknown as typeof fetch
-    await callPhp('/cgpay-whoami')
-    expect(calledUrl).toBe('https://demo.example/cg/cgmembers/cgpay-whoami')
+    await callPhp('/cgpay/whoami')
+    expect(calledUrl).toBe('https://demo.example/cg/cgmembers/cgpay/whoami')
   })
 
-  it('resolves cgpay-grants against the same base URL (no separate env var)', async () => {
+  it('resolves cgpay/grants against the same base URL (no separate env var)', async () => {
     let calledUrl = ''
     global.fetch = vi.fn(async (url: string) => {
       calledUrl = url
       return new Response(JSON.stringify({ ok: 1 }), { status: 200 })
     }) as unknown as typeof fetch
-    await callPhp('/cgpay-grants')
-    expect(calledUrl).toBe('https://demo.example/cg/cgmembers/cgpay-grants')
+    await callPhp('/cgpay/grants')
+    expect(calledUrl).toBe('https://demo.example/cg/cgmembers/cgpay/grants')
   })
 
   it('sends the shared-secret header + JSON body on POST', async () => {
@@ -63,7 +63,7 @@ describe('callPhp', () => {
       received = { url, init }
       return new Response(JSON.stringify({ ok: 1 }), { status: 200 })
     }) as unknown as typeof fetch
-    await callPhp('/cgpay-whoami', { method: 'POST', body: { ssid: 'abc' } })
+    await callPhp('/cgpay/whoami', { method: 'POST', body: { ssid: 'abc' } })
     expect(received!.init.method).toBe('POST')
     expect((received!.init.headers as Record<string, string>)['x-cg-internal-token']).toBe('test-secret')
     expect((received!.init.headers as Record<string, string>)['content-type']).toBe('application/json')
@@ -76,11 +76,11 @@ describe('callPhp', () => {
       calledUrl = url
       return new Response(JSON.stringify({ ok: 1 }), { status: 200 })
     }) as unknown as typeof fetch
-    await callPhp('/cgpay-people-autocomplete', {
+    await callPhp('/cgpay/people-autocomplete', {
       method: 'GET',
       query: { uid: 42, search: 'ada', limit: 20 }
     })
-    expect(calledUrl).toBe('https://demo.example/cg/cgmembers/cgpay-people-autocomplete?uid=42&search=ada&limit=20')
+    expect(calledUrl).toBe('https://demo.example/cg/cgmembers/cgpay/people-autocomplete?uid=42&search=ada&limit=20')
   })
 
   it('returns {ok:true, data} on a successful JSON response', async () => {

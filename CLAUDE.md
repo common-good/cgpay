@@ -22,7 +22,7 @@ The modernized member-facing app for Common Good. Runs behind pm2 alongside the 
 ```
 routes/
   +layout.svelte           app-wide navigation, header
-  +layout.server.ts        SSR identity load - calls PHP /cgpay-whoami on every nav
+  +layout.server.ts        SSR identity load - calls PHP /cgpay/whoami on every nav
   +page.svelte             dashboard
   login/                   sign-in page
   grants/                  fiscal-sponsorship grant intake + list
@@ -38,9 +38,9 @@ lib/
     db.ts                  MySQL pool (READ-ONLY user - most reads work directly; writes go via PHP)
     drupal-password.ts     verifies $S$-prefixed Drupal 7 hashes
     auth.ts                JWT sign/verify + Bearer header helper (being retired)
-    php-whoami.ts          server-to-server client for /cgpay-whoami
-    php-grants.ts          server-to-server client for /cgpay-grants
-    php-people.ts          server-to-server client for /cgpay-people-autocomplete
+    php-whoami.ts          server-to-server client for /cgpay/whoami
+    php-grants.ts          server-to-server client for /cgpay/grants
+    php-people.ts          server-to-server client for /cgpay/people-autocomplete
     drive.ts               Google Drive upload for grant agreement PDFs
     rate-limit.ts          in-memory rate limiter for auth endpoints
   components/              shared Svelte components (Brand, etc.)
@@ -51,8 +51,8 @@ lib/
 
 **PHP is the single source of truth for identity.** The two apps share a session via the `SSESS...` cookie scoped to `.commongood.earth` (see `.env` `PHP_COOKIE_DOMAIN`).
 
-- **Login flow:** `/api/login` verifies password against `users.pass` (via `drupal-password.ts`), calls PHP `/cgpay-sso` to create a session, sets the SSO cookie on the browser scoped to both the parent domain and the PHP host.
-- **Identity on every request:** `+layout.server.ts` reads the SSO cookie and calls PHP `/cgpay-whoami` to get `{uid, name, sponsored, menu}`. This runs on every full page load (SSR), but client-side navigation reuses the cached layout data unless something invalidates it (see Common gotchas), so a PHP account switch shows up on the next full load.
+- **Login flow:** `/api/login` verifies password against `users.pass` (via `drupal-password.ts`), calls PHP `/cgpay/sso` to create a session, sets the SSO cookie on the browser scoped to both the parent domain and the PHP host.
+- **Identity on every request:** `+layout.server.ts` reads the SSO cookie and calls PHP `/cgpay/whoami` to get `{uid, name, sponsored, menu}`. This runs on every full page load (SSR), but client-side navigation reuses the cached layout data unless something invalidates it (see Common gotchas), so a PHP account switch shows up on the next full load.
 - **Sign out:** `/api/logout` clears the SSO cookie on both domain scopes.
 
 **Legacy:** a `cg_token` JWT is still stored in localStorage and used by `/api/grants`, `/api/people-autocomplete`, `/api/me/*` for Bearer auth. Being retired in a follow-up - new code should not add JWT usage; new endpoints should use the SSO-cookie path.
@@ -65,11 +65,11 @@ Server-to-server endpoints on cgmembers-frame (all POST, all use `X-CG-Internal-
 
 | Endpoint | Purpose | Client wrapper |
 |---|---|---|
-| `/cgpay-sso` | create session for verified uid | inlined in `api/login/+server.ts` |
-| `/cgpay-lookup` | identifier -> uid resolution | inlined in `api/login/+server.ts` |
-| `/cgpay-whoami` | session -> `{uid, name, sponsored, menu}` | `lib/server/php-whoami.ts` |
-| `/cgpay-grants` | create/update grant record | `lib/server/php-grants.ts` |
-| `/cgpay-people-autocomplete` | grantor typeahead | `lib/server/php-people.ts` |
+| `/cgpay/sso` | create session for verified uid | inlined in `api/login/+server.ts` |
+| `/cgpay/lookup` | identifier -> uid resolution | inlined in `api/login/+server.ts` |
+| `/cgpay/whoami` | session -> `{uid, name, sponsored, menu}` | `lib/server/php-whoami.ts` |
+| `/cgpay/grants` | create/update grant record | `lib/server/php-grants.ts` |
+| `/cgpay/people-autocomplete` | grantor typeahead | `lib/server/php-people.ts` |
 
 When adding a new PHP endpoint: implement the PHP side under `cgmembers/rcredits/forms/cgpay*.inc` and register in `cg-menu.inc`, then add the node client under `web/src/lib/server/php-*.ts`. Use `hash_equals` in PHP for the shared-secret compare (fail-closed on empty).
 
