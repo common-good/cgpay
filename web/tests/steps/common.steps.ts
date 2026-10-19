@@ -19,6 +19,9 @@ When('I select {string} as {string}', async ({ page }, label: string, id: string
 
 When('I go to page {string}', async ({ page }, name: string) => { await page.goto(pagePath(name)) })
 
+// A page on the PHP member site, by its path below PUBLIC_PHP_BASE_URL.
+Then('(I am )on PHP page {string}', async ({ page }, path: string) => { await expect(page).toHaveURL(new RegExp(`/cgmembers/${path}$`), { timeout: 15_000 }) })
+
 Then('I see {string}', async ({ page }, id: string) => { await expect(page.getByTestId(id)).toBeVisible() })
 
 Then('I see text {string}', async ({ page }, text: string) => { await expect(page.getByText(text).first()).toBeVisible() })
