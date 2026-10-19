@@ -37,10 +37,10 @@ lib/
   server/                  server-only code
     db.ts                  MySQL pool (READ-ONLY user - most reads work directly; writes go via PHP)
     drupal-password.ts     verifies $S$-prefixed Drupal 7 hashes
-    auth.ts                JWT sign/verify + Bearer header helper (being retired)
-    php-whoami.ts          server-to-server client for /cgpay-whoami
-    php-grants.ts          server-to-server client for /cgpay-grants
-    php-people.ts          server-to-server client for /cgpay-people-autocomplete
+    auth.ts                cookie auth: reads the SSO cookie and asks PHP who owns it (currentUser, requireUser)
+    php-whoami.ts          server-to-server client for /cgpay/whoami
+    php-grants.ts          server-to-server client for /cgpay/grants
+    php-people.ts          server-to-server client for /cgpay/people-autocomplete
     drive.ts               Google Drive upload for grant agreement PDFs
     rate-limit.ts          in-memory rate limiter for auth endpoints
   components/              shared Svelte components (Brand, etc.)
