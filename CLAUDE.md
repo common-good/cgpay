@@ -99,7 +99,7 @@ Set per environment in `.env` on the deploy target (see [PR #155](https://github
 - `cd web && npm run test:unit` - Vitest unit tests
 - `cd web && npm run test:e2e` - Playwright E2E: runs `bddgen` (compiles Gherkin features), then the plain specs and the Gherkin features. Builds and previews the app itself.
 - `cd web && npm run build` - production build (verifies adapter-node output)
-- Test accounts (non-production PHP side): the standard accounts Abe One, Bea Two, Citre, ... Ida Nine (`.ZPA` ... `.ZPI`). The individual ones have password `k`; the companies (Citre, Gisette) have none.
+- Test accounts (non-production PHP side): the standard accounts Abe One, Bea Two, Citre, ... Ida Nine (`.ZPA` ... `.ZPI`), made by `makeTestAccounts()` in cgmembers-frame `admin/admin.inc`. The individual ones have password `k`; the companies (Citre, Gisette) have none. Abe is an administrator. Bea manages Citre (Abe sells for it). Gisette is a fiscally sponsored company, managed by Flo.
 
 Always run at least `svelte-check` + `npm run build` before opening a PR.
 
@@ -111,6 +111,11 @@ Plain specs (`web/tests/e2e/`) are being replaced gradually by Gherkin features 
 - One worker only (shared test DB, in-memory rate limiter). Scenarios must be independent: set up state in fixtures, never rely on a previous scenario.
 - The Gherkin project is skipped in CI: its `testDb` fixture needs the PHP test endpoint (`testops()` in cgmembers-frame `forms/api.inc`, which refuses to run on production or stage).
 - Scenarios refer to the standard test accounts by first name (Abe, Bea, Cit, ...). These are the PHP accounts `.ZPA`, `.ZPB`, ... (`NEWZPA`...; the same accounts as the legacy app's `K6...` ids). cgmembers-frame's own features use other uids (`.ZZA`...); in cgpay features always use the names.
+- Write a BDD feature test for every new feature, and for existing functionality you touch.
+- Reuse existing steps as much as possible.
+- Avoid steps that match literal text (`I see text "..."`). Refer to a marker for the text instead (a `data-testid`), so the wording can be tweaked without changing the test or its purpose.
+- Test accounts: Bea is an individual account, Citre a company account, Dee a second individual account. Abe is an admin account, used only for admin actions. Gisette (managed by Flo) is the fiscally sponsored company; the other accounts, listed in `web/tests/support/accounts.ts`, are available if needed.
+- Tests should often run from the beginning to the middle of a process, from the middle to the end (or both), rather than start to finish every time. That clarifies the data structure strategy and reduces the number and complexity of tests needed.
 - Group scenarios under the business rule they illustrate with Gherkin's `Rule:` keyword.
 - The legacy PWA's cucumber suite (top-level `tests/`, `npm test` at the repo root) is the model for step vocabulary.
 
