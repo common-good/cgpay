@@ -59,7 +59,7 @@ lib/
 
 **Do not extend node-side password checking.** `drupal-password.ts` verifies only `$S$`-prefixed hashes, because that's all cgmembers uses (per William, 2026-07-06). For any other `pass` format `checkPassword` returns false - intentional, fail-closed. Do not add other Drupal hash formats.
 
-Known gap: `/api/login` verifies the password in node, then `/cgpay-sso` creates the PHP session after checking only that the account is `ok`. So PHP's MFA step and its DB-backed flood control are bypassed (node's rate limiter is in memory and resets on restart). The intended fix is a PHP endpoint that verifies the password and returns a session or "MFA required", leaving node a thin proxy. Once PHP no longer owns login, node should use a modern hash (argon2 or bcrypt, rehashed on login) rather than a port of Drupal's scheme.
+Known gap: `/api/login` verifies the password in node, then `/cgpay/sso` creates the PHP session after checking only that the account is `ok`. So PHP's MFA step and its DB-backed flood control are bypassed (node's rate limiter is in memory and resets on restart). The intended fix is a PHP endpoint that verifies the password and returns a session or "MFA required", leaving node a thin proxy. Once PHP no longer owns login, node should use a modern hash (argon2 or bcrypt, rehashed on login) rather than a port of Drupal's scheme.
 
 ## Working with the PHP side
 
@@ -83,7 +83,7 @@ Set per environment in `.env` on the deploy target (see [PR #155](https://github
 - `DB_HOST` / `DB_USER` / `DB_PASSWORD` / `DB_NAME` - MySQL (read-only user)
 - `PHP_SSO_SECRET` - shared secret with PHP (matches `cgpaySsoSecret` in cgmembers config.json)
 - `PHP_SSO_COOKIE_NAME` - the `SSESS...` cookie name PHP sets
-- `PUBLIC_PHP_BASE_URL` - PHP host base URL (exposed to browser). The `/cgpay-sso` and `/cgpay-grants` URLs and the parent cookie domain (e.g. `.commongood.earth`) are derived from it
+- `PUBLIC_PHP_BASE_URL` - PHP host base URL (exposed to browser). The `/cgpay/sso` and `/cgpay/grants` URLs and the parent cookie domain (e.g. `.commongood.earth`) are derived from it
 
 ## Branch / deploy flow
 
