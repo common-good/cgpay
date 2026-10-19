@@ -12,14 +12,20 @@
   import u from '#utils.js'
   import c from '#constants.js'
   import ScanFake from './ScanFake.svelte'
+  import { isHandoffVisit } from '../handoff.js'
 
   const me = $st.me
   const paying = ($st.intent == 'pay')
+  const handoffVisit = isHandoffVisit()
   let qr, btnPay, payOk
   let qrAction
 
   function scan() { u.go('scan') }
   async function receiveQr() { return await u.generateQr(u.makeQrUrl(u.getMainId($st.me.accountId))) }
+  function typeUrl() {
+    const phpBase = u.api().replace(/api\/?$/, '')
+    return `${phpBase}tx/${paying ? 'pay' : 'charge'}`
+  }
 
   onMount(async () => {
     if ($st.allowShow) [qr, qrAction] = paying ? [me.qr, 'Pay'] : [await receiveQr(), 'Receive']
@@ -47,12 +53,28 @@
     <button class="primary" data-testid="btn-scan" on:click={scan}>
       Scan to {paying ? btnPay : 'Charge'}
     </button>
+    {#if handoffVisit}
+      <a class="secondary" data-testid="btn-type" href={typeUrl()}>
+        Type to {paying ? 'Pay' : 'Charge'}
+      </a>
+    {/if}
   </div>
 </section>
 
 <style lang='stylus'>
   button
     text-transform capitalize
+
+  .bottom
+    display flex
+    gap $s-1
+
+  .bottom > *
+    flex 1
+
+  .secondary
+    cgButtonSecondary()
+    text-align center
 
   h1 
     text-transform capitalize

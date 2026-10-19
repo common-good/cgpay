@@ -4,6 +4,7 @@
   import c from '#constants.js'
   import { onMount } from 'svelte'
   import SubmitCharge from '#modules/SubmitCharge.svelte'
+  import { returnFromHandoff } from '../handoff.js'
 
 // import { encrypt, createMessage, readKey } from 'openpgp'
 // Example with curl: curl -d "actorId=G6VM03&amount=1234.98&created=1672959981&description=test%20food&deviceId=GrfaVyHkxnTf4cxsyIEjkWyNdK0wUoDK153r2LIBoFocvw73T&offline=false&otherId=H6VM0G0NyCBBlUF1qWNZ2k&proof=d0e4eaeb4e9c1dc9d80bef9eeb3ad1342fd24997156cb57575479bd3ac19d00b" -X POST -H "Content-type: application/x-www-form-urlencoded" 'https://demo.commongood.earth/api/transactions'
@@ -37,13 +38,13 @@
 
 	u.undo.subscribe(askUndo) // receive notification of Back click (see Layout.svelte)
 
-  function goHome() { u.go('home') }
+  function goHome() { returnFromHandoff() }
 
   function askUndo() {
     if (!gotTx) return // Layout.svelte updates u.undo upon arrival. Ignore.
     st.setTimeout(null)
     u.yesno('Reverse the transaction?', 
-      () => { u.hide(); st.undoTx(); u.goHome('The transaction has been reversed.') },
+      () => { u.hide(); st.undoTx(); returnFromHandoff('The transaction has been reversed.') },
       () => { u.hide(); st.setTimeout(c.txTimeout)
     })
   }
