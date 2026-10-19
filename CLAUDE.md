@@ -97,11 +97,22 @@ Set per environment in `.env` on the deploy target (see [PR #155](https://github
 
 - `cd web && npm run check` - `svelte-check` type check
 - `cd web && npm run test:unit` - Vitest unit tests
-- `cd web && npm run test:e2e` - Playwright E2E (requires a running dev server)
+- `cd web && npm run test:e2e` - Playwright E2E: runs `bddgen` (compiles Gherkin features), then the plain specs and the Gherkin features. Builds and previews the app itself.
 - `cd web && npm run build` - production build (verifies adapter-node output)
 - Test accounts (non-production PHP side): the standard accounts Abe One, Bea Two, Citre, ... Ida Nine (`.ZPA` ... `.ZPI`). The individual ones have password `k`; the companies (Citre, Gisette) have none.
 
 Always run at least `svelte-check` + `npm run build` before opening a PR.
+
+### E2E: write new tests as Gherkin features
+
+Plain specs (`web/tests/e2e/`) are being replaced gradually by Gherkin features (`web/tests/features/`, steps in `web/tests/steps/`) run with `playwright-bdd`. Layout, commands, and test-endpoint setup are in `web/tests/README.md`. The essentials:
+
+- Import `Given`/`When`/`Then` from `tests/steps/fixtures.ts`, not from `@playwright/test`. Run `npm run bddgen` after editing a feature or step.
+- One worker only (shared test DB, in-memory rate limiter). Scenarios must be independent: set up state in fixtures, never rely on a previous scenario.
+- The Gherkin project is skipped in CI: its `testDb` fixture needs the PHP test endpoint (`testops()` in cgmembers-frame `forms/api.inc`, which refuses to run on production or stage).
+- Scenarios refer to the standard test accounts by first name (Abe, Bea, Cit, ...). These are the PHP accounts `.ZPA`, `.ZPB`, ... (`NEWZPA`...; the same accounts as the legacy app's `K6...` ids). cgmembers-frame's own features use other uids (`.ZZA`...); in cgpay features always use the names.
+- Group scenarios under the business rule they illustrate with Gherkin's `Rule:` keyword.
+- The legacy PWA's cucumber suite (top-level `tests/`, `npm test` at the repo root) is the model for step vocabulary.
 
 ## Conventions
 
