@@ -1,6 +1,6 @@
-// Server-to-server call to cgmembers /cgpay-whoami.
+// Server-to-server call to cgmembers /cgpay/whoami.
 // Given a session id (the value of the SSESS... cookie), return who owns it.
-// See cgmembers/rcredits/forms/cgpaywhoami.inc for the PHP side.
+// See cgmembers/rcredits/forms/cgpay/whoami.inc for the PHP side.
 
 import { callPhp, PhpCallError } from './php-client'
 
@@ -29,7 +29,7 @@ export async function phpWhoami(ssid: string | undefined | null): Promise<Whoami
   if (!ssid) return { ok: false, reason: 'no_session' }
 
   try {
-    const result = await callPhp<WhoamiRaw>('/cgpay-whoami', {
+    const result = await callPhp<WhoamiRaw>('/cgpay/whoami', {
       method: 'POST',
       body: { ssid }
     })

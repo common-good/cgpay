@@ -67,22 +67,22 @@ describe('derived PHP helpers', () => {
   beforeEach(() => { fillRequired() })
 
   it('phpEndpointUrl joins base + endpoint without losing the base path', () => {
-    expect(phpEndpointUrl('cgpay-whoami')).toBe('http://localhost/cg/cgmembers/cgpay-whoami')
+    expect(phpEndpointUrl('cgpay/whoami')).toBe('http://localhost/cg/cgmembers/cgpay/whoami')
   })
 
   it('phpEndpointUrl tolerates a leading slash on the endpoint', () => {
-    expect(phpEndpointUrl('/cgpay-whoami')).toBe('http://localhost/cg/cgmembers/cgpay-whoami')
+    expect(phpEndpointUrl('/cgpay/whoami')).toBe('http://localhost/cg/cgmembers/cgpay/whoami')
   })
 
   it('phpEndpointUrl tolerates a trailing slash on the base URL', () => {
     publicEnvState.PUBLIC_PHP_BASE_URL = 'https://pay-test.commongood.earth/'
-    expect(phpEndpointUrl('cgpay-whoami')).toBe('https://pay-test.commongood.earth/cgpay-whoami')
+    expect(phpEndpointUrl('cgpay/whoami')).toBe('https://pay-test.commongood.earth/cgpay/whoami')
   })
 
   it('phpSsoUrl + phpGrantsUrl use the same base', () => {
     publicEnvState.PUBLIC_PHP_BASE_URL = 'https://pay-test.commongood.earth'
-    expect(phpSsoUrl()).toBe('https://pay-test.commongood.earth/cgpay-sso')
-    expect(phpGrantsUrl()).toBe('https://pay-test.commongood.earth/cgpay-grants')
+    expect(phpSsoUrl()).toBe('https://pay-test.commongood.earth/cgpay/sso')
+    expect(phpGrantsUrl()).toBe('https://pay-test.commongood.earth/cgpay/grants')
   })
 
   it('phpCookieDomain derives the parent domain', () => {
