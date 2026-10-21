@@ -29,4 +29,6 @@ Scenario: A sponsee reports a check grant and submits it without check details
   | Gina Grantor | 1000   | Check | 1 Main St | Boston | MA    | 02108 |
   And click "btn-report"
   Then on page "grants"
-  And see "Gina Grantor"
+  And these "grants" rows:
+  | uid | amount | by    | ckNum | ckDate |
+  | Gis | 1000   | check |       |        |

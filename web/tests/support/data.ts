@@ -6,7 +6,7 @@ import { resolve } from './magic'
 // Data in the test database (through the PHP test endpoint, see test-db.ts) and scenario variables.
 type Rows = Record<string, unknown>[]
 
-const readers: Record<string, (app: App) => Promise<Rows>> = { txs: app => app.testDb.txs() }
+const readers: Record<string, (app: App) => Promise<Rows>> = { grants: app => app.testDb.rows('grants'), txs: app => app.testDb.rows('txs') }
 const writers: Record<string, (app: App, rows: Rows) => Promise<unknown>> = { users: (app, rows) => app.testDb.updateUsers(rows) }
 
 async function read(app: App, name: string): Promise<Rows> {
@@ -36,13 +36,13 @@ export default {
     app.vars.set(name, tableData(table, shape, app, { nicknames: false }))
   },
 
-  /** The app has this many records ("txs" only, so far). */
+  /** The app has this many records ("txs" and "grants", so far). */
   async soCount(app: App, name: string, n: number) {
     const got = (await read(app, name)).length
     if (got !== n) throw new Error(`count "${name}" is ${n}: got ${got}.`)
   },
 
-  /** The app has all of these records (and maybe more), comparing only the columns the table lists ("txs" only, so far). */
+  /** The app has all of these records (and maybe more), comparing only the columns the table lists ("txs" and "grants", so far). */
   async soThese(app: App, name: string, table: { raw(): string[][] }) {
     const problems = rowProblems(await read(app, name), tableData(table, 'rows', app) as Rows, app)
     if (problems.length) throw new Error(`these "${name}" rows: ${problems.join('; ')}`)
