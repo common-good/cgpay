@@ -1,6 +1,9 @@
 import { defineConfig, devices } from '@playwright/test'
 import { defineBddProject } from 'playwright-bdd'
 
+// The PHP server runs in this time zone; magic dates in the tests (%now0, %ymd, ...) must agree with it wherever the tests run.
+process.env.TZ = 'America/New_York'
+
 // Always called, so `bddgen` finds its config even when the project is skipped.
 const bddProject = defineBddProject({
   name: 'bdd',
