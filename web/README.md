@@ -1,19 +1,19 @@
 # cgpay/web
 
-SvelteKit subapp that proves out the Node + Svelte + MariaDB + JWT stack against the
+SvelteKit subapp that proves out the Node + Svelte + MariaDB stack against the
 existing Drupal `users` table. First milestone of the broader PHP → Svelte migration.
 
 ## What's here
 
 | Path | What |
 |---|---|
-| `src/routes/api/login/+server.ts` | `POST /api/login` — validates against `users.pass` (Drupal phpass), issues a JWT. Rate-limited; timing-constant. |
-| `src/routes/api/me/balance/+server.ts` | `GET /api/me/balance` — bearer-auth, returns `users.balance`. |
+| `src/routes/api/login/+server.ts` | `POST /api/login` — validates against `users.pass` (Drupal phpass), then has PHP create the session (`/cgpay-sso`). Rate-limited; timing-constant. |
+| `src/routes/api/me/balance/+server.ts` | `GET /api/me/balance` — signed-in user's `users.balance`. |
 | `src/routes/login/+page.svelte` | Login form. |
-| `src/routes/+page.svelte` | Dashboard: shows balance, redirects to `/login` if no token. |
-| `src/lib/server/drupal-password.ts` | Port of `cgmembers/includes/password.inc` — handles `$S$`, `$P$`, `$H$`, `U$` prefixes. |
+| `src/routes/+page.svelte` | Dashboard: shows balance, redirects to `/login` if not signed in. |
+| `src/lib/server/drupal-password.ts` | Port of `cgmembers/includes/password.inc` — verifies `$S$` hashes only. |
 | `src/lib/server/db.ts` | `mysql2/promise` connection pool, env-driven. |
-| `src/lib/server/auth.ts` | JWT sign/verify; refuses to boot without a 32+ char `JWT_SECRET`. |
+| `src/lib/server/auth.ts` | Cookie auth: reads the SSO cookie and asks PHP who owns it. |
 | `src/lib/server/rate-limit.ts` | Minimal in-memory rate limiter (move to Redis before multi-instance). |
 | `src/routes/preview/...` | UI-only design previews. Use placeholder data; no auth required. |
 
@@ -21,7 +21,7 @@ existing Drupal `users` table. First milestone of the broader PHP → Svelte mig
 
 ```sh
 cp .env.example .env
-# fill in JWT_SECRET only (any string >= 32 chars is fine for browsing UI)
+# fill in every value (the app refuses to boot if a required one is blank)
 npm install
 npm run dev
 ```
@@ -31,11 +31,10 @@ design without a database.
 
 ## Running end-to-end against staging
 
-To actually log in and read a real balance, you need three things:
+To actually log in and read a real balance, you need two things:
 
 1. **Read-only DB user** on staging's MariaDB.
 2. **A test member account** to log in as.
-3. **JWT secret** for token signing.
 
 ### Step 1 — SSH tunnel to staging's MariaDB
 
@@ -61,7 +60,9 @@ DB_PORT=3307
 DB_USER=<DB_NAME>_ro      # read-only user for now
 DB_PASSWORD=…
 DB_NAME=…                 # test, dev, staging, demo, beta, main, etc.
-JWT_SECRET=$(openssl rand -base64 48)
+PHP_SSO_SECRET=…          # same as cgpaySsoSecret in the cgmembers config.json
+PHP_SSO_COOKIE_NAME=…     # the SESS... cookie name PHP sets
+PUBLIC_PHP_BASE_URL=…     # PHP host base URL
 ```
 
 ### Step 3 — Run
@@ -111,14 +112,14 @@ PORT=3000 node build
 ### B. Any Node host (Render, Fly, Railway, Vercel-with-node-build, etc.)
 
 Just `npm run build`; entry point is `build/index.js`. Set the same env vars you'd use
-locally (DB_* + JWT_SECRET).
+locally (see `.env.example`).
 
 ### Endpoints currently exposed
 
 | Method | Path | What | Status |
 |---|---|---|---|
-| `POST` | `/api/login` | Username + password → JWT | Phase 1 — production-ready |
-| `GET`  | `/api/me/balance` | Balance for JWT subject | Phase 1 — production-ready |
+| `POST` | `/api/login` | Username + password → SSO session cookie | Phase 1 — production-ready |
+| `GET`  | `/api/me/balance` | Balance for the signed-in user | Phase 1 — production-ready |
 | `GET`  | `/api/me/info` | Balance + recent transactions + pending invoices in one call | Phase 2 — queries match documented schema, awaiting verification against real data |
 
 ## Security notes
@@ -127,13 +128,13 @@ locally (DB_* + JWT_SECRET).
 - Login is rate-limited (5 attempts / 60s rolling window per IP; 5-minute lockout after).
 - Password verification is timing-constant (we always run the hash, even when the
   username doesn't exist, to avoid leaking which usernames are valid).
-- `JWT_SECRET` must be at least 32 chars or the app refuses to start.
+- The app refuses to start if any required env var is missing (see `.env.example`).
 - `.env` is gitignored; commit `.env.example` only.
 
 ## Known gaps before production
 
 - Rate limiter is in-memory — move to Redis or use a shared cache before scaling out.
-- No refresh tokens; JWT expires after 8h and the user re-logs in.
-- No CSRF; the API expects a bearer token in `Authorization`, not a cookie.
+- Session lifetime is PHP's; node has no refresh logic.
+- The API authenticates with the SSO session cookie, not a bearer token, so CSRF matters; the only protection is SvelteKit's Origin check and the cookie's SameSite setting.
 - `users.balance` is read as a JS Number (precise up to 2^53). Switch to a Decimal type
   on the wire if balances ever exceed that.
