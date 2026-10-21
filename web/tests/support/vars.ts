@@ -1,4 +1,5 @@
 import { isBuiltInName, resolve, type MagicCtx } from './magic'
+import { tableData, type Shape } from './table'
 
 // Scenario variables: defined with 'var "name" is ...' and used as %name (see magic.ts).
 // Each scenario gets a fresh Vars, so nothing leaks from one scenario to the next.
@@ -32,6 +33,11 @@ export class Vars {
  */
 export function setVar(app: MagicCtx, name: string, value: unknown) {
   app.vars.set(name, resolve(value, undefined, app, { nicknames: false }))
+}
+
+/** Define a variable from a table, read in the given shape (see table.ts). Nicknames wait until the variable is used. */
+export function setVarTable(app: MagicCtx, name: string, table: { raw(): string[][] }, shape: Shape) {
+  app.vars.set(name, tableData(table, shape, app, { nicknames: false }))
 }
 
 /** The value of the {value} part of a step: a quoted string, a number, or a JSON array or object. */

@@ -8,7 +8,8 @@ process.env.TZ = 'America/New_York'
 const bddProject = defineBddProject({
   name: 'bdd',
   features: 'tests/features/**/*.feature',
-  steps: 'tests/steps/**/*.ts'
+  steps: 'tests/steps/**/*.ts',
+  matchKeywords: true // the same step text can mean setup/action after Given and When, and a check after Then
 })
 
 // E2E tests hit the running SvelteKit app in a real browser. We spin up
