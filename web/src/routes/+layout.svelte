@@ -128,10 +128,13 @@
     background: var(--cg-navy);
     color: var(--cg-on-navy);
     border-bottom: none;
+    flex-wrap: wrap;
   }
   .nav-links {
     list-style: none; padding: 0; margin: 0;
     display: flex; gap: 1.5rem; flex: 1;
+    flex-wrap: wrap;
+    min-width: 0;
   }
   .nav-links a {
     color: var(--cg-on-navy-muted);
@@ -190,4 +193,21 @@
   }
   .app-version .ver-sep { margin: 0 0.35rem; opacity: 0.5; }
   .app-version .ver-branch { color: var(--cg-text); font-weight: 500; }
+
+  /* Phone-width tweaks: tighten the header so brand + nav + account fit on
+     narrow screens without the right side running off (per cgpay #183). */
+  @media (max-width: 640px) {
+    .topnav {
+      gap: 0.75rem;
+      padding: 0.7rem 1rem;
+    }
+    .nav-links {
+      gap: 0.9rem;
+      order: 3;
+      flex-basis: 100%;
+    }
+    .account { gap: 0.6rem; margin-left: auto; }
+    .hi { display: none; }
+    .ghost { padding: 0.3rem 0.7rem; }
+  }
 </style>

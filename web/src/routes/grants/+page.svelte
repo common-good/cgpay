@@ -157,9 +157,9 @@
 
   .table-wrap {
     background: var(--cg-surface); border: 1px solid var(--cg-border);
-    border-radius: var(--cg-radius); overflow: hidden;
+    border-radius: var(--cg-radius); overflow-x: auto;
   }
-  table { width: 100%; border-collapse: collapse; }
+  table { width: 100%; border-collapse: collapse; min-width: 480px; }
   th, td { padding: 0.75rem 1rem; text-align: left; font-size: 0.9rem; }
   th { background: var(--cg-bg); font-weight: 600; color: var(--cg-text); font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.04em; }
   tbody tr { border-top: 1px solid var(--cg-border); }
@@ -172,4 +172,18 @@
   .pill-green { background: #dcfce7; color: #166534; }
   .pill-blue  { background: #dbeafe; color: #1e40af; }
   .pill-amber { background: #fef3c7; color: #92400e; }
+
+  /* Phone-width tweaks (#183): stack the header and tighten padding so the
+     Report-Grant action sits under the heading instead of crowding it off
+     the right edge. The table itself scrolls horizontally. */
+  @media (max-width: 640px) {
+    .container { padding: 1.25rem 1rem 2.5rem; }
+    header {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.75rem;
+    }
+    .header-actions { justify-content: flex-start; }
+    th, td { padding: 0.6rem 0.75rem; }
+  }
 </style>

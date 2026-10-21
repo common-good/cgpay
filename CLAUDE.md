@@ -37,7 +37,7 @@ lib/
   server/                  server-only code
     db.ts                  MySQL pool (READ-ONLY user - most reads work directly; writes go via PHP)
     drupal-password.ts     verifies $S$-prefixed Drupal 7 hashes
-    auth.ts                JWT sign/verify + Bearer header helper (being retired)
+    auth.ts                cookie auth: reads the SSO cookie and asks PHP who owns it (currentUser, requireUser)
     php-whoami.ts          server-to-server client for /cgpay-whoami
     php-grants.ts          server-to-server client for /cgpay-grants
     php-people.ts          server-to-server client for /cgpay-people-autocomplete
@@ -49,13 +49,13 @@ lib/
 
 ## Auth model
 
-**PHP is the single source of truth for identity.** The two apps share a session via the `SSESS...` cookie scoped to `.commongood.earth` (see `.env` `PHP_COOKIE_DOMAIN`).
+**PHP is the single source of truth for identity.** The two apps share a session via the `SSESS...` cookie scoped to `.commongood.earth` (derived from `PUBLIC_PHP_BASE_URL`; see `lib/server/env.ts`).
 
 - **Login flow:** `/api/login` verifies password against `users.pass` (via `drupal-password.ts`), calls PHP `/cgpay-sso` to create a session, sets the SSO cookie on the browser scoped to both the parent domain and the PHP host.
 - **Identity on every request:** `+layout.server.ts` reads the SSO cookie and calls PHP `/cgpay-whoami` to get `{uid, name, sponsored, menu}`. This runs on every full page load (SSR), but client-side navigation reuses the cached layout data unless something invalidates it (see Common gotchas), so a PHP account switch shows up on the next full load.
 - **Sign out:** `/api/logout` clears the SSO cookie on both domain scopes.
 
-**Legacy:** a `cg_token` JWT is still stored in localStorage and used by `/api/grants`, `/api/people-autocomplete`, `/api/me/*` for Bearer auth. Being retired in a follow-up - new code should not add JWT usage; new endpoints should use the SSO-cookie path.
+**No JWT:** endpoints authenticate with the SSO cookie. Use `requireUser(cookies)` (401 when signed out) or `currentUser(cookies)` (null when signed out) from `lib/server/auth.ts`.
 
 **Do not extend node-side password checking.** `drupal-password.ts` verifies only `$S$`-prefixed hashes, because that's all cgmembers uses (per William, 2026-07-06). For any other `pass` format `checkPassword` returns false - intentional, fail-closed. Do not add other Drupal hash formats.
 
@@ -81,12 +81,9 @@ Set per environment in `.env` on the deploy target (see [PR #155](https://github
 
 - `PORT` - pm2 port (per environment, e.g. 3001 for test)
 - `DB_HOST` / `DB_USER` / `DB_PASSWORD` / `DB_NAME` - MySQL (read-only user)
-- `JWT_SECRET` - signs `cg_token`
-- `PHP_SSO_URL` - `https://<phphost>/cgpay-sso`
 - `PHP_SSO_SECRET` - shared secret with PHP (matches `cgpaySsoSecret` in cgmembers config.json)
-- `PHP_COOKIE_DOMAIN` - `.commongood.earth`
 - `PHP_SSO_COOKIE_NAME` - the `SSESS...` cookie name PHP sets
-- `PUBLIC_PHP_BASE_URL` - PHP host base URL (exposed to browser)
+- `PUBLIC_PHP_BASE_URL` - PHP host base URL (exposed to browser). The `/cgpay-sso` and `/cgpay-grants` URLs and the parent cookie domain (e.g. `.commongood.earth`) are derived from it
 
 ## Branch / deploy flow
 
@@ -116,6 +113,7 @@ Plain specs (`web/tests/e2e/`) are being replaced gradually by Gherkin features 
 - Scenarios refer to the standard test accounts by first name (Abe, Bea, Cit, ...). These are the PHP accounts `.ZPA`, `.ZPB`, ... (`NEWZPA`...; the same accounts as the legacy app's `K6...` ids). cgmembers-frame's own features use other uids (`.ZZA`...); in cgpay features always use the names.
 - Write a BDD feature test for every new feature, and for existing functionality you touch.
 - Reuse existing steps as much as possible.
+- Avoid steps that match literal text (`I see text "..."`). Refer to a marker for the text instead (a `data-testid`), so the wording can be tweaked without changing the test or its purpose.
 - Test accounts: Bea is an individual account, Citre a company account, Dee a second individual account. Abe is an admin account, used only for admin actions. Gisette (managed by Flo) is the fiscally sponsored company; the other accounts, listed in `web/tests/support/accounts.ts`, are available if needed.
 - Tests should often run from the beginning to the middle of a process, from the middle to the end (or both), rather than start to finish every time. That clarifies the data structure strategy and reduces the number and complexity of tests needed.
 - Group scenarios under the business rule they illustrate with Gherkin's `Rule:` keyword.

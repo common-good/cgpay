@@ -30,8 +30,8 @@ export type CreateGrantInput = {
   city?: string
   state?: number
   zip?: string
-  ckNum?: string   // required when by === 'check'
-  ckDate?: string  // required when by === 'check'; ISO date string or anything strtotime-parseable
+  ckNum?: string   // admin-only; required when an admin reports a check grant
+  ckDate?: string  // admin-only; required with ckNum; ISO date string or anything strtotime-parseable
   driveFileId?: string // Google Drive file id for the grant agreement PDF (PR B)
   grantorPid?: number  // when the user picks an existing grantor from the autocomplete
 }

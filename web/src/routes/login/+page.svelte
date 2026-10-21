@@ -254,4 +254,13 @@
     text-decoration: none;
   }
   .help-link:hover { color: var(--cg-green); text-decoration: underline; }
+
+  /* Phone-width tweaks (#183): tighten card padding and the outer page gutter
+     so the login card doesn't crowd the edges of a small device. */
+  @media (max-width: 420px) {
+    .page { padding: 1.25rem 0.75rem; }
+    .card-top { padding: 1.25rem 1.25rem 1rem; }
+    .card-body { padding: 1.25rem 1.25rem 1.25rem; }
+    h1 { font-size: 1.35rem; }
+  }
 </style>

@@ -30,7 +30,7 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] }
     },
     // Skipped in CI: the testDb fixture needs the PHP test endpoint (local WAMP), which CI lacks.
-    // Uses localhost, not 127.0.0.1: a signed-in flow needs the SSO cookie, whose domain (PHP_COOKIE_DOMAIN) is 'localhost' locally.
+    // Uses localhost, not 127.0.0.1: a signed-in flow needs the SSO cookie, whose domain (derived from PUBLIC_PHP_BASE_URL) is 'localhost' locally.
     ...(process.env.CI ? [] : [{ ...bddProject, use: { ...devices['Desktop Chrome'], baseURL: process.env.E2E_BASE_URL ?? 'http://localhost:4173' } }])
   ],
   webServer: {
@@ -42,7 +42,10 @@ export default defineConfig({
     url: 'http://127.0.0.1:4173',
     reuseExistingServer: !process.env.CI,
     // The BDD sign-in scenarios exceed the login limit of 5 attempts per minute.
-    env: { E2E_RATE_LIMIT_MAX: '1000' },
+    env: {
+      E2E_RATE_LIMIT_MAX: '1000',
+      CGPAY_PWA_URL: 'http://localhost:3000'
+    },
     timeout: 120_000,
     stdout: 'pipe',
     stderr: 'pipe'

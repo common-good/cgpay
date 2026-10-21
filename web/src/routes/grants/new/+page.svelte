@@ -19,7 +19,12 @@
   let stateCode = $state('')
   let zip = $state('')
 
-  // Check-specific fields (per William 2026-08-04): only required when by === 'check'.
+  // Check-specific fields are admin-only (per William 2026-10-09, cgpay #180).
+  // A sponsee reporting an expected check grant doesn't have the check number
+  // or date yet - the admin fills them in when the check arrives. The form
+  // hides these inputs for non-admin callers; PHP's cgpayGrantsParseFlds no
+  // longer requires them for check-type grants.
+  const isAdmin = $derived(!!data.user?.admin)
   let ckNum = $state('')
   let ckDate = $state('')
 
@@ -110,14 +115,14 @@
     && city.trim().length > 0
     && stateCode.trim().length > 0 && Number.isFinite(stateNum) && stateNum > 0
     && zip.trim().length > 0
-    && (by !== 'check' || (ckNum.trim().length > 0 && ckDate.trim().length > 0))
+    && (by !== 'check' || !isAdmin || (ckNum.trim().length > 0 && ckDate.trim().length > 0))
   )
   // Mirrors canSubmit so a disabled button says why.
   const missing = $derived([
     !fullName.trim() && 'grantor name',
     !(Number.isFinite(amountNum) && amountNum > 0) && 'amount',
-    by === 'check' && !ckNum.trim() && 'check number',
-    by === 'check' && !ckDate.trim() && 'check date',
+    by === 'check' && isAdmin && !ckNum.trim() && 'check number',
+    by === 'check' && isAdmin && !ckDate.trim() && 'check date',
     !address.trim() && 'street address',
     !city.trim() && 'city',
     !(Number.isFinite(stateNum) && stateNum > 0) && 'state',
@@ -141,7 +146,7 @@
     if (stateCode.trim() && Number.isFinite(Number(stateCode))) {
       payload.state = Number(stateCode)
     }
-    if (by === 'check') {
+    if (by === 'check' && isAdmin) {
       payload.ckNum = ckNum.trim()
       payload.ckDate = ckDate.trim()
     }
@@ -239,7 +244,7 @@
             <div class="field span-2" class:has-err={fe('fullName')}>
               <label for="grantor">Grantor Name <span class="req">*</span></label>
               <div class="autocomplete">
-                <input id="grantor" type="text" value={fullName}
+                <input id="grantor" data-testid="grantor" type="text" value={fullName}
                   oninput={onGrantorInput}
                   onkeydown={onGrantorKeydown}
                   onblur={onGrantorBlur}
@@ -268,13 +273,13 @@
 
             <div class="field" class:has-err={fe('amount')}>
               <label for="amount">Expected Amount <span class="req">*</span></label>
-              <div class="input-wrap"><span class="prefix">$</span><input id="amount" type="text" inputmode="decimal" bind:value={amount} placeholder="25,000.00" aria-invalid={!!fe('amount')} /></div>
+              <div class="input-wrap"><span class="prefix">$</span><input id="amount" data-testid="amount" type="text" inputmode="decimal" bind:value={amount} placeholder="25,000.00" aria-invalid={!!fe('amount')} /></div>
               {#if fe('amount')}<span class="field-err">{fe('amount')}</span>{/if}
             </div>
 
             <div class="field" class:has-err={fe('by')}>
               <label for="by">Payment Method <span class="req">*</span></label>
-              <select id="by" bind:value={by} aria-invalid={!!fe('by')}>
+              <select id="by" data-testid="by" bind:value={by} aria-invalid={!!fe('by')}>
                 <option value="ach">ACH</option>
                 <option value="check">Check</option>
                 <option value="wire">Wire</option>
@@ -282,15 +287,15 @@
               {#if fe('by')}<span class="field-err">{fe('by')}</span>{/if}
             </div>
 
-            {#if by === 'check'}
+            {#if by === 'check' && isAdmin}
               <div class="field" class:has-err={fe('ckNum')}>
                 <label for="ckNum">Check Number <span class="req">*</span></label>
-                <input id="ckNum" type="text" bind:value={ckNum} placeholder="e.g. 1234" autocomplete="off" aria-invalid={!!fe('ckNum')} />
+                <input id="ckNum" data-testid="ckNum" type="text" bind:value={ckNum} placeholder="e.g. 1234" autocomplete="off" aria-invalid={!!fe('ckNum')} />
                 {#if fe('ckNum')}<span class="field-err">{fe('ckNum')}</span>{/if}
               </div>
               <div class="field" class:has-err={fe('ckDate')}>
                 <label for="ckDate">Check Date <span class="req">*</span></label>
-                <input id="ckDate" type="date" bind:value={ckDate} autocomplete="off" aria-invalid={!!fe('ckDate')} />
+                <input id="ckDate" data-testid="ckDate" type="date" bind:value={ckDate} autocomplete="off" aria-invalid={!!fe('ckDate')} />
                 {#if fe('ckDate')}<span class="field-err">{fe('ckDate')}</span>{/if}
               </div>
             {/if}
@@ -313,17 +318,17 @@
           <div class="grid-2">
             <div class="field span-2" class:has-err={fe('address')}>
               <label for="address">Street Address <span class="req">*</span></label>
-              <input id="address" type="text" bind:value={address} autocomplete="off" aria-invalid={!!fe('address')} />
+              <input id="address" data-testid="address" type="text" bind:value={address} autocomplete="off" aria-invalid={!!fe('address')} />
               {#if fe('address')}<span class="field-err">{fe('address')}</span>{/if}
             </div>
             <div class="field" class:has-err={fe('city')}>
               <label for="city">City <span class="req">*</span></label>
-              <input id="city" type="text" bind:value={city} autocomplete="off" aria-invalid={!!fe('city')} />
+              <input id="city" data-testid="city" type="text" bind:value={city} autocomplete="off" aria-invalid={!!fe('city')} />
               {#if fe('city')}<span class="field-err">{fe('city')}</span>{/if}
             </div>
             <div class="field" class:has-err={fe('state')}>
               <label for="state">State <span class="req">*</span></label>
-              <select id="state" bind:value={stateCode} aria-invalid={!!fe('state')}>
+              <select id="state" data-testid="state" bind:value={stateCode} aria-invalid={!!fe('state')}>
                 <option value="">Select…</option>
                 {#each data.states as s}
                   <option value={String(s.id)}>{s.abbrev}</option>
@@ -333,7 +338,7 @@
             </div>
             <div class="field" class:has-err={fe('zip')}>
               <label for="zip">ZIP <span class="req">*</span></label>
-              <input id="zip" type="text" bind:value={zip} autocomplete="off" aria-invalid={!!fe('zip')} />
+              <input id="zip" data-testid="zip" type="text" bind:value={zip} autocomplete="off" aria-invalid={!!fe('zip')} />
               {#if fe('zip')}<span class="field-err">{fe('zip')}</span>{/if}
             </div>
             <div class="field" class:has-err={fe('email')}>
@@ -354,7 +359,7 @@
             <span class="submit-hint">Still needed: {missing.join(', ')}</span>
           {/if}
           <a class="ghost" href="/grants">Cancel</a>
-          <button class="primary" type="submit" disabled={!canSubmit}>
+          <button class="primary" type="submit" data-testid="btn-report" disabled={!canSubmit}>
             {submitting ? 'Saving…' : 'Report Grant'}
           </button>
         </div>
@@ -493,4 +498,25 @@
     border-radius: var(--cg-radius-sm); font-size: 0.9rem; font-weight: 500; cursor: pointer;
   }
   .primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* Phone-width tweaks (#183): tighten the container and form-card so the
+     content doesn't run off the right edge. Form-footer buttons go full-width
+     so they're reachable with a thumb. */
+  @media (max-width: 560px) {
+    .container { padding: 1.25rem 1rem 2.5rem; }
+    .form-card { padding: 1.25rem; }
+    .form-footer {
+      flex-direction: column-reverse;
+      align-items: stretch;
+      gap: 0.6rem;
+    }
+    .form-footer .ghost,
+    .form-footer .primary {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      text-align: center;
+      justify-content: center;
+    }
+    .submit-hint { margin-right: 0; text-align: center; }
+  }
 </style>
