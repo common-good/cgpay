@@ -13,7 +13,7 @@
     <div class="card-body">
       <h1>Check your email</h1>
       <p>We just sent you a message with a 6-digit code. Enter the code on the verification page to finish setting up your account.</p>
-      <p class="muted">The verification page lands in a later release (KAN-33). For now, this screen confirms the sign-up form reached the server.</p>
+      <p class="muted">The code-entry page is in the next release. For now, this screen confirms the sign-up form reached the server.</p>
       <div class="foot">
         <a class="inline-link" href="/login">Back to sign in</a>
       </div>

@@ -1,4 +1,4 @@
-// POST /api/signup - stubbed until the PHP /cgpay-signup endpoint lands (KAN-31).
+// POST /api/signup - stubbed until the PHP /cgpay-signup endpoint lands.
 // The field names and response shape match the scoping doc so swapping the
 // stub for the real PHP call is a one-file change.
 
@@ -32,7 +32,7 @@ export const POST: RequestHandler = async ({ request }) => {
     return json({ errors: errs, message: 'Please fix the errors above.' }, { status: 400 })
   }
 
-  // TODO (KAN-31): swap for a real call to PHP /cgpay-signup once that endpoint ships.
+  // TODO: swap for a real call to PHP /cgpay-signup once that endpoint ships.
   // Expected response shape per the scoping doc: {uid, status: 'verify_email', qid}.
   // For now, log the submission so a local dev run proves end-to-end wiring and return a stubbed success.
   console.log('[signup] stub accepted', {
