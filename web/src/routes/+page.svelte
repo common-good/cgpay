@@ -2,13 +2,17 @@
   import { onMount } from 'svelte'
   import { goto } from '$app/navigation'
   import { env } from '$env/dynamic/public'
+  import type { PageData } from './$types'
   import Icon from '$lib/components/Icon.svelte'
   import type { InfoResponse, InfoTx } from './api/me/info/+server'
   import { phpUrl } from '$lib/utils'
 
+  let { data }: { data: PageData } = $props()
+
   let loading = $state(true)
   let error = $state<string | null>(null)
   let info = $state<InfoResponse | null>(null)
+  let hasCamera = $state(false)
 
   type ModalKind = 'pay' | 'receive' | 'transfer' | 'soon' | null
   let modal = $state<ModalKind>(null)
@@ -18,25 +22,56 @@
   // Empty string = no PHP target configured; we render the menu as disabled.
   const phpBase = env.PUBLIC_PHP_BASE_URL ?? ''
 
-  onMount(async () => {
+  async function detectCamera(): Promise<boolean> {
+    if (!navigator.mediaDevices?.enumerateDevices) return false
     try {
-      const res = await fetch('/api/me/info?limit=20')
+      return (await navigator.mediaDevices.enumerateDevices()).some(device => device.kind === 'videoinput')
+    } catch (cameraError) {
+      console.warn('Could not detect a camera; keeping the PHP transaction links.', cameraError)
+      return false
+    }
+  }
+
+  function transactionUrl(intent: 'pay' | 'charge'): string {
+    const pwaBase = data.cgpayPwaUrl.replace(/\/+$/, '')
+    return hasCamera && pwaBase
+      ? `${pwaBase}/handoff#intent=${intent}`
+      : phpUrl(`tx/${intent}`)
+  }
+
+  /**
+   * Fetch the dashboard data from the server and display it.
+   * @param bool quiet: if true, keep showing the current data and ignore errors (a refresh)
+   */
+  async function loadInfo(quiet = false) {
+    try {
+      const res = await fetch('/api/me/info?limit=20', { cache: 'no-store' })
       if (res.status === 401) {
         await goto('/login')
         return
       }
       if (!res.ok) {
+        if (quiet) return
         const body = await res.json().catch(() => ({}))
         error = body.message ?? `Failed to load dashboard (${res.status})`
         return
       }
       info = await res.json()
     } catch {
-      error = 'Network error - please try again.'
+      if (!quiet) error = 'Network error - please try again.'
     } finally {
       loading = false
     }
+  }
+
+  onMount(async () => {
+    hasCamera = await detectCamera()
+    await loadInfo()
   })
+
+  // Returning from the legacy app (Back button, restored page): show current balance and transactions.
+  function onPageShow(e: PageTransitionEvent) { if (e.persisted) loadInfo(true) }
+  function onVisible() { if (document.visibilityState === 'visible' && info) loadInfo(true) }
 
   function fmtMoney(n: number) {
     return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -80,7 +115,7 @@
   }
 </script>
 
-<svelte:window onkeydown={onKeydown} />
+<svelte:window onkeydown={onKeydown} onpageshow={onPageShow} onvisibilitychange={onVisible} />
 
 <div class="page">
   {#if loading}
@@ -122,7 +157,7 @@
 
       <section class="actions">
         <article class="card action">
-          <a class="action-btn" href={phpUrl('tx/pay') || '#'} aria-disabled={!phpBase || undefined}>
+          <a class="action-btn" href={transactionUrl('pay') || '#'} aria-disabled={!phpBase && !(hasCamera && data.cgpayPwaUrl) || undefined}>
             <div class="action-head">
               <div class="icon-wrap tone-rose"><Icon name="upload" size={20} /></div>
               <h2>Pay</h2>
@@ -137,7 +172,7 @@
         </article>
 
         <article class="card action">
-          <a class="action-btn" href={phpUrl('tx/charge') || '#'} aria-disabled={!phpBase || undefined}>
+          <a class="action-btn" href={transactionUrl('charge') || '#'} aria-disabled={!phpBase && !(hasCamera && data.cgpayPwaUrl) || undefined}>
             <div class="action-head">
               <div class="icon-wrap tone-green"><Icon name="download" size={20} /></div>
               <h2>Receive</h2>

@@ -8,8 +8,13 @@
   let error = $state<string | null>(null)
   let submitting = $state(false)
 
-  const phpBase = env.PUBLIC_PHP_BASE_URL ?? ''
-  const helpHref = phpBase ? phpBase.replace(/\/$/, '') + '/help' : 'mailto:support@commongood.earth'
+  const phpBase = (env.PUBLIC_PHP_BASE_URL ?? '').replace(/\/$/, '')
+  const helpHref   = phpBase ? phpBase + '/help' : 'mailto:support@commongood.earth'
+  // Sign-up and password-reset live on the PHP member site today. These links
+  // point there until the node redesign ships (cgpay member-features batch).
+  // PHP's /settings/password is its Reset Password page; when signed out it asks for the account ID or email.
+  const signupHref = phpBase ? phpBase + '/signup' : ''
+  const forgotHref = phpBase ? phpBase + '/settings/password' : ''
 
   async function submit(e: Event) {
     e.preventDefault()
@@ -54,6 +59,7 @@
           <label for="identifier">Account ID</label>
           <input
             id="identifier"
+            data-testid="identifier"
             type="text"
             bind:value={identifier}
             autocomplete="username"
@@ -66,6 +72,7 @@
           <label for="password">Password</label>
           <input
             id="password"
+            data-testid="password"
             type="password"
             bind:value={password}
             autocomplete="current-password"
@@ -78,10 +85,21 @@
           <p class="err" role="alert">{error}</p>
         {/if}
 
-        <button type="submit" class="primary" disabled={submitting}>
-          {submitting ? 'Signing in…' : 'Sign in'}
-        </button>
+        <div class="form-actions">
+          <button type="submit" class="primary" data-testid="btn-signin" disabled={submitting}>
+            {submitting ? 'Signing in…' : 'Sign in'}
+          </button>
+          {#if forgotHref}
+            <a class="inline-link" data-testid="lnk-reset" href={forgotHref}>Reset password</a>
+          {/if}
+        </div>
       </form>
+
+      {#if signupHref}
+        <p class="signup-prompt">
+          New to Common Good? <a class="signup-link" data-testid="lnk-signup" href={signupHref}>Create an account</a>
+        </p>
+      {/if}
 
       <div class="foot">
         <a class="help-link" href={helpHref}>Need help signing in?</a>
@@ -194,9 +212,39 @@
   .primary:hover:not(:disabled) { background: var(--cg-green-hover); }
   .primary:disabled { opacity: 0.6; cursor: not-allowed; }
 
+  .form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 0.4rem;
+  }
+  .form-actions .primary { margin-top: 0; flex: 1; }
+  .inline-link {
+    color: var(--cg-navy);
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .inline-link:hover { text-decoration: underline; }
+
+  .signup-prompt {
+    margin: 1.25rem 0 0;
+    text-align: center;
+    font-size: 0.9rem;
+    color: var(--cg-text-muted);
+  }
+  .signup-link {
+    color: var(--cg-green);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .signup-link:hover { text-decoration: underline; }
+
   .foot {
-    margin-top: 1.5rem;
-    padding-top: 1.25rem;
+    margin-top: 1.25rem;
+    padding-top: 1rem;
     border-top: 1px solid var(--cg-border);
     text-align: center;
   }
