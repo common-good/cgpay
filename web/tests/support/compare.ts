@@ -4,20 +4,27 @@ const TIME_FIELD = /^(created|modified|updated|received|ckDate|documented)$|(Dat
 const TIME_SLACK_SECS = 3
 
 /**
- * Compare what the app has (got) to what a table says it should have (want).
- * Only the keys in want are compared. In a wanted value: ? means anything, !x means anything but x,
- * an empty value matches null or empty, numbers compare as numbers, and time fields may differ by a few seconds.
- * @returns the problems found (an empty list means they match)
+ * Check that what the app has (got) includes the rows a table lists (want): each wanted row must match a different
+ * row of got, in any order, and got may have more rows. Only the keys in a wanted row are compared. In a wanted value:
+ * ? means anything, !x means anything but x, an empty value matches null or empty, numbers compare as numbers,
+ * and time fields may differ by a few seconds.
+ * @returns the problems found (an empty list means got includes all the wanted rows)
  */
 export function rowProblems(got: Record<string, unknown>[], want: Record<string, unknown>[], ctx: MagicCtx): string[] {
   const problems: string[] = []
-  if (got.length !== want.length) problems.push(`got ${got.length} rows, wanted ${want.length}`)
-  for (let i = 0; i < Math.min(got.length, want.length); i++) {
-    for (const [field, w] of Object.entries(want[i])) {
-      if (!matches(got[i][field], w, field, ctx)) problems.push(`row ${i + 1} "${field}": got ${JSON.stringify(got[i][field])}, wanted ${JSON.stringify(w)}`)
-    }
-  }
+  const unused = [...got]
+  want.forEach((w, i) => {
+    const diffs = unused.map(g => fieldProblems(g, w, ctx))
+    const best = diffs.reduce((b, d, k) => d.length < diffs[b].length ? k : b, 0)
+    if (diffs.length && !diffs[best].length) unused.splice(best, 1)
+    else problems.push(`no row matches wanted row ${i + 1}` + (diffs.length ? ` (closest: ${diffs[best].join(', ')})` : ` (the app has no rows left)`))
+  })
   return problems
+}
+
+function fieldProblems(got: Record<string, unknown>, want: Record<string, unknown>, ctx: MagicCtx): string[] {
+  return Object.entries(want).filter(([field, w]) => !matches(got[field], w, field, ctx))
+    .map(([field, w]) => `"${field}" is ${JSON.stringify(got[field])}, wanted ${JSON.stringify(w)}`)
 }
 
 function matches(got: unknown, want: unknown, field: string, ctx: MagicCtx): boolean {

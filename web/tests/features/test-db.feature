@@ -7,5 +7,4 @@ Feature: Test database fixture
     Given these "users" rows:
     | uid | fullName |
     | Abe | Abe One  |
-    Then these "txs" rows:
-    | xid |
+    Then count "txs" is 0

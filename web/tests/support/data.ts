@@ -1,24 +1,50 @@
 import type { App } from '../steps/fixtures'
 import { rowProblems } from './compare'
-import { tableData } from './table'
+import { tableData, type Shape } from './table'
+import { resolve } from './magic'
 
-// Data in the test database, through the PHP test endpoint (see test-db.ts).
+// Data in the test database (through the PHP test endpoint, see test-db.ts) and scenario variables.
 type Rows = Record<string, unknown>[]
 
 const readers: Record<string, (app: App) => Promise<Rows>> = { txs: app => app.testDb.txs() }
 const writers: Record<string, (app: App, rows: Rows) => Promise<unknown>> = { users: (app, rows) => app.testDb.updateUsers(rows) }
 
-/** Set records ("users" only, so far): each row has the uid (a nickname works) and the fields to change. */
-export async function setThese(app: App, name: string, table: { raw(): string[][] }) {
-  const write = writers[name]
-  if (!write) throw new Error(`these "${name}" rows: cannot be set. Can set: ${Object.keys(writers).join(', ')}.`)
-  await write(app, tableData(table, 'rows', app) as Rows)
+async function read(app: App, name: string): Promise<Rows> {
+  const reader = readers[name]
+  if (!reader) throw new Error(`"${name}" cannot be read. Can read: ${Object.keys(readers).join(', ')}.`)
+  return await reader(app)
 }
 
-/** The app has exactly these records ("txs" only, so far), comparing only the columns the table lists. */
-export async function soThese(app: App, name: string, table: { raw(): string[][] }) {
-  const read = readers[name]
-  if (!read) throw new Error(`these "${name}" rows: cannot be read. Can read: ${Object.keys(readers).join(', ')}.`)
-  const problems = rowProblems(await read(app), tableData(table, 'rows', app) as Rows, app)
-  if (problems.length) throw new Error(`these "${name}" rows: ${problems.join('; ')}`)
+export default {
+  /** Set records ("users" only, so far): each row has the uid (a nickname works) and the fields to change. */
+  async setThese(app: App, name: string, table: { raw(): string[][] }) {
+    const write = writers[name]
+    if (!write) throw new Error(`these "${name}" rows: cannot be set. Can set: ${Object.keys(writers).join(', ')}.`)
+    await write(app, tableData(table, 'rows', app) as Rows)
+  },
+
+  /**
+   * Define a variable. The value is evaluated now (so %now-2d is fixed from here on), except account
+   * nicknames, which wait until the variable is used and the field is known.
+   */
+  setVar(app: App, name: string, value: unknown) {
+    app.vars.set(name, resolve(value, undefined, app, { nicknames: false }))
+  },
+
+  /** Define a variable from a table, read in the given shape (see table.ts). Nicknames wait until the variable is used. */
+  setVarTable(app: App, name: string, table: { raw(): string[][] }, shape: Shape) {
+    app.vars.set(name, tableData(table, shape, app, { nicknames: false }))
+  },
+
+  /** The app has this many records ("txs" only, so far). */
+  async soCount(app: App, name: string, n: number) {
+    const got = (await read(app, name)).length
+    if (got !== n) throw new Error(`count "${name}" is ${n}: got ${got}.`)
+  },
+
+  /** The app has all of these records (and maybe more), comparing only the columns the table lists ("txs" only, so far). */
+  async soThese(app: App, name: string, table: { raw(): string[][] }) {
+    const problems = rowProblems(await read(app, name), tableData(table, 'rows', app) as Rows, app)
+    if (problems.length) throw new Error(`these "${name}" rows: ${problems.join('; ')}`)
+  }
 }

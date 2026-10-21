@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { Vars, setVar, parseValue } from '../support/vars'
+import { Vars, parseValue } from '../support/vars'
+import data from '../support/data'
 import { tableData } from '../support/table'
 import { uidOf } from '../support/accounts'
 
@@ -33,8 +34,8 @@ describe('Vars', () => {
 describe('setVar', () => {
   it('evaluates times now, but leaves nicknames until the variable is used', () => {
     const c = ctx()
-    setVar(c, 'start', '%now-2d')
-    setVar(c, 'account', 'Abe')
+    data.setVar(c as never, 'start', '%now-2d')
+    data.setVar(c as never, 'account', 'Abe')
     expect(c.vars.get('start')).toBe(now - 2 * 86400)
     expect(c.vars.get('account')).toBe('Abe')
   })
