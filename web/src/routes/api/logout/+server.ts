@@ -1,5 +1,5 @@
 // Sign out: clear the PHP SSO cookie so the browser stops presenting it.
-// Once the cookie is gone, /cgpay-whoami returns 401 on the next SSR and
+// Once the cookie is gone, /cgpay/whoami returns 401 on the next SSR and
 // +layout.server.ts sees `user: null` -> header renders as anonymous.
 
 import { json } from '@sveltejs/kit'

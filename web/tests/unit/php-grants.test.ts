@@ -43,7 +43,7 @@ describe('php-grants client', () => {
     await listGrants(42)
 
     expect(calls).toHaveLength(1)
-    expect(calls[0].url).toBe('https://demo.example/cg/cgmembers/cgpay-grants?uid=42')
+    expect(calls[0].url).toBe('https://demo.example/cg/cgmembers/cgpay/grants?uid=42')
     expect((calls[0].init.headers as Record<string, string>)['x-cg-internal-token']).toBe('test-secret')
   })
 
@@ -65,7 +65,7 @@ describe('php-grants client', () => {
     const id = await createGrant({ uid: 5, amount: 500, by: 'ach', fullName: 'A Donor' })
 
     expect(id).toBe(99)
-    expect(received!.url).toBe('https://demo.example/cg/cgmembers/cgpay-grants')
+    expect(received!.url).toBe('https://demo.example/cg/cgmembers/cgpay/grants')
     expect(received!.init.method).toBe('POST')
     const body = JSON.parse(received!.init.body as string)
     expect(body).toMatchObject({ uid: 5, amount: 500, by: 'ach', fullName: 'A Donor' })

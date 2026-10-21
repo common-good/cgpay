@@ -7,7 +7,7 @@ existing Drupal `users` table. First milestone of the broader PHP → Svelte mig
 
 | Path | What |
 |---|---|
-| `src/routes/api/login/+server.ts` | `POST /api/login` — validates against `users.pass` (Drupal phpass), then has PHP create the session (`/cgpay-sso`). Rate-limited; timing-constant. |
+| `src/routes/api/login/+server.ts` | `POST /api/login` — validates against `users.pass` (Drupal phpass), then has PHP create the session (`/cgpay/sso`). Rate-limited; timing-constant. |
 | `src/routes/api/me/balance/+server.ts` | `GET /api/me/balance` — signed-in user's `users.balance`. |
 | `src/routes/login/+page.svelte` | Login form. |
 | `src/routes/+page.svelte` | Dashboard: shows balance, redirects to `/login` if not signed in. |

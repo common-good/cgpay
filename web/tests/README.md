@@ -14,7 +14,7 @@ tests/
 │   ├── drupal-password.test.ts    phpass prefix dispatch + guard behaviour
 │   ├── env.test.ts                Required-env check, PHP URLs and cookie domain derived from PUBLIC_PHP_BASE_URL
 │   ├── php-client.test.ts         Server-to-server calls to PHP (config and error handling)
-│   ├── php-grants.test.ts         Grants client for PHP /cgpay-grants
+│   ├── php-grants.test.ts         Grants client for PHP /cgpay/grants
 │   └── rate-limit.test.ts         Rolling window + lockout semantics
 ├── e2e/        # Legacy plain Playwright specs (project "chromium")
 │   ├── login.spec.ts              Login page contract + protected-route redirect

@@ -1,5 +1,5 @@
 // Phase 3 endpoint — Expected Grants list + create.
-// GET  → sponsee's own grants (via PHP /cgpay-grants)
+// GET  → sponsee's own grants (via PHP /cgpay/grants)
 // POST → create a new expected grant for the signed-in sponsee
 
 import { json, error } from '@sveltejs/kit'

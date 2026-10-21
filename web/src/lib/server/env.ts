@@ -56,11 +56,11 @@ export function phpEndpointUrl(endpoint: string): string {
 }
 
 export function phpSsoUrl(): string {
-  return phpEndpointUrl('cgpay-sso')
+  return phpEndpointUrl('cgpay/sso')
 }
 
 export function phpGrantsUrl(): string {
-  return phpEndpointUrl('cgpay-grants')
+  return phpEndpointUrl('cgpay/grants')
 }
 
 /** Parent cookie domain for the PHP host, derived from PUBLIC_PHP_BASE_URL. */

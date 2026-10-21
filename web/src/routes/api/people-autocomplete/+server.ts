@@ -1,6 +1,6 @@
 // Proxy endpoint for the grantor-name typeahead on /grants/new.
-// Browser hits this with its session cookie; we resolve identity via PHP /cgpay-whoami
-// and forward to PHP /cgpay-people-autocomplete using the shared secret.
+// Browser hits this with its session cookie; we resolve identity via PHP /cgpay/whoami
+// and forward to PHP /cgpay/people-autocomplete using the shared secret.
 
 import { json, error } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
