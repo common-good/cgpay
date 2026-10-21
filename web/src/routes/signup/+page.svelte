@@ -42,7 +42,7 @@
       })
       if (!res.ok) {
         const body = await res.json().catch(() => ({}))
-        // Field-level errors from PHP (future KAN-31) merge in so the user sees them inline.
+        // Field-level errors from PHP merge in so the user sees them inline.
         if (body?.errors && typeof body.errors === 'object') fieldErrors = { ...fieldErrors, ...body.errors }
         submitError = body?.message ?? `Sign up failed (${res.status}). Try again.`
         return
