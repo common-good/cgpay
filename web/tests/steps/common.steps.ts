@@ -24,3 +24,34 @@ Then('I see error {string}', async ({ page }, message: string) => {
 Then('(I am )on page {string}', async ({ page }, name: string) => {
   await expect(page).toHaveURL(new RegExp(`^[^/]+//[^/]+${pagePath(name)}$`), { timeout: 15_000 })
 })
+
+When('I set camera availability to {string}', async ({ page }, availability: string) => {
+  if (availability !== 'present' && availability !== 'absent') {
+    throw new Error(`Unknown camera availability "${availability}".`)
+  }
+  await page.addInitScript((hasCamera: boolean) => {
+    Object.defineProperty(navigator, 'mediaDevices', {
+      configurable: true,
+      value: {
+        enumerateDevices: async () => hasCamera ? [{ kind: 'videoinput' }] : []
+      }
+    })
+  }, availability === 'present')
+  await page.reload()
+})
+
+Then('the Pay and Charge actions use the legacy handoff', async ({ page }) => {
+  await expect(page.locator('.actions .action-btn').nth(0)).toHaveAttribute(
+    'href',
+    'http://localhost:3000/handoff#intent=pay'
+  )
+  await expect(page.locator('.actions .action-btn').nth(1)).toHaveAttribute(
+    'href',
+    'http://localhost:3000/handoff#intent=charge'
+  )
+})
+
+Then('the Pay and Charge actions keep their PHP links', async ({ page }) => {
+  await expect(page.locator('.actions .action-btn').nth(0)).toHaveAttribute('href', /tx\/pay$/)
+  await expect(page.locator('.actions .action-btn').nth(1)).toHaveAttribute('href', /tx\/charge$/)
+})
