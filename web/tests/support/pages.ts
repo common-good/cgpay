@@ -60,7 +60,7 @@ export default {
     for (const [i, id] of ids.entries()) await setField(app, id, values[i])
   },
 
-  async onPage(app: App, path: string) { await app.page.goto(path) },
+  async onPage(app: App, path: string) { await app.page.goto('/' + path) },
 
   async select(app: App, id: string, label: string) { await setField(app, id, label) },
 
@@ -84,7 +84,7 @@ export default {
   },
 
   async soOnPage(app: App, path: string) {
-    await expect(app.page, `on page "${path}"`).toHaveURL(new RegExp(`^[^/]+//[^/]+${escapeRegExp(path)}$`), { timeout: 15_000 })
+    await expect(app.page, `on page "${path}"`).toHaveURL(new RegExp(`^[^/]+//[^/]+/${escapeRegExp(path)}$`), { timeout: 15_000 })
   },
 
   // A page on the PHP member site, by its path below PUBLIC_PHP_BASE_URL.
