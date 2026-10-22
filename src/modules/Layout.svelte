@@ -10,7 +10,7 @@
   import st from'#store.js'
   import u from '#utils.js'
   import c from '#constants.js'
-  import { isHandoffVisit, returnFromHandoff } from '../handoff.js'
+  import { isHandoffVisit, returnFromHandoff, backGoesToDashboard } from '../handoff.js'
 
   /**
    * Layout the standard page.
@@ -29,7 +29,7 @@
   function setViewportHeight() { viewHeight = window.visualViewport.height }
   function goBack() {
     if (u.pageUri() == 'tx' && $st.pending) u.undo.update(n => n + 1)
-    else if (u.onPage('tx-start') && isHandoffVisit()) returnFromHandoff()
+    else if (backGoesToDashboard()) returnFromHandoff()
     else u.goBack()
   }
 
