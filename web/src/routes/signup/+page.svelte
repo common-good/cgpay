@@ -5,6 +5,7 @@
     validateFullName, validateEmail, validatePhone, validateZip, validateAgreement,
     validateSignup, type FieldErrors
   } from '$lib/signup-validation'
+  import { writeSignupSession } from '$lib/signup-session'
 
   let fullName = $state('')
   let email = $state('')
@@ -46,6 +47,10 @@
         if (body?.errors && typeof body.errors === 'object') fieldErrors = { ...fieldErrors, ...body.errors }
         submitError = body?.message ?? `Sign up failed (${res.status}). Try again.`
         return
+      }
+      const body = await res.json().catch(() => ({}))
+      if (typeof body.uid === 'number' && typeof body.qid === 'string') {
+        writeSignupSession({ uid: body.uid, qid: body.qid })
       }
       await goto('/signup/check-email')
     } catch {

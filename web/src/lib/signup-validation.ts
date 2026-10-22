@@ -51,6 +51,26 @@ export function validateAgreement(accepted: boolean): string | null {
   return accepted ? null : 'You must agree to continue.'
 }
 
+export function validateCode(v: string): string | null {
+  const code = v.trim()
+  if (!code) return 'Please enter the code we emailed you.'
+  if (code.length < 4) return 'That code looks too short.'
+  return null
+}
+
+const MIN_PASSWORD_LEN = 8
+export function validatePassword(v: string): string | null {
+  if (!v) return 'Please choose a password.'
+  if (v.length < MIN_PASSWORD_LEN) return `Password must be at least ${MIN_PASSWORD_LEN} characters.`
+  return null
+}
+
+export function validatePasswordConfirm(password: string, confirm: string): string | null {
+  if (!confirm) return 'Please confirm your password.'
+  if (confirm !== password) return 'Passwords do not match.'
+  return null
+}
+
 /** Run every validator; returns {} when the form is clean. */
 export function validateSignup(input: SignupInput, isUS: boolean = true): FieldErrors {
   const errors: FieldErrors = {}
