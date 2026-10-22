@@ -50,7 +50,7 @@
       <img src={ cgLogo } alt='Common Good Logo' />
     {/if}
     <button on:click={goHome} data-testid="account-name">{ ($st.me ? $st.me.name : '') + (u.realData() ? '' : ' (DEMO)')}</button>
-    <button data-testid="btn-nav" class="btn" aria-label="Menu" on:click={toggleNav}><NavIcon width={'100%'} height={'100%'} /></button>
+    {#if !isHandoffVisit()}<button data-testid="btn-nav" class="btn" aria-label="Menu" on:click={toggleNav}><NavIcon width={'100%'} height={'100%'} /></button>{/if}
   </header>
   { #key currentRoute }<NetworkStatus/>{ /key }
   <div class="content">

@@ -244,6 +244,7 @@ const u = {
   isApple() { return /iPhone|iPod|iPad/i.test(navigator.userAgent) },
   isAndroid() { return /Android/i.test(navigator.userAgent) },
   go(page, setTrail = true) { 
+    if (page == 'home' && u.toDashboard?.()) return // handed off from the new app: its dashboard is home (see handoff.js)
     if (setTrail) st.setTrail(u.st()?.pending ? '' : u.pageUri())
     st.setPending(false) // must come after setTrail
     st.setLeft(u.atHome(page) ? 'logo' : 'back')

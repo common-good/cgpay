@@ -24,14 +24,36 @@ export function backGoesToDashboard() {
 
 /**
  * Go to the node dashboard if this visit came by handoff, else to the home screen.
- * @param string msg: message to show on the home screen (not shown when returning to the dashboard)
+ * @param string msg: message to show there (on the dashboard, it travels in a short-lived cookie, see setDashboardMessage)
  */
 export async function returnFromHandoff(msg) {
   const dashboardUrl = sessionStorage.getItem(dashboardUrlKey)
   if (!dashboardUrl) return msg ? u.goHome(msg) : u.go('home')
   sessionStorage.removeItem(dashboardUrlKey)
+  if (msg) setDashboardMessage(msg)
   await sendQueuedTxs()
   window.location.assign(dashboardUrl)
+}
+
+/**
+ * Leave a message for the dashboard in a cookie it reads and clears (the two apps share the parent domain, or localhost).
+ * The dashboard shows it as plain text.
+ */
+function setDashboardMessage(msg) {
+  const host = location.hostname
+  const parts = host.split('.')
+  const domain = (parts.length < 2 || /^\d+(\.\d+){3}$/.test(host)) ? '' : '; domain=.' + parts.slice(-2).join('.')
+  const secure = location.protocol == 'https:' ? '; secure' : ''
+  document.cookie = `cgpay-msg=${encodeURIComponent(String(msg).slice(0, 300))}; path=/; max-age=120; samesite=lax${domain}${secure}`
+}
+
+// u.go('home') comes here during a handoff visit: the new app's dashboard is home, and the message (see u.goHome and u.goEr) shows there.
+u.toDashboard = () => {
+  if (!isHandoffVisit()) return false
+  const msg = u.st().erMsg // set by u.goHome and u.goEr
+  st.setMsg(null)
+  returnFromHandoff(msg)
+  return true
 }
 
 /**

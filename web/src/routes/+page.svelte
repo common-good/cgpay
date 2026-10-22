@@ -13,6 +13,7 @@
   let error = $state<string | null>(null)
   let info = $state<InfoResponse | null>(null)
   let hasCamera = $state(false)
+  let message = $state<string | null>(null)
 
   type ModalKind = 'pay' | 'receive' | 'transfer' | 'soon' | null
   let modal = $state<ModalKind>(null)
@@ -64,7 +65,17 @@
     }
   }
 
+  // A message the legacy app left for us in a cookie (see setDashboardMessage in the legacy app's handoff.js): show it once, as text.
+  function takeMessage(): string | null {
+    const found = document.cookie.split('; ').find(c => c.startsWith('cgpay-msg='))
+    const parts = location.hostname.split('.')
+    const domains = ['', ...(parts.length > 1 && !/^\d+(\.\d+){3}$/.test(location.hostname) ? [`; domain=.${parts.slice(-2).join('.')}`] : [])]
+    for (const d of domains) document.cookie = `cgpay-msg=; path=/; max-age=0${d}`
+    return found ? decodeURIComponent(found.slice('cgpay-msg='.length)).slice(0, 300) : null
+  }
+
   onMount(async () => {
+    message = takeMessage()
     hasCamera = await detectCamera()
     await loadInfo()
   })
@@ -128,6 +139,7 @@
       </div>
     </main>
   {:else if info}
+    {#if message}<p class="notice" role="status" data-testid="msg">{message}</p>{/if}
     <div class="hero">
       <div class="hero-inner">
         <h1>Welcome back, {firstName(info.name)}!</h1>
@@ -141,7 +153,7 @@
           <div class="icon-wrap tone-green"><Icon name="bank" size={20} /></div>
           <div class="card-body">
             <span class="s-label">Available Funds</span>
-            <span class="s-value">{fmtMoney(info.balance)}</span>
+            <span class="s-value" data-testid="balance">{fmtMoney(info.balance)}</span>
           </div>
         </article>
 
@@ -157,7 +169,7 @@
 
       <section class="actions">
         <article class="card action">
-          <a class="action-btn" href={transactionUrl('pay') || '#'} aria-disabled={!phpBase && !(hasCamera && data.cgpayPwaUrl) || undefined}>
+          <a class="action-btn" data-testid="btn-pay" href={transactionUrl('pay') || '#'} aria-disabled={!phpBase && !(hasCamera && data.cgpayPwaUrl) || undefined}>
             <div class="action-head">
               <div class="icon-wrap tone-rose"><Icon name="upload" size={20} /></div>
               <h2>Pay</h2>
@@ -172,7 +184,7 @@
         </article>
 
         <article class="card action">
-          <a class="action-btn" href={transactionUrl('charge') || '#'} aria-disabled={!phpBase && !(hasCamera && data.cgpayPwaUrl) || undefined}>
+          <a class="action-btn" data-testid="btn-receive" href={transactionUrl('charge') || '#'} aria-disabled={!phpBase && !(hasCamera && data.cgpayPwaUrl) || undefined}>
             <div class="action-head">
               <div class="icon-wrap tone-green"><Icon name="download" size={20} /></div>
               <h2>Receive</h2>
@@ -378,6 +390,7 @@
   }
   .card-body { display: grid; gap: 0.25rem; }
   .s-label { font-size: 0.85rem; color: var(--cg-text-muted); font-weight: 500; }
+  .notice { margin: 0; padding: 0.75rem 1rem; background: var(--cg-green-soft); color: var(--cg-text); text-align: center; }
   .s-value { font-size: 1.4rem; font-weight: 700; color: var(--cg-text); letter-spacing: -0.01em; }
   .s-note { font-size: 0.75rem; color: var(--cg-text-muted); font-style: italic; margin-top: 0.15rem; }
   .tone-purple { background: rgba(120,80,180,0.1); color: #785ab4; }
