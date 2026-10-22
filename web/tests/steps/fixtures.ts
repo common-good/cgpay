@@ -19,7 +19,13 @@ export const test = base.extend<Fixtures>({
     },
     { auto: true }
   ],
-  app: async ({ page, testDb }, use) => {
+  app: async ({ page, testDb, baseURL }, use) => {
+    // The legacy app returns members to the dashboard PHP knows (cgpayUrl, a dev server); the tests run against their own server.
+    await page.route('**/api/handoff', async route => {
+      const res = await route.fetch()
+      const body = JSON.stringify({ ...(await res.json()), dashboardUrl: baseURL })
+      await route.fulfill({ response: res, body, headers: { ...res.headers(), 'content-length': String(Buffer.byteLength(body)) } })
+    })
     await use({ page, testDb, vars: new Vars(), now: Math.floor(Date.now() / 1000) })
   }
 })
