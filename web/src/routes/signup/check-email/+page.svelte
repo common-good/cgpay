@@ -12,8 +12,14 @@
     </div>
     <div class="card-body">
       <h1>Check your email</h1>
-      <p>We just sent you a message with a 6-digit code. Enter the code on the verification page to finish setting up your account.</p>
-      <p class="muted">The code-entry page is in the next release. For now, this screen confirms the sign-up form reached the server.</p>
+      <p>We just sent you a message with a short code. Click the link in the email, or enter the code below to finish setting up your account.</p>
+
+      <div class="actions">
+        <a class="primary" href="/signup/verify">Enter your code</a>
+      </div>
+
+      <p class="muted">Didn't get the email? Check your spam folder, or <a class="inline-link" href="/signup">try signing up again</a>.</p>
+
       <div class="foot">
         <a class="inline-link" href="/login">Back to sign in</a>
       </div>
@@ -61,6 +67,27 @@
   }
   p { color: var(--cg-text); line-height: 1.5; margin: 0 0 1rem; }
   .muted { color: var(--cg-text-muted); font-size: 0.88rem; }
-  .foot { margin-top: 1rem; text-align: center; }
+
+  .actions {
+    margin: 1rem 0 1.25rem;
+    display: flex;
+    justify-content: center;
+  }
+  .primary {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    background: var(--cg-green);
+    color: white;
+    border: none;
+    border-radius: var(--cg-radius-sm);
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.15s;
+  }
+  .primary:hover { background: var(--cg-green-hover); }
+
+  .foot { margin-top: 1.25rem; text-align: center; }
   .inline-link { color: var(--cg-green); text-decoration: underline; }
+  .inline-link:hover { color: var(--cg-green-hover); }
 </style>
