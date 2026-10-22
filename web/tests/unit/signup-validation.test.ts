@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import {
   validateFullName, validateEmail, validatePhone, validateZip,
-  validateAgreement, validateSignup
+  validateAgreement, validateSignup,
+  validateCode, validatePassword, validatePasswordConfirm
 } from '../../src/lib/signup-validation'
 
 describe('validateFullName', () => {
@@ -65,4 +66,26 @@ describe('validateSignup', () => {
     const errs = validateSignup({ ...good, zip: 'M5V 3L9' }, false)
     expect(errs.zip).toBeUndefined()
   })
+})
+
+describe('validateCode', () => {
+  it('rejects empty', () => { expect(validateCode('')).not.toBeNull() })
+  it('rejects whitespace only', () => { expect(validateCode('   ')).not.toBeNull() })
+  it('rejects fewer than 4 chars', () => { expect(validateCode('abc')).not.toBeNull() })
+  it('accepts 4-char word code', () => { expect(validateCode('tree')).toBeNull() })
+  it('accepts 6-digit numeric code', () => { expect(validateCode('123456')).toBeNull() })
+  it('accepts code with surrounding whitespace', () => { expect(validateCode('  tree  ')).toBeNull() })
+})
+
+describe('validatePassword', () => {
+  it('rejects empty', () => { expect(validatePassword('')).not.toBeNull() })
+  it('rejects 7 chars', () => { expect(validatePassword('1234567')).not.toBeNull() })
+  it('accepts 8 chars', () => { expect(validatePassword('12345678')).toBeNull() })
+  it('accepts long password', () => { expect(validatePassword('a very long passphrase here')).toBeNull() })
+})
+
+describe('validatePasswordConfirm', () => {
+  it('rejects empty confirm', () => { expect(validatePasswordConfirm('abc12345', '')).not.toBeNull() })
+  it('rejects mismatch', () => { expect(validatePasswordConfirm('abc12345', 'abc12346')).not.toBeNull() })
+  it('accepts match', () => { expect(validatePasswordConfirm('abc12345', 'abc12345')).toBeNull() })
 })
