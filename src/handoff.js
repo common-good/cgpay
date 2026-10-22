@@ -13,6 +13,16 @@ export function isHandoffVisit() {
 }
 
 /**
+ * True if Back should go to the dashboard: on the first page of a handoff visit, which is tx-start, or scan when tx-start was skipped.
+ */
+export function backGoesToDashboard() {
+  if (!isHandoffVisit()) return false
+  const trail = u.st().trail || []
+  const cameFromHandoff = String(trail[trail.length - 1]).startsWith('handoff') // the page name includes the #intent=... part
+  return u.onPage('tx-start') || (u.onPage('scan') && cameFromHandoff)
+}
+
+/**
  * Go to the node dashboard if this visit came by handoff, else to the home screen.
  * @param string msg: message to show on the home screen (not shown when returning to the dashboard)
  */
