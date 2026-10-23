@@ -13,7 +13,7 @@
   let error = $state<string | null>(null)
   let info = $state<InfoResponse | null>(null)
   let hasCamera = $state(false)
-  let message = $state<string | null>(null)
+  let message = $state<{ kind: 'info' | 'error', text: string } | null>(null)
 
   type ModalKind = 'pay' | 'receive' | 'transfer' | 'soon' | null
   let modal = $state<ModalKind>(null)
@@ -66,12 +66,14 @@
   }
 
   // A message the legacy app left for us in a cookie (see setDashboardMessage in the legacy app's handoff.js): show it once, as text.
-  function takeMessage(): string | null {
+  function takeMessage(): { kind: 'info' | 'error', text: string } | null {
     const found = document.cookie.split('; ').find(c => c.startsWith('cgpay-msg='))
     const parts = location.hostname.split('.')
     const domains = ['', ...(parts.length > 1 && !/^\d+(\.\d+){3}$/.test(location.hostname) ? [`; domain=.${parts.slice(-2).join('.')}`] : [])]
     for (const d of domains) document.cookie = `cgpay-msg=; path=/; max-age=0${d}`
-    return found ? decodeURIComponent(found.slice('cgpay-msg='.length)).slice(0, 300) : null
+    if (!found) return null
+    const m = decodeURIComponent(found.slice('cgpay-msg='.length)).match(/^(error|info):([\s\S]*)$/)
+    return { kind: m?.[1] === 'error' ? 'error' : 'info', text: (m ? m[2] : '').slice(0, 300) }
   }
 
   onMount(async () => {
@@ -139,7 +141,15 @@
       </div>
     </main>
   {:else if info}
-    {#if message}<p class="notice" role="status" data-testid="msg">{message}</p>{/if}
+    {#if message}
+      <div class="notice-wrap">
+        <div class="notice {message.kind}" role={message.kind === 'error' ? 'alert' : 'status'} data-testid="notice-{message.kind}">
+          <Icon name={message.kind === 'error' ? 'alert' : 'check'} size={22} />
+          <p>{#if message.kind === 'error'}<strong>Something went wrong</strong>{/if}<span data-testid="msg">{message.text}</span></p>
+          <button type="button" class="notice-close" aria-label="Dismiss" data-testid="msg-close" onclick={() => message = null}><Icon name="x" size={18} /></button>
+        </div>
+      </div>
+    {/if}
     <div class="hero">
       <div class="hero-inner">
         <h1>Welcome back, {firstName(info.name)}!</h1>
@@ -390,7 +400,13 @@
   }
   .card-body { display: grid; gap: 0.25rem; }
   .s-label { font-size: 0.85rem; color: var(--cg-text-muted); font-weight: 500; }
-  .notice { margin: 0; padding: 0.75rem 1rem; background: var(--cg-green-soft); color: var(--cg-text); text-align: center; }
+  .notice-wrap { max-width: 1280px; width: 100%; margin: 1rem auto 0; padding: 0 1.75rem; box-sizing: border-box; }
+  .notice { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.9rem 1rem; border-radius: var(--cg-radius-sm); border: 1px solid var(--cg-border); border-left: 4px solid var(--cg-green); background: var(--cg-green-soft); color: var(--cg-text); }
+  .notice.error { border-color: var(--cg-error); border-left-color: var(--cg-error); background: #fdecea; color: #3a0b08; }
+  .notice.error :global(svg) { color: var(--cg-error); }
+  .notice p { margin: 0; flex: 1; display: grid; gap: 0.15rem; }
+  .notice strong { color: var(--cg-error); }
+  .notice-close { border: 0; background: none; padding: 0.15rem; cursor: pointer; color: inherit; line-height: 0; }
   .s-value { font-size: 1.4rem; font-weight: 700; color: var(--cg-text); letter-spacing: -0.01em; }
   .s-note { font-size: 0.75rem; color: var(--cg-text-muted); font-style: italic; margin-top: 0.15rem; }
   .tone-purple { background: rgba(120,80,180,0.1); color: #785ab4; }

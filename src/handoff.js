@@ -25,34 +25,37 @@ export function backGoesToDashboard() {
 /**
  * Go to the node dashboard if this visit came by handoff, else to the home screen.
  * @param string msg: message to show there (on the dashboard, it travels in a short-lived cookie, see setDashboardMessage)
+ * @param string kind: 'info' or 'error', how the dashboard shows the message
  */
-export async function returnFromHandoff(msg) {
+export async function returnFromHandoff(msg, kind = 'info') {
   const dashboardUrl = sessionStorage.getItem(dashboardUrlKey)
   if (!dashboardUrl) return msg ? u.goHome(msg) : u.go('home')
   sessionStorage.removeItem(dashboardUrlKey)
-  if (msg) setDashboardMessage(msg)
+  if (msg) setDashboardMessage(msg, kind)
   await sendQueuedTxs()
   window.location.assign(dashboardUrl)
 }
 
 /**
  * Leave a message for the dashboard in a cookie it reads and clears (the two apps share the parent domain, or localhost).
- * The dashboard shows it as plain text.
+ * The cookie says 'info:' or 'error:' and then the text. The dashboard shows the text as plain text.
  */
-function setDashboardMessage(msg) {
+function setDashboardMessage(msg, kind) {
   const host = location.hostname
   const parts = host.split('.')
   const domain = (parts.length < 2 || /^\d+(\.\d+){3}$/.test(host)) ? '' : '; domain=.' + parts.slice(-2).join('.')
   const secure = location.protocol == 'https:' ? '; secure' : ''
-  document.cookie = `cgpay-msg=${encodeURIComponent(String(msg).slice(0, 300))}; path=/; max-age=120; samesite=lax${domain}${secure}`
+  document.cookie = `cgpay-msg=${encodeURIComponent(kind + ':' + String(msg).slice(0, 300))}; path=/; max-age=120; samesite=lax${domain}${secure}`
 }
 
 // u.go('home') comes here during a handoff visit: the new app's dashboard is home, and the message (see u.goHome and u.goEr) shows there.
 u.toDashboard = () => {
   if (!isHandoffVisit()) return false
   const msg = u.st().erMsg // set by u.goHome and u.goEr
+  const kind = u.msgKind || 'info'
+  u.msgKind = null
   st.setMsg(null)
-  returnFromHandoff(msg)
+  returnFromHandoff(msg, kind)
   return true
 }
 

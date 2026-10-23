@@ -235,8 +235,8 @@ const u = {
   alert(question, m1 = u.hide) { return u.dlg('Alert', question, 'OK', m1) },
   hide() { st.setModal(false) },
   crash(er) { console.log('crash', er); return typeof er === 'string' ? er : er.message },
-  goEr(msg) { st.setMsg(msg); u.go('home') },
-  goHome(msg) { st.setMsg(msg); u.go('home') },
+  goEr(msg) { u.msgKind = 'error'; st.setMsg(msg); u.go('home') },
+  goHome(msg) { u.msgKind = 'info'; st.setMsg(msg); u.go('home') }, // msgKind tells a handoff's dashboard how to show the message (see handoff.js)
   atHome(page = '') { return (page ? page : u.pageUri()) == 'home' },
   onPage(page) { return (u.pageUri() === page) },
   isTimeout(er) { return (typeof er === 'object' && (er.name == 'AbortError' || er.name == 'Offline')) },
