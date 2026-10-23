@@ -19,7 +19,8 @@ tests/
 │   ├── magic.test.ts              Magic values: dates, random values, nicknames, variables
 │   ├── vars-table.test.ts         Scenario variables and table shapes
 │   ├── compare-order.test.ts      Comparing data to a table; the order of steps.ts
-│   └── steps-order.test.ts        steps.ts layout: sections, blank lines, alphabetical order
+│   ├── steps-order.test.ts        steps.ts layout: sections, blank lines, alphabetical order
+│   └── features-layout.test.ts    A blank line before a Given or When that follows a Then
 ├── e2e/        # Legacy plain Playwright specs (project "chromium")
 │   ├── login.spec.ts              Login page contract + protected-route redirect
 │   └── grants.spec.ts             Grants create-form client contract
@@ -57,6 +58,7 @@ npm run test
 - One worker only (`workers: 1`): the app's rate limiter is in-memory and the test DB is shared. Keep scenarios independent; set up state in fixtures, never rely on a previous scenario.
 - The BDD project is skipped when `CI` is set, because CI has no PHP test endpoint.
 - The BDD project browses `http://localhost:4173` (override with `E2E_BASE_URL`), not `127.0.0.1` like the plain specs: a signed-in flow needs the SSO cookie, whose domain (derived from `PUBLIC_PHP_BASE_URL`) is `localhost` locally.
+- The handoff scenarios (`dashboard-handoff.feature`) cross into the legacy app. `playwright.config.ts` starts it as a second web server (`npm run dev` at the repo root, port 3000, so the root `node_modules` must be installed) with `VITE_TEST_API_URL` pointing it at the local PHP, and reuses one that is already running with that setting. The BDD browser has a fake camera that plays a video file (`tests/support/camera.ts`); the step `camera shows "Dee"` rewrites it to show that account's QR code before the scan page opens. The legacy app returns members to the dashboard address PHP knows (`cgpayUrl`), so the `app` fixture rewrites that in the `handoff` response to the server under test.
 - The login endpoint allows 5 attempts per minute per IP (in-memory limiter), so a run can contain at most 5 sign-in attempts per minute; spread more across minutes or raise the limit for test runs.
 - The plain grants specs need `E2E_FAKE_USER=1` in the server's environment (CI sets it); export it before `npm run test:e2e` locally, or put it in `.env`.
 - To skip the rebuild on each run, start `npm run build && npm run preview -- --host 127.0.0.1 --port 4173` once; local runs reuse a server already on that port.

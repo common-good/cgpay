@@ -4,6 +4,7 @@ import t from '../support/t'
 
 GWhen('acting as {string}', async ({ app }, who: string) => t.actingAs(app, who))
 GWhen('camera {string}', async ({ app }, state: string) => t.camera(app, state))
+GWhen('camera shows {string}', async ({ app }, who: string) => t.cameraShows(app, who))
 GWhen('click {string}', async ({ app }, id: string) => t.click(app, id))
 GWhen('input {string}: {string}', async ({ app }, id: string, value: string) => t.input(app, id, value))
 GWhen('input:', async ({ app }, table: DataTable) => t.inputRow(app, table))
@@ -27,4 +28,5 @@ Then('pay and charge go to {string}', async ({ app }, where: string) => t.soPayA
 Then('see {string}', async ({ app }, what: string) => t.soSee(app, what))
 Then('see not {string}', async ({ app }, what: string) => t.soSeeNot(app, what))
 Then('signed in as {string}', async ({ app }, who: string) => t.soSignedIn(app, who))
+Then('text {string}: {string}', async ({ app }, id: string, value: string) => t.soText(app, id, value))
 Then('these {string} rows:', async ({ app }, name: string, table: DataTable) => t.soThese(app, name, table))
