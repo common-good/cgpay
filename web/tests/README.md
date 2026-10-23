@@ -19,7 +19,8 @@ tests/
 │   ├── magic.test.ts              Magic values: dates, random values, nicknames, variables
 │   ├── vars-table.test.ts         Scenario variables and table shapes
 │   ├── compare-order.test.ts      Comparing data to a table; the order of steps.ts
-│   └── steps-order.test.ts        steps.ts layout: sections, blank lines, alphabetical order
+│   ├── steps-order.test.ts        steps.ts layout: sections, blank lines, alphabetical order
+│   └── features-layout.test.ts    A blank line before a Given or When that follows a Then
 ├── e2e/        # Legacy plain Playwright specs (project "chromium")
 │   ├── login.spec.ts              Login page contract + protected-route redirect
 │   └── grants.spec.ts             Grants create-form client contract

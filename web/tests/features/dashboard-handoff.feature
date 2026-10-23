@@ -25,14 +25,17 @@ Scenario: A member pays another member and comes back to the dashboard
   And see "btn-scan"
   And see "btn-type"
   And see not "btn-nav"
+
   When click "btn-scan"
   Then on page "tx"
   And text "theirName": "Dee Four"
+
   When input:
   | input-amount | input-description |
   | 2.34         | handoff!          |
   And click "btn-submit"
   Then see "tx-summary"
+
   When click "btn-done"
   Then on page ""
   And these "txs" rows:
@@ -46,6 +49,7 @@ Scenario: A member undoes the payment and the dashboard shows no transaction
   When click "btn-pay"
   And click "btn-scan"
   Then text "theirName": "Dee Four"
+
   When input:
   | input-amount | input-description |
   | 2.34         | handoff!          |
@@ -65,6 +69,7 @@ Scenario: A company has nothing to show, so it starts on the scan page and can g
   When click "btn-receive"
   Then on page "scan"
   And see not "btn-nav"
+
   When click "btn-back"
   Then on page ""
 
@@ -78,5 +83,6 @@ Scenario: A member scans their own QR code
   Then on page ""
   And see "notice-error"
   And text "msg": "That QR is for the same account as yours."
+
   When click "msg-close"
   Then see not "notice-error"
