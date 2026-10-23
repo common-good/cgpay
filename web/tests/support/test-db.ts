@@ -34,6 +34,9 @@ export class TestDb {
     return this.post('update', { table: 'users', keyedValues: JSON.stringify(rows) })
   }
 
+  /** All the test accounts' records in a table ("txs" or "grants"), in key order. */
+  rows(table: string): Promise<Record<string, unknown>[]> { return this.post('rows', { fieldList: '*', table }) }
+
   /** All test-account transactions, ordered by xid. */
-  txs(): Promise<Record<string, unknown>[]> { return this.post('rows', { fieldList: '*', table: 'txs' }) }
+  txs(): Promise<Record<string, unknown>[]> { return this.rows('txs') }
 }
