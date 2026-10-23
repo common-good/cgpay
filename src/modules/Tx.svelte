@@ -88,7 +88,7 @@
         const res = await u.postRequest('identity', info)
         st.setMe({ ...$st.me, selling: res.isell })
         const dfts = res[pay ? 'selling' : 'isell']
-        tx.description = dfts[0]
+        if (!tx.description) tx.description = dfts[0] // the default, unless the member already typed something while we waited for the server
         otherAccount = { ...otherAccount, ...res, lastTx:u.now() } // lastTx date lets us jettison old customers to save storage
         delete otherAccount.isell
         st.putAcct(card, otherAccount) // store and/or update stored customer account info
