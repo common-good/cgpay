@@ -53,6 +53,8 @@ Scenario: A member undoes the payment and the dashboard shows no transaction
   And click "btn-undo"
   And click "btn1"
   Then on page ""
+  And see "notice-info"
+  And text "msg": "The transaction has been reversed."
   And count "txs" is 0
 
 Rule: A company goes straight to scanning
@@ -74,4 +76,7 @@ Scenario: A member scans their own QR code
   When click "btn-pay"
   And click "btn-scan"
   Then on page ""
+  And see "notice-error"
   And text "msg": "That QR is for the same account as yours."
+  When click "msg-close"
+  Then see not "notice-error"

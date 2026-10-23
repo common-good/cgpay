@@ -2,6 +2,7 @@ import { test as base, createBdd, defineParameterType } from 'playwright-bdd'
 import type { Page } from '@playwright/test'
 import { TestDb } from '../support/test-db'
 import { Vars, parseValue } from '../support/vars'
+import { writeCameraVideo } from '../support/camera'
 
 // What the steps work with: the page, the test database, the scenario's variables, and the time the scenario started (unix seconds).
 export type App = { page: Page, testDb: TestDb, vars: Vars, now: number }
@@ -20,6 +21,7 @@ export const test = base.extend<Fixtures>({
     { auto: true }
   ],
   app: async ({ page, testDb, baseURL }, use) => {
+    writeCameraVideo('') // every scenario starts with the camera seeing nothing (the file keeps what an earlier scenario showed)
     // The legacy app returns members to the dashboard PHP knows (cgpayUrl, a dev server); the tests run against their own server.
     await page.route('**/api/handoff', async route => {
       const res = await route.fetch()
