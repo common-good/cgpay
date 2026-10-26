@@ -1,9 +1,11 @@
-// POST /api/signup - stubbed until the PHP /cgpay-signup endpoint lands.
-// The field names and response shape match the scoping doc so swapping the
-// stub for the real PHP call is a one-file change.
+// POST /api/signup - proxies the new-member signup form to PHP /cgpay-signup.
+// PHP owns account creation, uniqueness checks, invitation chain, and the
+// verification-code email; we only shape the request and forward.
 
 import { json, error } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
+import { env } from '$env/dynamic/private'
+import { phpUrl } from '$lib/utils'
 import { validateSignup, type SignupInput } from '$lib/signup-validation'
 
 export const POST: RequestHandler = async ({ request }) => {
@@ -16,7 +18,11 @@ export const POST: RequestHandler = async ({ request }) => {
 
   if (!body || typeof body !== 'object') return error(400, 'Invalid request body')
 
-  const input = body as Partial<SignupInput>
+  const input = body as Partial<SignupInput> & {
+    invitationCode?: string
+    source?: string
+  }
+
   // Server-side re-validation: the client already ran the same checks, but
   // never trust what the browser sent. Returns 400 w/ per-field errors so the
   // form can show them inline.
@@ -32,15 +38,56 @@ export const POST: RequestHandler = async ({ request }) => {
     return json({ errors: errs, message: 'Please fix the errors above.' }, { status: 400 })
   }
 
-  // TODO: swap for a real call to PHP /cgpay-signup once that endpoint ships.
-  // Expected response shape per the scoping doc: {uid, status: 'verify_email', qid}.
-  // For now, log the submission so a local dev run proves end-to-end wiring and return a stubbed success.
-  console.log('[signup] stub accepted', {
-    fullName: input.fullName,
-    email: input.email,
-    phone: input.phone,
-    zip: input.zip
-  })
+  const secret = env.PHP_SSO_SECRET
+  if (!secret) {
+    console.error('[signup] PHP_SSO_SECRET not configured')
+    return error(502, 'Signup is temporarily unavailable - please try again later.')
+  }
 
-  return json({ uid: 0, status: 'verify_email', qid: 'STUB', stub: true })
+  const payload = {
+    fullName: String(input.fullName),
+    email: String(input.email),
+    phone: String(input.phone),
+    zip: String(input.zip),
+    country: typeof input.country === 'number' ? input.country : 1228,
+    agreementAccepted: true,
+    ...(input.invitationCode ? { invitationCode: String(input.invitationCode) } : {}),
+    ...(input.source ? { source: String(input.source) } : {})
+  }
+
+  let res: Response
+  try {
+    res = await fetch(phpUrl('cgpay-signup'), {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-cg-internal-token': secret
+      },
+      body: JSON.stringify(payload)
+    })
+  } catch (e) {
+    console.error('[signup] PHP network error:', e)
+    return error(502, 'Unable to reach the signup service - please try again.')
+  }
+
+  const text = await res.text()
+  let data: unknown = null
+  try { data = text ? JSON.parse(text) : null } catch { /* non-JSON PHP response */ }
+
+  // PHP returns 400-ish with { errors: { field: msg } } on validation failures.
+  if (!res.ok) {
+    if (data && typeof data === 'object' && 'errors' in data) {
+      return json(data, { status: 400 })
+    }
+    console.error(`[signup] PHP /cgpay-signup returned ${res.status}: ${text.slice(0, 300)}`)
+    return error(502, 'Signup failed - please try again.')
+  }
+
+  if (!data || typeof data !== 'object' || typeof (data as { uid?: unknown }).uid !== 'number') {
+    console.error('[signup] PHP /cgpay-signup returned unexpected body:', text.slice(0, 300))
+    return error(502, 'Signup failed - please try again.')
+  }
+
+  // Pass through PHP's response shape: { uid, qid, status: 'verify_email' }.
+  return json(data)
 }
