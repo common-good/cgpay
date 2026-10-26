@@ -4,10 +4,24 @@
 type Bucket = { hits: number[]; blockedUntil: number }
 const buckets = new Map<string, Bucket>()
 
-// E2E_RATE_LIMIT_MAX lets the local test server allow many sign-in attempts per minute. Production leaves it unset. (process.env, not $env, so the unit test can import this.)
-const MAX_HITS = Number(process.env.E2E_RATE_LIMIT_MAX) || 5 // attempts allowed per window
+// E2E_RATE_LIMIT_MAX lets the local test server allow many sign-in attempts
+// per minute. Honored only outside production so a stray value in a prod .env
+// cannot silently disable the limiter; if we see it set in production anyway,
+// log a one-shot warning so the misconfiguration surfaces in logs.
+// (process.env, not $env, so the unit test can import this.)
 const WINDOW_MS = 60_000   // rolling 60s window
 const BLOCK_MS = 5 * 60_000 // 5 min block after threshold
+
+let MAX_HITS = 5 // attempts allowed per window
+const rawOverride = process.env.E2E_RATE_LIMIT_MAX
+if (rawOverride) {
+  if (process.env.NODE_ENV === 'production') {
+    console.warn('[rate-limit] E2E_RATE_LIMIT_MAX is set in production; ignoring. Unset it or move it to a test-only env file.')
+  } else {
+    const parsed = Number(rawOverride)
+    if (Number.isFinite(parsed) && parsed > 0) MAX_HITS = parsed
+  }
+}
 
 export type RateLimitResult = { ok: true } | { ok: false; retryAfterSec: number }
 

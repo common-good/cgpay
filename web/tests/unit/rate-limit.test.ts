@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, afterEach } from 'vitest'
 import { rateLimit } from '../../src/lib/server/rate-limit'
 
 // The rate limiter uses an in-memory Map keyed by whatever string you pass, so
@@ -59,5 +59,69 @@ describe('rateLimit', () => {
     for (let i = 0; i < 5; i++) {
       expect(rateLimit(key, start + 65_000 + i * 1_000).ok, `re-attempt ${i + 1}`).toBe(true)
     }
+  })
+})
+
+// The limiter reads E2E_RATE_LIMIT_MAX + NODE_ENV at import time. These tests
+// mutate the env, reset the module cache, and dynamic-import so each case gets
+// a fresh instance; the static import at the top of this file is unaffected.
+describe('rateLimit E2E_RATE_LIMIT_MAX guard', () => {
+  const originalEnv = { ...process.env }
+  afterEach(() => {
+    process.env = { ...originalEnv }
+    vi.resetModules()
+    vi.restoreAllMocks()
+  })
+
+  it('ignores E2E_RATE_LIMIT_MAX in production and warns once', async () => {
+    process.env.NODE_ENV = 'production'
+    process.env.E2E_RATE_LIMIT_MAX = '1000'
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    vi.resetModules()
+    const { rateLimit: prodLimit } = await import('../../src/lib/server/rate-limit')
+    expect(warnSpy).toHaveBeenCalledOnce()
+    expect(warnSpy.mock.calls[0][0]).toMatch(/E2E_RATE_LIMIT_MAX is set in production/)
+    const start = 10_000_000
+    for (let i = 0; i < 5; i++) {
+      expect(prodLimit(`prod-guard-${i}`, start + i).ok, `prod attempt ${i + 1}`).toBe(true)
+    }
+    // 6th attempt on the SAME key should be blocked (limit is still 5, not 1000)
+    for (let i = 0; i < 5; i++) prodLimit('prod-same-key', start + i)
+    expect(prodLimit('prod-same-key', start + 5).ok).toBe(false)
+  })
+
+  it('honors E2E_RATE_LIMIT_MAX when NODE_ENV is not production', async () => {
+    process.env.NODE_ENV = 'test'
+    process.env.E2E_RATE_LIMIT_MAX = '20'
+    vi.resetModules()
+    const { rateLimit: testLimit } = await import('../../src/lib/server/rate-limit')
+    const start = 11_000_000
+    // Should allow 20 attempts (not block at 5)
+    for (let i = 0; i < 20; i++) {
+      expect(testLimit('test-override', start + i).ok, `attempt ${i + 1}`).toBe(true)
+    }
+    expect(testLimit('test-override', start + 20).ok).toBe(false)
+  })
+
+  it('falls back to default when E2E_RATE_LIMIT_MAX is not a positive number', async () => {
+    process.env.NODE_ENV = 'test'
+    process.env.E2E_RATE_LIMIT_MAX = 'not-a-number'
+    vi.resetModules()
+    const { rateLimit: badLimit } = await import('../../src/lib/server/rate-limit')
+    const start = 12_000_000
+    for (let i = 0; i < 5; i++) badLimit('bad-override', start + i)
+    expect(badLimit('bad-override', start + 5).ok).toBe(false)
+  })
+
+  it('does not warn or override when E2E_RATE_LIMIT_MAX is unset', async () => {
+    process.env.NODE_ENV = 'production'
+    delete process.env.E2E_RATE_LIMIT_MAX
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    vi.resetModules()
+    const { rateLimit: cleanLimit } = await import('../../src/lib/server/rate-limit')
+    expect(warnSpy).not.toHaveBeenCalled()
+    const start = 13_000_000
+    for (let i = 0; i < 5; i++) cleanLimit('clean-prod', start + i)
+    expect(cleanLimit('clean-prod', start + 5).ok).toBe(false)
   })
 })
