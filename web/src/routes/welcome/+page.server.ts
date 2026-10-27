@@ -4,7 +4,7 @@
 
 import { redirect } from '@sveltejs/kit'
 import type { PageServerLoad } from './$types'
-import { env } from '$env/dynamic/private'
+import { env } from '$env/dynamic/public'
 
 export const load: PageServerLoad = async ({ parent }) => {
   const { user } = await parent()
