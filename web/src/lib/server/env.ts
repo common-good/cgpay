@@ -26,6 +26,7 @@ const REQUIRED_ENV = [
   'PHP_SSO_SECRET',
   'PHP_SSO_COOKIE_NAME',
   'PUBLIC_PHP_BASE_URL',
+  'PUBLIC_TURNSTILE_SITEKEY',
 ] as const
 
 function readBaseUrl(): string {
@@ -83,7 +84,9 @@ export function phpHostname(): string {
 export function assertRequiredEnv(): void {
   const missing: string[] = []
   for (const name of REQUIRED_ENV) {
-    const value = name === 'PUBLIC_PHP_BASE_URL' ? publicEnv[name] : privateEnv[name]
+    const value = name.startsWith('PUBLIC_')
+      ? (publicEnv as Record<string, string | undefined>)[name]
+      : (privateEnv as Record<string, string | undefined>)[name]
     if (!value || value.trim() === '') missing.push(name)
   }
   if (missing.length > 0) {

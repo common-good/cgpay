@@ -1,11 +1,20 @@
 <script lang="ts">
+  import { onMount } from 'svelte'
   import { goto } from '$app/navigation'
+  import { env } from '$env/dynamic/public'
   import Brand from '$lib/components/Brand.svelte'
   import {
     validateFullName, validateEmail, validatePhone, validateZip, validateAgreement,
     validateSignup, type FieldErrors
   } from '$lib/signup-validation'
   import { writeSignupSession } from '$lib/signup-session'
+
+  // Cloudflare Turnstile. The widget is invisible by default: it posts the
+  // token into a hidden input named `cf-turnstile-response` inside its container,
+  // and we read it off the DOM at submit time. The script tag + widget div are
+  // all that's needed to activate it; no npm package.
+  const turnstileSitekey = env.PUBLIC_TURNSTILE_SITEKEY as string
+  let turnstileEl = $state<HTMLDivElement | null>(null)
 
   let fullName = $state('')
   let email = $state('')
@@ -22,6 +31,23 @@
   let submitError = $state<string | null>(null)
   let submitting = $state(false)
 
+  onMount(() => {
+    // Load the Turnstile script once per page load. The widget div with the
+    // cf-turnstile class auto-renders when the script boots.
+    if (document.getElementById('cf-turnstile-script')) return
+    const s = document.createElement('script')
+    s.id = 'cf-turnstile-script'
+    s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js'
+    s.async = true
+    s.defer = true
+    document.head.appendChild(s)
+  })
+
+  function readTurnstileToken(): string {
+    const input = turnstileEl?.querySelector<HTMLInputElement>('input[name="cf-turnstile-response"]')
+    return input?.value ?? ''
+  }
+
   function onBlur(field: keyof FieldErrors, msg: string | null) {
     fieldErrors = { ...fieldErrors, [field]: msg ?? undefined }
   }
@@ -36,10 +62,11 @@
 
     submitting = true
     try {
+      const captchaToken = readTurnstileToken()
       const res = await fetch('/api/signup', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(input)
+        body: JSON.stringify({ ...input, captchaToken })
       })
       if (!res.ok) {
         const body = await res.json().catch(() => ({}))
@@ -156,6 +183,10 @@
             <span>I agree to the <a class="inline-link" href="/agreement" target="_blank" rel="noopener">Common Good Agreement</a>.</span>
           </label>
           {#if fieldErrors.agreementAccepted}<span class="field-err">{fieldErrors.agreementAccepted}</span>{/if}
+        </div>
+
+        <div class="turnstile" bind:this={turnstileEl}>
+          <div class="cf-turnstile" data-sitekey={turnstileSitekey} data-size="flexible"></div>
         </div>
 
         {#if submitError}
@@ -287,6 +318,12 @@
   }
   .inline-link { color: var(--cg-green); text-decoration: underline; }
   .inline-link:hover { color: var(--cg-green-hover); }
+
+  .turnstile {
+    display: flex;
+    justify-content: center;
+    min-height: 65px;
+  }
 
   .err {
     margin: -0.25rem 0 0;

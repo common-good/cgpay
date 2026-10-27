@@ -21,6 +21,7 @@ export const POST: RequestHandler = async ({ request }) => {
   const input = body as Partial<SignupInput> & {
     invitationCode?: string
     source?: string
+    captchaToken?: string
   }
 
   // Server-side re-validation: the client already ran the same checks, but
@@ -51,6 +52,7 @@ export const POST: RequestHandler = async ({ request }) => {
     zip: String(input.zip),
     country: typeof input.country === 'number' ? input.country : 1228,
     agreementAccepted: true,
+    ...(input.captchaToken ? { captchaToken: String(input.captchaToken) } : {}),
     ...(input.invitationCode ? { invitationCode: String(input.invitationCode) } : {}),
     ...(input.source ? { source: String(input.source) } : {})
   }
