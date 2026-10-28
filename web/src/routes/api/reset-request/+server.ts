@@ -1,24 +1,39 @@
+// POST /api/reset-request - stubbed until the PHP /cgpay/reset-request endpoint lands.
+// The field names and response shape match the forgot-password scoping doc so swapping
+// the stub for the real PHP call is a one-file change (see /api/signup/+server.ts as
+// the matching proxy pattern once we're wiring it for real).
+
 import { json, error } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
-import { rateLimit } from '$lib/server/rate-limit'
-import { requestReset } from '$lib/server/reset'
+import { validateResetRequest, type ResetRequestInput } from '$lib/reset-validation'
 
-// Always answers the same way once the input is well-formed, so it cannot be used to find out which accounts exist.
-export const POST: RequestHandler = async ({ request, getClientAddress }) => {
-  const rl = rateLimit(`reset-request:${getClientAddress()}`)
-  if (!rl.ok) throw error(429, `Too many attempts. Try again in ${rl.retryAfterSec}s.`)
-
-  const body = await request.json().catch(() => null)
-  const identifier = typeof body?.identifier === 'string' ? body.identifier.trim() : ''
-  const channel = body?.channel
-  if (!identifier || identifier.length > 254) {
-    return json({ errors: { identifier: 'Please enter your account ID, email, or phone.' } }, { status: 400 })
-  }
-  if (channel !== 'email' && channel !== 'sms') {
-    return json({ errors: { channel: 'Pick a channel for the code.' } }, { status: 400 })
+export const POST: RequestHandler = async ({ request }) => {
+  let body: unknown
+  try {
+    body = await request.json()
+  } catch {
+    return error(400, 'Invalid JSON body')
   }
 
-  // Not awaited: making and delivering a code takes longer than finding no account, so waiting would show which accounts exist.
-  requestReset(identifier, channel).catch(e => console.error('[reset-request] failed:', e))
-  return json({ status: 'code_sent' })
+  if (!body || typeof body !== 'object') return error(400, 'Invalid request body')
+
+  const input = body as Partial<ResetRequestInput>
+  const errs = validateResetRequest({
+    identifier: String(input.identifier ?? ''),
+    channel: (input.channel === 'sms' ? 'sms' : 'email')
+  })
+  if (Object.keys(errs).length > 0) {
+    return json({ errors: errs, message: 'Please fix the errors above.' }, { status: 400 })
+  }
+
+  // TODO: swap for a real POST to PHP /cgpay/reset-request once that endpoint ships.
+  // The real endpoint always returns 200 (identifier-enumeration guard - see scoping doc).
+  // On match it returns { uid, qid }; on no match it returns { uid: 0, qid: '' } with the
+  // same shape so the UI can proceed to the verify page without leaking which identifiers exist.
+  console.log('[reset-request] stub accepted', {
+    identifier: input.identifier,
+    channel: input.channel
+  })
+
+  return json({ uid: 0, qid: 'STUB', status: 'code_sent', stub: true })
 }
