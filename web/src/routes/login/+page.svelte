@@ -10,11 +10,10 @@
 
   const phpBase = (env.PUBLIC_PHP_BASE_URL ?? '').replace(/\/$/, '')
   const helpHref   = phpBase ? phpBase + '/help' : 'mailto:support@commongood.earth'
-  // Sign-up and password-reset live on the PHP member site today. These links
-  // point there until the node redesign ships (cgpay member-features batch).
-  // PHP's /settings/password is its Reset Password page; when signed out it asks for the account ID or email.
+  // Sign-up still lives on PHP until the node redesign in #203 lands. Password reset
+  // now points at the node /reset flow (see feat/forgot-password-scaffold).
   const signupHref = phpBase ? phpBase + '/signup' : ''
-  const forgotHref = phpBase ? phpBase + '/settings/password' : ''
+  const forgotHref = '/reset'
 
   async function submit(e: Event) {
     e.preventDefault()
