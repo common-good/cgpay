@@ -1,5 +1,5 @@
 // POST /api/signup-verify - proxies the verify-code + set-password step to
-// PHP /cgpay-signup-verify. On success PHP returns SSO cookie values with the
+// PHP /cgpay/signup-verify. On success PHP returns SSO cookie values with the
 // same shape as /cgpay-sso; we forward them to the browser the same way
 // /api/login does so the member lands signed in on both the node app and the
 // PHP site.
@@ -8,6 +8,7 @@ import { json, error } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
 import { env } from '$env/dynamic/private'
 import { phpUrl } from '$lib/utils'
+import { rateLimit } from '$lib/server/rate-limit'
 import { phpCookieDomain, phpHostname } from '$lib/server/env'
 
 type VerifyBody = {
@@ -27,7 +28,15 @@ type SsoLike = {
   menu?: string[]
 }
 
-export const POST: RequestHandler = async ({ request, cookies }) => {
+export const POST: RequestHandler = async ({ request, cookies, getClientAddress }) => {
+  // Rate-limit the code-verify step so an attacker can't brute-force the
+  // 32-char code (even with the PHP-side flood control). Mirrors /api/login.
+  const ip = getClientAddress()
+  const rl = rateLimit(`signup-verify:${ip}`)
+  if (!rl.ok) {
+    throw error(429, `Too many attempts. Try again in ${rl.retryAfterSec}s.`)
+  }
+
   let body: VerifyBody
   try {
     body = await request.json()
@@ -54,7 +63,7 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 
   let res: Response
   try {
-    res = await fetch(phpUrl('cgpay-signup-verify'), {
+    res = await fetch(phpUrl('cgpay/signup-verify'), {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
@@ -75,7 +84,7 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
     if (data && typeof data === 'object' && 'errors' in data) {
       return json(data, { status: 400 })
     }
-    console.error(`[signup-verify] PHP /cgpay-signup-verify returned ${res.status}: ${text.slice(0, 300)}`)
+    console.error(`[signup-verify] PHP /cgpay/signup-verify returned ${res.status}: ${text.slice(0, 300)}`)
     return error(502, 'Verification failed - please try again.')
   }
 

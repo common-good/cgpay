@@ -1,4 +1,4 @@
-// POST /api/signup - proxies the new-member signup form to PHP /cgpay-signup.
+// POST /api/signup - proxies the new-member signup form to PHP /cgpay/signup.
 // PHP owns account creation, uniqueness checks, invitation chain, and the
 // verification-code email; we only shape the request and forward.
 
@@ -6,9 +6,19 @@ import { json, error } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
 import { env } from '$env/dynamic/private'
 import { phpUrl } from '$lib/utils'
+import { rateLimit } from '$lib/server/rate-limit'
 import { validateSignup, type SignupInput } from '$lib/signup-validation'
 
-export const POST: RequestHandler = async ({ request }) => {
+export const POST: RequestHandler = async ({ request, getClientAddress }) => {
+  // Each successful call creates an account, sends email, and notifies staff
+  // (tellStaffNewMember). Rate-limit by client IP so a bad actor can't flood
+  // the DB + inboxes. Mirrors the /api/login limiter.
+  const ip = getClientAddress()
+  const rl = rateLimit(`signup:${ip}`)
+  if (!rl.ok) {
+    throw error(429, `Too many attempts. Try again in ${rl.retryAfterSec}s.`)
+  }
+
   let body: unknown
   try {
     body = await request.json()
@@ -59,7 +69,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
   let res: Response
   try {
-    res = await fetch(phpUrl('cgpay-signup'), {
+    res = await fetch(phpUrl('cgpay/signup'), {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
@@ -81,12 +91,12 @@ export const POST: RequestHandler = async ({ request }) => {
     if (data && typeof data === 'object' && 'errors' in data) {
       return json(data, { status: 400 })
     }
-    console.error(`[signup] PHP /cgpay-signup returned ${res.status}: ${text.slice(0, 300)}`)
+    console.error(`[signup] PHP /cgpay/signup returned ${res.status}: ${text.slice(0, 300)}`)
     return error(502, 'Signup failed - please try again.')
   }
 
   if (!data || typeof data !== 'object' || typeof (data as { uid?: unknown }).uid !== 'number') {
-    console.error('[signup] PHP /cgpay-signup returned unexpected body:', text.slice(0, 300))
+    console.error('[signup] PHP /cgpay/signup returned unexpected body:', text.slice(0, 300))
     return error(502, 'Signup failed - please try again.')
   }
 
