@@ -26,5 +26,5 @@ Scenario: Empty submit shows a field error on every required field
   And error "Please enter your email address."
   And error "Please enter your phone number."
   And error "Please enter your ZIP code."
-  And error "You must agree to the Common Good Agreement to continue."
+  And error "You must agree to continue."
   And on page "signup"
