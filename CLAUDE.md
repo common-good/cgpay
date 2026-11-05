@@ -157,7 +157,7 @@ When you learn durable infra facts (not secret values), propose the edit to `doc
 
 ### Local setup (varies by developer; clone the repos wherever suits you)
 
-- **Windows:** keep cgpay in WSL and run node/npm there (e.g. `wsl bash -ic "..."`). Keep cgmembers-frame on the Windows filesystem under WAMP, so the PHP side is reachable at a local URL such as `http://localhost/<folder>/cgmembers`. Files edited from Windows tools can end up with CRLF line endings in the WSL checkout; check diffs with WSL git.
+- **Windows:** work in WSL mode. Keep cgpay in WSL (e.g. `/home/w/cgpay`) and open it in VS Code through the Remote - WSL extension (the lower left corner should read "WSL: Ubuntu-22.04"), so node, npm, git and Claude Code all run natively in Ubuntu and files keep LF line endings. Keep cgmembers-frame on the Windows filesystem under WAMP, so the PHP side is reachable at a local URL such as `http://localhost/<folder>/cgmembers`.
 - **Mac:** TODO (Chris or another Mac developer): document how to run the PHP side locally and where the repos live.
 - Run the dev server from `web/` (`cd web && npm run dev`). Running it from the repo root starts the legacy PWA.
 
