@@ -15,13 +15,14 @@ Servers, sites, and how the pieces fit. Written for both humans and Claude, so i
 | 5 | `bounces.php` exists in cg, in nginx and in a cron line | deleted everywhere (Postmark tracks bounces; member support checks it) |
 | 6 | `copy_admin_keys` in cg `deploy.rb` fails the `test` deploy if `shared/misc` is missing | runs only on `test` and only if `shared/misc` exists |
 | 7 | `rc2.me` and `rc4.me` redirects on the test server point at dead or old hosts | `*.rc2.me` DNS to members, redirect to `pay.main`; `*.rc4.me` stays on test server, redirect to `pay.demo` |
-| 8 | Test server: homes are mode 755; `config.json`, `phinx.json`, `.env` readable by other users | homes 750 with ACL for `nginx`; secret files 600 |
+| 8 | Test server locked down 2026-11-05 (homes 750 + ACL for `nginx`, secrets 600). Members and standby: pay `.env` files are 674 (world-readable) because lsyncd needs a different owner/ACL scheme before they can be 600 without breaking promotion; `config.json` is 600 with an ACL for beta | members/standby `.env` hardened with a promotion-safe scheme |
 | 9 | Test server leftovers: `cgpay-poc` process (port 3000), `new.conf` and old `cgpay-*` nginx confs, PHP 7.3 pool, legacy accounts, a stale second pm2 process on `dev` | removed |
 | 10 | `staging` and `demo` have no running pay process | running once the SvelteKit work merges to main |
 | 11 | Test server MariaDB is 10.6.23, members is 10.11 (Ubuntu 24.04) | decide: accept, or upgrade the test server |
 | 12 | SSH password login still on; no firewall or fail2ban | hardening pass across all servers |
 | 13 | New cg routes need a manual `/sadmin/util/reset-menu` after deploy (all four test envs currently lack the `/cgpay/*` routes) | cg deploy rebuilds the menu automatically |
-| 14 | Test-server runbook ("Runbook - CG server environments setup") predates the PROD runbook | updated to match this doc |
+| 14 | Dead `.env` params (`JWT_SECRET`, `PHP_SSO_URL`, `PHP_COOKIE_DOMAIN`) are still in every pay `.env`; deployed builds still read two of them | removed after the cookie fix (branch `fix/per-env-cookie-domain`) is deployed |
+| 15 | Test-server runbook ("Runbook - CG server environments setup") predates the PROD runbook | updated to match this doc |
 
 ## Servers
 
@@ -48,7 +49,7 @@ SSH: port **7822** everywhere; key auth (password fallback still on until the ha
 | `pay.main`, `pay.beta` | CNAME | `main`, `beta` | **yes** (pay) |
 | `test`, `dev`, `staging`, `demo` and `pay.<env>` | A or CNAME | test server | **yes** |
 
-A promotion flips only `members` and `standby`; everything else follows. SSH aliases `members`/`standby` in William's `~/.ssh/config` point at `members1`/`members2` directly and do not follow promotions. Each `pay.<env>` and `<env>` needs explicit records (a wildcard does not cover them). An old `pay-test` DNS record still exists on the test server side; unused.
+A promotion flips only `members` and `standby`; everything else follows. SSH aliases `members`/`standby` in William's `~/.ssh/config` point at `members1`/`members2` directly and do not follow promotions. Each `pay.<env>` and `<env>` needs explicit records (a wildcard does not cover them). The old `pay-<env>` DNS names have been removed.
 
 `rc2.me` / `rc4.me`: apex records point at promo; `<region>.rc2.me`, `<region>.rc4.me` and `www.rc2.me` point at the test server today.
 **Target:** `*.rc2.me` to members (redirect `<region>.rc2.me/<code>` to `pay.main.commongood.earth/?region=&code=`); `*.rc4.me` stays on the test server and redirects to `pay.demo.commongood.earth/?region=&code=`.
