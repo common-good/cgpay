@@ -11,7 +11,7 @@ Servers, sites, and how the pieces fit. Written for both humans and Claude, so i
 | 1 | Production is the old server `new`; members and standby are being built | members is production, standby is hot standby, `new` retired |
 | 2 | cgpay uses read-only DB user `<env>_ro` | `<env>_cgpay` (SELECT everywhere, writes only on allowlisted tables, first `reset_codes`) |
 | 3 | Script `ropw2` rotates the cgpay DB password and restarts the wrong pm2 name (`pay`) | `cgpaypw2`, restarts `pay-main` / `pay-beta`, handles `_ro` and `_cgpay` |
-| 4 | Test server cookie domain is `.commongood.earth` in all four envs | per env: `.test.commongood.earth`, `.dev...`, etc. |
+| 4 | pay sets its session cookie on `.commongood.earth` for every env (the code derives the last two labels of the PHP host and ignores `PHP_COOKIE_DOMAIN`) | the PHP host itself (`.test.commongood.earth`, `.main...`): branch `fix/per-env-cookie-domain`, commit 5326bc18, not yet a PR or deployed |
 | 5 | `bounces.php` exists in cg, in nginx and in a cron line | deleted everywhere (Postmark tracks bounces; member support checks it) |
 | 6 | `copy_admin_keys` in cg `deploy.rb` fails the `test` deploy if `shared/misc` is missing | runs only on `test` and only if `shared/misc` exists |
 | 7 | `rc2.me` and `rc4.me` redirects on the test server point at dead or old hosts | `*.rc2.me` DNS to members, redirect to `pay.main`; `*.rc4.me` stays on test server, redirect to `pay.demo` |
@@ -20,7 +20,8 @@ Servers, sites, and how the pieces fit. Written for both humans and Claude, so i
 | 10 | `staging` and `demo` have no running pay process | running once the SvelteKit work merges to main |
 | 11 | Test server MariaDB is 10.6.23, members is 10.11 (Ubuntu 24.04) | decide: accept, or upgrade the test server |
 | 12 | SSH password login still on; no firewall or fail2ban | hardening pass across all servers |
-| 13 | Test-server runbook ("Runbook - CG server environments setup") predates the PROD runbook | updated to match this doc |
+| 13 | New cg routes need a manual `/sadmin/util/reset-menu` after deploy (all four test envs currently lack the `/cgpay/*` routes) | cg deploy rebuilds the menu automatically |
+| 14 | Test-server runbook ("Runbook - CG server environments setup") predates the PROD runbook | updated to match this doc |
 
 ## Servers
 
@@ -127,6 +128,7 @@ One Let's Encrypt cert `commongood.earth`: apex plus `*.commongood.earth` and `*
 - Stages: `main`, `beta`, `main-standby`, `beta-standby`; test server has `test`, `dev`, `staging`, `demo`. One `deploy.rb` per repo handles all of them.
 - `phinx migrate` runs only under `main`, never `beta`. Repos are public; deploys clone over https.
 - pm2 process name is `pay-<stage>`. It must run from `current_path`, not a release dir; a stale pinned process needs `pm2 delete pay-<stage>` once (live now: `dev` on the test server has one).
+- **Menu rebuild.** cg keeps its routes in Drupal's `menu_router` table, rebuilt only when `R_VERSION` changes (unchanged since 2019). A deploy that adds or renames a route (the `/cgpay/*` endpoints) is invisible until an admin visits `/sadmin/util/reset-menu` on that env, or pay gets HTML "Page Not Found" from `/cgpay/whoami` and nobody can sign in. Check: `select count(*) from menu_router where path like 'cgpay/%'` is greater than 0. **Target:** a cg deploy step rebuilds the menu, which makes this manual step unnecessary.
 - cg `deploy.rb` task `copy_admin_keys` copies `shared/misc` into the release on stage `test` only. **Target:** also skip when `shared/misc` does not exist, so a missing directory no longer aborts the deploy. On `dev`, `staging` and `demo` the keys are copied in by hand once per release when needed, never kept in `shared/`.
 
 ## Operations
@@ -141,17 +143,17 @@ Backups: standby only, `mysqldump` of `main` via account `backup`, daily/weekly/
 
 ## Secrets (where, not what)
 
-name.com token and Postmark tokens: root-only files under `/etc/letsencrypt/namecom/`, `/etc/cert-monitor/`, `/etc/mysql-backup/`. DB passwords: config files above and William's password manager. Root MariaDB uses `unix_socket` (sudo, no password). On the test server today, `config.json`, `phinx.json` and `.env` are world-readable; see Target.
+name.com token and Postmark tokens: root-only files under `/etc/letsencrypt/namecom/`, `/etc/cert-monitor/`, `/etc/mysql-backup/`. DB passwords: config files above and William's password manager. Root MariaDB uses `unix_socket` (sudo, no password). On the test server these files are now mode 600 and homes 750 (locked down 2026-11-05). On members and standby the pay `.env` files are still mode 664 (world-readable) and need tightening; `beta` reads `main`'s `config/` through an ACL, so a plain `chmod 600` on `config.json` would break beta.
 
 ## Test server and promo
 
 Facts as of 2026-11-05 (read-only look; crontabs, pm2 lists and MariaDB users need sudo and are unverified):
 
 - 8 nginx server blocks (`<env>`, `pay.<env>` for test/dev/staging/demo) on the synced cert; per env a PHP-FPM pool and Linux user. pay is up on 3001 (test) and 3002 (dev); staging/demo pay not running (3003/3004 closed).
-- Cookie domain is `.commongood.earth` in every env's cg and pay config (shared across envs). `baseUrl` is `""`.
+- pay's cookie domain is `.commongood.earth` for every env (derived in code; `PHP_COOKIE_DOMAIN`, `JWT_SECRET` and `PHP_SSO_URL` in `.env` are not read). `baseUrl` is `""`. cg's own cookie scope is still the open item below.
 - `demo` is public-facing and deliberately skips real verification, transfers, and staff alerts via `stage`.
 - Leftovers: `cgpay-poc` (user `cschwab`, port 3000), `new.conf`, `old-new`, `cgpay-*`, `app1`, `ws`, `default` nginx confs, a PHP 7.3 pool, legacy accounts `new`, `new-demo`, `fuzzy`, `scooley`, `jridgway`, and on `dev` a second node process pinned to release `20260902...`.
-- **Target:** per-env cookie domains; homes 750 with an ACL for `nginx`, secret files 600; leftovers removed; `bounces` locations removed from the env confs; rc2/rc4 redirects updated (see DNS); `staging` and `demo` pay running once SvelteKit merges.
+- **Target:** per-env cookie scope (code fix above); homes 750 with an ACL for `nginx`, secret files 600; leftovers removed; `bounces` locations removed from the env confs; rc2/rc4 redirects updated (see DNS); `staging` and `demo` pay running once SvelteKit merges.
 - **promo**: only `www.commongood.earth` uses the wildcard cert; nothing synced from members except the cert.
 
 ## Open items
