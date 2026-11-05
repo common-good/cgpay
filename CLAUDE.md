@@ -151,6 +151,10 @@ Plain specs (`web/tests/e2e/`) are being replaced gradually by Gherkin features 
 
 Companion repo: `cgmembers-frame` (Drupal-7-derived PHP - member site, admin, tx engine). See its `CLAUDE.md` for the PHP-side conventions.
 
+Servers, sites, DNS, DB users, and deploy/sync layout: see `docs/infrastructure.md`. Read it before touching deploy, nginx, DNS, or env config.
+
+When you learn durable infra facts (not secret values), propose the edit to `docs/infrastructure.md` and wait for approval. When you edit it, also re-check one or two existing claims against what you've seen.
+
 ### Local setup (varies by developer; clone the repos wherever suits you)
 
 - **Windows:** keep cgpay in WSL and run node/npm there (e.g. `wsl bash -ic "..."`). Keep cgmembers-frame on the Windows filesystem under WAMP, so the PHP side is reachable at a local URL such as `http://localhost/<folder>/cgmembers`. Files edited from Windows tools can end up with CRLF line endings in the WSL checkout; check diffs with WSL git.
