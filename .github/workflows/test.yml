@@ -52,6 +52,7 @@ jobs:
       PHP_SSO_SECRET: 'ci-dummy-secret'
       PHP_SSO_COOKIE_NAME: 'SESSci'
       PUBLIC_PHP_BASE_URL: 'http://localhost/cg/cgmembers'
+      PUBLIC_TURNSTILE_SITEKEY: '1x00000000000000000000AA'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
