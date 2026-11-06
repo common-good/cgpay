@@ -1,5 +1,5 @@
 // Pure validators for the sign-up form. Shape matches the fields PHP
-// `/cgpay-signup` will expect once that endpoint lands (see the bank-transfers
+// `/cgpay/signup` will expect once that endpoint lands (see the bank-transfers
 // scoping doc's sibling: node signup redesign). Format-only checks live here
 // so submit-time UX stays responsive; final uniqueness, criminal-name and
 // anti-abuse checks stay on the PHP side.

@@ -1,6 +1,6 @@
 // POST /api/signup-verify - proxies the verify-code + set-password step to
 // PHP /cgpay/signup-verify. On success PHP returns SSO cookie values with the
-// same shape as /cgpay-sso; we forward them to the browser the same way
+// same shape as /cgpay/sso; we forward them to the browser the same way
 // /api/login does so the member lands signed in on both the node app and the
 // PHP site.
 
@@ -13,6 +13,7 @@ import { phpCookieDomain, phpHostname } from '$lib/server/env'
 
 type VerifyBody = {
   uid?: unknown
+  qid?: unknown
   code?: unknown
   newPassword?: unknown
 }
@@ -45,11 +46,15 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
   }
 
   const uid = typeof body.uid === 'number' ? body.uid : 0
+  const qid = typeof body.qid === 'string' ? body.qid.trim() : ''
   const code = typeof body.code === 'string' ? body.code.trim() : ''
   const newPassword = typeof body.newPassword === 'string' ? body.newPassword : ''
 
-  if (!uid || !code || !newPassword) {
-    return json({ message: 'uid, code, and newPassword are required.' }, { status: 400 })
+  // The email-link flow may arrive with only qid (no uid, since sessionStorage
+  // is per-tab and the email may open in a different tab/device). PHP accepts
+  // either; we just need at least one of them.
+  if ((!uid && !qid) || !code || !newPassword) {
+    return json({ message: 'uid or qid, code, and newPassword are required.' }, { status: 400 })
   }
   if (newPassword.length < 8) {
     return json({ errors: { newPassword: 'Password must be at least 8 characters.' } }, { status: 400 })
@@ -69,7 +74,7 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
         'content-type': 'application/json',
         'x-cg-internal-token': secret
       },
-      body: JSON.stringify({ uid, code, newPassword })
+      body: JSON.stringify({ uid, qid, code, newPassword })
     })
   } catch (e) {
     console.error('[signup-verify] PHP network error:', e)

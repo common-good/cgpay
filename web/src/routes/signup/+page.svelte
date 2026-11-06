@@ -15,6 +15,8 @@
   // all that's needed to activate it; no npm package.
   const turnstileSitekey = env.PUBLIC_TURNSTILE_SITEKEY as string
   let turnstileEl = $state<HTMLDivElement | null>(null)
+  let captchaReady = $state(false)
+  let captchaPollTimer: ReturnType<typeof setInterval> | undefined
 
   let fullName = $state('')
   let email = $state('')
@@ -34,13 +36,24 @@
   onMount(() => {
     // Load the Turnstile script once per page load. The widget div with the
     // cf-turnstile class auto-renders when the script boots.
-    if (document.getElementById('cf-turnstile-script')) return
-    const s = document.createElement('script')
-    s.id = 'cf-turnstile-script'
-    s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js'
-    s.async = true
-    s.defer = true
-    document.head.appendChild(s)
+    if (!document.getElementById('cf-turnstile-script')) {
+      const s = document.createElement('script')
+      s.id = 'cf-turnstile-script'
+      s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js'
+      s.async = true
+      s.defer = true
+      document.head.appendChild(s)
+    }
+    // Poll for the token so we can enable the submit button + show the member
+    // something coherent instead of "Sign up failed (400)" when they submit
+    // before Turnstile is ready. Stops once we see a token.
+    captchaPollTimer = setInterval(() => {
+      if (readTurnstileToken()) {
+        captchaReady = true
+        clearInterval(captchaPollTimer)
+      }
+    }, 300)
+    return () => clearInterval(captchaPollTimer)
   })
 
   function readTurnstileToken(): string {
@@ -60,9 +73,14 @@
     fieldErrors = errs
     if (Object.keys(errs).length > 0) return
 
+    const captchaToken = readTurnstileToken()
+    if (!captchaToken) {
+      submitError = 'Verification is still loading - please wait a moment and try again.'
+      return
+    }
+
     submitting = true
     try {
-      const captchaToken = readTurnstileToken()
       const res = await fetch('/api/signup', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -70,9 +88,16 @@
       })
       if (!res.ok) {
         const body = await res.json().catch(() => ({}))
-        // Field-level errors from PHP merge in so the user sees them inline.
-        if (body?.errors && typeof body.errors === 'object') fieldErrors = { ...fieldErrors, ...body.errors }
-        submitError = body?.message ?? `Sign up failed (${res.status}). Try again.`
+        const phpErrors = (body?.errors && typeof body.errors === 'object') ? body.errors as Record<string, string> : {}
+        // Captcha errors aren't a field in the form - surface them as the submit error.
+        if (phpErrors.captcha) {
+          submitError = phpErrors.captcha
+          delete phpErrors.captcha
+        } else {
+          submitError = body?.message ?? `Sign up failed (${res.status}). Try again.`
+        }
+        // Remaining field-level errors from PHP merge in so the user sees them inline.
+        if (Object.keys(phpErrors).length > 0) fieldErrors = { ...fieldErrors, ...phpErrors }
         return
       }
       const body = await res.json().catch(() => ({}))
@@ -193,8 +218,8 @@
           <p class="err" role="alert">{submitError}</p>
         {/if}
 
-        <button type="submit" class="primary" data-testid="btn-signup" disabled={submitting}>
-          {submitting ? 'Creating account…' : 'Create my account'}
+        <button type="submit" class="primary" data-testid="btn-signup" disabled={submitting || !captchaReady}>
+          {submitting ? 'Creating account…' : (captchaReady ? 'Create my account' : 'Loading verification…')}
         </button>
       </form>
     </div>

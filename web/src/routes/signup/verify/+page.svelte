@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import { goto } from '$app/navigation'
+  import { page } from '$app/state'
   import Brand from '$lib/components/Brand.svelte'
   import { validateCode } from '$lib/signup-validation'
   import { readSignupSession, writeSignupSession } from '$lib/signup-session'
@@ -11,13 +12,31 @@
   let qid = $state('')
 
   onMount(() => {
+    // Email-link flow: the verification email carries ?qid=...&code=... so the
+    // member can finish in a new tab or on a different device. Prefer those URL
+    // params; only fall back to sessionStorage (same-tab flow) if the URL has nothing.
+    const urlCode = (page.url.searchParams.get('code') ?? '').trim()
+    const urlQid = (page.url.searchParams.get('qid') ?? '').trim()
     const session = readSignupSession()
-    if (!session) {
-      // No signup in progress on this device - send them back to the start.
+
+    if (urlQid) qid = urlQid
+    else if (session) qid = session.qid
+
+    if (urlCode) code = urlCode
+
+    if (!urlQid && !session) {
+      // No signup context at all (no URL params, no sessionStorage) - send
+      // them to the start. The /api/signup-verify endpoint can take either
+      // uid (from session) or qid (from URL), so one is enough.
       goto('/signup')
       return
     }
-    qid = session.qid
+
+    // Seed sessionStorage from the URL so the /signup/password step (which
+    // reads from session) has what it needs. uid stays 0 when we only have qid.
+    if (urlQid && (!session || session.qid !== urlQid)) {
+      writeSignupSession({ uid: session?.uid ?? 0, qid: urlQid })
+    }
   })
 
   function onBlur() {
@@ -32,11 +51,7 @@
 
     submitting = true
     const session = readSignupSession()
-    if (!session) {
-      await goto('/signup')
-      return
-    }
-    writeSignupSession({ ...session, code: code.trim() })
+    writeSignupSession({ uid: session?.uid ?? 0, qid: qid || session?.qid || '', code: code.trim() })
     await goto('/signup/password')
   }
 </script>

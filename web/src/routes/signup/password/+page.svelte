@@ -48,7 +48,7 @@
       const res = await fetch('/api/signup-verify', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ uid: session.uid, code: session.code, newPassword: password })
+        body: JSON.stringify({ uid: session.uid, qid: session.qid, code: session.code, newPassword: password })
       })
       if (!res.ok) {
         const body = await res.json().catch(() => ({}))
