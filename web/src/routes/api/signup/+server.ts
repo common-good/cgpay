@@ -9,7 +9,7 @@ import { phpUrl } from '$lib/utils'
 import { rateLimit } from '$lib/server/rate-limit'
 import { validateSignup, type SignupInput } from '$lib/signup-validation'
 
-export const POST: RequestHandler = async ({ request, getClientAddress }) => {
+export const POST: RequestHandler = async ({ request, cookies, getClientAddress }) => {
   // Each successful call creates an account, sends email, and notifies staff
   // (tellStaffNewMember). Rate-limit by client IP so a bad actor can't flood
   // the DB + inboxes. Mirrors the /api/login limiter.
@@ -55,6 +55,13 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
     return error(502, 'Signup is temporarily unavailable - please try again later.')
   }
 
+  // The `ad` cookie is set by the promo site when a visitor arrives from a
+  // `cg4.us/a=XXX` QR / link. The legacy PHP signup form reads it directly from
+  // $_COOKIE in signup.inc; this proxy forwards it to PHP as source2 so the
+  // new signup path carries the same attribution. (Read it server-side, not
+  // client-side, so the ad cookie can stay HttpOnly in a future hardening.)
+  const adCookie = cookies.get('ad')?.trim() ?? ''
+
   const payload = {
     fullName: String(input.fullName),
     email: String(input.email),
@@ -64,7 +71,8 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
     agreementAccepted: true,
     ...(input.captchaToken ? { captchaToken: String(input.captchaToken) } : {}),
     ...(input.invitationCode ? { invitationCode: String(input.invitationCode) } : {}),
-    ...(input.source ? { source: String(input.source) } : {})
+    ...(input.source ? { source: String(input.source) } : {}),
+    ...(adCookie ? { source2: adCookie } : {})
   }
 
   let res: Response
