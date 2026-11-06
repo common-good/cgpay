@@ -55,11 +55,14 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
     return error(502, 'Signup is temporarily unavailable - please try again later.')
   }
 
-  // The `ad` cookie is set by the promo site when a visitor arrives from a
-  // `cg4.us/a=XXX` QR / link. The legacy PHP signup form reads it directly from
-  // $_COOKIE in signup.inc; this proxy forwards it to PHP as source2 so the
-  // new signup path carries the same attribution. (Read it server-side, not
-  // client-side, so the ad cookie can stay HttpOnly in a future hardening.)
+  // The `ad` cookie is set by cg4.us when a visitor arrives from a
+  // cg4.us/a=XXX / w=XXX / q=XXX QR or link (a= goes to the app, w= to the
+  // website, q= is a company account ID). For non-members, cg4.us appends to
+  // the cookie instead of overwriting, so the value is a space-separated chain
+  // of every source the visitor touched before signing up. The legacy PHP form
+  // reads it directly from $_COOKIE; this proxy forwards it to PHP as source2
+  // so the new signup path carries the same attribution. (Read it server-side,
+  // not client-side, so the ad cookie can stay HttpOnly in a future hardening.)
   const adCookie = cookies.get('ad')?.trim() ?? ''
 
   const payload = {
