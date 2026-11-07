@@ -148,6 +148,18 @@ Backups: standby only, `mysqldump` of `main` via account `backup`, daily/weekly/
 
 name.com token and Postmark tokens: root-only files under `/etc/letsencrypt/namecom/`, `/etc/cert-monitor/`, `/etc/mysql-backup/`. DB passwords: config files above and William's password manager. Root MariaDB uses `unix_socket` (sudo, no password). On the test server these files are now mode 600 and homes 750 (locked down 2026-11-05). On members and standby the pay `.env` files are still mode 664 (world-readable) and need tightening; `beta` reads `main`'s `config/` through an ACL, so a plain `chmod 600` on `config.json` would break beta.
 
+## Third-party services
+
+All keys sit in cg's `config.json` (see Secrets). Setup steps: "Runbook - Third-party services setup".
+
+| Service | Keys | Notes |
+|---|---|---|
+| Postmark | `postmarkKey` | All app mail goes through its API. Production server for main and beta, a test server for the rest; mail must be sendable from main, beta, demo, dev, test. Bounces are tracked there |
+| Stripe | `stripePublic`, `stripeSecret` | Nonmember card payments. Test keys everywhere except main and beta. No webhook handler in the code |
+| QuickBooks Online | `qboCreds` = "ClientID,Secret" | Authorize once on main at `/qbo`; cron refreshes the token every 6 hours (DB variable `qboRefresh`). Only the active server may refresh |
+| SSN lookup | `ssnUser`, `ssnPass`, `ssnRequest` | nationalpublicdata.com via `Acct::ssnCheck()`. Account's card expired, no site login, only the API keys. Production only (other stages use a canned file) |
+| Bank partner | none: `BANK` / `BANK_DATA` in `defs.inc` | Climate First Bank. Admin builds the NACHA file (`achbatch.inc`), uploaded by hand in the bank portal. A new bank is a code change |
+
 ## Test server and promo
 
 Facts as of 2026-11-06:
