@@ -14,9 +14,9 @@ Servers, sites, and how the pieces fit. Written for both humans and Claude, so i
 | 4 | pay sets its session cookie on `.commongood.earth` for every env (the code derives the last two labels of the PHP host and ignores `PHP_COOKIE_DOMAIN`) | the PHP host itself (`.test.commongood.earth`, `.main...`): cgpay PR #209, not yet merged or deployed |
 | 5 | `bounces.php` removed 2026-11-06 from the members and standby crontab and nginx, and from the PROD runbook; the file is deleted in cgmembers-frame PR #98 (not yet merged) | merged, deployed everywhere (Postmark tracks bounces; member support checks it) |
 | 6 | `copy_admin_keys` in cg `deploy.rb` fails the `test` deploy if `shared/misc` is missing (fix: cgmembers-frame PR #99, not yet merged) | runs only on `test` and only if `shared/misc` exists |
-| 7 | `rc2.me` and `rc4.me` redirects on the test server point at dead or old hosts | `*.rc2.me` DNS to members, redirect to `pay.main`; `*.rc4.me` stays on test server, redirect to `pay.demo` |
+| 7 | Redirects done 2026-11-06 (test server rc2 and rc4, members and standby rc2). DNS not yet changed: `<region>.rc2.me` and `www.rc2.me` still point at the test server | `*.rc2.me` DNS to members; `*.rc4.me` stays on the test server |
 | 8 | Test server locked down 2026-11-05 (homes 750 + ACL for `nginx`, secrets 600). Members and standby: pay `.env` files are 674 (world-readable) because lsyncd needs a different owner/ACL scheme before they can be 600 without breaking promotion; `config.json` is 600 with an ACL for beta | members/standby `.env` hardened with a promotion-safe scheme |
-| 9 | Test server leftovers: account `new` (PHP 7.3 pool, `new.conf`, `cgpay-dev.conf` and `cgpay-staging.conf` nginx confs, `/home/new` with a 32 GB 2024 backup zip), old per-env GitHub deploy keys and `~/.ssh/config` aliases. Removed 2026-11-06: the `cgpay-poc` process, systemd unit, nginx conf, logs and `/home/cschwab/cgpay` (Chris approved; his one stash is saved as `docs/cschwab-poc-stash-2026-11-06.patch`), the DB users `new_cg`, `new_user`, `new_demo` with the databases `new_cg` and `new_demo`, `/home/new-demo`, the accounts `fuzzy`, `jridgway`, `scooley`, and `bounces` leftovers | removed |
+| 9 | Test server leftovers removed 2026-11-06: the `cgpay-poc` process, systemd unit, nginx conf, logs and `/home/cschwab/cgpay` (Chris approved; his one stash is saved as `docs/cschwab-poc-stash-2026-11-06.patch`); the DB users `new_cg`, `new_user`, `new_demo` and the databases `new_cg`, `new_demo`; the account `new` (including a 32 GB 2024 backup zip), its PHP pools and the `new`, `cgpay-*`, `app1`, `ws` nginx confs (archived in `/root/nginx-old-confs-nov6.tgz`); `/home/new-demo`; the accounts `fuzzy`, `jridgway`, `scooley`; the per-env GitHub deploy keys (server and GitHub) | none |
 | 10 | `staging` and `demo` have no running pay process | running once the SvelteKit work merges to main |
 | 11 | Test server MariaDB is 10.6.23, members is 10.11 (Ubuntu 24.04) | decide: accept, or upgrade the test server |
 | 12 | SSH password login still on; no firewall or fail2ban | hardening pass across all servers |
@@ -54,7 +54,7 @@ SSH: port **7822** everywhere; key auth (password fallback still on until the ha
 A promotion flips only `members` and `standby`; everything else follows. SSH aliases `members`/`standby` in William's `~/.ssh/config` point at `members1`/`members2` directly and do not follow promotions. Each `pay.<env>` and `<env>` needs explicit records (a wildcard does not cover them). The old `pay-<env>` DNS names have been removed.
 
 `rc2.me` / `rc4.me`: apex records point at promo; `<region>.rc2.me`, `<region>.rc4.me` and `www.rc2.me` point at the test server today.
-**Target:** `*.rc2.me` to members (redirect `<region>.rc2.me/<code>` to `pay.main.commongood.earth/?region=&code=`); `*.rc4.me` stays on the test server and redirects to `pay.demo.commongood.earth/?region=&code=`.
+Redirect format (live on the test server for rc2 and rc4, and on members and standby for rc2): `[<region>.]rc2.me/<type><code>` goes to `https://pay.main.commongood.earth/Q=CGCARD-<type><region><code>` (302); rc4 goes to `pay.demo` the same way. **Target:** `*.rc2.me` DNS to members; `*.rc4.me` stays on the test server.
 
 ## Environments on members and standby
 
@@ -156,13 +156,13 @@ Facts as of 2026-11-06:
 - pay's cookie domain is `.commongood.earth` for every env (derived in code; `PHP_COOKIE_DOMAIN`, `JWT_SECRET` and `PHP_SSO_URL` in `.env` are not read; removed from the `.env` files on 2026-11-06). `baseUrl` is `""`. cg's own cookie scope is still the open item below.
 - `demo` is public-facing and deliberately skips real verification, transfers, and staff alerts via `stage`.
 - Leftovers: see item 9.
-- **Target:** per-env cookie scope (code fix above); homes 750 with an ACL for `nginx`, secret files 600; leftovers removed; rc2/rc4 redirects updated (see DNS); `staging` and `demo` pay running once SvelteKit merges.
+- **Target:** per-env cookie scope (code fix above); homes 750 with an ACL for `nginx`, secret files 600; leftovers removed; rc2/rc4 DNS (see DNS); `staging` and `demo` pay running once SvelteKit merges.
 - **promo**: only `www.commongood.earth` uses the wildcard cert; nothing synced from members except the cert.
 
 ## Open items
 
 - How cg sets its session cookie `Domain` (if from `config.json`, beta's shared file breaks per-env scoping).
-- `coApiUrl` placeholder in `config.json`.
+- `coApiUrl` keeps the template placeholder (`http://%website/cgapi/%etc`) on every env; `cgfEmail` and `promoUrl` are real on main and beta (2026-11-06) and still placeholders on the test server.
 - Runbook status and remaining differences: `~/docs/runbooks/conflicts-2026-11-05.md`.
 
 ---
