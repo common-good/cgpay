@@ -126,13 +126,14 @@ Plain specs (`web/tests/e2e/`) are being replaced gradually by Gherkin features 
 - Given is context, named as a state (`signed in as`, `acting as`, `on page`). When is the one action under test, an imperative (`input`, `select`, `click`, `camera`). Then is the outcome. Never use `*` as a step keyword.
 - To enter two or more values use `input:` with a table (element ids in the header row, one row of values; selects work too). For one value use `input "x": "y"` or `select "x": "y"`.
 - A step with a table argument ends with the table's shape: `values:`, `rows:`, `row:`, `rows pivoted:`, `row pivoted:` or `values pivoted:`. `Then these "x" rows:` means the app includes those rows (any order, more allowed); use `count "x" is N` for an exact number.
+- In a scenario, a Given or When that comes after a Then starts a new part of the story: put a blank line before it (and before its group, if And steps follow). A unit test checks it.
 - Pages are literal paths without the leading slash: `on page "grants/new"`, and `on page ""` for the dashboard.
 - Magic values: account nicknames are bare (`Abe`, `Bea`); everything else starts with `%` (`%now`, `%ymd-3d`, `%random3`, and `%name` for a variable defined with `var "name" is "..."`). The full list is at the top of `tests/support/magic.ts`. Tests run in the America/New_York time zone.
 - `steps.ts` has the GWhen steps (valid after Given or When), one blank line, then the Then steps; each section is alphabetical by step text without its arguments (a unit test checks it). Support functions for Then steps start with `so`.
 
 ## Conventions
 
-- **No em-dashes** (`-`) anywhere in code, PRs, commit messages, or comments (per Chris's preference).
+- **No multi-byte characters** (em-dashes, curly quotes, arrows, ellipsis characters, accents and the like; plain ASCII only) in code, PRs, commit messages, or comments. Anything that reads the text with the wrong encoding (some terminals, Windows tools, logs, mail clients, browsers without a charset header) shows them as garbage such as `?` or a run of odd characters. Use `-`, `"`, `'`, `->` and `...` instead.
 - **Commit messages: title only, no body.** Details go in PR descriptions.
 - **No `Co-Authored-By: Claude` trailers** on commits.
 - **Comments:** default to none. Only add for non-obvious *why* - a hidden constraint, a subtle invariant, a workaround. Never explain *what* the code does. Exception, function headers: short functions get none; longer ones get a header that says informally what the function does and what it is good for.

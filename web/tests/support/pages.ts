@@ -2,6 +2,8 @@ import { expect } from '@playwright/test'
 import type { App } from '../steps/fixtures'
 import { acct } from './accounts'
 import { resolve } from './magic'
+import { writeCameraVideo } from './camera'
+import { qrOf } from './accounts'
 
 // What the steps do in the browser. The only place that knows element ids (data-testid) and URLs.
 // Checks are named so... and say what they were looking for when they fail.
@@ -37,17 +39,21 @@ export default {
     await app.page.goto('/')
   },
 
-  /** Give the device a camera or take it away ("present" or "absent"), then reload so the dashboard notices. */
+  /** Give the device a camera or take it away ("present" or "absent"). The browser has a fake camera, so "present" needs nothing; "absent" hides it, then reload so the dashboard notices. */
   async camera(app: App, state: string) {
     if (state !== 'present' && state !== 'absent') throw new Error(`camera "${state}": say "present" or "absent".`)
+    if (state === 'present') return
     await app.page.addInitScript((hasCamera: boolean) => {
       Object.defineProperty(navigator, 'mediaDevices', {
         configurable: true,
         value: { enumerateDevices: async () => hasCamera ? [{ kind: 'videoinput' }] : [] }
       })
-    }, state === 'present')
+    }, false)
     await app.page.reload()
   },
+
+  /** The camera sees this account's QR code (set before the scan page opens). */
+  async cameraShows(app: App, who: string) { writeCameraVideo(qrOf(who)) },
 
   async click(app: App, id: string) { await app.page.getByTestId(id).click() },
 
@@ -119,5 +125,10 @@ export default {
     else await expect(app.page.getByText(v), `see not "${v}" (as text)`).toHaveCount(0)
   },
 
-  async soSignedIn(app: App, who: string) { await checkSignedIn(app, who) }
+  async soSignedIn(app: App, who: string) { await checkSignedIn(app, who) },
+
+  /** The element's text is exactly this. Literal text is fine for a first version of a test; later, mark the text and check the marker. */
+  async soText(app: App, id: string, value: string) {
+    await expect(app.page.getByTestId(id), `text "${id}": "${value}"`).toHaveText(text(app, value, id), { timeout: 10_000 })
+  }
 }
