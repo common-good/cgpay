@@ -7,6 +7,7 @@ The modernized member-facing app for Common Good. Runs behind pm2 alongside the 
 - **`web/`** - the current SvelteKit + adapter-node app. All active engineering happens here.
 - **top-level `src/`, `public/`, `dist/`, `vite.config.js`, `constants.js`, `utils0.js`** - legacy PWA (last touched Jan 2025 apart from one 2026-05 circular-import fix). Do not add new code here; do not delete without asking William - it still ships in some capacity.
 - **`config/deploy.rb`, `config/deploy/*.rb`, `Capfile`, `Gemfile`** - Capistrano deploy config for the SvelteKit app (see Deploy below).
+- **`server/`** - scripts, nginx confs, lsyncd conf and systemd units for the production pair (members + standby); the production runbook installs them from here, and they mirror what runs on the servers (see `server/README.md`).
 
 ## Tech stack
 
@@ -133,6 +134,7 @@ Plain specs (`web/tests/e2e/`) are being replaced gradually by Gherkin features 
 ## Conventions
 
 - **No multi-byte characters** (em-dashes, curly quotes, arrows, ellipsis characters, accents and the like; plain ASCII only) in code, PRs, commit messages, or comments. Anything that reads the text with the wrong encoding (some terminals, Windows tools, logs, mail clients, browsers without a charset header) shows them as garbage such as `?` or a run of odd characters. Use `-`, `"`, `'`, `->` and `...` instead.
+- **Public repo: no security gaps, no server specifics.** Never put known weaknesses or concerns, server IPs, ports, account names or hardening state in this repo, its PRs, issues or commit messages. They live in a root-only private directory on the test server (ask William for the path); fix the weakness, then record it there.
 - **Commit messages: title only, no body.** Details go in PR descriptions.
 - **No `Co-Authored-By: Claude` trailers** on commits.
 - **Comments:** default to none. Only add for non-obvious *why* - a hidden constraint, a subtle invariant, a workaround. Never explain *what* the code does. Exception, function headers: short functions get none; longer ones get a header that says informally what the function does and what it is good for.
@@ -152,9 +154,13 @@ Plain specs (`web/tests/e2e/`) are being replaced gradually by Gherkin features 
 
 Companion repo: `cgmembers-frame` (Drupal-7-derived PHP - member site, admin, tx engine). See its `CLAUDE.md` for the PHP-side conventions.
 
+Servers, sites, DNS, DB users, and deploy/sync layout: see `docs/infrastructure.md`. Read it before touching deploy, nginx, DNS, or env config.
+
+When you learn durable infra facts (not secret values), propose the edit to `docs/infrastructure.md` and wait for approval. When you edit it, also re-check one or two existing claims against what you've seen.
+
 ### Local setup (varies by developer; clone the repos wherever suits you)
 
-- **Windows:** keep cgpay in WSL and run node/npm there (e.g. `wsl bash -ic "..."`). Keep cgmembers-frame on the Windows filesystem under WAMP, so the PHP side is reachable at a local URL such as `http://localhost/<folder>/cgmembers`. Files edited from Windows tools can end up with CRLF line endings in the WSL checkout; check diffs with WSL git.
+- **Windows:** work in WSL mode. Keep cgpay in WSL (e.g. `/home/w/cgpay`) and open it in VS Code through the Remote - WSL extension (the lower left corner should read "WSL: Ubuntu-22.04"), so node, npm, git and Claude Code all run natively in Ubuntu and files keep LF line endings. Keep cgmembers-frame on the Windows filesystem under WAMP, so the PHP side is reachable at a local URL such as `http://localhost/<folder>/cgmembers`.
 - **Mac:** TODO (Chris or another Mac developer): document how to run the PHP side locally and where the repos live.
 - Run the dev server from `web/` (`cd web && npm run dev`). Running it from the repo root starts the legacy PWA.
 
