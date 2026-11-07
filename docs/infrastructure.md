@@ -10,19 +10,21 @@ Servers, sites, and how the pieces fit. Written for both humans and Claude, so i
 |---|---|---|
 | 1 | Production is the old server `new`; members and standby are being built | members is production, standby is hot standby, `new` retired |
 | 2 | cgpay uses read-only DB user `<env>_ro` | `<env>_cgpay` (SELECT everywhere, writes only on allowlisted tables, first `reset_codes`) |
-| 3 | Script `ropw2` rotates the cgpay DB password and restarts the wrong pm2 name (`pay`) | `cgpaypw2`, restarts `pay-main` / `pay-beta`, handles `_ro` and `_cgpay` |
-| 4 | pay sets its session cookie on `.commongood.earth` for every env (the code derives the last two labels of the PHP host and ignores `PHP_COOKIE_DOMAIN`) | the PHP host itself (`.test.commongood.earth`, `.main...`): branch `fix/per-env-cookie-domain`, commit 5326bc18, not yet a PR or deployed |
-| 5 | `bounces.php` exists in cg, in nginx and in a cron line | deleted everywhere (Postmark tracks bounces; member support checks it) |
-| 6 | `copy_admin_keys` in cg `deploy.rb` fails the `test` deploy if `shared/misc` is missing | runs only on `test` and only if `shared/misc` exists |
+| 3 | `cgpaypw2` (replaces `ropw2`) is installed on members and rotates `main_ro`; it restarts `pay-main` / `pay-beta`, which exist only after the first deploy of the fixed `deploy.rb` (members still runs two processes named `pay`; `pm2 delete pay` once per user then) | same script rotates `main_cgpay` when that user exists |
+| 4 | pay sets its session cookie on `.commongood.earth` for every env (the code derives the last two labels of the PHP host and ignores `PHP_COOKIE_DOMAIN`) | the PHP host itself (`.test.commongood.earth`, `.main...`): cgpay PR #209, not yet merged or deployed |
+| 5 | `bounces.php` removed 2026-11-06 from the members and standby crontab and nginx, and from the PROD runbook; the file is deleted in cgmembers-frame PR #98 (not yet merged) | merged, deployed everywhere (Postmark tracks bounces; member support checks it) |
+| 6 | `copy_admin_keys` in cg `deploy.rb` fails the `test` deploy if `shared/misc` is missing (fix: cgmembers-frame PR #99, not yet merged) | runs only on `test` and only if `shared/misc` exists |
 | 7 | `rc2.me` and `rc4.me` redirects on the test server point at dead or old hosts | `*.rc2.me` DNS to members, redirect to `pay.main`; `*.rc4.me` stays on test server, redirect to `pay.demo` |
 | 8 | Test server locked down 2026-11-05 (homes 750 + ACL for `nginx`, secrets 600). Members and standby: pay `.env` files are 674 (world-readable) because lsyncd needs a different owner/ACL scheme before they can be 600 without breaking promotion; `config.json` is 600 with an ACL for beta | members/standby `.env` hardened with a promotion-safe scheme |
-| 9 | Test server leftovers: `cgpay-poc` process (port 3000), `new.conf` and old `cgpay-*` nginx confs, PHP 7.3 pool, legacy accounts, a stale second pm2 process on `dev` | removed |
+| 9 | Test server leftovers: account `new` (PHP 7.3 pool, `new.conf`, `cgpay-dev.conf` and `cgpay-staging.conf` nginx confs, `/home/new` with a 32 GB 2024 backup zip), old per-env GitHub deploy keys and `~/.ssh/config` aliases. Removed 2026-11-06: the `cgpay-poc` process, systemd unit, nginx conf, logs and `/home/cschwab/cgpay` (Chris approved; his one stash is saved as `docs/cschwab-poc-stash-2026-11-06.patch`), the DB users `new_cg`, `new_user`, `new_demo` with the databases `new_cg` and `new_demo`, `/home/new-demo`, the accounts `fuzzy`, `jridgway`, `scooley`, and `bounces` leftovers | removed |
 | 10 | `staging` and `demo` have no running pay process | running once the SvelteKit work merges to main |
 | 11 | Test server MariaDB is 10.6.23, members is 10.11 (Ubuntu 24.04) | decide: accept, or upgrade the test server |
 | 12 | SSH password login still on; no firewall or fail2ban | hardening pass across all servers |
-| 13 | New cg routes need a manual `/sadmin/util/reset-menu` after deploy (all four test envs currently lack the `/cgpay/*` routes) | cg deploy rebuilds the menu automatically |
-| 14 | Dead `.env` params (`JWT_SECRET`, `PHP_SSO_URL`, `PHP_COOKIE_DOMAIN`) are still in every pay `.env`; deployed builds still read two of them | removed after the cookie fix (branch `fix/per-env-cookie-domain`) is deployed |
-| 15 | Test-server runbook ("Runbook - CG server environments setup") predates the PROD runbook | updated to match this doc |
+| 13 | New cg routes need a manual `/sadmin/util/reset-menu` after deploy (done on test and dev; staging and demo still lack the `/cgpay/*` routes) | cg deploy rebuilds the menu automatically |
+| 14 | Dead `.env` params (`JWT_SECRET`, `PHP_SSO_URL`, `PHP_COOKIE_DOMAIN`) removed 2026-11-06 from every pay `.env` (test, dev, staging, demo, main, beta). `main` and `beta` have a build (58c162dc) that still reads them, but nothing runs there yet; deploy `develop` before starting `pay-main` or `pay-beta` | done once `develop` is deployed to main and beta |
+| 15 | Turnstile (captcha on /signup, cgpay #203 and cgmembers #86): test envs have Cloudflare's always-pass test keys; `main` and `beta` have the placeholder "add real Cloudflare key here" in pay `.env` (`PUBLIC_TURNSTILE_SITEKEY`) and cg `config.json` (`turnstileSitekey`, `turnstileSecret`) on members and standby | real sitekey and secret from the Cloudflare dashboard in both places |
+| 16 | `staging` and `demo` pay `.env` lack `PORT` (3003, 3004) and `PHP_SSO_COOKIE_NAME`; `CGPAY_PWA_URL` is unset in every env | set when those envs are brought up; `CGPAY_PWA_URL` stays unset until the legacy app is ported |
+| 17 | The runbooks were out of step with the repos and this doc | updated 2026-11-06 (ENV runbook rewritten, PROD renames); conflict list `~/docs/runbooks/conflicts-2026-11-05.md` |
 
 ## Servers
 
@@ -87,15 +89,15 @@ Naming rule: **Linux user = DB name = DB user = `<env>`**; the cgpay user is `<e
 - `beta` has no DB or DB user of its own; its config files are symlinks to `main`'s (cg) or copies of `main`'s credentials (pay `.env`).
 - **Rotating a password:** `ALTER USER` runs on members only and replicates. Files do not replicate, so rewrite them on both boxes: `config.json` and `phinx.json` for `main`; both pay `.env` files for the cgpay user. (`.env` is also copied by `lsyncd` after about 2 s.) Phinx runs on the server, from the server's `phinx.json`, so it must match.
 - **Restarting cgpay after an `.env` change:** `sudo -iu <env> bash -c 'source ~/.nvm/nvm.sh && pm2 restart pay-<env> --update-env'`, for `main` and `beta`, on both boxes. The pm2 process name is `pay-<env>`, not `pay`.
-- Scripts on members: `dbpw2` (the `main` user: DB + `config.json` + `phinx.json`, both boxes), `ropw2` (`main_ro`: DB + both `.env` + restart; **buggy, restarts `pay`**).
-- **Target:** `ropw2` is replaced by `cgpaypw2 <pw>`, which rotates `main_cgpay` if it exists, else `main_ro`, rewrites `DB_USER` and `DB_PASSWORD` in both `.env` files, and restarts `pay-main` and `pay-beta` on both boxes. CLAUDE.md's mention of a `cgweb_ro` user "in some environments" is unreconciled with these names (open item).
+- Scripts on members: `dbpw2` (the `main` user: DB + `config.json` + `phinx.json`, both boxes), `cgpaypw2` (the cgpay DB user, now `main_ro`: DB + both `.env` + restart `pay-main` and `pay-beta`; installed 2026-11-05).
+- `cgpaypw2 <pw>` rotates `main_cgpay` if it exists, else `main_ro`, rewrites `DB_USER` and `DB_PASSWORD` in both `.env` files, and restarts `pay-main` and `pay-beta` on both boxes. CLAUDE.md's mention of a `cgweb_ro` user "in some environments" is unreconciled with these names (open item).
 
 ## Layout on a box
 
 - App dirs (Capistrano): `/home/<env>/cg/{releases,current,shared}` and `/home/<env>/pay/{releases,current,shared/web}`. Home dirs are mode 750 on members and standby (755 on the test server now).
 - **`beta` symlinks into `main`'s `shared/`**: `config/`, `vendor/` (read-only use) and `cgLogs/`, `cgPhotoTemp/`, `msgs/` (writable via POSIX ACLs). `beta/cg/shared` is otherwise empty. ACL on `/home/main` lets `beta` traverse; `www-data` is in both users' groups so nginx can serve static assets.
-- `config.json` has DB creds and `cgpaySsoSecret`; `baseUrl` is deliberately `""` (cg derives it from the request Host), also on the test server; `stage` is `"main"` for both main and beta.
-- pay config: `/home/<env>/pay/shared/web/.env` (PORT, DB_*, JWT_SECRET, PHP_SSO_URL, PHP_SSO_SECRET, PHP_COOKIE_DOMAIN, PHP_SSO_COOKIE_NAME, PUBLIC_PHP_BASE_URL; pay will not start if PHP_SSO_COOKIE_NAME is missing; its value is the `SSESS<hash>` cookie cg sets for that host). Real separate file per env.
+- `config.json` has DB creds and `cgpaySsoSecret`; `baseUrl` is deliberately `""` (cg derives it from the request Host), also on the test server; `stage` is `"main"` for both main and beta (standby fixed 2026-11-06; it said `"test"`).
+- pay config: `/home/<env>/pay/shared/web/.env` (`PORT`, `DB_*`, `PHP_SSO_SECRET`, `PHP_SSO_COOKIE_NAME`, `PUBLIC_PHP_BASE_URL`, `PUBLIC_TURNSTILE_SITEKEY`, `CGPAY_PWA_URL` (unset), and on local and test only `TEST_ADMIN_BYPASS`; pay will not start if PHP_SSO_COOKIE_NAME is missing; its value is the `SSESS<hash>` cookie cg sets for that host). Real separate file per env. Each `.env` follows the layout and comments of `web/.env.example` and holds only variables the code reads.
 - nginx: `/etc/nginx/sites-available/{main,pay.main,beta,pay.beta,rc2}.conf`, symlinked into `sites-enabled`. Standby copies differ only in cert path.
 - Node: nvm per user, v20.20.2, plus global `pm2`. Deploy repos are public, cloned over https (no deploy keys).
 
@@ -117,7 +119,7 @@ Naming rule: **Linux user = DB name = DB user = `<env>`**; the cgpay user is `<e
 | `/etc/commongood-standby` | `standby-guard` makes cg cron jobs no-ops |
 
 `main`'s crontab (identical on both boxes, via `standby-guard`): `cron.php` every 5 min and `app-socket.php` every 5 min (flock). Never in `beta`'s crontab. Promotion = remove both markers, `SET GLOBAL read_only=0`, stop replication, flip DNS; see "Runbook - Promotion checklist".
-**Target:** `bounces.php` is gone from the crontab, nginx and the repo (the PROD runbook still lists an hourly `bounces.php` job until it is edited). Bounces are tracked in Postmark.
+`bounces.php` is gone from the crontab and nginx (2026-11-06); the repo file goes with cgmembers-frame PR #98. Bounces are tracked in Postmark.
 
 ## Certificates
 
@@ -138,9 +140,9 @@ One Let's Encrypt cert `commongood.earth`: apex plus `*.commongood.earth` and `*
 |---|---|
 | `userpw2 <env> <pw>` | Linux password for main/beta on both boxes |
 | `dbpw2 <pw>` | `main` DB password + `config.json` + `phinx.json` on both |
-| `ropw2 <pw>` | now: `main_ro` password, both `.env` files, restart (bug: wrong pm2 name). **Target:** `cgpaypw2` |
+| `cgpaypw2 <pw>` | cgpay DB user's password (`main_cgpay` if it exists, else `main_ro`), both `.env` files, restart `pay-main` and `pay-beta` |
 
-Backups: standby only, `mysqldump` of `main` via account `backup`, daily/weekly/monthly (7 / 35 / 366 days) in `/var/backups/mysql/`; failures email `tech@` via Postmark (`cronic-on-error`). Keep MariaDB and Node versions identical on the two boxes; patch standby first.
+Backups: standby only, `mysqldump` of `main` via account `backup`, daily/weekly/monthly (7 / 35 / 366 days) in `/var/backups/mysql/` (mode 700, files 600; `umask 077` in `mysql-backup.sh`); failures email `tech@` via Postmark (`cronic-on-error`). Keep MariaDB and Node versions identical on the two boxes; patch standby first.
 
 ## Secrets (where, not what)
 
@@ -148,21 +150,20 @@ name.com token and Postmark tokens: root-only files under `/etc/letsencrypt/name
 
 ## Test server and promo
 
-Facts as of 2026-11-05 (read-only look; crontabs, pm2 lists and MariaDB users need sudo and are unverified):
+Facts as of 2026-11-06:
 
 - 8 nginx server blocks (`<env>`, `pay.<env>` for test/dev/staging/demo) on the synced cert; per env a PHP-FPM pool and Linux user. pay is up on 3001 (test) and 3002 (dev); staging/demo pay not running (3003/3004 closed).
-- pay's cookie domain is `.commongood.earth` for every env (derived in code; `PHP_COOKIE_DOMAIN`, `JWT_SECRET` and `PHP_SSO_URL` in `.env` are not read). `baseUrl` is `""`. cg's own cookie scope is still the open item below.
+- pay's cookie domain is `.commongood.earth` for every env (derived in code; `PHP_COOKIE_DOMAIN`, `JWT_SECRET` and `PHP_SSO_URL` in `.env` are not read; removed from the `.env` files on 2026-11-06). `baseUrl` is `""`. cg's own cookie scope is still the open item below.
 - `demo` is public-facing and deliberately skips real verification, transfers, and staff alerts via `stage`.
-- Leftovers: `cgpay-poc` (user `cschwab`, port 3000), `new.conf`, `old-new`, `cgpay-*`, `app1`, `ws`, `default` nginx confs, a PHP 7.3 pool, legacy accounts `new`, `new-demo`, `fuzzy`, `scooley`, `jridgway`, and on `dev` a second node process pinned to release `20260902...`.
-- **Target:** per-env cookie scope (code fix above); homes 750 with an ACL for `nginx`, secret files 600; leftovers removed; `bounces` locations removed from the env confs; rc2/rc4 redirects updated (see DNS); `staging` and `demo` pay running once SvelteKit merges.
+- Leftovers: see item 9.
+- **Target:** per-env cookie scope (code fix above); homes 750 with an ACL for `nginx`, secret files 600; leftovers removed; rc2/rc4 redirects updated (see DNS); `staging` and `demo` pay running once SvelteKit merges.
 - **promo**: only `www.commongood.earth` uses the wildcard cert; nothing synced from members except the cert.
 
 ## Open items
 
 - How cg sets its session cookie `Domain` (if from `config.json`, beta's shared file breaks per-env scoping).
-- Unverified without sudo on the test server: crontabs, pm2 names, MariaDB users, `/etc/sudoers.d/deploy-restart`, leftover deploy keys.
 - `coApiUrl` placeholder in `config.json`.
-- The PROD runbook still names `ropw2`/`pay` and `bounces.php`; the test-server runbook is stale in many places. Conflict list: `~/docs/runbooks/conflicts-2026-11-05.md`.
+- Runbook status and remaining differences: `~/docs/runbooks/conflicts-2026-11-05.md`.
 
 ---
 
