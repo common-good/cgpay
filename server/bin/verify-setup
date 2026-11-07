@@ -44,6 +44,7 @@ members|standby)
     ck "$e: cg config.json is owned by main and closed to others" private main "/home/$e/cg/shared/config/config.json"
   done
   ck "standby-guard installed" test -x /usr/local/bin/standby-guard
+  ck "no bootstrap lock left on" bash -c "! ls /etc/nginx/bootstrap-lock.d/*.conf"
   if [ "$ROLE" = members ]; then
     ck "password scripts installed" bash -c "for f in userpw2 dbpw2 cgpaypw2; do [ -x /usr/local/bin/\$f ] || exit 1; done"
     for e in main beta; do ck "$e: pm2 pay-$e online" pm2on "$e" "pay-$e"; done
@@ -68,6 +69,7 @@ members|standby)
   ;;
 test)
   ck "mariadb running" systemctl is-active --quiet mariadb
+  ck "no bootstrap lock left on" bash -c "! ls /etc/nginx/bootstrap-lock.d/*.conf"
   ck "synced cert present and valid 30+ days" bash -c "sudo openssl x509 -checkend 2592000 -noout -in /etc/letsencrypt-synced/fullchain.pem"
   for e in test dev staging demo; do
     want "$e cg" "$e.$D" "200 302"

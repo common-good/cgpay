@@ -9,3 +9,4 @@ maxretry = 5
 enabled = true
 port = 7822
 backend = systemd
+journalmatch = _COMM=sshd
