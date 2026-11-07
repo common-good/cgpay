@@ -1,0 +1,12 @@
+#!/bin/bash
+# usage: make-superadmin <env> <uid or email>
+# Makes an individual account a superAdmin on a non-production environment (never main or beta) and
+# leaves the scan-QR image in your home folder as superadmin-qr-<env>.png. Run it from your own login.
+set -euo pipefail
+[ $# -eq 2 ] && [[ "$1" =~ ^[a-z]+$ ]] || { echo "usage: make-superadmin <env> <uid or email>"; exit 1; }
+ENV="$1"
+case "$ENV" in main|beta) echo "Never on $ENV."; exit 1;; esac
+TMP="/home/$ENV/.superadmin-qr.png"; OUT="$HOME/superadmin-qr-$ENV.png"
+sudo -u "$ENV" php "/home/$ENV/cg/current/cgmembers/rcredits/admin/makeSuperAdmin.php" "$2" "$TMP"
+sudo install -m 600 -o "$(id -un)" "$TMP" "$OUT" && sudo rm -f "$TMP"
+echo "Saved $OUT. Copy it to your computer (scp), print it, then delete it here and there."

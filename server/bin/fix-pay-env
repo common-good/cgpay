@@ -1,0 +1,7 @@
+#!/bin/bash
+# lsyncd writes the pay .env files as user lsyncd; make them belong to their env user, mode 600.
+for e in main beta; do
+  f=/home/$e/pay/shared/web/.env
+  [ -f "$f" ] || continue
+  [ "$(stat -c %U:%G:%a "$f")" = "$e:$e:600" ] || { chown "$e:$e" "$f"; chmod 600 "$f"; }
+done
