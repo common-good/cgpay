@@ -15,7 +15,7 @@ Install with `sudo install -m MODE -o root -g root server/<path> <destination>`.
 | `bin/cronic-on-error`, `bin/mysql-backup.sh` | `/usr/local/bin/` | 755, 700 | standby (backups; needs `/etc/mysql-backup/{credentials.sh,backup.cnf}`) |
 | `bin/check-cert-expiry.sh` | `/usr/local/bin/` | 700 | members (needs `/etc/cert-monitor/credentials.sh`) |
 | `bin/fix-pay-env`, `systemd/fix-pay-env.{service,path}` | `/usr/local/bin/`, `/etc/systemd/system/` | 755, 644 | standby (re-owns the synced pay `.env` files) |
-| `bin/verify-setup` | run in place: `bash server/bin/verify-setup <members|standby|test> [domain]` | - | any (read-only checks, PASS/FAIL per line) |
+| `bin/verify-setup` | run in place: `bash server/bin/verify-setup <role> [domain]` (role: members, standby or test) | - | any (read-only checks, PASS/FAIL per line) |
 | `ssh/00-hardening.conf` | `/etc/ssh/sshd_config.d/` | 644 | all (key-only SSH; the 00- name must sort before cloud-init's 50-) |
 | `fail2ban/jail.local` | `/etc/fail2ban/` | 644 | all (edit `ignoreip` to your own server IPs first) |
 | `lsyncd/lsyncd.conf.lua` | `/etc/lsyncd/` | 644 | members |
