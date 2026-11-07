@@ -7,6 +7,7 @@ The modernized member-facing app for Common Good. Runs behind pm2 alongside the 
 - **`web/`** - the current SvelteKit + adapter-node app. All active engineering happens here.
 - **top-level `src/`, `public/`, `dist/`, `vite.config.js`, `constants.js`, `utils0.js`** - legacy PWA (last touched Jan 2025 apart from one 2026-05 circular-import fix). Do not add new code here; do not delete without asking William - it still ships in some capacity.
 - **`config/deploy.rb`, `config/deploy/*.rb`, `Capfile`, `Gemfile`** - Capistrano deploy config for the SvelteKit app (see Deploy below).
+- **`server/`** - scripts, nginx confs, lsyncd conf and systemd units for the production pair (members + standby); the production runbook installs them from here, and they mirror what runs on the servers (see `server/README.md`).
 
 ## Tech stack
 
