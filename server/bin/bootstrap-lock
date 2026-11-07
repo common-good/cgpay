@@ -8,7 +8,7 @@
 set -euo pipefail
 [ $# -eq 2 ] && [[ "$1" =~ ^(on|off)$ ]] && [[ "$2" =~ ^[a-z]+$ ]] || { echo "usage: bootstrap-lock on|off <env>"; exit 1; }
 MODE="$1"; ENV="$2"; DIR=/etc/nginx/bootstrap-lock.d; F="$DIR/$ENV.conf"
-reload() { sudo nginx -t >/dev/null 2>&1 && sudo systemctl reload nginx; }
+reload() { sudo nginx -t >/dev/null 2>&1 && sudo systemctl reload nginx && sleep 1; }
 
 if [ "$MODE" = on ]; then
   IP="${SSH_CLIENT%% *}"
