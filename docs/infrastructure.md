@@ -15,11 +15,11 @@ Servers, sites, and how the pieces fit. Written for both humans and Claude, so i
 | 5 | `bounces.php` removed 2026-11-06 from the members and standby crontab and nginx, and from the PROD runbook; the file is deleted in cgmembers-frame PR #98 (not yet merged) | merged, deployed everywhere (Postmark tracks bounces; member support checks it) |
 | 6 | `copy_admin_keys` in cg `deploy.rb` fails the `test` deploy if `shared/misc` is missing (fix: cgmembers-frame PR #99, not yet merged) | runs only on `test` and only if `shared/misc` exists |
 | 7 | Redirects done 2026-11-06 (test server rc2 and rc4, members and standby rc2). DNS not yet changed: `<region>.rc2.me` and `www.rc2.me` still point at the test server | `*.rc2.me` DNS to members; `*.rc4.me` stays on the test server |
-| 8 | Test server locked down 2026-11-05 (homes 750 + ACL for `nginx`, secrets 600). Members and standby: pay `.env` files are 674 (world-readable) because lsyncd needs a different owner/ACL scheme before they can be 600 without breaking promotion; `config.json` is 600 with an ACL for beta | members/standby `.env` hardened with a promotion-safe scheme |
+| 8 | Done 2026-11-07: test server homes 750 + ACL for `nginx`, secrets 600; members and standby pay `.env` files are 600, owned by their env user. lsyncd writes the standby copy as user `lsyncd`, so standby has a systemd path unit (`fix-pay-env.path`, script `/usr/local/bin/fix-pay-env`) that re-owns the synced files to `main`/`beta` mode 600 within a second; promotion needs no extra step. `config.json` is 600 with an ACL for beta | none |
 | 9 | Test server leftovers removed 2026-11-06: the `cgpay-poc` process, systemd unit, nginx conf, logs and `/home/cschwab/cgpay` (Chris approved; his one stash is saved as `docs/cschwab-poc-stash-2026-11-06.patch`); the DB users `new_cg`, `new_user`, `new_demo` and the databases `new_cg`, `new_demo`; the account `new` (including a 32 GB 2024 backup zip), its PHP pools and the `new`, `cgpay-*`, `app1`, `ws` nginx confs (archived in `/root/nginx-old-confs-nov6.tgz`); `/home/new-demo`; the accounts `fuzzy`, `jridgway`, `scooley`; the per-env GitHub deploy keys (server and GitHub) | none |
 | 10 | `staging` and `demo` have no running pay process | running once the SvelteKit work merges to main |
-| 11 | Test server MariaDB is 10.6.23, members is 10.11 (Ubuntu 24.04) | decide: accept, or upgrade the test server |
-| 12 | SSH password login still on; no firewall or fail2ban | hardening pass across all servers |
+| 11 | Test server MariaDB upgraded 2026-11-07 from 10.6.23 to 10.11.19 (MariaDB.org repo `deb.mariadb.org/10.11/ubuntu`), same series as members; pre-upgrade dump of all DBs in `/root/all-dbs-pre-10.11-nov7.sql.gz` on the test server. Local dev machines run 11.2.2 | none (keep 10.11 on all three servers) |
+| 12 | Hardened 2026-11-07 on all three servers: `/etc/ssh/sshd_config.d/00-hardening.conf` (no password login, no root login, no X11, MaxAuthTries 3), ufw (deny incoming; allow 7822, 80, 443; members and standby also allow 3306 from each other), fail2ban `sshd` jail on port 7822 (1 h ban after 5 failures in 10 min; our three server IPs ignored). Not done: promo and `new` | promo and `new` (new retires at cutover) |
 | 13 | New cg routes need a manual `/sadmin/util/reset-menu` after deploy (done on test and dev; staging and demo still lack the `/cgpay/*` routes) | cg deploy rebuilds the menu automatically |
 | 14 | Dead `.env` params (`JWT_SECRET`, `PHP_SSO_URL`, `PHP_COOKIE_DOMAIN`) removed 2026-11-06 from every pay `.env` (test, dev, staging, demo, main, beta). `main` and `beta` have a build (58c162dc) that still reads them, but nothing runs there yet; deploy `develop` before starting `pay-main` or `pay-beta` | done once `develop` is deployed to main and beta |
 | 15 | Turnstile (captcha on /signup, cgpay #203 and cgmembers #86): test envs have Cloudflare's always-pass test keys; `main` and `beta` have the placeholder "add real Cloudflare key here" in pay `.env` (`PUBLIC_TURNSTILE_SITEKEY`) and cg `config.json` (`turnstileSitekey`, `turnstileSecret`) on members and standby | real sitekey and secret from the Cloudflare dashboard in both places |
@@ -32,11 +32,11 @@ Servers, sites, and how the pieces fit. Written for both humans and Claude, so i
 |---|---|---|---|
 | **members VPS** (`members1`, 65.181.122.201) | Production primary (target). Runs `main` + `beta` | Ubuntu 24.04, nginx, PHP 8.2-FPM, MariaDB, Node 20.20.2 via nvm, pm2 | `members1.commongood.earth` |
 | **standby VPS** (`members2`) | Hot standby, promotable. Full app stack identical to members; web blocked until promoted | same as members | `members2.commongood.earth` |
-| **test server** (103.72.79.209, hostname `test`; formerly `new1` / `new2`: one VPS) | Envs `test`, `dev`, `staging`, `demo` (each cg + pay) | Ubuntu 22.04.5, nginx (runs as user `nginx`), PHP 8.2.35-FPM, MariaDB 10.6.23, Node 20 via nvm per env user | `test.commongood.earth` |
+| **test server** (103.72.79.209, hostname `test`; formerly `new1` / `new2`: one VPS) | Envs `test`, `dev`, `staging`, `demo` (each cg + pay) | Ubuntu 22.04.5, nginx (runs as user `nginx`), PHP 8.2.35-FPM, MariaDB 10.11.19, Node 20 via nvm per env user | `test.commongood.earth` |
 | **promo** (65.181.127.6) | Marketing sites: `www.commongood.earth`, `cg4.us`, `commongoodbank.com`; apex `rc2.me`, `rc4.me` | not covered here | `commongood.earth` |
 | old server `new` (68.66.205.7) | **Current production** until members takes over; its crontabs and nginx config were the model for members | CentOS | - |
 
-SSH: port **7822** everywhere; key auth (password fallback still on until the hardening pass). Admin accounts: `wspademan`, `cschwab`, `egwynn` (sudo).
+SSH: port **7822** everywhere; key auth only (see gap 12). Admin accounts: `wspademan`, `cschwab`, `egwynn` (sudo).
 
 **Target:** `new` is retired after the promotion.
 
@@ -82,7 +82,7 @@ Naming rule: **Linux user = DB name = DB user = `<env>`**; the cgpay user is `<e
 | members, standby | `main` | `main` | ALL on `main.*` | cg, for `main` and `beta` | `/home/main/cg/shared/config/config.json` (`.db.pass`) and `phinx.json` (`.environments.main.pass`) |
 | members, standby | `main` | `main_ro` -> `main_cgpay` | now: SELECT on `main.*`. Target: SELECT on `main.*` plus INSERT/UPDATE/DELETE on allowlisted tables (see `web/src/lib/server/data.ts`; first `reset_codes`) | cgpay, for `main` and `beta` | `/home/{main,beta}/pay/shared/web/.env` (`DB_USER=`, `DB_PASSWORD=`) |
 | members -> standby | n/a | `repl` (`%`) | REPLICATION SLAVE | replication | standby's replication config |
-| standby only | `main` | `backup` | SELECT, LOCK TABLES, SHOW VIEW, EVENT, TRIGGER | mysqldump cron | `/etc/mysql-backup/credentials.sh` |
+| standby only | `main` | `backup` | SELECT, LOCK TABLES, SHOW VIEW, EVENT, TRIGGER | mysqldump cron | `/etc/mysql-backup/backup.cnf` (mode 600; `mysqldump --defaults-extra-file`, so the password is not on the command line) |
 | test server | `test`, `dev`, `staging`, `demo` | `<env>`, `<env>_ro` (e.g. `test_ro`) -> `<env>_cgpay` | same as main | cg / cgpay of that env | `/home/<env>/cg/shared/config/{config,phinx}.json`, `/home/<env>/pay/shared/web/.env` |
 | all | n/a | `root` | unix_socket | admin | no password: `sudo mysql -u root` |
 
