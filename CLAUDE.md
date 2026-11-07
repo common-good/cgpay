@@ -134,6 +134,7 @@ Plain specs (`web/tests/e2e/`) are being replaced gradually by Gherkin features 
 ## Conventions
 
 - **No multi-byte characters** (em-dashes, curly quotes, arrows, ellipsis characters, accents and the like; plain ASCII only) in code, PRs, commit messages, or comments. Anything that reads the text with the wrong encoding (some terminals, Windows tools, logs, mail clients, browsers without a charset header) shows them as garbage such as `?` or a run of odd characters. Use `-`, `"`, `'`, `->` and `...` instead.
+- **Public repo: no security gaps, no server specifics.** Never put known weaknesses or concerns, server IPs, ports, account names or hardening state in this repo, its PRs, issues or commit messages. They live in a root-only private directory on the test server (ask William for the path); fix the weakness, then record it there.
 - **Commit messages: title only, no body.** Details go in PR descriptions.
 - **No `Co-Authored-By: Claude` trailers** on commits.
 - **Comments:** default to none. Only add for non-obvious *why* - a hidden constraint, a subtle invariant, a workaround. Never explain *what* the code does. Exception, function headers: short functions get none; longer ones get a header that says informally what the function does and what it is good for.
