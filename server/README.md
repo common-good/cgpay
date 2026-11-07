@@ -15,7 +15,8 @@ Install with `sudo install -m MODE -o root -g root server/<path> <destination>`.
 | `bin/cronic-on-error`, `bin/mysql-backup.sh` | `/usr/local/bin/` | 755, 700 | standby (backups; needs `/etc/mysql-backup/{credentials.sh,backup.cnf}`) |
 | `bin/check-cert-expiry.sh` | `/usr/local/bin/` | 700 | members (needs `/etc/cert-monitor/credentials.sh`) |
 | `bin/fix-pay-env`, `systemd/fix-pay-env.{service,path}` | `/usr/local/bin/`, `/etc/systemd/system/` | 755, 644 | standby (re-owns the synced pay `.env` files) |
-| `bin/bootstrap-lock` | run in place: `server/bin/bootstrap-lock on or off <env>` | - | any (locks an env to your IP and sets a one-time admin password while the temporary admin account exists; see the superadmin bootstrap runbook section) |
+| `bin/make-superadmin` | run in place: `server/bin/make-superadmin <env> <uid or email>` | - | test server (makes an account a superAdmin and saves its scan-QR PNG; refuses main and beta; needs cgmembers-frame `admin/makeSuperAdmin.php`) |
+| `bin/bootstrap-lock` | run in place: `server/bin/bootstrap-lock on or off <env>` | - | main and beta first-time setup (locks an env to your IP and sets a one-time admin password while the temporary admin account exists; see the superadmin bootstrap runbook section) |
 | `bin/verify-setup` | run in place: `bash server/bin/verify-setup <role> [domain]` (role: members, standby or test) | - | any (read-only checks, PASS/FAIL per line) |
 | `ssh/00-hardening.conf` | `/etc/ssh/sshd_config.d/` | 644 | all (key-only SSH; the 00- name must sort before cloud-init's 50-) |
 | `fail2ban/jail.local` | `/etc/fail2ban/` | 644 | all (edit `ignoreip` to your own server IPs first) |
