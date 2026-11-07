@@ -31,7 +31,7 @@
       st.setTimeout(null)
       saveHandoffDashboardUrl(result.dashboardUrl)
       st.setIntent(intent)
-      u.go('tx-start')
+      u.go(($st.allowShow || $st.allowType) ? 'tx-start' : 'scan') // same rule as the Home screen: a company has nothing to show, so it goes straight to scan
     } catch (er) {
       if (Number(er.message) === 401) {
         if (dashboardUrl) {

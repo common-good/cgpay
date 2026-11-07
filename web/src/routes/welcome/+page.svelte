@@ -27,24 +27,24 @@
     <article class="card">
       <h3>Member</h3>
       <p>Join as an individual. Pay, get paid, and keep your money in your community.</p>
-      <a class="btn primary" href="/signup" data-testid="cta-member">Join as a Member</a>
+      <a class="btn primary" href="/signup" data-testid="lnk-member">Join as a Member</a>
     </article>
 
     <article class="card">
       <h3>Business</h3>
       <p>Register your business or organization. Accept Common Good credit from customers and pay vendors.</p>
-      <a class="btn" href={businessHref} data-testid="cta-business">Register a business</a>
+      <a class="btn" href={businessHref} data-testid="lnk-business">Register a business</a>
     </article>
 
     <article class="card">
       <h3>Fiscal Sponsee</h3>
       <p>Apply for fiscal sponsorship. Accept tax-deductible donations without applying to the IRS.</p>
-      <a class="btn" href={sponseeHref} data-testid="cta-sponsee">Apply for sponsorship</a>
+      <a class="btn" href={sponseeHref} data-testid="lnk-sponsee">Apply for sponsorship</a>
     </article>
   </section>
 
   <p class="signin-row">
-    Already a member? <a class="inline-link" href="/login" data-testid="link-signin">Sign in</a>
+    Already a member? <a class="inline-link" href="/login" data-testid="lnk-signin">Sign in</a>
   </p>
 </main>
 

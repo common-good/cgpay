@@ -29,7 +29,7 @@ const constants = {
   },
   apis: {
 //    test:  'http://localhost/cgmembers-frame/cgmembers/api/',
-    test: 'https://demo.commongood.earth/api/', // should be test.cg.e when that db exists
+    test: import.meta.env?.VITE_TEST_API_URL ?? 'https://demo.commongood.earth/api/', // VITE_TEST_API_URL points a local build at a local server (the BDD tests do). Demo should be test.cg.e when that db exists
     demo: 'https://demo.commongood.earth/api/',
     real: 'https://new.commongood.earth/api/',
   },
