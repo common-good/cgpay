@@ -1,0 +1,14 @@
+#!/bin/bash
+# usage: userpw2 <env> <pw>
+set -euo pipefail
+if [ $# -ne 2 ]; then
+  echo "usage: userpw2 <env> <pw>"
+  exit 1
+fi
+ENV="$1"
+PW="$2"
+
+echo "$ENV:$PW" | sudo chpasswd
+ssh -t -p 7822 "$(whoami)@standby.commongood.earth" "echo '$ENV:$PW' | sudo chpasswd"
+
+echo "Linux password for '$ENV' updated on members and standby."

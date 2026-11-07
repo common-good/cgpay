@@ -1,0 +1,23 @@
+#!/bin/bash
+# usage: cronic-on-error <real command...>
+source /etc/mysql-backup/credentials.sh
+OUTPUT=$("$@" 2>&1)
+STATUS=$?
+if [ "$STATUS" -ne 0 ]; then
+  # Built with jq, not manual string interpolation - same reason as
+  # check-cert-expiry.sh: raw newlines in a hand-built JSON string
+  # produce invalid JSON, confirmed the hard way there already.
+  PAYLOAD=$(jq -n \
+    --arg from "alerts@commongood.earth" \
+    --arg to "tech@commongood.earth" \
+    --arg subject "FAILED: $*" \
+    --arg body "$OUTPUT" \
+    '{From: $from, To: $to, Subject: $subject, TextBody: $body}')
+  curl -s "https://api.postmarkapp.com/email" \
+    -X POST \
+    -H "Accept: application/json" \
+    -H "Content-Type: application/json" \
+    -H "X-Postmark-Server-Token: ${POSTMARK_TOKEN}" \
+    -d "$PAYLOAD" > /dev/null
+fi
+exit "$STATUS"
