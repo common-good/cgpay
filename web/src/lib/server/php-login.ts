@@ -112,7 +112,7 @@ export async function phpSso(uid: number): Promise<SsoResponse | null> {
   return data as SsoResponse
 }
 
-/** Put the PHP session (and device) cookies on the browser. See Common gotchas in the Guide before changing this. */
+/** Put the PHP session (and device) cookies on the browser. See "Common gotchas" in CLAUDE.md before changing this. */
 export function setSsoCookies(cookies: Cookies, sso: SsoResponse) {
   const cookieOpts = {
     path: '/',
