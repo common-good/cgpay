@@ -43,3 +43,12 @@ export function nicknameFor(nick: string, field: string | undefined): string | n
   if (field === 'fullName') return acct(nick).fullName
   return undefined
 }
+
+/**
+ * What the account's QR code says, as the legacy app's fake-scan buttons use for Abe and Bea:
+ * the region, the account ID (K + DC + the account's letter) and the card code (12345 + the lowercase letter).
+ */
+export function qrOf(nick: string): string {
+  const a = acct(nick).identifier.slice(-1) // A to I
+  return `HTTP://6VM.RC4.ME/KDC${a}12345${a.toLowerCase()}`
+}

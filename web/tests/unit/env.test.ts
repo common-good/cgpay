@@ -28,11 +28,12 @@ const REQUIRED_ENV = {
   PHP_SSO_SECRET: 's',
   PHP_SSO_COOKIE_NAME: 'SESSabc',
   PUBLIC_PHP_BASE_URL: 'http://localhost/cg/cgmembers',
+  PUBLIC_TURNSTILE_SITEKEY: '1x00000000000000000000AA',
 }
 
 function fillRequired() {
   for (const [k, v] of Object.entries(REQUIRED_ENV)) {
-    if (k === 'PUBLIC_PHP_BASE_URL') publicEnvState[k] = v
+    if (k.startsWith('PUBLIC_')) publicEnvState[k] = v
     else privateEnvState[k] = v
   }
 }
