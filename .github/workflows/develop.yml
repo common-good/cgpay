@@ -62,7 +62,7 @@
     #     sudo chmod 600 ~/.ssh/id_rsa
     #     echo ${{ secrets.SSH_HOST }} > ~/.ssh/known_hosts
     # - name: connect to server
-    #   run: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} -p 7822 
+    #   run: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 
     # - name: copy dist to server
     #   run: "cp deploy.tar ~/home/new/current"
     # - name: cleanup
