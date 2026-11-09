@@ -1,0 +1,9 @@
+[Unit]
+Description=Watch the synced pay .env files
+
+[Path]
+PathChanged=/home/main/pay/shared/web/.env
+PathChanged=/home/beta/pay/shared/web/.env
+
+[Install]
+WantedBy=multi-user.target
