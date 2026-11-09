@@ -9,7 +9,7 @@ import type { RequestHandler } from './$types'
 import { env } from '$env/dynamic/private'
 import { phpUrl } from '$lib/utils'
 import { rateLimit } from '$lib/server/rate-limit'
-import { phpCookieDomain, phpHostname } from '$lib/server/env'
+import { phpCookieDomain } from '$lib/server/env'
 
 type VerifyBody = {
   uid?: unknown
@@ -102,9 +102,9 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 
   const sso = data as SsoLike
 
-  // Mirror the cookie-set pattern from /api/login: SSO cookie on the shared
-  // parent domain + a second copy scoped to the PHP host subdomain to overwrite
-  // any stale cookie there, plus the device-tracking box-<QID> cookie.
+  // Set the SSO cookie on the PHP host's per-env scope (e.g. `.main.commongood.earth`
+  // after #209), which both the pay and cg hosts under that env can read. Plus the
+  // device-tracking box-<QID> cookie on the same scope.
   const cookieOpts = {
     path: '/',
     httpOnly: true,
@@ -112,12 +112,8 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
     sameSite: 'lax' as const
   }
   const parentDomain = phpCookieDomain()
-  const phpHost = phpHostname()
 
   cookies.set(sso.cookieName, sso.ssid, { ...cookieOpts, domain: parentDomain })
-  if (phpHost !== parentDomain.replace(/^\./, '')) {
-    cookies.set(sso.cookieName, sso.ssid, { ...cookieOpts, domain: '.' + phpHost })
-  }
   if (sso.boxCookieName && sso.boxCookieValue) {
     cookies.set(sso.boxCookieName, sso.boxCookieValue, { ...cookieOpts, domain: parentDomain })
   }
