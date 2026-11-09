@@ -52,14 +52,13 @@ describe('cookieDomainFor', () => {
     expect(cookieDomainFor('127.0.0.1')).toBe('127.0.0.1')
   })
 
-  it('returns .parent-domain for a subdomain', () => {
-    expect(cookieDomainFor('pay-test.commongood.earth')).toBe('.commongood.earth')
-    expect(cookieDomainFor('new.commongood.earth')).toBe('.commongood.earth')
+  it('scopes to the host itself, so each environment has its own cookie scope', () => {
+    expect(cookieDomainFor('test.commongood.earth')).toBe('.test.commongood.earth')
+    expect(cookieDomainFor('main.commongood.earth')).toBe('.main.commongood.earth')
+    expect(cookieDomainFor('main.commongood.earth')).not.toBe(cookieDomainFor('beta.commongood.earth'))
   })
 
-  it('returns .apex-domain even when the input IS the apex', () => {
-    // Still prefixes with "." so a cookie set here is sent to every subdomain,
-    // not just the apex.
+  it('prefixes a dot even for an apex host, so subdomains get the cookie', () => {
     expect(cookieDomainFor('commongood.earth')).toBe('.commongood.earth')
   })
 })
@@ -86,9 +85,9 @@ describe('derived PHP helpers', () => {
     expect(phpGrantsUrl()).toBe('https://pay-test.commongood.earth/cgpay/grants')
   })
 
-  it('phpCookieDomain derives the parent domain', () => {
-    publicEnvState.PUBLIC_PHP_BASE_URL = 'https://pay-test.commongood.earth'
-    expect(phpCookieDomain()).toBe('.commongood.earth')
+  it('phpCookieDomain scopes to the PHP host', () => {
+    publicEnvState.PUBLIC_PHP_BASE_URL = 'https://test.commongood.earth'
+    expect(phpCookieDomain()).toBe('.test.commongood.earth')
   })
 
   it('phpCookieDomain returns localhost unchanged', () => {
