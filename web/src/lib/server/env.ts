@@ -72,12 +72,6 @@ export function phpCookieDomain(): string {
   return cookieDomainFor(new URL(base).hostname)
 }
 
-/** Hostname (no scheme, no port) of the PHP server. */
-export function phpHostname(): string {
-  const base = readBaseUrl()
-  return new URL(base).hostname
-}
-
 /**
  * Validate every required env var is present. Called once at startup from
  * hooks.server.ts; throws a single error listing everything missing so the

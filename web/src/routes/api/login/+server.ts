@@ -4,7 +4,7 @@ import { env } from '$env/dynamic/private'
 import pool from '$lib/server/db'
 import { checkPassword } from '$lib/server/drupal-password'
 import { phpUrl } from '$lib/utils'
-import { phpCookieDomain, phpHostname } from '$lib/server/env'
+import { phpCookieDomain } from '$lib/server/env'
 import { rateLimit } from '$lib/server/rate-limit'
 import type { RowDataPacket } from 'mysql2'
 
@@ -201,40 +201,11 @@ export const POST: RequestHandler = async ({ request, getClientAddress, cookies 
       secure: true,
       sameSite: 'lax' as const
     }
-    const parentDomain = phpCookieDomain()
-    const phpHost = phpHostname()
-
-    // Primary cookie: scoped to the shared parent domain so it reaches every
-    // subdomain (including the PHP host).
-    cookies.set(sso.cookieName, sso.ssid, {
-      ...cookieOpts,
-      domain: parentDomain
-    })
-
-    // Secondary cookie: scoped to the PHP host subdomain with the SAME value.
-    // If the user ever signed in directly on that subdomain (e.g. demo) the
-    // browser has a stale cookie scoped to it. Setting one with matching
-    // name+domain+path OVERWRITES that stale cookie. Without this, the browser
-    // sends two cookies of the same name to PHP and Drupal's lookup is
-    // non-deterministic — for affected users, it usually picks the stale one
-    // and treats them as anonymous.
-    if (phpHost !== parentDomain.replace(/^\./, '')) {
-      cookies.set(sso.cookieName, sso.ssid, {
-        ...cookieOpts,
-        domain: '.' + phpHost
-      })
-    }
-
-    // Device tracking cookie (box-<QID>) — cgmembers uses this to recognise the
-    // browser as a registered device for this member. Without it, downstream
-    // PHP features that look the device up in r_boxes won't recognise the
-    // user's machine. Scoped to the same parent domain so it reaches the PHP
-    // host.
+    const domain = phpCookieDomain()
+    cookies.set(sso.cookieName, sso.ssid, { ...cookieOpts, domain })
+    // box-<QID> marks this browser as a registered device; PHP looks it up in r_boxes.
     if (sso.boxCookieName && sso.boxCookieValue) {
-      cookies.set(sso.boxCookieName, sso.boxCookieValue, {
-        ...cookieOpts,
-        domain: parentDomain
-      })
+      cookies.set(sso.boxCookieName, sso.boxCookieValue, { ...cookieOpts, domain })
     }
   }
 
