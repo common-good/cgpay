@@ -16,7 +16,6 @@ const {
   phpEndpointUrl,
   phpGrantsUrl,
   phpSsoUrl,
-  phpHostname,
 } = await import('../../src/lib/server/env')
 
 const REQUIRED_ENV = {
@@ -92,11 +91,6 @@ describe('derived PHP helpers', () => {
 
   it('phpCookieDomain returns localhost unchanged', () => {
     expect(phpCookieDomain()).toBe('localhost')
-  })
-
-  it('phpHostname returns the host only', () => {
-    publicEnvState.PUBLIC_PHP_BASE_URL = 'https://pay-test.commongood.earth/foo'
-    expect(phpHostname()).toBe('pay-test.commongood.earth')
   })
 })
 

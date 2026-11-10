@@ -102,20 +102,16 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 
   const sso = data as SsoLike
 
-  // Set the SSO cookie on the PHP host's per-env scope (e.g. `.main.commongood.earth`
-  // after #209), which both the pay and cg hosts under that env can read. Plus the
-  // device-tracking box-<QID> cookie on the same scope.
   const cookieOpts = {
     path: '/',
     httpOnly: true,
     secure: true,
     sameSite: 'lax' as const
   }
-  const parentDomain = phpCookieDomain()
-
-  cookies.set(sso.cookieName, sso.ssid, { ...cookieOpts, domain: parentDomain })
+  const domain = phpCookieDomain()
+  cookies.set(sso.cookieName, sso.ssid, { ...cookieOpts, domain })
   if (sso.boxCookieName && sso.boxCookieValue) {
-    cookies.set(sso.boxCookieName, sso.boxCookieValue, { ...cookieOpts, domain: parentDomain })
+    cookies.set(sso.boxCookieName, sso.boxCookieValue, { ...cookieOpts, domain })
   }
 
   return json({
