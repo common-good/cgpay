@@ -9,7 +9,7 @@ import type { RequestHandler } from './$types'
 import { env } from '$env/dynamic/private'
 import { phpUrl } from '$lib/utils'
 import { rateLimit } from '$lib/server/rate-limit'
-import { phpCookieDomain } from '$lib/server/env'
+import { setSsoCookies } from '$lib/server/sso-cookies'
 
 type VerifyBody = {
   uid?: unknown
@@ -102,17 +102,7 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 
   const sso = data as SsoLike
 
-  const cookieOpts = {
-    path: '/',
-    httpOnly: true,
-    secure: true,
-    sameSite: 'lax' as const
-  }
-  const domain = phpCookieDomain()
-  cookies.set(sso.cookieName, sso.ssid, { ...cookieOpts, domain })
-  if (sso.boxCookieName && sso.boxCookieValue) {
-    cookies.set(sso.boxCookieName, sso.boxCookieValue, { ...cookieOpts, domain })
-  }
+  setSsoCookies(cookies, sso)
 
   return json({
     uid: sso.uid,
