@@ -16,6 +16,7 @@ tests/
 │   ├── php-client.test.ts         Server-to-server calls to PHP (config and error handling)
 │   ├── php-grants.test.ts         Grants client for PHP /cgpay/grants
 │   ├── rate-limit.test.ts         Rolling window + lockout semantics
+│   ├── sso-cookies.test.ts        SSO cookie writes expire old scopes; duplicate session cookies are healed (also against SvelteKit's real cookie jar)
 │   ├── magic.test.ts              Magic values: dates, random values, nicknames, variables
 │   ├── vars-table.test.ts         Scenario variables and table shapes
 │   ├── compare-order.test.ts      Comparing data to a table; the order of steps.ts

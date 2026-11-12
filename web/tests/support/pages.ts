@@ -85,6 +85,14 @@ export default {
     await expect(page, `signed in as "${who}" (the dashboard)`).toHaveURL(/^[^/]+\/\/[^/]+\/$/, { timeout: 15_000 })
   },
 
+  /**
+   * Leave a session cookie PHP does not know in the browser, which sends it ahead of the good one on API calls
+   * (a longer path goes first). Online it is an older scope of the same name; locally a host has only one scope, so the path stands in.
+   */
+  async staleSessionCookie(app: App) {
+    await app.page.context().addCookies([{ name: process.env.PHP_SSO_COOKIE_NAME as string, value: 'stale', domain: 'localhost', path: '/api', secure: true, httpOnly: true }])
+  },
+
   async soError(app: App, message: string) {
     await expect(app.page.getByRole('alert'), `error "${message}"`).toContainText(message, { timeout: 10_000 })
   },
