@@ -162,9 +162,9 @@ See also Shared guidance above.
 
 Companion repo: `cgmembers-frame` (Drupal-7-derived PHP - member site, admin, tx engine). See its `CLAUDE.md` for the PHP-side conventions.
 
-Servers, sites, DNS, DB users, and deploy/sync layout: see `docs/infrastructure.md`. Read it before touching deploy, nginx, DNS, or env config.
+Servers, sites, DNS, DB users and deploy layout are in the private infrastructure document; `docs/infrastructure.md` says how to get it, and a cached copy is conventionally `~/docs/infrastructure.md`. Read it before touching deploy, nginx, DNS or env config.
 
-When you learn durable infra facts (not secret values), propose the edit to `docs/infrastructure.md` and wait for approval. When you edit it, also re-check one or two existing claims against what you've seen, picked at random, so over time every claim gets rechecked.
+When you learn durable infra facts (not secret values), propose the edit to the private document and wait for approval. When you edit it, also re-check one or two existing claims against what you've seen, picked at random, so over time every claim gets rechecked.
 
 ### Local setup (varies by developer; clone the repos wherever suits you)
 
