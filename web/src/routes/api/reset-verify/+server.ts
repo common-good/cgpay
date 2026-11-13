@@ -2,7 +2,8 @@ import { json, error } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
 import { rateLimit } from '$lib/server/rate-limit'
 import { verifyReset } from '$lib/server/reset'
-import { phpSso, setSsoCookies } from '$lib/server/php-login'
+import { phpSso } from '$lib/server/php-login'
+import { setSsoCookies } from '$lib/server/sso-cookies'
 
 const BAD_CODE = { errors: { code: 'That code is wrong or has expired.' } }
 
