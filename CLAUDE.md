@@ -147,6 +147,7 @@ Plain specs (`web/tests/e2e/`) are being replaced gradually by Gherkin features 
 - **`u_company` table lacks SELECT for `cgweb_ro`** in some environments - `/api/me/info` has a defensive fallback that treats `sponsored=false` when the query denies (see [PR #151](https://github.com/common-good/cgpay/pull/151)).
 - **Stale cookies from the old shared scope:** login used to set the SSO cookie on `.commongood.earth`. A browser holding one of those next to the new `.<env>.commongood.earth` cookie sends both, and PHP may pick the stale one (the user looks signed out). Clear the `SSESS...` cookies for `commongood.earth` and sign in again.
 - **`+layout.server.ts` load does NOT rerun when cookies change.** SvelteKit doesn't track `cookies.get()` as a dependency; a server load reruns only on URL/param changes it uses, `depends()` keys, or an explicit `invalidate`/`invalidateAll`. So anything that sets or clears the SSO cookie client-side must then navigate with `goto(path, { invalidateAll: true })` (login) or call `invalidateAll()` (sign out), or the header keeps showing the old user.
+- **Stale same-named SSO cookies shadow the right one.** A browser can hold `SSESS...` cookies at older scopes (`.commongood.earth`, host-only); it sends all of them and the server reads the wrong one, so sign-in looks broken until cookies are cleared. node expires stale copies of its own env's cookie in `hooks.server.ts`; PHP does the same for the host-only copy. Expire only this env's cookie name, since other `SSESS` names may belong to another site.
 
 ## Cross-repo
 
