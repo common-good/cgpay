@@ -1,0 +1,25 @@
+#!/bin/bash
+# usage: standby-web <on [minutes]|off|status>
+BLOCK_FILE=/etc/commongood-standby-web-blocked
+
+case "$1" in
+  on)
+    sudo rm -f "$BLOCK_FILE"
+    echo "standby web access: OPEN"
+    if [ -n "$2" ]; then
+      echo "sudo touch $BLOCK_FILE" | at now + "$2" minutes
+      echo "auto re-blocking in $2 minutes"
+    fi
+    ;;
+  off)
+    sudo touch "$BLOCK_FILE"
+    echo "standby web access: BLOCKED"
+    ;;
+  status)
+    [ -f "$BLOCK_FILE" ] && echo BLOCKED || echo OPEN
+    ;;
+  *)
+    echo "usage: standby-web <on [minutes]|off|status>"
+    exit 1
+    ;;
+esac

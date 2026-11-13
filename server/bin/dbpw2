@@ -1,0 +1,28 @@
+#!/bin/bash
+# usage: dbpw2 <pw>
+# Only 'main' has a DB account - 'beta' reuses it. Updates main's config.json
+# and phinx.json; beta's copies are symlinks to them, so they follow.
+set -euo pipefail
+if [ $# -ne 1 ]; then
+  echo "usage: dbpw2 <pw>"
+  exit 1
+fi
+PW="$1"
+
+# ALTER USER replicates to standby; no need to run it there.
+sudo mysql -u root -e "ALTER USER 'main'@'localhost' IDENTIFIED BY '${PW}'; FLUSH PRIVILEGES;"
+
+# Files are not replicated - update on both servers.
+update_config() {
+  local PW="$1" D=/home/main/cg/shared/config
+  sudo jq --arg p "$PW" '.db.pass = $p' $D/config.json | sudo tee $D/config.json.new > /dev/null
+  sudo mv $D/config.json.new $D/config.json
+  sudo jq --arg p "$PW" '.environments.main.pass = $p' $D/phinx.json | sudo tee $D/phinx.json.new > /dev/null
+  sudo mv $D/phinx.json.new $D/phinx.json
+  sudo chown main:main $D/config.json $D/phinx.json
+}
+
+update_config "$PW"
+ssh -t -p 7822 "$(whoami)@standby.commongood.earth" "$(declare -f update_config); update_config '$PW'"
+
+echo "main's DB password (replicated) + config.json and phinx.json (both servers; beta via symlink) updated."

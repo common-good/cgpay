@@ -1,0 +1,29 @@
+#!/bin/bash
+# usage: cgpaypw2 <pw>
+# Rotates the DB password cgpay connects with (main_cgpay if it exists, else
+# main_ro), rewrites .env for main and beta on both servers, restarts pay-main
+# and pay-beta.
+set -euo pipefail
+[ $# -eq 1 ] || { echo "usage: cgpaypw2 <pw>"; exit 1; }
+PW="$1"
+if [[ "$PW" =~ [^A-Za-z0-9+/=._-] ]]; then
+  echo "pw may contain only letters, digits and + / = . _ -"; exit 1
+fi
+
+DBU=$(sudo mysql -N -u root -e "SELECT user FROM mysql.user WHERE user IN ('main_cgpay','main_ro') ORDER BY user='main_cgpay' DESC LIMIT 1")
+[ -n "$DBU" ] || { echo "no main_cgpay or main_ro user found"; exit 1; }
+# ALTER USER replicates to standby.
+sudo mysql -u root -e "ALTER USER '${DBU}'@'localhost' IDENTIFIED BY '${PW}'; FLUSH PRIVILEGES;"
+
+update_env_and_restart() {
+  local PW="$1" DBU="$2" ENV
+  for ENV in main beta; do
+    sudo sed -i -e "s|^DB_USER=.*|DB_USER=${DBU}|" -e "s|^DB_PASSWORD=.*|DB_PASSWORD=${PW}|" "/home/$ENV/pay/shared/web/.env"
+    sudo chown "$ENV:$ENV" "/home/$ENV/pay/shared/web/.env"
+    sudo -iu "$ENV" bash -c "source ~/.nvm/nvm.sh && pm2 restart pay-$ENV --update-env"
+  done
+}
+
+update_env_and_restart "$PW" "$DBU"
+ssh -t -p 7822 "$(whoami)@standby.commongood.earth" "$(declare -f update_env_and_restart); update_env_and_restart '$PW' '$DBU'"
+echo "${DBU} password (replicated) + .env for main and beta (both servers) updated; pay-main and pay-beta restarted on both."

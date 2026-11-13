@@ -26,6 +26,7 @@ const REQUIRED_ENV = [
   'PHP_SSO_SECRET',
   'PHP_SSO_COOKIE_NAME',
   'PUBLIC_PHP_BASE_URL',
+  'PUBLIC_TURNSTILE_SITEKEY',
 ] as const
 
 function readBaseUrl(): string {
@@ -35,18 +36,20 @@ function readBaseUrl(): string {
 }
 
 /**
- * Return the parent cookie domain for the PHP host.
+ * Return the cookie domain for the PHP host: the host itself, with a leading
+ * dot so the cookie also reaches its subdomains (pay.<env> lives under the PHP
+ * host <env>). Each environment is its own cookie scope, so signing in on one
+ * never signs you in on another.
  *   - `localhost` -> `localhost`
  *   - IPv4 literal (e.g. 127.0.0.1) -> hostname as-is
- *   - `pay-test.commongood.earth` -> `.commongood.earth`
+ *   - `test.commongood.earth` -> `.test.commongood.earth`
  * Returned value is suitable to pass directly as the `domain` attribute on
  * `cookies.set(...)`.
  */
 export function cookieDomainFor(hostname: string): string {
   if (/^\d+\.\d+\.\d+\.\d+$/.test(hostname)) return hostname
-  const parts = hostname.split('.')
-  if (parts.length < 2) return hostname
-  return '.' + parts.slice(-2).join('.')
+  if (!hostname.includes('.')) return hostname
+  return '.' + hostname
 }
 
 /** Full URL for a cgpay-* endpoint on the configured PHP host. */
@@ -63,16 +66,10 @@ export function phpGrantsUrl(): string {
   return phpEndpointUrl('cgpay/grants')
 }
 
-/** Parent cookie domain for the PHP host, derived from PUBLIC_PHP_BASE_URL. */
+/** Cookie domain for the PHP host, derived from PUBLIC_PHP_BASE_URL. */
 export function phpCookieDomain(): string {
   const base = readBaseUrl()
   return cookieDomainFor(new URL(base).hostname)
-}
-
-/** Hostname (no scheme, no port) of the PHP server. */
-export function phpHostname(): string {
-  const base = readBaseUrl()
-  return new URL(base).hostname
 }
 
 /**
@@ -83,7 +80,9 @@ export function phpHostname(): string {
 export function assertRequiredEnv(): void {
   const missing: string[] = []
   for (const name of REQUIRED_ENV) {
-    const value = name === 'PUBLIC_PHP_BASE_URL' ? publicEnv[name] : privateEnv[name]
+    const value = name.startsWith('PUBLIC_')
+      ? (publicEnv as Record<string, string | undefined>)[name]
+      : (privateEnv as Record<string, string | undefined>)[name]
     if (!value || value.trim() === '') missing.push(name)
   }
   if (missing.length > 0) {

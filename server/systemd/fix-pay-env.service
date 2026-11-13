@@ -1,0 +1,6 @@
+[Unit]
+Description=Fix owner and mode of the synced pay .env files
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/fix-pay-env

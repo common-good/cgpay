@@ -1,0 +1,52 @@
+#!/bin/bash
+# usage: bootstrap-lock on|off <env>
+# While a new site still has its temporary "admin" account (runbook: superadmin bootstrap),
+# "on" lets only your own computer reach <env>'s cg and pay sites and gives admin a random
+# one-time password (printed once). "off" removes the lock and disables admin (pass=NULL).
+# Run it from your own ssh session as a user with sudo. Needs the nginx include
+# "include /etc/nginx/bootstrap-lock.d/<env>.*;" in the env's server blocks (the repo confs have it).
+set -euo pipefail
+[ $# -eq 2 ] && [[ "$1" =~ ^(on|off)$ ]] && [[ "$2" =~ ^[a-z]+$ ]] || { echo "usage: bootstrap-lock on|off <env>"; exit 1; }
+MODE="$1"; ENV="$2"; DIR=/etc/nginx/bootstrap-lock.d; F="$DIR/$ENV.conf"
+reload() { sudo nginx -t >/dev/null 2>&1 && sudo systemctl reload nginx && sleep 1; }
+
+if [ "$MODE" = on ]; then
+  IP="${SSH_CLIENT%% *}"
+  [[ "$IP" =~ ^[0-9a-fA-F:.]+$ ]] || { echo "No ssh client address found; run this from your own ssh session."; exit 1; }
+  PW=$(python3 - <<'EOF'
+import hashlib, secrets
+A = "./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+def b64(b, n):
+    o, i = "", 0
+    while True:
+        v = b[i]; i += 1; o += A[v & 63]
+        if i < n: v |= b[i] << 8
+        o += A[(v >> 6) & 63]
+        if i >= n: break
+        i += 1
+        if i < n: v |= b[i] << 16
+        o += A[(v >> 12) & 63]
+        if i >= n: break
+        i += 1
+        o += A[(v >> 18) & 63]
+        if i >= n: break
+    return o
+pw = secrets.token_urlsafe(12)
+salt = "".join(secrets.choice(A) for _ in range(8))
+h = hashlib.sha512((salt + pw).encode()).digest()
+for _ in range(1 << 15): h = hashlib.sha512(h + pw.encode()).digest()
+print(pw, "$S$D" + salt + b64(h, 64)[:43])
+EOF
+)
+  sudo install -d -m 755 "$DIR"
+  printf 'allow %s;\ndeny all;\n' "$IP" | sudo tee "$F" >/dev/null
+  reload
+  sudo mysql -e "UPDATE \`$ENV\`.users SET pass='${PW#* }' WHERE uid=1"
+  echo "Locked: only $IP can reach $ENV sites."
+  echo "admin one-time password (shown once): ${PW%% *}"
+else
+  sudo rm -f "$F"
+  reload
+  sudo mysql -e "UPDATE \`$ENV\`.users SET pass=NULL WHERE uid=1"
+  echo "Unlocked: $ENV sites open again, admin password removed."
+fi

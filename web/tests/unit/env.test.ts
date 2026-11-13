@@ -16,7 +16,6 @@ const {
   phpEndpointUrl,
   phpGrantsUrl,
   phpSsoUrl,
-  phpHostname,
 } = await import('../../src/lib/server/env')
 
 const REQUIRED_ENV = {
@@ -28,11 +27,12 @@ const REQUIRED_ENV = {
   PHP_SSO_SECRET: 's',
   PHP_SSO_COOKIE_NAME: 'SESSabc',
   PUBLIC_PHP_BASE_URL: 'http://localhost/cg/cgmembers',
+  PUBLIC_TURNSTILE_SITEKEY: '1x00000000000000000000AA',
 }
 
 function fillRequired() {
   for (const [k, v] of Object.entries(REQUIRED_ENV)) {
-    if (k === 'PUBLIC_PHP_BASE_URL') publicEnvState[k] = v
+    if (k.startsWith('PUBLIC_')) publicEnvState[k] = v
     else privateEnvState[k] = v
   }
 }
@@ -51,14 +51,13 @@ describe('cookieDomainFor', () => {
     expect(cookieDomainFor('127.0.0.1')).toBe('127.0.0.1')
   })
 
-  it('returns .parent-domain for a subdomain', () => {
-    expect(cookieDomainFor('pay-test.commongood.earth')).toBe('.commongood.earth')
-    expect(cookieDomainFor('new.commongood.earth')).toBe('.commongood.earth')
+  it('scopes to the host itself, so each environment has its own cookie scope', () => {
+    expect(cookieDomainFor('test.commongood.earth')).toBe('.test.commongood.earth')
+    expect(cookieDomainFor('main.commongood.earth')).toBe('.main.commongood.earth')
+    expect(cookieDomainFor('main.commongood.earth')).not.toBe(cookieDomainFor('beta.commongood.earth'))
   })
 
-  it('returns .apex-domain even when the input IS the apex', () => {
-    // Still prefixes with "." so a cookie set here is sent to every subdomain,
-    // not just the apex.
+  it('prefixes a dot even for an apex host, so subdomains get the cookie', () => {
     expect(cookieDomainFor('commongood.earth')).toBe('.commongood.earth')
   })
 })
@@ -85,18 +84,13 @@ describe('derived PHP helpers', () => {
     expect(phpGrantsUrl()).toBe('https://pay-test.commongood.earth/cgpay/grants')
   })
 
-  it('phpCookieDomain derives the parent domain', () => {
-    publicEnvState.PUBLIC_PHP_BASE_URL = 'https://pay-test.commongood.earth'
-    expect(phpCookieDomain()).toBe('.commongood.earth')
+  it('phpCookieDomain scopes to the PHP host', () => {
+    publicEnvState.PUBLIC_PHP_BASE_URL = 'https://test.commongood.earth'
+    expect(phpCookieDomain()).toBe('.test.commongood.earth')
   })
 
   it('phpCookieDomain returns localhost unchanged', () => {
     expect(phpCookieDomain()).toBe('localhost')
-  })
-
-  it('phpHostname returns the host only', () => {
-    publicEnvState.PUBLIC_PHP_BASE_URL = 'https://pay-test.commongood.earth/foo'
-    expect(phpHostname()).toBe('pay-test.commongood.earth')
   })
 })
 

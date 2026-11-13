@@ -1,0 +1,88 @@
+#!/bin/bash
+# usage: verify-setup <members|standby|test> [domain]
+# Read-only checks that a server was set up as the runbooks say. Prints PASS/FAIL per check,
+# exits with the number of failures. Run it as a user with sudo on the server itself.
+ROLE="${1:?usage: verify-setup <members|standby|test> [domain]}"
+D="${2:-commongood.earth}"
+FAILS=0
+
+ck() { # ck "what" command...   (passes when the command succeeds)
+  local what="$1"; shift
+  if "$@" >/dev/null 2>&1; then echo "PASS  $what"; else echo "FAIL  $what"; FAILS=$((FAILS + 1)); fi
+}
+code() { curl -sk -o /dev/null -w '%{http_code}' --max-time 10 --resolve "$1:443:127.0.0.1" "https://$1/"; }
+want() { # want "what" host "200 302"   (passes when the status is one of the listed codes)
+  local c; c=$(code "$2")
+  if [[ " $3 " == *" $c "* ]]; then echo "PASS  $1 ($c)"; else echo "FAIL  $1 (got $c, wanted $3)"; FAILS=$((FAILS + 1)); fi
+}
+pm2on() { sudo -iu "$1" bash -c "source ~/.nvm/nvm.sh >/dev/null 2>&1; pm2 jlist 2>/dev/null" | python3 -c "
+import sys, json
+print(any(p['name'] == '$2' and p['pm2_env']['status'] == 'online' for p in json.load(sys.stdin)))" | grep -q True; }
+mode600() { [ "$(sudo stat -L -c %U:%a "$2")" = "$1:600" ]; }
+private() { [ "$(sudo stat -L -c %U "$2")" = "$1" ] && [[ "$(sudo stat -L -c %a "$2")" == *0 ]]; } # owner is right and "other" has no access (beta reads main's config through an ACL, so the mode is not 600)
+sshd_has() { sudo sshd -T 2>/dev/null | grep -qix "$1"; }
+ufw_has() { sudo ufw status | grep -qE "^$1[[:space:]]+ALLOW"; }
+
+echo "== $ROLE ($D)"
+
+# every server
+ck "sshd: password login off" sshd_has "passwordauthentication no"
+ck "sshd: root login off" sshd_has "permitrootlogin no"
+ck "ufw active" bash -c "sudo ufw status | grep -q 'Status: active'"
+for p in 7822/tcp 80/tcp 443/tcp; do ck "ufw allows $p" ufw_has "$p"; done
+ck "fail2ban sshd jail running" bash -c "sudo fail2ban-client status sshd"
+ck "nginx config valid" sudo nginx -t
+ck "nginx running" systemctl is-active --quiet nginx
+
+case "$ROLE" in
+members|standby)
+  ck "mariadb running" systemctl is-active --quiet mariadb
+  ck "ufw allows 3306 from the other box" bash -c "sudo ufw status | grep -E '^3306/tcp +ALLOW' | grep -qv Anywhere"
+  ck "lsyncd running (members) or absent (standby)" bash -c "[ $ROLE = standby ] || systemctl is-active --quiet lsyncd"
+  for e in main beta; do
+    ck "$e: pay .env is 600 and owned by $e" mode600 "$e" "/home/$e/pay/shared/web/.env"
+    ck "$e: cg config.json is owned by main and closed to others" private main "/home/$e/cg/shared/config/config.json"
+  done
+  ck "standby-guard installed" test -x /usr/local/bin/standby-guard
+  ck "no bootstrap lock left on" bash -c "! ls /etc/nginx/bootstrap-lock.d/*.conf"
+  if [ "$ROLE" = members ]; then
+    ck "password scripts installed" bash -c "for f in userpw2 dbpw2 cgpaypw2; do [ -x /usr/local/bin/\$f ] || exit 1; done"
+    for e in main beta; do ck "$e: pm2 pay-$e online" pm2on "$e" "pay-$e"; done
+    want "main cg" "main.$D" "200 302"
+    want "pay.main" "pay.main.$D" "200 302"
+    want "beta cg" "beta.$D" "200 302"
+    want "pay.beta" "pay.beta.$D" "200 302"
+    ck "cert valid for 30+ days" bash -c "sudo openssl x509 -checkend 2592000 -noout -in /etc/letsencrypt/live/$D/fullchain.pem"
+    ck "binary logging on" bash -c "sudo mysql -N -e 'SELECT @@log_bin' | grep -q 1"
+  else
+    ck "replication: both threads running" bash -c "sudo mysql -e 'SHOW SLAVE STATUS\\G' | grep -E 'Slave_(IO|SQL)_Running: Yes' | wc -l | grep -q 2"
+    ck "replication: no error" bash -c "! sudo mysql -e 'SHOW SLAVE STATUS\\G' | grep -E 'Last_(IO_|SQL_)?Errno: [1-9]'"
+    ck "replication: lag is 0" bash -c "sudo mysql -e 'SHOW SLAVE STATUS\\G' | grep -q 'Seconds_Behind_Master: 0'"
+    ck "database is read-only" bash -c "sudo mysql -N -e 'SELECT @@read_only' | grep -q 1"
+    want "web gate closed (main cg)" "main.$D" "403"
+    want "web gate closed (pay.main)" "pay.main.$D" "403"
+    ck "synced cert present and valid 30+ days" bash -c "sudo openssl x509 -checkend 2592000 -noout -in /etc/letsencrypt-synced/fullchain.pem"
+    ck "fix-pay-env.path active" systemctl is-active --quiet fix-pay-env.path
+    ck "backup dirs, script and credentials" bash -c "sudo test -d /var/backups/mysql/daily && sudo test -x /usr/local/bin/mysql-backup.sh && sudo test -f /etc/mysql-backup/backup.cnf"
+    ck "standby-web installed" test -x /usr/local/bin/standby-web
+  fi
+  ;;
+test)
+  ck "mariadb running" systemctl is-active --quiet mariadb
+  ck "no bootstrap lock left on" bash -c "! ls /etc/nginx/bootstrap-lock.d/*.conf"
+  ck "synced cert present and valid 30+ days" bash -c "sudo openssl x509 -checkend 2592000 -noout -in /etc/letsencrypt-synced/fullchain.pem"
+  for e in test dev staging demo; do
+    want "$e cg" "$e.$D" "200 302"
+    ck "$e: cg config.json is 600 and owned by $e" mode600 "$e" "/home/$e/cg/shared/config/config.json"
+  done
+  for e in test dev; do
+    want "pay.$e" "pay.$e.$D" "200 302"
+    ck "$e: pm2 pay-$e online" pm2on "$e" "pay-$e"
+    ck "$e: pay .env is 600 and owned by $e" mode600 "$e" "/home/$e/pay/shared/web/.env"
+  done
+  ;;
+*) echo "unknown role $ROLE"; exit 2 ;;
+esac
+
+echo "== $FAILS failure(s)"
+exit "$FAILS"

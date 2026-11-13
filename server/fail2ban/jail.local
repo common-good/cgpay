@@ -1,0 +1,12 @@
+[DEFAULT]
+# Replace with the IPs of your own three servers (members, standby, test server) so they never ban each other
+ignoreip = 127.0.0.1/8 ::1 103.72.79.209 65.181.122.201 65.98.5.134
+bantime = 1h
+findtime = 10m
+maxretry = 5
+
+[sshd]
+enabled = true
+port = 7822
+backend = systemd
+journalmatch = _COMM=sshd
