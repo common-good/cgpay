@@ -2,10 +2,8 @@
 // identifier -> uid (/cgpay/lookup), uid -> PHP session (/cgpay/sso), and the cookies that carry it.
 
 import { error } from '@sveltejs/kit'
-import type { Cookies } from '@sveltejs/kit'
 import { env } from '$env/dynamic/private'
 import { phpUrl } from '$lib/utils'
-import { phpCookieDomain } from '$lib/server/env'
 
 // DEBUG_LOGIN=1 in .env enables tracing. Never log the password or shared secret, only presence/length.
 export const DEBUG_LOGIN = env.DEBUG_LOGIN === '1'
@@ -110,12 +108,4 @@ export async function phpSso(uid: number): Promise<SsoResponse | null> {
     throw error(502, 'Unable to complete sign-in - please try again.')
   }
   return data as SsoResponse
-}
-
-/** Put the PHP session (and device) cookies on the browser. See "Common gotchas" in CLAUDE.md before changing this. */
-export function setSsoCookies(cookies: Cookies, sso: SsoResponse) {
-  const cookieOpts = { path: '/', httpOnly: true, secure: true, sameSite: 'lax' as const, domain: phpCookieDomain() }
-  cookies.set(sso.cookieName, sso.ssid, cookieOpts)
-  // box-<QID> marks this browser as a registered device; PHP looks it up in r_boxes.
-  if (sso.boxCookieName && sso.boxCookieValue) cookies.set(sso.boxCookieName, sso.boxCookieValue, cookieOpts)
 }
