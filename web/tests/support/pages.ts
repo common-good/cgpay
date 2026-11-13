@@ -94,7 +94,7 @@ export default {
   },
 
   async soError(app: App, message: string) {
-    await expect(app.page.getByRole('alert'), `error "${message}"`).toContainText(message, { timeout: 10_000 })
+    await expect(app.page.getByRole('alert').filter({ hasText: message }), `error "${message}"`).toBeVisible({ timeout: 10_000 })
   },
 
   async soOnPage(app: App, path: string) {
