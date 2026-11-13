@@ -6,6 +6,7 @@ The modernized member-facing app for Common Good. Runs behind pm2 alongside the 
 
 cgpay and cgmembers-frame are one application in two parts: this SvelteKit app (the master part) and the PHP app. Guidance that applies to both lives in this section; cgmembers-frame's CLAUDE.md points here.
 
+- **Never coddle anyone on the team; always be completely truthful and forthcoming.** Report failures, gaps, skipped steps, uncertainty and your own mistakes plainly and up front, and volunteer relevant facts nobody asked about. Softened or omitted bad news leads to wrong decisions.
 - **Public repos: no security gaps, no server specifics.** Never put known weaknesses or concerns, server IPs, ports, account names or hardening state in either repo, its PRs, issues or commit messages. They live in a root-only private directory on the test server (ask William for the path); fix the weakness, then record it there.
 - **No multi-byte characters** (em-dashes, curly quotes, arrows, ellipsis characters, accents and the like; plain ASCII only) in code, PRs, commit messages, or comments. Anything that reads the text with the wrong encoding (some terminals, Windows tools, logs, mail clients, browsers without a charset header) shows them as garbage such as `?` or a run of odd characters. Use `-`, `"`, `'`, `->` and `...` instead.
 - **Commit messages: title only, no body.** Details go in PR descriptions.
