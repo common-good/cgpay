@@ -19,15 +19,15 @@ when "main", "beta", "demo"
   ask :branch, "main"   # ask temporarily while getting set up
 end
 
-server "#{subdomain}.commongood.earth", roles: %w{app db web}, user: stage, port: 7822
+# The SSH port comes from your ~/.ssh/config (Host *.commongood.earth); ask William for it.
+server "#{subdomain}.commongood.earth", roles: %w{app db web}, user: stage
 
 set :deploy_to, "/home/#{stage}/pay"
 set :tmp_dir, "/home/#{stage}/tmp"
 set :ssh_options, {
   forward_agent: false,
   auth_methods: %w(publickey),
-  user: stage,
-  port: 7822
+  user: stage
 }
 
 set :linked_dirs, %w[web/node_modules]
