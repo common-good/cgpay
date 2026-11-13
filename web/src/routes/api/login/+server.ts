@@ -161,7 +161,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress, cookies 
   let user: UserRow | undefined
   if (uid !== null) {
     const [rows] = await pool.query<UserRow[]>(
-      'SELECT uid, name, pass FROM users WHERE uid = ? LIMIT 1',
+      'SELECT id AS uid, name, pass FROM upeople WHERE id = ? LIMIT 1',
       [uid]
     )
     user = rows[0]

@@ -14,7 +14,7 @@ export const GET: RequestHandler = async ({ cookies }) => {
   const me = await requireUser(cookies)
 
   const [rows] = await pool.query<BalanceRow[]>(
-    'SELECT balance FROM users WHERE uid = ? LIMIT 1',
+    'SELECT balance FROM accounts WHERE id = ? LIMIT 1',
     [me.uid]
   )
   if (!rows[0]) throw error(404, 'user not found')
