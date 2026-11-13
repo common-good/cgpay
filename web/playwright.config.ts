@@ -52,12 +52,14 @@ export default defineConfig({
     // locally, the `&&` fallback keeps the test:e2e flow one-command.
     command: process.env.CI
       ? 'npm run preview -- --host 127.0.0.1 --port 4173'
-      : 'npm run build && npm run preview -- --host 127.0.0.1 --port 4173',
+      : 'npm run build && NODE_ENV=test npm run preview -- --host 127.0.0.1 --port 4173',
     url: 'http://127.0.0.1:4173',
     reuseExistingServer: !process.env.CI,
-    // The BDD sign-in scenarios exceed the login limit of 5 attempts per minute.
+    // The BDD sign-in scenarios exceed the login limit of 5 attempts per minute. The limiter ignores
+    // E2E_RATE_LIMIT_MAX in production, and vite preview defaults NODE_ENV to production, hence NODE_ENV=test.
     env: {
       E2E_RATE_LIMIT_MAX: '1000',
+      E2E_FAKE_USER: '1',
       CGPAY_PWA_URL: 'http://localhost:3000'
     },
     timeout: 120_000,
