@@ -33,7 +33,7 @@ design without a database.
 
 To actually log in and read a real balance, you need two things:
 
-1. **Read-only DB user** on staging's MariaDB.
+1. **The `<DB_NAME>_cgpay` DB user** on staging's MariaDB (SELECT on every table, writes only to `reset_codes`).
 2. **A test member account** to log in as.
 
 ### Step 1 — SSH tunnel to staging's MariaDB
@@ -57,7 +57,7 @@ Fill in:
 ```dotenv
 DB_HOST=127.0.0.1
 DB_PORT=3307
-DB_USER=<DB_NAME>_ro      # read-only user for now
+DB_USER=<DB_NAME>_cgpay
 DB_PASSWORD=…
 DB_NAME=…                 # test, dev, staging, demo, beta, main, etc.
 PHP_SSO_SECRET=…          # same as cgpaySsoSecret in the cgmembers config.json
