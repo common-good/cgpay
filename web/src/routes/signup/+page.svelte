@@ -139,7 +139,7 @@
             placeholder="First and last name"
             aria-invalid={!!fieldErrors.fullName}
           />
-          {#if fieldErrors.fullName}<span class="field-err">{fieldErrors.fullName}</span>{/if}
+          {#if fieldErrors.fullName}<span class="field-err" role="alert">{fieldErrors.fullName}</span>{/if}
         </div>
 
         <div class="field" class:has-err={fieldErrors.email}>
@@ -154,7 +154,7 @@
             placeholder="you@example.com"
             aria-invalid={!!fieldErrors.email}
           />
-          {#if fieldErrors.email}<span class="field-err">{fieldErrors.email}</span>{/if}
+          {#if fieldErrors.email}<span class="field-err" role="alert">{fieldErrors.email}</span>{/if}
         </div>
 
         <div class="field" class:has-err={fieldErrors.phone}>
@@ -169,7 +169,7 @@
             placeholder="(555) 555-1234"
             aria-invalid={!!fieldErrors.phone}
           />
-          {#if fieldErrors.phone}<span class="field-err">{fieldErrors.phone}</span>{/if}
+          {#if fieldErrors.phone}<span class="field-err" role="alert">{fieldErrors.phone}</span>{/if}
         </div>
 
         <div class="field" class:has-err={fieldErrors.zip}>
@@ -185,7 +185,7 @@
             placeholder="02139"
             aria-invalid={!!fieldErrors.zip}
           />
-          {#if fieldErrors.zip}<span class="field-err">{fieldErrors.zip}</span>{/if}
+          {#if fieldErrors.zip}<span class="field-err" role="alert">{fieldErrors.zip}</span>{/if}
         </div>
 
         <div class="field toggle-row">
@@ -207,7 +207,7 @@
             />
             <span>I agree to the <a class="inline-link" href="/agreement" target="_blank" rel="noopener">Common Good Agreement</a>.</span>
           </label>
-          {#if fieldErrors.agreementAccepted}<span class="field-err">{fieldErrors.agreementAccepted}</span>{/if}
+          {#if fieldErrors.agreementAccepted}<span class="field-err" role="alert">{fieldErrors.agreementAccepted}</span>{/if}
         </div>
 
         <div class="turnstile" bind:this={turnstileEl}>
