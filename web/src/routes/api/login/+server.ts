@@ -4,7 +4,7 @@ import { env } from '$env/dynamic/private'
 import pool from '$lib/server/db'
 import { checkPassword } from '$lib/server/drupal-password'
 import { phpUrl } from '$lib/utils'
-import { phpCookieDomain } from '$lib/server/env'
+import { setSsoCookies } from '$lib/server/sso-cookies'
 import { rateLimit } from '$lib/server/rate-limit'
 import type { RowDataPacket } from 'mysql2'
 
@@ -194,20 +194,8 @@ export const POST: RequestHandler = async ({ request, getClientAddress, cookies 
   // Hand off to PHP — this also resolves the user's menu categories
   const sso = await phpSso(user.uid)
 
-  if (sso) {
-    const cookieOpts = {
-      path: '/',
-      httpOnly: true,
-      secure: true,
-      sameSite: 'lax' as const
-    }
-    const domain = phpCookieDomain()
-    cookies.set(sso.cookieName, sso.ssid, { ...cookieOpts, domain })
-    // box-<QID> marks this browser as a registered device; PHP looks it up in r_boxes.
-    if (sso.boxCookieName && sso.boxCookieValue) {
-      cookies.set(sso.boxCookieName, sso.boxCookieValue, { ...cookieOpts, domain })
-    }
-  }
+  // box-<QID> marks this browser as a registered device; PHP looks it up in r_boxes.
+  if (sso) setSsoCookies(cookies, sso)
 
   // Identity is now derived from the SSO cookie on every subsequent request
   // (see +layout.server.ts + /cgpay/whoami). No JWT to return.

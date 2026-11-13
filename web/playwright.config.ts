@@ -6,6 +6,9 @@ import { CAMERA_FILE, writeCameraVideo } from './tests/support/camera'
 // The PHP server runs in this time zone; magic dates in the tests (%now0, %ymd, ...) must agree with it wherever the tests run.
 process.env.TZ = 'America/New_York'
 
+// The steps need the session cookie's name, which is in .env with the app's other settings.
+try { process.loadEnvFile('.env') } catch {}
+
 // The BDD browser has a fake camera that plays this file (a step rewrites it to show a QR code; see camera.ts).
 if (!existsSync(CAMERA_FILE)) writeCameraVideo('')
 const fakeCamera = ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream', `--use-file-for-fake-video-capture=${CAMERA_FILE}`]

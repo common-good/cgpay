@@ -6,11 +6,20 @@
 //
 // See cgpay #178.
 
+import type { Handle } from '@sveltejs/kit'
 import { assertRequiredEnv } from '$lib/server/env'
+import { healSsoCookies } from '$lib/server/sso-cookies'
+import { phpWhoami } from '$lib/server/php-whoami'
 
 try {
   assertRequiredEnv()
 } catch (e) {
   console.error('[startup]', e instanceof Error ? e.message : e)
   throw e
+}
+
+// A browser that sends the session cookie twice (an old scope left behind) is healed before anything reads it.
+export const handle: Handle = async ({ event, resolve }) => {
+  await healSsoCookies(event.cookies, event.request.headers.get('cookie'), async v => (await phpWhoami(v)).ok)
+  return resolve(event)
 }
