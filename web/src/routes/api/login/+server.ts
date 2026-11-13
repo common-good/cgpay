@@ -3,7 +3,7 @@ import type { RequestHandler } from './$types'
 import { env } from '$env/dynamic/private'
 import pool from '$lib/server/db'
 import { checkPassword } from '$lib/server/drupal-password'
-import { phpUrl } from '$lib/utils'
+import { dbg, phpLookup, phpSso } from '$lib/server/php-login'
 import { setSsoCookies } from '$lib/server/sso-cookies'
 import { rateLimit } from '$lib/server/rate-limit'
 import type { RowDataPacket } from 'mysql2'
@@ -16,12 +16,6 @@ import type { RowDataPacket } from 'mysql2'
 const TEST_ADMIN_BYPASS = env.TEST_ADMIN_BYPASS === '1'
 const ADMIN_UID = 1
 
-// DEBUG_LOGIN=1 in .env enables tracing. Never log the password or shared secret, only presence/length.
-const DEBUG_LOGIN = env.DEBUG_LOGIN === '1'
-function dbg(...args: unknown[]) {
-  if (DEBUG_LOGIN) console.log('[login:debug]', ...args)
-}
-
 type UserRow = RowDataPacket & { uid: number; name: string; pass: string }
 
 // A real-looking hash to verify against when the username doesn't exist.
@@ -30,105 +24,6 @@ type UserRow = RowDataPacket & { uid: number; name: string; pass: string }
 const DUMMY_HASH = '$S$DummyHashUsedForConstantTimeWhenUserNotFound00000000'
 
 const DEFAULT_MENU = ['Dashboard', 'History', 'Community', 'Settings']
-
-type SsoResponse = {
-  cookieName: string
-  sid: string
-  ssid: string
-  menu: string[]
-  boxCookieName?: string
-  boxCookieValue?: string
-}
-
-/**
- * Resolve a user-supplied identifier (account code, username, full name, email,
- * or phone) to a uid via the PHP /cgpay/lookup endpoint. cgmembers owns the
- * matching logic (including the encrypted-email path), so we don't reimplement
- * it here. Returns null if no match — caller still runs checkPassword against
- * DUMMY_HASH for timing parity.
- */
-async function phpLookup(identifier: string): Promise<number | null> {
-  const secret = env.PHP_SSO_SECRET
-  if (!secret) {
-    dbg('lookup skipped: PHP_SSO_SECRET not set')
-    return null
-  }
-
-  try {
-    const url = phpUrl('cgpay/lookup')
-    dbg('lookup request:', { url, body: { identifier }, tokenLength: secret.length })
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-cg-internal-token': secret
-      },
-      body: JSON.stringify({ identifier })
-    })
-    if (DEBUG_LOGIN) {
-      const text = await res.clone().text().catch(() => '<unreadable>')
-      dbg('lookup response:', res.status, text.slice(0, 500))
-    }
-    if (res.status === 404) return null
-    if (!res.ok) {
-      console.error(`[login] PHP lookup returned ${res.status}`)
-      return null
-    }
-    const data = await res.json().catch(() => null)
-    if (!data || typeof data.uid !== 'number') {
-      dbg('lookup response missing numeric uid:', data)
-      return null
-    }
-    return data.uid
-  } catch (e) {
-    console.error('[login] PHP lookup network error:', e)
-    return null
-  }
-}
-
-/**
- * Hand off the verified login to the PHP cgmembers site so menu links land
- * pre-authenticated. Returns the session cookie info + the user's menu
- * categories, or null if SSO is not configured (we degrade gracefully — login
- * still succeeds, but PHP links will require a second login).
- */
-async function phpSso(uid: number): Promise<SsoResponse | null> {
-  const secret = env.PHP_SSO_SECRET
-  if (!secret) {
-    console.warn('[login] PHP_SSO_SECRET not configured — skipping PHP session handoff')
-    return null
-  }
-
-  let res: Response
-  try {
-    const url = phpUrl('cgpay/sso')
-    dbg('sso request:', { url, body: { uid }, tokenLength: secret.length })
-    res = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-cg-internal-token': secret
-      },
-      body: JSON.stringify({ uid })
-    })
-  } catch (e) {
-    console.error('[login] PHP SSO network error:', e)
-    throw error(502, 'Unable to complete sign-in — please try again.')
-  }
-
-  dbg('sso response status:', res.status)
-  if (!res.ok) {
-    console.error(`[login] PHP SSO returned ${res.status}`)
-    throw error(502, 'Unable to complete sign-in — please try again.')
-  }
-
-  const data = await res.json().catch(() => null)
-  if (!data || typeof data.cookieName !== 'string' || typeof data.ssid !== 'string') {
-    console.error('[login] PHP SSO returned unexpected body:', data)
-    throw error(502, 'Unable to complete sign-in — please try again.')
-  }
-  return data as SsoResponse
-}
 
 export const POST: RequestHandler = async ({ request, getClientAddress, cookies }) => {
   const ip = getClientAddress()
@@ -194,7 +89,6 @@ export const POST: RequestHandler = async ({ request, getClientAddress, cookies 
   // Hand off to PHP — this also resolves the user's menu categories
   const sso = await phpSso(user.uid)
 
-  // box-<QID> marks this browser as a registered device; PHP looks it up in r_boxes.
   if (sso) setSsoCookies(cookies, sso)
 
   // Identity is now derived from the SSO cookie on every subsequent request

@@ -13,7 +13,7 @@ The modernized member-facing app for Common Good. Runs behind pm2 alongside the 
 - SvelteKit 2 with Svelte 5 runes (`$state`, `$derived`, `$props`, `$effect`)
 - TypeScript throughout (`web/src/**/*.ts`, `<script lang="ts">`)
 - Node 20+ via `@sveltejs/adapter-node`, run under pm2
-- MySQL 5.7+ (shared read-only user against the cgmembers DB - see `web/src/lib/server/db.ts`)
+- MySQL 5.7+ (shared user against the cgmembers DB: SELECT on the whole DB plus INSERT/UPDATE/DELETE on the tables allowlisted in `web/src/lib/server/data.ts` - see `web/src/lib/server/db.ts`)
 - Vitest for unit tests, Playwright for E2E
 - Capistrano (Ruby) for deploys
 
@@ -35,7 +35,8 @@ routes/
   preview/                 design previews for review (isolated from real auth)
 lib/
   server/                  server-only code
-    db.ts                  MySQL pool (READ-ONLY user - most reads work directly; writes go via PHP)
+    db.ts                  MySQL pool (SELECT everywhere; writes only to allowlisted tables via data.ts, all other writes go via PHP)
+    data.ts                allowlisted insert/update/remove for tables node owns; read the comment above ALLOWLIST before adding a table
     drupal-password.ts     verifies $S$-prefixed Drupal 7 hashes
     auth.ts                cookie auth: reads the SSO cookie and asks PHP who owns it (currentUser, requireUser)
     php-whoami.ts          server-to-server client for /cgpay/whoami
@@ -80,7 +81,7 @@ When adding a new PHP endpoint: implement the PHP side under `cgmembers/rcredits
 Set per environment in `.env` on the deploy target (see [PR #155](https://github.com/common-good/cgpay/pull/155) - loaded via `node --env-file`):
 
 - `PORT` - pm2 port (per environment, e.g. 3001 for test)
-- `DB_HOST` / `DB_USER` / `DB_PASSWORD` / `DB_NAME` - MySQL (read-only user)
+- `DB_HOST` / `DB_USER` / `DB_PASSWORD` / `DB_NAME` - MySQL (SELECT on the whole DB, write grants only on the tables allowlisted in `data.ts`)
 - `PHP_SSO_SECRET` - shared secret with PHP (matches `cgpaySsoSecret` in cgmembers config.json)
 - `PHP_SSO_COOKIE_NAME` - the `SSESS...` cookie name PHP sets
 - `PUBLIC_PHP_BASE_URL` - PHP host base URL (exposed to browser). The `/cgpay/sso` and `/cgpay/grants` URLs and the cookie domain (the PHP host, e.g. `.test.commongood.earth`) are derived from it
