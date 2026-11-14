@@ -27,3 +27,6 @@ vite.config.ts.timestamp-*
 /playwright-report
 /playwright/.cache
 /.features-gen
+
+# Store app build output (npm run app:build)
+/app-dist
