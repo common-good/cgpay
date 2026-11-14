@@ -219,7 +219,7 @@
         {/if}
 
         <button type="submit" class="primary" data-testid="btn-signup" disabled={submitting || !captchaReady}>
-          {submitting ? 'Creating account…' : (captchaReady ? 'Create my account' : 'Loading verification…')}
+          {submitting ? 'Creating account...' : (captchaReady ? 'Create my account' : 'Loading verification...')}
         </button>
       </form>
     </div>
