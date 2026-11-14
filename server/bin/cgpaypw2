@@ -1,8 +1,7 @@
 #!/bin/bash
 # usage: cgpaypw2 <pw>
-# Rotates the DB password cgpay connects with (main_cgpay if it exists, else
-# main_ro), rewrites .env for main and beta on both servers, restarts pay-main
-# and pay-beta.
+# Rotates the DB password cgpay connects with (main_cgpay), rewrites .env for
+# main and beta on both servers, restarts pay-main and pay-beta.
 set -euo pipefail
 [ $# -eq 1 ] || { echo "usage: cgpaypw2 <pw>"; exit 1; }
 PW="$1"
@@ -10,8 +9,8 @@ if [[ "$PW" =~ [^A-Za-z0-9+/=._-] ]]; then
   echo "pw may contain only letters, digits and + / = . _ -"; exit 1
 fi
 
-DBU=$(sudo mysql -N -u root -e "SELECT user FROM mysql.user WHERE user IN ('main_cgpay','main_ro') ORDER BY user='main_cgpay' DESC LIMIT 1")
-[ -n "$DBU" ] || { echo "no main_cgpay or main_ro user found"; exit 1; }
+DBU=$(sudo mysql -N -u root -e "SELECT user FROM mysql.user WHERE user='main_cgpay' LIMIT 1")
+[ -n "$DBU" ] || { echo "no main_cgpay user found"; exit 1; }
 # ALTER USER replicates to standby.
 sudo mysql -u root -e "ALTER USER '${DBU}'@'localhost' IDENTIFIED BY '${PW}'; FLUSH PRIVILEGES;"
 
