@@ -1,0 +1,15 @@
+#!/bin/bash
+# usage: render FILE...   Prints each FILE with {{NAME}} replaced by NAME from site.env
+# (next to this script, or the file named in $SITE_ENV). Fails on a missing value.
+set -euo pipefail
+D=$(dirname "$(readlink -f "$0")"); E=${SITE_ENV:-$D/site.env}
+[ -r "$E" ] || { echo "missing $E (copy site.env.example to site.env and fill it in)" >&2; exit 1; }
+. "$E"
+for f; do
+  s=()
+  for n in $(grep -o '{{[A-Z_]*}}' "$f" | sort -u | tr -d '{}'); do
+    v=${!n:-}; [ -n "$v" ] || { echo "$n is not set in $E" >&2; exit 1; }
+    s+=(-e "s|{{$n}}|$(printf %s "$v" | sed 's/[|&\\]/\\&/g')|g")
+  done
+  if [ ${#s[@]} -gt 0 ]; then sed "${s[@]}" "$f"; else cat "$f"; fi
+done

@@ -6,3 +6,5 @@ dev-dist/
 log/
 
 .env
+
+server/site.env

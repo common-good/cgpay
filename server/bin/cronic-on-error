@@ -8,8 +8,8 @@ if [ "$STATUS" -ne 0 ]; then
   # check-cert-expiry.sh: raw newlines in a hand-built JSON string
   # produce invalid JSON, confirmed the hard way there already.
   PAYLOAD=$(jq -n \
-    --arg from "alerts@commongood.earth" \
-    --arg to "tech@commongood.earth" \
+    --arg from "{{ALERT_FROM}}" \
+    --arg to "{{TECH_TO}}" \
     --arg subject "FAILED: $*" \
     --arg body "$OUTPUT" \
     '{From: $from, To: $to, Subject: $subject, TextBody: $body}')
