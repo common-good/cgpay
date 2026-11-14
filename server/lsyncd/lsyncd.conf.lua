@@ -6,7 +6,7 @@ settings {
 sync {
   default.rsync,
   source = "/home/main/cg/shared/",
-  target = "cg-standby-sync:/home/main/cg/shared/",
+  target = "{{SYNC_HOST}}:/home/main/cg/shared/",
   delay = 2,
   exclude = { "config/" },
   rsync = {
@@ -21,7 +21,7 @@ sync {
 sync {
   default.rsync,
   source = "/home/main/pay/shared/web/",
-  target = "cg-standby-sync:/home/main/pay/shared/web/",
+  target = "{{SYNC_HOST}}:/home/main/pay/shared/web/",
   delay = 2,
   exclude = { "node_modules/" },
   rsync = {
@@ -36,7 +36,7 @@ sync {
 sync {
   default.rsync,
   source = "/home/beta/pay/shared/web/",
-  target = "cg-standby-sync:/home/beta/pay/shared/web/",
+  target = "{{SYNC_HOST}}:/home/beta/pay/shared/web/",
   delay = 2,
   exclude = { "node_modules/" },
   rsync = {
