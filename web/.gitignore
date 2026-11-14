@@ -29,4 +29,4 @@ vite.config.ts.timestamp-*
 /.features-gen
 
 # Store app build output (npm run app:build)
-/app-dist
+/app/dist

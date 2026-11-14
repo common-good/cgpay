@@ -9,9 +9,7 @@ const config = {
 	kit: {
 		// adapter-node builds a self-contained Node server we can run anywhere with `node build`.
 		// Works on a generic VPS (e.g. demo.commongood.earth's host), Render, Fly, Railway, etc.
-		adapter: adapter(),
-		// Type-check the store app's bundled screens (app/) too.
-		typescript: { config: c => { c.include.push('../app/**/*.ts', '../app/**/*.svelte') } }
+		adapter: adapter()
 	}
 };
 
