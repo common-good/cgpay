@@ -15,9 +15,8 @@
   let hasCamera = $state(false)
   let message = $state<{ kind: 'info' | 'error', text: string } | null>(null)
 
-  type ModalKind = 'pay' | 'receive' | 'transfer' | 'soon' | null
+  type ModalKind = 'pay' | 'receive' | null
   let modal = $state<ModalKind>(null)
-  let soonAction = $state('')
 
   // Where the PHP member site lives. Menu items link to /<lowercased category> on this host.
   // Empty string = no PHP target configured; we render the menu as disabled.
@@ -105,10 +104,6 @@
 
   function openPayPending() { modal = 'pay' }
   function openReceivePending() { modal = 'receive' }
-  function openSoon(action: string) {
-    soonAction = action
-    modal = 'soon'
-  }
   function closeModal() { modal = null }
 
   function onKeydown(e: KeyboardEvent) {
@@ -299,11 +294,7 @@
   {#if modal}
     <button class="modal-backdrop" type="button" onclick={closeModal} aria-label="Close dialog"></button>
     <div class="modal card" role="dialog" aria-labelledby="modal-title" aria-modal="true" tabindex="-1">
-      {#if modal === 'soon'}
-        <h3 id="modal-title">{soonAction} — coming soon</h3>
-        <p>This action will go live in the next phase of the Common Good member rebuild.</p>
-        <button class="primary-btn" onclick={closeModal}>Got it</button>
-      {:else if modal === 'pay' && info}
+      {#if modal === 'pay' && info}
         <h3 id="modal-title">Pending payments</h3>
         <p class="modal-sub">Invoices waiting on you.</p>
         <ul class="modal-list">

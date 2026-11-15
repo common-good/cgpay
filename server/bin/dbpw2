@@ -23,6 +23,6 @@ update_config() {
 }
 
 update_config "$PW"
-ssh -t -p 7822 "$(whoami)@standby.commongood.earth" "$(declare -f update_config); update_config '$PW'"
+ssh -t standby.commongood.earth "$(declare -f update_config); update_config '$PW'"
 
 echo "main's DB password (replicated) + config.json and phinx.json (both servers; beta via symlink) updated."

@@ -9,7 +9,7 @@ import { qrOf } from './accounts'
 // Checks are named so... and say what they were looking for when they fail.
 
 // Where the Pay and Charge buttons lead when the device has a camera (the legacy app, see CGPAY_PWA_URL).
-const LEGACY_APP = 'http://localhost:3000'
+const LEGACY_APP = `http://localhost:${process.env.E2E_PWA_PORT ?? '3000'}`
 
 // An element id (like btn-signin or ckNum) starts with a lowercase letter and has no spaces or punctuation except - and _.
 const looksLikeId = (s: string) => /^[a-z][A-Za-z0-9_-]*$/.test(s)
@@ -94,7 +94,7 @@ export default {
   },
 
   async soError(app: App, message: string) {
-    await expect(app.page.getByRole('alert'), `error "${message}"`).toContainText(message, { timeout: 10_000 })
+    await expect(app.page.getByRole('alert').filter({ hasText: message }).first(), `error "${message}"`).toBeVisible({ timeout: 10_000 })
   },
 
   async soOnPage(app: App, path: string) {
