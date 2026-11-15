@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">CGPay</string>
-    <string name="title_activity_main">CGPay</string>
+    <string name="app_name">CGPay Trial</string>
+    <string name="title_activity_main">CGPay Trial</string>
     <string name="package_name">earth.commongood.cgpay</string>
     <string name="custom_url_scheme">earth.commongood.cgpay</string>
 </resources>

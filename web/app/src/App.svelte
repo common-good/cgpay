@@ -13,7 +13,6 @@
 
   let name = $state(store('name'))
   let intent = $state(hash.get('intent') || '')
-  let online = $state(navigator.onLine)
   let msg = $state('')
   let qr = $state('')
   let scanning = $state(false)
@@ -21,11 +20,8 @@
   let scanner: Html5Qrcode | null = null
 
   onMount(() => {
-    const set = () => online = navigator.onLine
-    addEventListener('online', set)
-    addEventListener('offline', set)
     if (intent === 'pay' || intent === 'charge') scan()
-    return () => { removeEventListener('online', set); removeEventListener('offline', set); scanner?.stop().catch(() => {}) }
+    return () => { scanner?.stop().catch(() => {}) }
   })
 
   async function reachable() {
@@ -69,7 +65,6 @@
 <main>
   <h1>CGPay <small>bundled screen</small></h1>
 
-  <p data-testid="net" class:bad={!online}>{online ? 'Online' : 'Offline'} (as the phone reports it)</p>
   <p data-testid="acct">{name ? `Last account seen on the live site: ${name}` : 'No account seen yet. Open Dashboard and sign in.'}</p>
   {#if intent}<p data-testid="intent">Asked to: {intent}</p>{/if}
 
