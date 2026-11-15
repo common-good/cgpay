@@ -18,10 +18,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
     return json({ errors: { channel: 'Pick a channel for the code.' } }, { status: 400 })
   }
 
-  try {
-    await requestReset(identifier, channel)
-  } catch (e) {
-    console.error('[reset-request] failed:', e)
-  }
+  // Not awaited: making and delivering a code takes longer than finding no account, so waiting would show which accounts exist.
+  requestReset(identifier, channel).catch(e => console.error('[reset-request] failed:', e))
   return json({ status: 'code_sent' })
 }
