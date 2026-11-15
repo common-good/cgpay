@@ -75,7 +75,7 @@ export default defineConfig({
     cwd: '..',
     url: `http://localhost:${PWA}`,
     reuseExistingServer: true,
-    env: { VITE_TEST_API_URL: 'http://localhost/cg/cgmembers/api/' },
+    env: { VITE_TEST_API_URL: process.env.TEST_API_URL ?? 'http://localhost/cg/cgmembers/api/' },
     timeout: 120_000,
     stdout: 'pipe' as const,
     stderr: 'pipe' as const
