@@ -8,6 +8,9 @@ process.env.TZ = 'America/New_York'
 
 // The steps need the session cookie's name, which is in .env with the app's other settings.
 try { process.loadEnvFile('.env') } catch {}
+// Ports of the preview server and the legacy app. Concurrent local test slots each set their own (E2E_PORT, E2E_PWA_PORT in .env).
+const PORT = process.env.E2E_PORT ?? '4173'
+const PWA = process.env.E2E_PWA_PORT ?? '3000'
 
 // The BDD browser has a fake camera that plays this file (a step rewrites it to show a QR code; see camera.ts).
 if (!existsSync(CAMERA_FILE)) writeCameraVideo('')
@@ -32,7 +35,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? 'github' : 'list',
   use: {
-    baseURL: 'http://127.0.0.1:4173',
+    baseURL: `http://127.0.0.1:${PORT}`,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure'
   },
@@ -45,22 +48,22 @@ export default defineConfig({
     },
     // Skipped in CI: the testDb fixture needs the PHP test endpoint (local WAMP), which CI lacks.
     // Uses localhost, not 127.0.0.1: a signed-in flow needs the SSO cookie, whose domain (derived from PUBLIC_PHP_BASE_URL) is 'localhost' locally.
-    ...(process.env.CI ? [] : [{ ...bddProject, use: { ...devices['Desktop Chrome'], baseURL: process.env.E2E_BASE_URL ?? 'http://localhost:4173', launchOptions: { args: fakeCamera } } }])
+    ...(process.env.CI ? [] : [{ ...bddProject, use: { ...devices['Desktop Chrome'], baseURL: process.env.E2E_BASE_URL ?? `http://localhost:${PORT}`, launchOptions: { args: fakeCamera } } }])
   ],
   webServer: [{
     // Build is run as a separate CI step so failures surface visibly;
     // locally, the `&&` fallback keeps the test:e2e flow one-command.
     command: process.env.CI
-      ? 'npm run preview -- --host 127.0.0.1 --port 4173'
-      : 'npm run build && NODE_ENV=test npm run preview -- --host 127.0.0.1 --port 4173',
-    url: 'http://127.0.0.1:4173',
+      ? `npm run preview -- --host 127.0.0.1 --port ${PORT}`
+      : `npm run build && NODE_ENV=test npm run preview -- --host 127.0.0.1 --port ${PORT}`,
+    url: `http://127.0.0.1:${PORT}`,
     reuseExistingServer: !process.env.CI,
     // The BDD sign-in scenarios exceed the login limit of 5 attempts per minute. The limiter ignores
     // E2E_RATE_LIMIT_MAX in production, and vite preview defaults NODE_ENV to production, hence NODE_ENV=test.
     env: {
       E2E_RATE_LIMIT_MAX: '1000',
       E2E_FAKE_USER: '1',
-      CGPAY_PWA_URL: 'http://localhost:3000'
+      CGPAY_PWA_URL: `http://localhost:${PWA}`
     },
     timeout: 120_000,
     stdout: 'pipe',
@@ -68,9 +71,9 @@ export default defineConfig({
   },
   // The legacy app, which the dashboard hands off to (port 3000), pointed at the local PHP. Local only: CI skips the BDD project.
   ...(process.env.CI ? [] : [{
-    command: 'npm run dev',
+    command: `npm run dev -- --port ${PWA}`,
     cwd: '..',
-    url: 'http://localhost:3000',
+    url: `http://localhost:${PWA}`,
     reuseExistingServer: true,
     env: { VITE_TEST_API_URL: 'http://localhost/cg/cgmembers/api/' },
     timeout: 120_000,
