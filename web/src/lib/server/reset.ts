@@ -61,7 +61,7 @@ export async function requestReset(identifier: string, channel: Channel, now = M
  * Check a code against the account's newest unused, unexpired one. Each look costs a try,
  * and the try is claimed (tries = old value) before the comparison, so parallel guesses
  * cannot outrun the limit. A right code is spent at once; spending it is the single-use gate.
- * Gives back the row id, or null for any kind of wrong.
+ * Gives back the row id and its tries before this look, or null for any kind of wrong.
  */
 async function spendCode(uid: number, code: string, now: number) {
   const [rows] = await pool.query<Row[]>('SELECT id, codeHash, tries FROM reset_codes WHERE uid = ? AND usedAt IS NULL AND expires > ? ORDER BY id DESC LIMIT 1', [uid, now])
@@ -69,18 +69,23 @@ async function spendCode(uid: number, code: string, now: number) {
   if (!r || r.tries >= MAX_TRIES) return null
   if ((await update('reset_codes', { tries: r.tries + 1 }, { id: r.id, tries: r.tries })).affectedRows !== 1) return null
   if (!same(hashCode(uid, code), r.codeHash)) return null
-  return (await update('reset_codes', { usedAt: now }, { id: r.id, usedAt: null })).affectedRows === 1 ? r.id : null
+  return (await update('reset_codes', { usedAt: now }, { id: r.id, usedAt: null })).affectedRows === 1 ? { id: r.id, tries: r.tries } : null
 }
 
 /**
  * Finish a reset: the right code plus a new password. On success the caller signs the
  * member in as the returned uid. 'bad_code' covers no such account, wrong, expired and used.
+ * When PHP refuses the password (too weak), the code is unspent and the try given back, so the member can pick another.
  */
 export async function verifyReset(identifier: string, code: string, newPassword: string, now = Math.floor(Date.now() / 1000)) {
   const uid = await phpLookup(identifier)
-  const id = uid === null ? null : await spendCode(uid, code, now)
-  if (uid === null || id === null) return { ok: false, why: 'bad_code' } as const
-  const done = await phpResetComplete(id, uid, newPassword)
-  if (done !== 'ok') return { ok: false, why: done === 'rejected' ? 'bad_password' : 'unavailable' } as const
+  const spent = uid === null ? null : await spendCode(uid, code, now)
+  if (uid === null || spent === null) return { ok: false, why: 'bad_code' } as const
+  const done = await phpResetComplete(spent.id, uid, newPassword)
+  if (done === 'failed') return { ok: false, why: 'unavailable' } as const
+  if (done !== 'ok') {
+    await update('reset_codes', { usedAt: null, tries: spent.tries }, { id: spent.id })
+    return { ok: false, why: 'bad_password', message: done.refused } as const
+  }
   return { ok: true, uid } as const
 }

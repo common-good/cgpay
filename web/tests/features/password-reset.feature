@@ -55,16 +55,16 @@ Feature: Password reset
       | Bea | 123456 |
 
       When post "reset-verify":
-      | identifier | code   | newPassword |
-      | Bea        | 123456 | newpass99   |
+      | identifier | code   | newPassword   |
+      | Bea        | 123456 | Tulip-Rain-42 |
       Then reply row:
       | http |
       | 200  |
       And count "reset_codes" is 0
 
       When post "login":
-      | identifier | password  |
-      | Bea        | newpass99 |
+      | identifier | password      |
+      | Bea        | Tulip-Rain-42 |
       Then reply row:
       | http |
       | 200  |
@@ -75,8 +75,8 @@ Feature: Password reset
       | Bea | 123456 |
 
       When post "reset-verify":
-      | identifier | code   | newPassword |
-      | Bea        | 654321 | newpass99   |
+      | identifier | code   | newPassword   |
+      | Bea        | 654321 | Tulip-Rain-42 |
       Then reply row:
       | http | errors.code |
       | 400  | ?           |
@@ -97,8 +97,8 @@ Feature: Password reset
       | Bea | 123456 | %now-1n |
 
       When post "reset-verify":
-      | identifier | code   | newPassword |
-      | Bea        | 123456 | newpass99   |
+      | identifier | code   | newPassword   |
+      | Bea        | 123456 | Tulip-Rain-42 |
       Then reply row:
       | http | errors.code |
       | 400  | ?           |
@@ -112,11 +112,34 @@ Feature: Password reset
       | Bea | 123456 | 5     |
 
       When post "reset-verify":
-      | identifier | code   | newPassword |
-      | Bea        | 123456 | newpass99   |
+      | identifier | code   | newPassword   |
+      | Bea        | 123456 | Tulip-Rain-42 |
       Then reply row:
       | http | errors.code |
       | 400  | ?           |
+
+    Scenario: The right code is entered with a password that is too easy to guess
+      Given these "reset_codes" rows:
+      | uid | code   |
+      | Bea | 123456 |
+
+      When post "reset-verify":
+      | identifier | code   | newPassword |
+      | Bea        | 123456 | newpass99   |
+      Then reply row:
+      | http | errors.newPassword |
+      | 400  | ?                  |
+      And these "reset_codes" rows:
+      | uid | tries | usedAt |
+      | Bea | 0     |        |
+
+      When post "reset-verify":
+      | identifier | code   | newPassword   |
+      | Bea        | 123456 | Tulip-Rain-42 |
+      Then reply row:
+      | http |
+      | 200  |
+      And count "reset_codes" is 0
 
     Scenario: The right code is entered with a password that is too short
       Given these "reset_codes" rows:

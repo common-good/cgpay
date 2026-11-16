@@ -170,10 +170,17 @@ describe('verifyReset', () => {
 
   it('tells a refused password from an unreachable PHP', async () => {
     live()
-    phpResetComplete.mockResolvedValue('rejected')
-    expect(await verifyReset('x', '123456', 'newpassword', NOW)).toEqual({ ok: false, why: 'bad_password' })
+    phpResetComplete.mockResolvedValue({ refused: 'too weak' })
+    expect(await verifyReset('x', '123456', 'newpassword', NOW)).toEqual({ ok: false, why: 'bad_password', message: 'too weak' })
     live()
     phpResetComplete.mockResolvedValue('failed')
     expect(await verifyReset('x', '123456', 'newpassword', NOW)).toEqual({ ok: false, why: 'unavailable' })
+  })
+
+  it('gives the code and the try back when PHP refuses the password', async () => {
+    live(2)
+    phpResetComplete.mockResolvedValue({ refused: 'too weak' })
+    await verifyReset('x', '123456', 'newpassword', NOW)
+    expect(update).toHaveBeenLastCalledWith('reset_codes', { usedAt: null, tries: 2 }, { id: 9 })
   })
 })

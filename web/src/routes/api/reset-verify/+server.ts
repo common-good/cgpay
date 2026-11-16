@@ -23,7 +23,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress, cookies 
   const r = await verifyReset(identifier, code, pw)
   if (!r.ok) {
     if (r.why === 'bad_code') return json(BAD_CODE, { status: 400 })
-    if (r.why === 'bad_password') return json({ errors: { newPassword: 'That password is not acceptable.' } }, { status: 400 })
+    if (r.why === 'bad_password') return json({ errors: { newPassword: r.message } }, { status: 400 })
     throw error(502, 'Unable to reset the password - please try again.')
   }
 
