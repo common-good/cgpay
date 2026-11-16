@@ -17,7 +17,7 @@
       goto('/reset')
       return
     }
-    channelLabel = session.channel === 'sms' ? 'phone' : 'email'
+    channelLabel = session.channel === 'sms' ? 'phone or email' : 'email'
   })
 
   function onBlur() {
@@ -72,7 +72,7 @@
         </div>
 
         <button type="submit" class="primary" data-testid="btn-verify" disabled={submitting}>
-          {submitting ? 'Checking…' : 'Continue'}
+          {submitting ? 'Checking...' : 'Continue'}
         </button>
       </form>
 

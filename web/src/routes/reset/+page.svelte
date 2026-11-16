@@ -98,7 +98,7 @@
         {/if}
 
         <button type="submit" class="primary" data-testid="btn-send-code" disabled={submitting}>
-          {submitting ? 'Sending code…' : 'Send code'}
+          {submitting ? 'Sending code...' : 'Send code'}
         </button>
       </form>
 

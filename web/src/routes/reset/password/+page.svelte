@@ -102,7 +102,7 @@
 
     <div class="card-body">
       <h1 id="pw-h1">Set a new password</h1>
-      <p class="subtitle">Pick something you'll remember. At least 8 characters with a mix of cases, numbers, or symbols.</p>
+      <p class="subtitle">Pick something you'll remember. The meter shows how strong it is.</p>
 
       <form onsubmit={submit} novalidate>
         <div class="field" class:has-err={fieldErrors.newPassword}>
@@ -144,7 +144,7 @@
         {/if}
 
         <button type="submit" class="primary" data-testid="btn-set-password" disabled={submitting}>
-          {submitting ? 'Setting password…' : 'Set password'}
+          {submitting ? 'Setting password...' : 'Set password'}
         </button>
       </form>
     </div>

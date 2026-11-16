@@ -10,8 +10,6 @@
 
   const phpBase = (env.PUBLIC_PHP_BASE_URL ?? '').replace(/\/$/, '')
   const helpHref   = phpBase ? phpBase + '/help' : 'mailto:support@commongood.earth'
-  // Sign-up still lives on PHP until the node redesign in #203 lands. Password reset
-  // now points at the node /reset flow (see feat/forgot-password-scaffold).
   const signupHref = phpBase ? phpBase + '/signup' : ''
   const forgotHref = '/reset'
 

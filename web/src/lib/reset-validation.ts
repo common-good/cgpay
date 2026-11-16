@@ -31,9 +31,10 @@ export function validateCode(value: string): string | null {
   return null
 }
 
+// Length ceiling only: pwScore (lib/pw-score.ts) + PHP's reason text are the authoritative
+// strength signal, so the client does not second-guess what the server will accept.
 export function validatePassword(value: string): string | null {
   if (!value) return 'Please choose a password.'
-  if (value.length < 8) return 'Password must be at least 8 characters.'
   if (value.length > 128) return 'Password is too long.'
   return null
 }
