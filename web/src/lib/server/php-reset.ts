@@ -18,12 +18,13 @@ export async function phpResetDeliver(uid: number, channel: Channel, code: strin
   }
 }
 
-/** Set the new password for a code node has just verified. 'rejected' means PHP refused the password itself. */
-export async function phpResetComplete(resetId: number, uid: number, newPassword: string): Promise<'ok' | 'rejected' | 'failed'> {
+/** Set the new password for a code node has just verified. { refused } means PHP refused the password itself (too weak, say), with its reason. */
+export async function phpResetComplete(resetId: number, uid: number, newPassword: string): Promise<'ok' | 'failed' | { refused: string }> {
   try {
     const r = await callPhp('/cgpay/reset-complete', { body: { resetId, uid, newPassword } })
     if (r.ok) return 'ok'
-    return r.status === 400 ? 'rejected' : 'failed'
+    const why = (r.body as { errors?: { newPassword?: unknown } } | null)?.errors?.newPassword
+    return r.status === 400 ? { refused: typeof why === 'string' ? why : 'That password is not acceptable.' } : 'failed'
   } catch (e) {
     if (!(e instanceof PhpCallError)) throw e
     console.error('[reset] complete failed:', e.message)
