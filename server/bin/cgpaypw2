@@ -25,5 +25,5 @@ update_env_and_restart() {
 }
 
 update_env_and_restart "$PW" "$DBU"
-ssh -t standby.commongood.earth "$(declare -f update_env_and_restart); update_env_and_restart '$PW' '$DBU'"
+ssh -t standby.{{DOMAIN}} "$(declare -f update_env_and_restart); update_env_and_restart '$PW' '$DBU'"
 echo "${DBU} password (replicated) + .env for main and beta (both servers) updated; pay-main and pay-beta restarted on both."
