@@ -33,7 +33,7 @@
   {:else if screen === 'scan'}
     <Scan {intent} onscan={text => { qr = text; screen = 'tx' }} onfail={fail} />
   {:else if screen === 'tx' && device}
-    <Tx {device} {intent} {qr} onfail={fail} />
+    <Tx {device} {intent} {qr} onfail={fail} ondone={msg => toDashboard(live, msg)} />
   {:else if screen === 'home'}
     <h1>CGPay</h1>
     <p data-testid="acct">{device ? `Account: ${device.name}` : 'No account yet. Open Dashboard and sign in.'}</p>

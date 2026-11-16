@@ -2,13 +2,13 @@
 import type { Device } from '$lib/app-shell'
 import { noCardCode, type Card } from './qr'
 
-const VERSION = 40206 // the legacy app's version number, which the server's rules for old and new apps go by
+export const VERSION = 40206 // the legacy app's version number, which the server's rules for old and new apps go by
 const TIMEOUT_MS = 3200
 
 export type Identity = { name: string, agent: string, location: string, limit: number, selling: string[], isell: string[] }
 
 // POST to an endpoint and return the Response. A failure status becomes an Error whose message is the status; no answer in time throws a TimeoutError.
-async function post(d: Device, endpoint: string, params: Record<string, string | number>) {
+export async function post(d: Device, endpoint: string, params: Record<string, string | number | boolean | undefined>) {
   const res = await fetch(d.api + endpoint, {
     method: 'POST',
     headers: { 'Content-type': 'application/x-www-form-urlencoded' },
