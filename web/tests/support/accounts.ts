@@ -44,11 +44,19 @@ export function nicknameFor(nick: string, field: string | undefined): string | n
   return undefined
 }
 
+// Agents' cards for companies, as in the legacy app's tests: the company's account ID with the agent's number, and the agent's card code.
+const agentCards: Record<string, string> = { 'Abe/Cit': 'LDCC098765a', 'Bea/Cit': 'LDCC198765b', 'Flo/Gis': 'LDCG098765f' }
+
 /**
  * What the account's QR code says, as the legacy app's fake-scan buttons use for Abe and Bea:
  * the region, the account ID (K + DC + the account's letter) and the card code (12345 + the lowercase letter).
+ * "Flo/Gis" is the card Flo uses for Gisette.
  */
 export function qrOf(nick: string): string {
+  if (nick.includes('/')) {
+    if (!agentCards[nick]) throw new Error(`No agent card "${nick}". Known: ${Object.keys(agentCards).join(', ')}`)
+    return `HTTP://6VM.RC4.ME/${agentCards[nick]}`
+  }
   const a = acct(nick).identifier.slice(-1) // A to I
   return `HTTP://6VM.RC4.ME/KDC${a}12345${a.toLowerCase()}`
 }

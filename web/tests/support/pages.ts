@@ -68,6 +68,23 @@ export default {
 
   async onPage(app: App, path: string) { await app.page.goto('/' + path) },
 
+  /**
+   * Scan this account's QR code to pay or charge it ("pay" or "charge"), starting from the dashboard: the camera shows the code,
+   * then the dashboard's Pay or Charge button leads to the scanner (through the start page, which companies skip).
+   */
+  async scan(app: App, who: string, why: string) {
+    const btn = { pay: 'btn-pay', charge: 'btn-receive' }[why]
+    if (!btn) throw new Error(`scan "${who}" to "${why}": say "pay" or "charge".`)
+    writeCameraVideo(qrOf(who))
+    await app.page.goto('/')
+    const link = app.page.getByTestId(btn)
+    await expect(link, `scan "${who}": the dashboard found the camera`).toHaveAttribute('href', /\/handoff#intent=/) // until then the button leads to PHP
+    await link.click()
+    await app.page.waitForURL(/\/(tx-start|scan)$/, { timeout: 15_000 })
+    if (app.page.url().endsWith('/tx-start')) await app.page.getByTestId('btn-scan').click()
+    await app.page.waitForURL(/\/(tx|)$/, { timeout: 15_000 }) // the transaction page, or the dashboard when the scan fails
+  },
+
   async select(app: App, id: string, label: string) { await setField(app, id, label) },
 
   /**
@@ -135,8 +152,11 @@ export default {
 
   async soSignedIn(app: App, who: string) { await checkSignedIn(app, who) },
 
-  /** The element's text is exactly this. Literal text is fine for a first version of a test; later, mark the text and check the marker. */
+  /** The element's text (a field's value) is exactly this. Literal text is fine for a first version of a test; later, mark the text and check the marker. */
   async soText(app: App, id: string, value: string) {
-    await expect(app.page.getByTestId(id), `text "${id}": "${value}"`).toHaveText(text(app, value, id), { timeout: 10_000 })
+    const el = app.page.getByTestId(id)
+    const [v, at] = [text(app, value, id), `text "${id}": "${value}"`]
+    if (await el.evaluate(e => ['INPUT', 'SELECT', 'TEXTAREA'].includes(e.tagName))) await expect(el, at).toHaveValue(v, { timeout: 10_000 })
+    else await expect(el, at).toHaveText(v, { timeout: 10_000 })
   }
 }
