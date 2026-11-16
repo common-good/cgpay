@@ -10,6 +10,8 @@ import { qrOf } from './accounts'
 
 // Where the Pay and Charge buttons lead when the device has a camera (the legacy app, see CGPAY_PWA_URL).
 const LEGACY_APP = `http://localhost:${process.env.E2E_PWA_PORT ?? '3000'}`
+// E2E_SCREENS=bundled runs the transaction features against the store app's bundled screens instead of the legacy app.
+const BUNDLED_MODE = process.env.E2E_SCREENS === 'bundled'
 // Where the tests serve the store app's bundled screens (PUBLIC_APP_URL in playwright.config.ts).
 const BUNDLED = `http://localhost:${process.env.E2E_APP_PORT ?? '5180'}`
 
@@ -47,6 +49,7 @@ export default {
    */
   async camera(app: App, state: string) {
     if (state !== 'present' && state !== 'absent') throw new Error(`camera "${state}": say "present" or "absent".`)
+    if (state === 'present' && BUNDLED_MODE) return await this.inStoreApp(app) // the app's dashboard needs no camera test
     if (state === 'present') return await expect(app.page.getByTestId('btn-pay'), 'camera "present": the dashboard found the camera').toHaveAttribute('href', /\/handoff#intent=/)
     await app.page.addInitScript((hasCamera: boolean) => {
       Object.defineProperty(navigator, 'mediaDevices', {
@@ -94,11 +97,22 @@ export default {
     if (!btn) throw new Error(`scan "${who}" to "${why}": say "pay" or "charge".`)
     writeCameraVideo(qrOf(who))
     await app.page.goto('/')
+    if (BUNDLED_MODE) return await this.scanInBundled(app, btn)
     await this.camera(app, 'present')
     await app.page.getByTestId(btn).click()
     await app.page.waitForURL(/\/(tx-start|scan)$/, { timeout: 15_000 })
     if (app.page.url().endsWith('/tx-start')) await app.page.getByTestId('btn-scan').click()
     await app.page.waitForURL(/\/(tx|)$/, { timeout: 15_000 }) // the transaction page, or the dashboard when the scan fails
+  },
+
+  // The store app's bundled screens: the dashboard (in the app) opens them, the start page is skipped by companies, and a failed scan returns to the dashboard.
+  async scanInBundled(app: App, btn: string) {
+    await this.inStoreApp(app)
+    await app.page.getByTestId(btn).click()
+    const screen = (name: string) => app.page.locator(`[data-screen="${name}"]`)
+    await expect(screen('tx-start').or(screen('scan')), 'scan: the bundled screens opened').toBeVisible({ timeout: 15_000 })
+    if (await screen('tx-start').count()) await app.page.getByTestId('btn-scan').click()
+    await expect(screen('tx').or(app.page.getByTestId('balance')), 'scan: the transaction screen, or the dashboard when the scan fails').toBeVisible({ timeout: 15_000 })
   },
 
   async select(app: App, id: string, label: string) { await setField(app, id, label) },
@@ -136,6 +150,7 @@ export default {
   },
 
   async soOnPage(app: App, path: string) {
+    if (BUNDLED_MODE && path && !path.includes('/')) return await expect(app.page.locator(`[data-screen="${path}"]`), `on page "${path}" (bundled screen)`).toBeVisible({ timeout: 15_000 })
     await expect(app.page, `on page "${path}"`).toHaveURL(new RegExp(`^[^/]+//[^/]+/${escapeRegExp(path)}$`), { timeout: 15_000 })
   },
 

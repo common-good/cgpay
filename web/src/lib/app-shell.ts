@@ -2,7 +2,8 @@
 export const inApp = () => typeof navigator !== 'undefined' && navigator.userAgent.includes('CGPayApp')
 
 // What the bundled screens need to transact with PHP's API on the account's behalf (see /api/me/device).
-export type Device = { accountId: string, cardCode: string, deviceId: string, qr: string, isCo: boolean, name: string, selling: string[] | null }
+// api is PHP's transaction API (base address, ends in a slash); real is true on production, where QR codes are the real ones.
+export type Device = { accountId: string, cardCode: string, deviceId: string, qr: string, isCo: boolean, name: string, selling: string[] | null, real: boolean, api: string }
 
 let asked: { who: string, device: Promise<Device | null> } | undefined
 

@@ -7,7 +7,7 @@ import type { Device } from '$lib/app-shell'
 
 const API_VERSION = '40206' // the legacy app's version, so PHP gives the current deviceId format
 
-/** Return the session's account credentials, or null if PHP refuses them (signed out, or the account can't use the app yet). */
+/** Return the session's account credentials (with the API address), or null if PHP refuses them (signed out, or the account can't use the app yet). */
 export async function phpDevice(ssid: string): Promise<Device | null> {
   const res = await fetch(phpEndpointUrl('api/handoff'), {
     method: 'POST',
@@ -15,5 +15,6 @@ export async function phpDevice(ssid: string): Promise<Device | null> {
     body: new URLSearchParams({ version: API_VERSION })
   })
   if (!res.ok) return null
-  return (await res.json()).accounts?.[0] ?? null
+  const account = (await res.json()).accounts?.[0]
+  return account ? { ...account, api: phpEndpointUrl('api/') } : null
 }
