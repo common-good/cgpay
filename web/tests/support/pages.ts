@@ -70,6 +70,7 @@ export default {
       Object.defineProperty(navigator, 'userAgent', { configurable: true, get: () => ua })
     })
     await app.page.reload()
+    app.storeApp = true
     await expect(app.page.getByTestId('nav-app'), 'in the store app: the dashboard got the device credentials').toHaveAttribute('href', /device=/)
   },
 
@@ -82,6 +83,15 @@ export default {
     const [ids, values, ...extra] = table.raw()
     if (!values || extra.length) throw new Error('input: needs a header row with the element ids and exactly one row of values below it.')
     for (const [i, id] of ids.entries()) await setField(app, id, values[i])
+  },
+
+  /**
+   * Cut the app off from the server (or restore it): requests to PHP's API fail the way they do on a phone with no signal.
+   * The live dashboard stays reachable, because a scan starts from it (a truly offline browser could not load it).
+   */
+  async network(app: App, on: boolean) {
+    const api = '**/cgmembers/api/**'
+    if (on) await app.page.unroute(api); else await app.page.route(api, r => r.abort('internetdisconnected'))
   },
 
   async onPage(app: App, path: string) { await app.page.goto('/' + path) },
@@ -97,7 +107,7 @@ export default {
     if (!btn) throw new Error(`scan "${who}" to "${why}": say "pay" or "charge".`)
     writeCameraVideo(qrOf(who))
     await app.page.goto('/')
-    if (BUNDLED_MODE) return await this.scanInBundled(app, btn)
+    if (BUNDLED_MODE || app.storeApp) return await this.scanInBundled(app, btn)
     await this.camera(app, 'present')
     await app.page.getByTestId(btn).click()
     await app.page.waitForURL(/\/(tx-start|scan)$/, { timeout: 15_000 })
@@ -107,7 +117,8 @@ export default {
 
   // The store app's bundled screens: the dashboard (in the app) opens them, the start page is skipped by companies, and a failed scan returns to the dashboard.
   async scanInBundled(app: App, btn: string) {
-    await this.inStoreApp(app)
+    if (!app.storeApp) await this.inStoreApp(app)
+    await expect(app.page.getByTestId('nav-app'), 'scan: the dashboard got the device credentials').toHaveAttribute('href', /device=/)
     await app.page.getByTestId(btn).click()
     const screen = (name: string) => app.page.locator(`[data-screen="${name}"]`)
     await expect(screen('tx-start').or(screen('scan')), 'scan: the bundled screens opened').toBeVisible({ timeout: 15_000 })
@@ -150,7 +161,7 @@ export default {
   },
 
   async soOnPage(app: App, path: string) {
-    if (BUNDLED_MODE && path && !path.includes('/')) return await expect(app.page.locator(`[data-screen="${path}"]`), `on page "${path}" (bundled screen)`).toBeVisible({ timeout: 15_000 })
+    if ((BUNDLED_MODE || app.storeApp) && ['home', 'tx-start', 'scan', 'tx'].includes(path)) return await expect(app.page.locator(`[data-screen="${path}"]`), `on page "${path}" (bundled screen)`).toBeVisible({ timeout: 15_000 })
     await expect(app.page, `on page "${path}"`).toHaveURL(new RegExp(`^[^/]+//[^/]+/${escapeRegExp(path)}$`), { timeout: 15_000 })
   },
 

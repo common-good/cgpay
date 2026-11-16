@@ -2,6 +2,7 @@
   import { onMount } from 'svelte'
   import type { Device } from '$lib/app-shell'
   import { store } from './storage'
+  import { flush, waiting } from './lib/tx'
   import { toDashboard } from './lib/leave'
   import Scan from './Scan.svelte'
   import Tx from './Tx.svelte'
@@ -18,11 +19,21 @@
   let device = $state<Device | null>(null)
   let screen = $state<Screen | ''>('')
   let qr = $state('')
+  let queued = $state(0)
   const fail = (msg: string) => toDashboard(live, msg, 'error')
+
+  // Send what waited for a connection, and show how much still waits.
+  async function sendQueued() {
+    if (device) await flush(device).catch(() => {})
+    queued = await waiting()
+  }
 
   onMount(async () => {
     if (handed) await store.set('device', JSON.parse(handed))
     device = (await store.get<Device>('device')) ?? null
+    window.addEventListener('online', sendQueued)
+    setInterval(() => queued && sendQueued(), 5000) // the online event is not reliable on phones
+    sendQueued()
     screen = device && (intent === 'pay' || intent === 'charge') ? (device.isCo ? 'scan' : 'tx-start') : 'home'
   })
 </script>
@@ -33,9 +44,10 @@
   {:else if screen === 'scan'}
     <Scan {intent} onscan={text => { qr = text; screen = 'tx' }} onfail={fail} />
   {:else if screen === 'tx' && device}
-    <Tx {device} {intent} {qr} onfail={fail} ondone={msg => toDashboard(live, msg)} />
+    <Tx {device} {intent} {qr} onfail={fail} ondone={(msg, offline) => offline ? (queued = 1, screen = 'home', sendQueued()) : toDashboard(live, msg)} />
   {:else if screen === 'home'}
     <h1>CGPay</h1>
+    {#if queued}<p data-testid="queued">{queued} transaction{queued == 1 ? '' : 's'} waiting to send</p>{/if}
     <p data-testid="acct">{device ? `Account: ${device.name}` : 'No account yet. Open Dashboard and sign in.'}</p>
     <button data-testid="btn-dashboard" onclick={() => toDashboard(live)}>Dashboard (live site)</button>
     <p class="foot">Live site: {live}</p>

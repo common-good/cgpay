@@ -1,11 +1,11 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import type { Device } from '$lib/app-shell'
-  import { identity, idPhoto, type Identity } from './lib/api'
+  import { identity, idPhoto, unreachable, type Identity } from './lib/api'
   import { mainId, parseQr, type Card } from './lib/qr'
-  import { checkAmount, enqueue, flush, makeTx, money, unqueue, type Tx } from './lib/tx'
+  import { cacheProfile, checkAmount, enqueue, flush, makeTx, money, offlineProfile, unqueue, type Tx } from './lib/tx'
 
-  let { device, intent, qr, onfail, ondone }: { device: Device, intent: string, qr: string, onfail: (msg: string) => void, ondone: (msg?: string) => void } = $props()
+  let { device, intent, qr, onfail, ondone }: { device: Device, intent: string, qr: string, onfail: (msg: string) => void, ondone: (msg?: string, offline?: boolean) => void } = $props()
   const paying = intent === 'pay'
   let who = $state<Identity | null>(null)
   let photo = $state('')
@@ -34,7 +34,7 @@
   }
 
   // Sending waits for Done, so that Undo can still take the transaction back before the server has it.
-  async function done() { try { await flush(device) } finally { ondone() } }
+  async function done() { let off = false; try { off = await flush(device) } finally { ondone('', off) } }
 
   // The other account's profile. Anything wrong with the scanned code sends the member back to the dashboard with the reason.
   onMount(async () => {
@@ -42,7 +42,16 @@
       card = parseQr(qr, device.real)
       if (!paying && !card.code) throw new Error('That QR is for payments only.')
       if (card.main === mainId(device.accountId)) throw new Error('That QR is for the same account as yours.')
-      who = await identity(device, card)
+      try {
+        const found = await identity(device, card)
+        await cacheProfile(card, found)
+        who = found
+      } catch (er) {
+        if (!unreachable(er)) throw er
+        who = await offlineProfile(card)
+        alert('OFFLINE. Trust this member or ask for ID.')
+        return
+      }
       if (who.limit <= 0) throw new Error('This account has no remaining funds, so a transaction is not possible at this time.')
       description = who[paying ? 'selling' : 'isell']?.[0] ?? ''
       if (!paying) photo = await idPhoto(device, card)

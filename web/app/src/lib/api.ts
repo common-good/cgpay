@@ -19,6 +19,9 @@ export async function post(d: Device, endpoint: string, params: Record<string, s
   return res
 }
 
+/** True when the request never got an answer (no connection or too slow), as opposed to the server answering with a failure status. */
+export const unreachable = (er: unknown) => isNaN(+(er as Error).message)
+
 const who = (d: Device, card: Card) => ({ deviceId: d.deviceId, actorId: noCardCode(d.accountId), otherId: card.acct + card.code })
 
 /** What the server says about the other account: name, agent, location, how much they can spend, and the description choices. */

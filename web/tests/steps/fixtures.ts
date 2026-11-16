@@ -5,7 +5,7 @@ import { Vars, parseValue } from '../support/vars'
 import { writeCameraVideo } from '../support/camera'
 
 // What the steps work with: the page, the test database, the scenario's variables, and the time the scenario started (unix seconds).
-export type App = { page: Page, testDb: TestDb, vars: Vars, now: number }
+export type App = { page: Page, testDb: TestDb, vars: Vars, now: number, storeApp?: boolean }
 
 type Fixtures = { testDb: TestDb, app: App }
 

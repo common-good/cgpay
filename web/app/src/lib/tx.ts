@@ -1,13 +1,15 @@
 // Transactions on the bundled screens: amount rules, the proof the server checks, and the queue that survives a closed app.
 import type { Device } from '$lib/app-shell'
 import { store } from '../storage'
-import { post, VERSION } from './api'
+import { post, unreachable, VERSION, type Identity } from './api'
 import { noCardCode, type Card } from './qr'
 
 export const ONLINE_LIMIT = 10000 // the most any account can be charged on the app
 export const money = (n: number | string) => (+n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
 export type Tx = { actorId: string, otherId: string, amount: string, description: string, created: number, proof: string, deviceId: string, offline: boolean, pending: boolean, version: number, error?: string }
+
+export const OFFLINE_LIMIT = 250 // how much an account not seen before can be charged without the server's word on what it has
 
 const sha256 = async (s: string) => [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)))].map(b => b.toString(16).padStart(2, '0')).join('')
 
@@ -37,17 +39,31 @@ export const unqueue = (k: string) => store.del(k)
 
 /**
  * Send every queued transaction, each on its own: one the server refuses is kept with the reason and does not hold up the others.
- * A network failure stops the run (the rest would fail the same way); they go out next time.
+ * A network failure stops the run (the rest would fail the same way; returns true) and they go out next time.
  */
-export async function flush(d: Device) {
+export async function flush(d: Device): Promise<boolean> {
   for (const [k, t] of await store.all<Tx>('tx:')) {
     if (t.error) continue
     try {
       const res = await (await post(d, 'transactions', { ...t })).json().catch(() => ({ ok: true }))
       if (res?.ok === false) await store.set(k, { ...t, error: String(res.message ?? 'refused') }); else await store.del(k)
     } catch (er) {
-      if (isNaN(+(er as Error).message)) return // no connection
+      if (unreachable(er)) return true
       await store.set(k, { ...t, error: (er as Error).message })
     }
   }
+  return false
+}
+
+/** How many queued transactions still wait for the server (not counting refused ones). */
+export const waiting = async () => (await store.all<Tx>('tx:')).filter(([, t]) => !t.error).length
+
+// Profiles of accounts seen before, for when the server cannot be reached. Kept with a hash of the card code, so a different code does not get the old profile.
+const profileKey = (c: Card) => `acct:${c.acct}`
+export const cacheProfile = async (c: Card, who: Identity) => store.set(profileKey(c), { who, h: await sha256(c.code) })
+
+/** The profile to go by when offline: the one saved earlier for this card, else a blank one with the offline limit. */
+export async function offlineProfile(c: Card): Promise<Identity> {
+  const saved = await store.get<{ who: Identity, h: string }>(profileKey(c))
+  return saved && saved.h === await sha256(c.code) ? saved.who : { name: '', agent: '', location: '', limit: OFFLINE_LIMIT, selling: [], isell: [] }
 }
