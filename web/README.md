@@ -33,7 +33,7 @@ design without a database.
 
 To actually log in and read a real balance, you need two things:
 
-1. **The `<DB_NAME>_cgpay` DB user** on staging's MariaDB (SELECT on every table, writes only to `reset_codes`).
+1. **The `<DB_NAME>_cgpay` DB user** on staging's MariaDB (SELECT on every table, writes only to the tables allowlisted in `web/src/lib/server/data.ts`).
 2. **A test member account** to log in as.
 
 ### Step 1 — SSH tunnel to staging's MariaDB
