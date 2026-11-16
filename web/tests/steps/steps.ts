@@ -23,6 +23,7 @@ GWhen('var {string} rows pivoted:', async ({ app }, name: string, table: DataTab
 GWhen('var {string} values:', async ({ app }, name: string, table: DataTable) => t.setVarTable(app, name, table, 'values'))
 GWhen('var {string} values pivoted:', async ({ app }, name: string, table: DataTable) => t.setVarTable(app, name, table, 'values pivoted'))
 
+Then('address has no {string}', async ({ app }, part: string) => t.soAddressHasNo(app, part))
 Then('count {string} is {int}', async ({ app }, name: string, n: number) => t.soCount(app, name, n))
 Then('error {string}', async ({ app }, message: string) => t.soError(app, message))
 Then('on page {string}', async ({ app }, path: string) => t.soOnPage(app, path))

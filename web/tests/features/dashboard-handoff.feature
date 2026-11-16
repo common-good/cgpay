@@ -23,6 +23,18 @@ Scenario: The live dashboard inside the store app hands transactions to the bund
   Then pay and charge go to "bundled screens"
   And see "nav-app"
 
+Scenario: The bundled screens keep the account the dashboard hands them, and take the credentials out of the address
+  Given signed in as "Bea"
+  And in the store app
+  When click "nav-app"
+  Then text "acct": "Account: Bea Two"
+  And address has no "device"
+
+  Given acting as "Cit"
+  And in the store app
+  When click "nav-app"
+  Then text "acct": "Account: Citre"
+
 Scenario: An ordinary browser has no link to the bundled screens
   Given signed in as "Bea"
   Then see not "nav-app"

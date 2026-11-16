@@ -11,6 +11,7 @@ try { process.loadEnvFile('.env') } catch {}
 // Ports of the preview server and the legacy app. Concurrent local test slots each set their own (E2E_PORT, E2E_PWA_PORT in .env).
 const PORT = process.env.E2E_PORT ?? '4173'
 const PWA = process.env.E2E_PWA_PORT ?? '3000'
+const APP = process.env.E2E_APP_PORT ?? '5180' // the store app's bundled screens (web/app)
 
 // The BDD browser has a fake camera that plays this file (a step rewrites it to show a QR code; see camera.ts).
 if (!existsSync(CAMERA_FILE)) writeCameraVideo('')
@@ -63,7 +64,8 @@ export default defineConfig({
     env: {
       E2E_RATE_LIMIT_MAX: '1000',
       E2E_FAKE_USER: '1',
-      CGPAY_PWA_URL: `http://localhost:${PWA}`
+      CGPAY_PWA_URL: `http://localhost:${PWA}`,
+      PUBLIC_APP_URL: `http://localhost:${APP}`
     },
     timeout: 120_000,
     stdout: 'pipe',
@@ -76,6 +78,16 @@ export default defineConfig({
     url: `http://localhost:${PWA}`,
     reuseExistingServer: true,
     env: { VITE_TEST_API_URL: process.env.TEST_API_URL ?? 'http://localhost/cg/cgmembers/api/' },
+    timeout: 120_000,
+    stdout: 'pipe' as const,
+    stderr: 'pipe' as const
+  }, {
+    // The store app's bundled screens, served from a port instead of the app package.
+    command: `npm run dev -- --port ${APP} --strictPort`,
+    cwd: 'app',
+    url: `http://localhost:${APP}`,
+    reuseExistingServer: true,
+    env: { VITE_LIVE_URL: process.env.E2E_BASE_URL ?? `http://localhost:${PORT}` },
     timeout: 120_000,
     stdout: 'pipe' as const,
     stderr: 'pipe' as const

@@ -10,6 +10,8 @@ import { qrOf } from './accounts'
 
 // Where the Pay and Charge buttons lead when the device has a camera (the legacy app, see CGPAY_PWA_URL).
 const LEGACY_APP = `http://localhost:${process.env.E2E_PWA_PORT ?? '3000'}`
+// Where the tests serve the store app's bundled screens (PUBLIC_APP_URL in playwright.config.ts).
+const BUNDLED = `http://localhost:${process.env.E2E_APP_PORT ?? '5180'}`
 
 // An element id (like btn-signin or ckNum) starts with a lowercase letter and has no spaces or punctuation except - and _.
 const looksLikeId = (s: string) => /^[a-z][A-Za-z0-9_-]*$/.test(s)
@@ -65,6 +67,7 @@ export default {
       Object.defineProperty(navigator, 'userAgent', { configurable: true, get: () => ua })
     })
     await app.page.reload()
+    await expect(app.page.getByTestId('nav-app'), 'in the store app: the dashboard got the device credentials').toHaveAttribute('href', /device=/)
   },
 
   async click(app: App, id: string) { await app.page.getByTestId(id).click() },
@@ -121,6 +124,11 @@ export default {
     await app.page.context().addCookies([{ name: process.env.PHP_SSO_COOKIE_NAME as string, value: 'stale', domain: 'localhost', path: '/api', secure: true, httpOnly: true }])
   },
 
+  /** The page's address (hash included) no longer mentions this, for example a parameter the page should have removed. */
+  async soAddressHasNo(app: App, part: string) {
+    await expect.poll(() => app.page.url(), `address has no "${part}"`).not.toContain(part)
+  },
+
   async soError(app: App, message: string) {
     await expect(app.page.getByRole('alert').filter({ hasText: message }).first(), `error "${message}"`).toBeVisible({ timeout: 10_000 })
   },
@@ -145,8 +153,8 @@ export default {
       await expect(link(0), at).toHaveAttribute('href', /tx\/pay$/)
       await expect(link(1), at).toHaveAttribute('href', /tx\/charge$/)
     } else if (where === 'bundled screens') {
-      await expect(link(0), at).toHaveAttribute('href', /^https:\/\/localhost\/#intent=pay&/)
-      await expect(link(1), at).toHaveAttribute('href', /^https:\/\/localhost\/#intent=charge&/)
+      await expect(link(0), at).toHaveAttribute('href', new RegExp(`^${escapeRegExp(BUNDLED)}/#intent=pay&device=`))
+      await expect(link(1), at).toHaveAttribute('href', new RegExp(`^${escapeRegExp(BUNDLED)}/#intent=charge&device=`))
     } else throw new Error(`${at}: say "legacy app", "PHP" or "bundled screens".`)
   },
 

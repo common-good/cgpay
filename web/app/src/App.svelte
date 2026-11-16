@@ -9,9 +9,13 @@
   const store = (k: string, v?: string) => {
     try { return v === undefined ? localStorage.getItem(k) : (localStorage.setItem(k, v), v) } catch { return null }
   }
-  if (hash.get('name')) store('name', hash.get('name')!)
+  // The live dashboard hands over the account's device credentials in the hash; keep them and take them out of the address.
+  if (hash.get('device')) store('device', hash.get('device')!)
+  hash.delete('device')
+  history.replaceState(null, '', location.pathname + (hash.size ? '#' + hash : ''))
+  const device = (() => { try { return JSON.parse(store('device') || 'null') } catch { return null } })()
 
-  let name = $state(store('name'))
+  let name = $state<string | null>(device?.name ?? null)
   let intent = $state(hash.get('intent') || '')
   let msg = $state('')
   let qr = $state('')
@@ -65,7 +69,7 @@
 <main>
   <h1>CGPay <small>bundled screen</small></h1>
 
-  <p data-testid="acct">{name ? `Last account seen on the live site: ${name}` : 'No account seen yet. Open Dashboard and sign in.'}</p>
+  <p data-testid="acct">{name ? `Account: ${name}` : 'No account yet. Open Dashboard and sign in.'}</p>
   {#if intent}<p data-testid="intent">Asked to: {intent}</p>{/if}
 
   <div id="reader" class:hidden={!scanning}></div>
