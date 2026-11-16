@@ -82,7 +82,7 @@ export const GET: RequestHandler = async ({ cookies, url }) => {
   const bestName = userRows[0].fullName || userRows[0].name
 
   // Sponsored-status lookup - separate query so a missing SELECT grant on u_company
-  // (as on the cgweb_ro user, 2026-08-04) doesn't 500 the whole dashboard.
+  // (as on the old read-only user) doesn't 500 the whole dashboard.
   // sponsored = u_company.coFlags bit 2 (CO_SPONSORED); persons have no u_company row -> false.
   let sponsored = false
   try {
