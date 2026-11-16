@@ -12,7 +12,7 @@
   const live = (import.meta.env.VITE_LIVE_URL || 'https://pay.test.commongood.earth').replace(/\/$/, '')
   const hash = new URLSearchParams(location.hash.slice(1))
   const handed = hash.get('device') // credentials stay out of the address
-  const intent = hash.get('intent') || ''
+  let intent = $state(hash.get('intent') || '')
   history.replaceState(null, '', location.pathname)
 
   type Screen = 'home' | 'tx-start' | 'scan' | 'tx'
@@ -34,8 +34,11 @@
     window.addEventListener('online', sendQueued)
     setInterval(() => queued && sendQueued(), 5000) // the online event is not reliable on phones
     sendQueued()
-    screen = device && (intent === 'pay' || intent === 'charge') ? (device.isCo ? 'scan' : 'tx-start') : 'home'
+    if (device && (intent === 'pay' || intent === 'charge')) start(intent); else screen = 'home'
   })
+
+  // Companies have nothing to show, so they go straight to scanning.
+  function start(what: string) { intent = what; screen = device!.isCo ? 'scan' : 'tx-start' }
 </script>
 
 <main data-screen={screen}>
@@ -49,6 +52,10 @@
     <h1>CGPay</h1>
     {#if queued}<p data-testid="queued">{queued} transaction{queued == 1 ? '' : 's'} waiting to send</p>{/if}
     <p data-testid="acct">{device ? `Account: ${device.name}` : 'No account yet. Open Dashboard and sign in.'}</p>
+    {#if device}
+      <button data-testid="btn-pay" onclick={() => start('pay')}>Pay</button>
+      <button data-testid="btn-receive" onclick={() => start('charge')}>Charge</button>
+    {/if}
     <button data-testid="btn-dashboard" onclick={() => toDashboard(live)}>Dashboard (live site)</button>
     <p class="foot">Live site: {live}</p>
   {/if}

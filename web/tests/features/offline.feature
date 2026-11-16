@@ -4,28 +4,38 @@ Feature: Offline
   So my business is not interrupted, and what I charged is sent when the network is back.
 
   Ported from the legacy app's tests/features/offline.feature and the offline scenarios of its scan and charge features.
-  The network is really cut (the browser goes offline), so these run only against the bundled screens, which keep working without it.
+  The network is really cut (the browser goes offline); the bundled screens still load, as they do from the phone's storage, and the live site does not.
+
+Background:
+  Given signed in as "Bea"
+  And acting as "Cit"
+  And in the store app
+  And camera shows "Dee"
+  When click "nav-app"
+  Then text "acct": "Account: Citre"
+
+Rule: The app starts offline and offers Pay and Charge from its own home screen
+
+Scenario: The app is started with no network
+  When network off
+  And reload
+  Then text "acct": "Account: Citre"
+  And see "btn-pay"
+  And see "btn-receive"
 
 Rule: A scan offline still shows a profile, and the member is told to trust it or check ID
 
 Scenario: A company scans a customer it has not seen before
-  Given signed in as "Bea"
-  And acting as "Cit"
-  And in the store app
-  And network off
-  When scan "Dee" to "charge"
+  When network off
+  And scan "Dee" to "charge"
   Then text "messageText": "OFFLINE. Trust this member or ask for ID."
   And text "theirName": ""
 
 Scenario: A company scans a repeat customer, whose name comes from the last time
-  Given signed in as "Bea"
-  And acting as "Cit"
-  And in the store app
   When scan "Dee" to "charge"
   Then see "charge-profile"
 
-  When on page ""
-  And network off
+  When network off
   And scan "Dee" to "charge"
   Then see "messageText"
 
@@ -35,11 +45,8 @@ Scenario: A company scans a repeat customer, whose name comes from the last time
 Rule: Offline, a customer not seen before can be charged up to a fixed limit
 
 Scenario: A cashier charges more than the offline limit
-  Given signed in as "Bea"
-  And acting as "Cit"
-  And in the store app
-  And network off
-  When scan "Dee" to "charge"
+  When network off
+  And scan "Dee" to "charge"
   And click "btn1"
   And input:
   | input-amount | input-description |
@@ -51,11 +58,8 @@ Scenario: A cashier charges more than the offline limit
 Rule: What was charged offline is sent when the connection is back
 
 Scenario: A company charges offline, then the connection returns
-  Given signed in as "Bea"
-  And acting as "Cit"
-  And in the store app
-  And network off
-  When scan "Dee" to "charge"
+  When network off
+  And scan "Dee" to "charge"
   And click "btn1"
   And input:
   | input-amount | input-description |

@@ -1,4 +1,4 @@
-import { expect } from '@playwright/test'
+import { expect, type Route } from '@playwright/test'
 import type { App } from '../steps/fixtures'
 import { acct } from './accounts'
 import { resolve } from './magic'
@@ -21,6 +21,8 @@ const looksLikeId = (s: string) => /^[a-z][A-Za-z0-9_-]*$/.test(s)
 const text = (app: App, v: unknown, field?: string) => String(resolve(v, field, app))
 const hi = (app: App) => app.page.getByText(/^Hi, /)
 const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+// Everything but the store app's own files fails, as with no signal (the app's files come from the phone).
+const cutOff = (r: Route) => new URL(r.request().url()).origin === BUNDLED ? r.continue() : r.abort('internetdisconnected')
 
 // Put a value in the element with this id: choose it if the element is a select, otherwise type it.
 async function setField(app: App, id: string, value: unknown) {
@@ -86,12 +88,17 @@ export default {
   },
 
   /**
-   * Cut the app off from the server (or restore it): requests to PHP's API fail the way they do on a phone with no signal.
-   * The live dashboard stays reachable, because a scan starts from it (a truly offline browser could not load it).
+   * Cut the connection (or restore it), as on a phone with no signal: every request but the store app's own files fails,
+   * so the live site and PHP's API cannot be reached. A scan then starts from the app's own home screen.
+   * (The browser's own offline switch is no use: a page loaded while it is on cannot fetch anything after it is off again.)
    */
   async network(app: App, on: boolean) {
-    const api = '**/cgmembers/api/**'
-    if (on) await app.page.unroute(api); else await app.page.route(api, r => r.abort('internetdisconnected'))
+    const ctx = app.page.context()
+    app.offline = !on
+    if (on) {
+      await ctx.unroute('**/*', cutOff)
+      for (const p of ctx.pages()) await p.evaluate(() => window.dispatchEvent(new Event('online'))) // what the browser does when the network returns
+    } else await ctx.route('**/*', cutOff)
   },
 
   async onPage(app: App, path: string) { await app.page.goto('/' + path) },
@@ -106,8 +113,8 @@ export default {
     const btn = { pay: 'btn-pay', charge: 'btn-receive' }[why]
     if (!btn) throw new Error(`scan "${who}" to "${why}": say "pay" or "charge".`)
     writeCameraVideo(qrOf(who))
-    await app.page.goto('/')
-    if (BUNDLED_MODE || app.storeApp) return await this.scanInBundled(app, btn)
+    if (app.offline) await app.page.goto(BUNDLED + '/'); else await app.page.goto('/')
+    if (BUNDLED_MODE || app.storeApp || app.offline) return await this.scanInBundled(app, btn)
     await this.camera(app, 'present')
     await app.page.getByTestId(btn).click()
     await app.page.waitForURL(/\/(tx-start|scan)$/, { timeout: 15_000 })
@@ -117,8 +124,10 @@ export default {
 
   // The store app's bundled screens: the dashboard (in the app) opens them, the start page is skipped by companies, and a failed scan returns to the dashboard.
   async scanInBundled(app: App, btn: string) {
-    if (!app.storeApp) await this.inStoreApp(app)
-    await expect(app.page.getByTestId('nav-app'), 'scan: the dashboard got the device credentials').toHaveAttribute('href', /device=/)
+    if (!app.offline) {
+      if (!app.storeApp) await this.inStoreApp(app)
+      await expect(app.page.getByTestId('nav-app'), 'scan: the dashboard got the device credentials').toHaveAttribute('href', /device=/)
+    }
     await app.page.getByTestId(btn).click()
     const screen = (name: string) => app.page.locator(`[data-screen="${name}"]`)
     await expect(screen('tx-start').or(screen('scan')), 'scan: the bundled screens opened').toBeVisible({ timeout: 15_000 })
