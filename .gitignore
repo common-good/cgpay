@@ -1,8 +1,10 @@
 .DS_Store
-node_modules/
+node_modules
 dist/
 dev-dist/
 /*.png
 log/
 
 .env
+
+server/site.env

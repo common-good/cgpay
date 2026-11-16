@@ -1,0 +1,20 @@
+{
+	"name": "cgpay-app",
+	"private": true,
+	"version": "0.0.1",
+	"type": "module",
+	"scripts": {
+		"build": "vite build",
+		"android": "vite build && cap sync android && cd android && ./gradlew assembleDebug"
+	},
+	"devDependencies": {
+		"@capacitor/android": "8.6.2",
+		"@capacitor/cli": "8.6.2",
+		"@capacitor/core": "8.6.2",
+		"@capacitor/ios": "8.6.2",
+		"@sveltejs/vite-plugin-svelte": "^7.3.1",
+		"html5-qrcode": "2.3.8",
+		"svelte": "^5.55.2",
+		"vite": "^8.0.7"
+	}
+}

@@ -5,7 +5,9 @@ runbook "Production and Standby VPS setup". The runbook says where each one goes
 and which server it belongs on; the files themselves live here so they are versioned
 with the app. The test-server environments use `config/deploy.rb` and the ENV runbook.
 
-Install with `sudo install -m MODE -o root -g root server/<path> <destination>`.
+The files contain `{{NAME}}` placeholders (domain, standby marker prefix, alert addresses, the ssh alias for lsyncd). Copy `site.env.example` to `site.env` (gitignored) and fill it in, then install each file with `sudo server/install MODE server/<path> <destination>`, which fills the placeholders in and installs the result owned by root. `server/render FILE` prints the filled-in file without installing it.
+
+The scripts and the lsyncd conf need the ssh client settings (port, and the alias named by `SYNC_HOST`) from the private runbook in `/etc/ssh/ssh_config.d/` first. Hardening files and server-specific checks are kept in the private runbook, not here, because this repo is public.
 
 | File | Destination | Mode | Server |
 |---|---|---|---|
@@ -17,15 +19,12 @@ Install with `sudo install -m MODE -o root -g root server/<path> <destination>`.
 | `bin/fix-pay-env`, `systemd/fix-pay-env.{service,path}` | `/usr/local/bin/`, `/etc/systemd/system/` | 755, 644 | standby (re-owns the synced pay `.env` files) |
 | `bin/make-superadmin` | run in place: `server/bin/make-superadmin <env> <uid or email>` | - | test server (makes an account a superAdmin and saves its scan-QR PNG; refuses main and beta; needs cgmembers-frame `admin/makeSuperAdmin.php`) |
 | `bin/bootstrap-lock` | run in place: `server/bin/bootstrap-lock on or off <env>` | - | main and beta first-time setup (locks an env to your IP and sets a one-time admin password while the temporary admin account exists; see the superadmin bootstrap runbook section) |
-| `bin/verify-setup` | run in place: `bash server/bin/verify-setup <role> [domain]` (role: members, standby or test) | - | any (read-only checks, PASS/FAIL per line) |
-| `ssh/00-hardening.conf` | `/etc/ssh/sshd_config.d/` | 644 | all (key-only SSH; the 00- name must sort before cloud-init's 50-) |
-| `fail2ban/jail.local` | `/etc/fail2ban/` | 644 | all (edit `ignoreip` to your own server IPs first) |
 | `lsyncd/lsyncd.conf.lua` | `/etc/lsyncd/` | 644 | members |
 | `nginx/{main,pay.main,beta,pay.beta,rc2}.conf` | `/etc/nginx/sites-available/` | 644 | members as is; standby with the cert path rewritten (below) |
 
 Standby nginx confs differ only in the TLS cert path:
 
-    sed -e 's|/etc/letsencrypt/live/commongood\.earth/|/etc/letsencrypt-synced/|g' nginx/main.conf
+    server/render server/nginx/main.conf | sed -e "s|/etc/letsencrypt/live/$DOMAIN/|/etc/letsencrypt-synced/|g"
 
-The scripts and confs mirror what runs on members and standby. If you change a file on a
+The scripts and confs mirror what runs on members and standby (after filling in the placeholders). If you change a file on a
 server, change it here too (and the other way around).

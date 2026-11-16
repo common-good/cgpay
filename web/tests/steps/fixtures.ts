@@ -3,9 +3,10 @@ import type { Page } from '@playwright/test'
 import { TestDb } from '../support/test-db'
 import { Vars, parseValue } from '../support/vars'
 import { writeCameraVideo } from '../support/camera'
+import resetCodes from '../support/reset-codes'
 
 // What the steps work with: the page, the test database, the scenario's variables, and the time the scenario started (unix seconds).
-export type App = { page: Page, testDb: TestDb, vars: Vars, now: number }
+export type App = { page: Page, testDb: TestDb, vars: Vars, now: number, reply?: Record<string, unknown> }
 
 type Fixtures = { testDb: TestDb, app: App }
 
@@ -16,6 +17,7 @@ export const test = base.extend<Fixtures>({
     async ({ request }, use) => {
       const db = new TestDb(request)
       await db.initialize()
+      await resetCodes.clear()
       await use(db)
     },
     { auto: true }

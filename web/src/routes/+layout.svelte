@@ -5,8 +5,12 @@
   import Brand from '$lib/components/Brand.svelte'
   import { appVersion } from '$lib/version'
   import favicon from '$lib/assets/favicon.svg'
+  import { onMount } from 'svelte'
+  import { inApp, appUrl } from '$lib/app-shell'
 
   let { data, children } = $props()
+  let app = $state(false)
+  onMount(() => app = inApp())
 
   // Hide the app header on preview routes (they use their own layout + white-bg TopNav).
   const isPreview = $derived(page.url.pathname.startsWith('/preview'))
@@ -60,6 +64,9 @@
             <li><button type="button" class="nav-disabled" title="Member site link not configured">{label}</button></li>
           {/if}
         {/each}
+        {#if app}
+          <li><a data-testid="nav-app" href={appUrl({ name: data.user.name })}>Scan</a></li>
+        {/if}
         {#if data.user.sponsored}
           <li><a class:active={activeLabel === 'Grants'} href="/grants">Grants</a></li>
         {/if}

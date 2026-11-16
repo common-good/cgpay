@@ -3,8 +3,8 @@ set -euo pipefail
 source /etc/cert-monitor/credentials.sh
 
 THRESHOLD_DAYS=20
-ALERT_TO="info@commongood.earth"
-ALERT_FROM="alerts@commongood.earth"
+ALERT_TO="{{ALERT_TO}}"
+ALERT_FROM="{{ALERT_FROM}}"
 
 OUTPUT=$(certbot certificates 2>&1)
 DAYS=$(echo "$OUTPUT" | grep -oP 'VALID: \K[0-9]+(?= days?)' | head -1)
@@ -23,7 +23,7 @@ if [ "$DAYS" -lt "$THRESHOLD_DAYS" ]; then
   PAYLOAD=$(jq -n \
     --arg from "$ALERT_FROM" \
     --arg to "$ALERT_TO" \
-    --arg subject "URGENT! SSL cert expiring in ${DAYS} days - commongood.earth" \
+    --arg subject "URGENT! SSL cert expiring in ${DAYS} days - {{DOMAIN}}" \
     --arg body "certbot certificates on members VPS reports:
 
 ${OUTPUT}

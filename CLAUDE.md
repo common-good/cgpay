@@ -2,18 +2,32 @@
 
 The modernized member-facing app for Common Good. Runs behind pm2 alongside the PHP `cgmembers-frame` site; the two share a browser session and coordinate via server-to-server internal endpoints.
 
+## Shared guidance (cgpay and cgmembers-frame)
+
+cgpay and cgmembers-frame are one application in two parts: this SvelteKit app (the master part) and the PHP app. Guidance that applies to both lives in this section; cgmembers-frame's CLAUDE.md points here.
+
+- **Never coddle anyone on the team; always be completely truthful and forthcoming.** Report failures, gaps, skipped steps, uncertainty and your own mistakes plainly and up front, and volunteer relevant facts nobody asked about. Softened or omitted bad news leads to wrong decisions.
+- **Public repos: no security gaps, no server specifics.** Never put known weaknesses or concerns, server IPs, ports, account names or hardening state in either repo, its PRs, issues or commit messages. They live in a root-only private directory on the test server (ask William for the path); fix the weakness, then record it there.
+- **No multi-byte characters** (em-dashes, curly quotes, arrows, ellipsis characters, accents and the like; plain ASCII only) in code, PRs, commit messages, or comments. Anything that reads the text with the wrong encoding (some terminals, Windows tools, logs, mail clients, browsers without a charset header) shows them as garbage such as `?` or a run of odd characters. Use `-`, `"`, `'`, `->` and `...` instead.
+- **Commit messages: title only, no body.** Details go in PR descriptions.
+- **No `Co-Authored-By: Claude` trailers** on commits.
+- **Comments:** default to none. Only add for non-obvious *why* - a hidden constraint, a subtle invariant, a workaround. Never explain *what* the code does. Exception, function headers: short functions get none; longer ones get a header that says informally what the function does and what it is good for. Existing `@param`-style headers stay as they are.
+- **Code style:** aim at minimal visual clutter. Keep code as short as possible without losing clarity and minimize non-blank lines; a block should be understandable with a few seconds of study, and so should a single line. Make small low-level tool functions instead of repeating code patterns, even if the tool is more complex inside; allow flexible argument number and type when that is convenient for callers (many simple calls beat a simple callee). Prefer conventional short names (`k` key, `v` value, `i` index, `a` account, `tx` transaction, `q` query) to long ones. Match the surrounding file.
+- **Writing CLAUDE.md:** state each rule and its reason, not who decided it or when.
+
 ## What this repo is
 
 - **`web/`** - the current SvelteKit + adapter-node app. All active engineering happens here.
 - **top-level `src/`, `public/`, `dist/`, `vite.config.js`, `constants.js`, `utils0.js`** - legacy PWA (last touched Jan 2025 apart from one 2026-05 circular-import fix). Do not add new code here; do not delete without asking William - it still ships in some capacity.
 - **`config/deploy.rb`, `config/deploy/*.rb`, `Capfile`, `Gemfile`** - Capistrano deploy config for the SvelteKit app (see Deploy below).
+- **`server/`** - scripts, nginx confs, lsyncd conf and systemd units for the production pair (members + standby); the production runbook installs them from here, and they mirror what runs on the servers (see `server/README.md`).
 
 ## Tech stack
 
 - SvelteKit 2 with Svelte 5 runes (`$state`, `$derived`, `$props`, `$effect`)
 - TypeScript throughout (`web/src/**/*.ts`, `<script lang="ts">`)
 - Node 20+ via `@sveltejs/adapter-node`, run under pm2
-- MySQL 5.7+ (`<DB_NAME>_cgpay` user against the cgmembers DB: SELECT on every table, writes only to `reset_codes` - see `web/src/lib/server/db.ts`)
+- MySQL 5.7+ (`<DB_NAME>_cgpay` user against the cgmembers DB: SELECT on the whole DB plus INSERT/UPDATE/DELETE on the tables allowlisted in `web/src/lib/server/data.ts` - see `web/src/lib/server/db.ts`)
 - Vitest for unit tests, Playwright for E2E
 - Capistrano (Ruby) for deploys
 
@@ -35,7 +49,8 @@ routes/
   preview/                 design previews for review (isolated from real auth)
 lib/
   server/                  server-only code
-    db.ts                  MySQL pool (`<DB_NAME>_cgpay` user - reads directly; writes go via PHP, except `reset_codes`)
+    db.ts                  MySQL pool (`<DB_NAME>_cgpay` user: SELECT everywhere; writes only to allowlisted tables via data.ts, all other writes go via PHP)
+    data.ts                allowlisted insert/update/remove for tables node owns; read the comment above ALLOWLIST before adding a table
     drupal-password.ts     verifies $S$-prefixed Drupal 7 hashes
     auth.ts                cookie auth: reads the SSO cookie and asks PHP who owns it (currentUser, requireUser)
     php-whoami.ts          server-to-server client for /cgpay/whoami
@@ -80,7 +95,7 @@ When adding a new PHP endpoint: implement the PHP side under `cgmembers/rcredits
 Set per environment in `.env` on the deploy target (see [PR #155](https://github.com/common-good/cgpay/pull/155) - loaded via `node --env-file`):
 
 - `PORT` - pm2 port (per environment, e.g. 3001 for test)
-- `DB_HOST` / `DB_USER` / `DB_PASSWORD` / `DB_NAME` - MySQL (the `<DB_NAME>_cgpay` user)
+- `DB_HOST` / `DB_USER` / `DB_PASSWORD` / `DB_NAME` - MySQL (the `<DB_NAME>_cgpay` user: SELECT on the whole DB, write grants only on the tables allowlisted in `data.ts`)
 - `PHP_SSO_SECRET` - shared secret with PHP (matches `cgpaySsoSecret` in cgmembers config.json)
 - `PHP_SSO_COOKIE_NAME` - the `SSESS...` cookie name PHP sets
 - `PUBLIC_PHP_BASE_URL` - PHP host base URL (exposed to browser). The `/cgpay/sso` and `/cgpay/grants` URLs and the cookie domain (the PHP host, e.g. `.test.commongood.earth`) are derived from it
@@ -132,11 +147,8 @@ Plain specs (`web/tests/e2e/`) are being replaced gradually by Gherkin features 
 
 ## Conventions
 
-- **No multi-byte characters** (em-dashes, curly quotes, arrows, ellipsis characters, accents and the like; plain ASCII only) in code, PRs, commit messages, or comments. Anything that reads the text with the wrong encoding (some terminals, Windows tools, logs, mail clients, browsers without a charset header) shows them as garbage such as `?` or a run of odd characters. Use `-`, `"`, `'`, `->` and `...` instead.
-- **Commit messages: title only, no body.** Details go in PR descriptions.
-- **No `Co-Authored-By: Claude` trailers** on commits.
-- **Comments:** default to none. Only add for non-obvious *why* - a hidden constraint, a subtle invariant, a workaround. Never explain *what* the code does. Exception, function headers: short functions get none; longer ones get a header that says informally what the function does and what it is good for.
-- **Code style:** keep code as short as possible without losing clarity and minimize non-blank lines (avoid visual clutter). Prefer conventional short names (`k` key, `v` value, `i` index, `a` account, `tx` transaction, `q` query) to long ones. Match the surrounding file.
+See also Shared guidance above.
+
 - **New endpoints:** return `throw error(status, msg)` for failures, `return json(...)` for successes. Never leak internal errors to the client.
 - **Server-only imports:** anything reading env vars, calling DB, or calling PHP must live under `lib/server/` and be imported only from `+server.ts` / `+*.server.ts` files.
 - **Preview routes** under `routes/preview/` are for design review only - they use isolated data and must not depend on real auth.
@@ -152,9 +164,13 @@ Plain specs (`web/tests/e2e/`) are being replaced gradually by Gherkin features 
 
 Companion repo: `cgmembers-frame` (Drupal-7-derived PHP - member site, admin, tx engine). See its `CLAUDE.md` for the PHP-side conventions.
 
+Servers, sites, DNS, DB users and deploy layout are in the private infrastructure document; `docs/infrastructure.md` says how to get it, and a cached copy is conventionally `~/docs/infrastructure.md`. Read it before touching deploy, nginx, DNS or env config.
+
+When you learn durable infra facts (not secret values), propose the edit to the private document and wait for approval. When you edit it, also re-check one or two existing claims against what you've seen, picked at random, so over time every claim gets rechecked.
+
 ### Local setup (varies by developer; clone the repos wherever suits you)
 
-- **Windows:** keep cgpay in WSL and run node/npm there (e.g. `wsl bash -ic "..."`). Keep cgmembers-frame on the Windows filesystem under WAMP, so the PHP side is reachable at a local URL such as `http://localhost/<folder>/cgmembers`. Files edited from Windows tools can end up with CRLF line endings in the WSL checkout; check diffs with WSL git.
+- **Windows:** work in WSL mode. Keep both repos in WSL (e.g. `~/cgpay` and `~/cg`) and open them in VS Code through the Remote - WSL extension (the lower left corner should read "WSL: Ubuntu-22.04"), so node, npm, git, PHP and Claude Code all run natively in Ubuntu and files keep LF line endings. Serve cgmembers-frame from WSL with nginx, PHP 8.2-FPM and MariaDB 10.11 (the test server's versions), so the PHP side is reachable at a local URL such as `http://localhost/cg/cgmembers`.
 - **Mac:** TODO (Chris or another Mac developer): document how to run the PHP side locally and where the repos live.
 - Run the dev server from `web/` (`cd web && npm run dev`). Running it from the repo root starts the legacy PWA.
 
