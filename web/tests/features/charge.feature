@@ -126,7 +126,7 @@ Scenario: The buyer has no balance and no credit
   And see "notice-error"
   And text "msg": "This account has no remaining funds, so a transaction is not possible at this time."
 
-Scenario: The buyer has a balance, but not enough (a credit line needs a connected bank account, which the test accounts lack)
+Scenario: The buyer has a balance and a credit line, but no connected bank account, so the credit line does not count
   Given these "users" rows:
   | uid | balance | floor |
   | Dee | 23      | -4    |
@@ -138,6 +138,21 @@ Scenario: The buyer has a balance, but not enough (a credit line needs a connect
   | 30           | food!             |
   And click "btn-submit"
   Then text "messageText": "This transaction is limited to $23.00."
+  And on page "tx"
+  And count "txs" is 0
+
+Scenario: The buyer has a balance and a credit line with a connected bank account, but not enough
+  Given these "users" rows:
+  | uid | balance | floor | bankAccount              |
+  | Dee | 23      | -4    | USkk21187028101234567890 |
+  And signed in as "Bea"
+  And acting as "Cit"
+  When scan "Dee" to "charge"
+  And input:
+  | input-amount | input-description |
+  | 30           | food!             |
+  And click "btn-submit"
+  Then text "messageText": "This transaction is limited to $27.00."
   And on page "tx"
   And count "txs" is 0
 
