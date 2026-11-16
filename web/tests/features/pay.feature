@@ -111,10 +111,10 @@ Scenario: The other account has no balance and no credit
   And see "notice-error"
   And text "msg": "This account has no remaining funds, so a transaction is not possible at this time."
 
-Scenario: The other account has a balance, but not enough
+Scenario: The other account has a balance, but not enough (a credit line needs a connected bank account, which the test accounts lack)
   Given these "users" rows:
   | uid | balance | floor |
-  | Dee | 23      | 0     |
+  | Dee | 23      | -4    |
   And signed in as "Bea"
   And acting as "Cit"
   When scan "Dee" to "pay"

@@ -4,7 +4,7 @@ import type { APIRequestContext } from '@playwright/test'
 // cgmembers/rcredits/forms/api.inc). It refuses to run on production/stage.
 //
 // Ops: initialize (reset to the default test accounts), update (users table
-// only), rows ("txs" or "grants"). Same protocol the old app's tests used.
+// only), rows ("txs", "tx_requests" or "grants"). Same protocol the old app's tests used.
 const API = (process.env.TEST_API_URL ?? 'http://localhost/cg/cgmembers/api/').replace(/\/?$/, '/')
 
 // Must match the format fixVersion() in cgmembers/rcredits/forms/api.inc accepts.
@@ -45,7 +45,7 @@ export class TestDb {
     return this.post('update', { table: 'users', keyedValues: JSON.stringify(rows) })
   }
 
-  /** All the test accounts' records in a table ("txs" or "grants"), in key order. */
+  /** All the test accounts' records in a table ("txs", "tx_requests" or "grants"), in key order. */
   rows(table: string): Promise<Record<string, unknown>[]> { return this.post('rows', { fieldList: '*', table }) }
 
   /** All test-account transactions, ordered by xid. */

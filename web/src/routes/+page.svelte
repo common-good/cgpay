@@ -22,14 +22,19 @@
   // Empty string = no PHP target configured; we render the menu as disabled.
   const phpBase = env.PUBLIC_PHP_BASE_URL ?? ''
 
-  async function detectCamera(): Promise<boolean> {
+  // A device's camera list can come back empty for a moment (seen with Chromium's fake camera), so look a few times before settling on the PHP links.
+  async function detectCamera(tries = 4): Promise<boolean> {
     if (!navigator.mediaDevices?.enumerateDevices) return false
-    try {
-      return (await navigator.mediaDevices.enumerateDevices()).some(device => device.kind === 'videoinput')
-    } catch (cameraError) {
-      console.warn('Could not detect a camera; keeping the PHP transaction links.', cameraError)
-      return false
+    for (let i = 0; i < tries; i++) {
+      try {
+        if ((await navigator.mediaDevices.enumerateDevices()).some(device => device.kind === 'videoinput')) return true
+      } catch (cameraError) {
+        console.warn('Could not detect a camera; keeping the PHP transaction links.', cameraError)
+        return false
+      }
+      if (i < tries - 1) await new Promise(resolve => setTimeout(resolve, 500))
     }
+    return false
   }
 
   function transactionUrl(intent: 'pay' | 'charge'): string {
@@ -77,7 +82,7 @@
 
   onMount(async () => {
     message = takeMessage()
-    hasCamera = await detectCamera()
+    detectCamera().then(found => hasCamera = found) // without a camera this takes a moment; the account info need not wait
     await loadInfo()
   })
 

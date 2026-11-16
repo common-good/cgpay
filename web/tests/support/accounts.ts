@@ -29,7 +29,7 @@ export function uidOf(nick: string): number {
   return UID_FIRST + nicks.indexOf(nick)
 }
 
-const uidFields = 'uid uid1 uid2 agt1 agt2 actorUid'.split(' ')
+const uidFields = 'uid uid1 uid2 agt1 agt2 actorUid payer payee'.split(' ')
 const qidFields = 'qid identifier'.split(' ')
 
 /**
@@ -44,19 +44,20 @@ export function nicknameFor(nick: string, field: string | undefined): string | n
   return undefined
 }
 
-// Agents' cards for companies, as in the legacy app's tests: the company's account ID with the agent's number, and the agent's card code.
-const agentCards: Record<string, string> = { 'Abe/Cit': 'LDCC098765a', 'Bea/Cit': 'LDCC198765b', 'Flo/Gis': 'LDCG098765f' }
+// Cards that are not an account's own, as in the legacy app's tests. Agents' cards for companies are the company's account ID with
+// the agent's number (u_relations.otherNum - 1: Bea and Flo are 1, Abe is 2) and the agent's card code. Invalid is Flo's card for Gisette with a wrong card code (lost or stolen).
+const cards: Record<string, string> = {
+  'Abe/Cit': 'HTTP://6VM.RC4.ME/LDCC198765a', 'Bea/Cit': 'HTTP://6VM.RC4.ME/LDCC098765b', 'Flo/Gis': 'HTTP://6VM.RC4.ME/LDCG098765f',
+  Invalid: 'HTTP://6VM.RC4.ME/LDCG098765x', Other: 'garbage'
+}
 
 /**
  * What the account's QR code says, as the legacy app's fake-scan buttons use for Abe and Bea:
  * the region, the account ID (K + DC + the account's letter) and the card code (12345 + the lowercase letter).
- * "Flo/Gis" is the card Flo uses for Gisette.
+ * Also the cards above: "Flo/Gis" is the card Flo uses for Gisette; "Invalid" and "Other" are not usable.
  */
 export function qrOf(nick: string): string {
-  if (nick.includes('/')) {
-    if (!agentCards[nick]) throw new Error(`No agent card "${nick}". Known: ${Object.keys(agentCards).join(', ')}`)
-    return `HTTP://6VM.RC4.ME/${agentCards[nick]}`
-  }
+  if (cards[nick]) return cards[nick]
   const a = acct(nick).identifier.slice(-1) // A to I
   return `HTTP://6VM.RC4.ME/KDC${a}12345${a.toLowerCase()}`
 }
