@@ -1,53 +1,33 @@
-// POST /api/reset-verify - stubbed until the PHP /cgpay/reset-verify endpoint lands.
-// Field names + response shape mirror /cgpay/sso: cookieName, sid, ssid, boxCookieName,
-// boxCookieValue, uid, qid. When the real endpoint lands this becomes a thin proxy that
-// forwards those cookies to the browser the same way /api/login does.
-
 import { json, error } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
-import { validatePassword } from '$lib/reset-validation'
+import { rateLimit } from '$lib/server/rate-limit'
+import { verifyReset } from '$lib/server/reset'
+import { phpSso } from '$lib/server/php-login'
+import { setSsoCookies } from '$lib/server/sso-cookies'
 
-type VerifyBody = {
-  uid?: unknown
-  code?: unknown
-  newPassword?: unknown
-}
+const BAD_CODE = { errors: { code: 'That code is wrong or has expired.' } }
 
-export const POST: RequestHandler = async ({ request }) => {
-  let body: VerifyBody
-  try {
-    body = await request.json()
-  } catch {
-    return error(400, 'Invalid JSON body')
+// Sets the new password if the code is right, then signs the member in like /api/login does.
+export const POST: RequestHandler = async ({ request, getClientAddress, cookies }) => {
+  const rl = rateLimit(`reset-verify:${getClientAddress()}`)
+  if (!rl.ok) throw error(429, `Too many attempts. Try again in ${rl.retryAfterSec}s.`)
+
+  const body = await request.json().catch(() => null)
+  const identifier = typeof body?.identifier === 'string' ? body.identifier.trim() : ''
+  const code = typeof body?.code === 'string' ? body.code.trim() : ''
+  const pw = typeof body?.newPassword === 'string' ? body.newPassword : ''
+  if (!identifier || identifier.length > 254) throw error(400, 'identifier, code, and newPassword are required.')
+  if (!/^[0-9]{6}$/.test(code)) return json(BAD_CODE, { status: 400 })
+  if (pw.length < 8 || pw.length > 128) return json({ errors: { newPassword: 'Password must be 8 to 128 characters.' } }, { status: 400 })
+
+  const r = await verifyReset(identifier, code, pw)
+  if (!r.ok) {
+    if (r.why === 'bad_code') return json(BAD_CODE, { status: 400 })
+    if (r.why === 'bad_password') return json({ errors: { newPassword: r.message } }, { status: 400 })
+    throw error(502, 'Unable to reset the password - please try again.')
   }
 
-  const uid = typeof body.uid === 'number' ? body.uid : 0
-  const code = typeof body.code === 'string' ? body.code.trim() : ''
-  const newPassword = typeof body.newPassword === 'string' ? body.newPassword : ''
-
-  if (!uid || !code || !newPassword) {
-    return json({ message: 'uid, code, and newPassword are required.' }, { status: 400 })
-  }
-  const pErr = validatePassword(newPassword)
-  if (pErr) return json({ errors: { newPassword: pErr } }, { status: 400 })
-
-  // Stub rejection path so the UI's "bad code" error can be exercised locally.
-  if (code === 'badcode') {
-    return json({ errors: { code: 'That code is wrong or has expired.' } }, { status: 400 })
-  }
-
-  console.log('[reset-verify] stub accepted', { uid, codeLength: code.length })
-
-  // When the real PHP call is wired in, forward these cookies to the browser the
-  // same way /api/login does (parent-domain + php-host-domain overwrite + box cookie).
-  return json({
-    uid,
-    qid: 'STUB',
-    cookieName: 'SESSstub',
-    sid: 'stub-session-id',
-    ssid: 'stub-session-id',
-    boxCookieName: 'box-STUB',
-    boxCookieValue: 'stub-box-value',
-    stub: true
-  })
+  const sso = await phpSso(r.uid)
+  if (sso) setSsoCookies(cookies, sso)
+  return json({ menu: sso?.menu ?? null })
 }

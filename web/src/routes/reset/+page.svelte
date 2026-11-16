@@ -39,15 +39,9 @@
         submitError = body?.message ?? `Request failed (${res.status}). Try again.`
         return
       }
-      // Identifier-enumeration guard: PHP always returns 200 for shape consistency,
-      // whether or not the identifier matched. Trust the uid+qid when present;
-      // otherwise still route the member forward so the form does not leak which
-      // identifiers exist.
-      if (typeof body.uid === 'number' && typeof body.qid === 'string') {
-        writeResetSession({ uid: body.uid, qid: body.qid, channel })
-      } else {
-        writeResetSession({ uid: 0, qid: '', channel })
-      }
+      // /api/reset-request always answers the same way for well-formed input so it cannot
+      // be used to enumerate accounts. Carry the identifier + channel forward either way.
+      writeResetSession({ identifier: identifier.trim(), channel })
       await goto('/reset/verify')
     } catch {
       submitError = 'Network error - please try again.'

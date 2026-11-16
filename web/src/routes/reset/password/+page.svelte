@@ -6,6 +6,7 @@
     validatePassword, validateConfirmPassword, type FieldErrors
   } from '$lib/reset-validation'
   import { readResetSession, clearResetSession } from '$lib/reset-session'
+  import { pwScore, pwStrengthRatio, PW_MIN_SCORE } from '$lib/pw-score'
 
   let password = $state('')
   let confirm = $state('')
@@ -13,10 +14,17 @@
   let submitError = $state<string | null>(null)
   let submitting = $state(false)
 
+  let strength = $derived(pwStrengthRatio(password))
+  let strengthLabel = $derived(
+    password.length === 0 ? '' :
+    pwScore(password) >= PW_MIN_SCORE ? 'Strong enough' :
+    strength >= 0.6 ? 'Getting there' :
+    'Too weak'
+  )
+
   onMount(() => {
     const session = readResetSession()
     if (!session || !session.code) {
-      // No code captured yet - send them to the verify page first.
       goto('/reset/verify')
     }
   })
@@ -54,17 +62,26 @@
       const res = await fetch('/api/reset-verify', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ uid: session.uid, code: session.code, newPassword: password })
+        body: JSON.stringify({ identifier: session.identifier, code: session.code, newPassword: password })
       })
       const body = await res.json().catch(() => ({}))
       if (!res.ok) {
-        if (body?.errors && typeof body.errors === 'object') fieldErrors = { ...fieldErrors, ...body.errors }
+        // PHP keeps the code usable when only the password was refused, so the member
+        // can pick a stronger one without starting over. A bad code sends them back.
+        if (body?.errors?.code) {
+          clearResetSession()
+          submitError = body.errors.code
+          await goto('/reset/verify')
+          return
+        }
+        if (body?.errors?.newPassword) {
+          fieldErrors = { ...fieldErrors, newPassword: body.errors.newPassword }
+          return
+        }
         submitError = body?.message ?? `Reset failed (${res.status}). Try again.`
         return
       }
       clearResetSession()
-      // SSO cookies are set server-side by /api/reset-verify, same shape as /api/login.
-      // invalidateAll so the layout load reruns against the new cookie.
       await goto('/', { invalidateAll: true })
     } catch {
       submitError = 'Network error - please try again.'
@@ -85,7 +102,7 @@
 
     <div class="card-body">
       <h1 id="pw-h1">Set a new password</h1>
-      <p class="subtitle">Pick something you'll remember. At least 8 characters.</p>
+      <p class="subtitle">Pick something you'll remember. At least 8 characters with a mix of cases, numbers, or symbols.</p>
 
       <form onsubmit={submit} novalidate>
         <div class="field" class:has-err={fieldErrors.newPassword}>
@@ -99,6 +116,12 @@
             onblur={onPasswordBlur}
             aria-invalid={!!fieldErrors.newPassword}
           />
+          {#if password.length > 0}
+            <div class="meter" aria-hidden="true">
+              <div class="meter-fill" class:weak={strength < 0.6} class:ok={strength >= 0.6 && strength < 1} class:strong={strength >= 1} style="width: {strength * 100}%"></div>
+            </div>
+            <span class="meter-label" class:strong={strength >= 1}>{strengthLabel}</span>
+          {/if}
           {#if fieldErrors.newPassword}<span class="field-err">{fieldErrors.newPassword}</span>{/if}
         </div>
 
@@ -180,6 +203,25 @@
   }
   .has-err input { border-color: #dc2626; }
   .field-err { font-size: 0.82rem; color: #991b1b; }
+
+  .meter {
+    height: 4px;
+    background: #e5e7eb;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .meter-fill {
+    height: 100%;
+    transition: width 120ms ease, background-color 120ms ease;
+  }
+  .meter-fill.weak { background: #dc2626; }
+  .meter-fill.ok { background: #d97706; }
+  .meter-fill.strong { background: var(--cg-green); }
+  .meter-label {
+    font-size: 0.78rem;
+    color: var(--cg-text-muted);
+  }
+  .meter-label.strong { color: var(--cg-green); }
 
   .primary {
     margin-top: 0.4rem;

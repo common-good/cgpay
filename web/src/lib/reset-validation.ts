@@ -27,7 +27,7 @@ export function validateChannel(value: string): string | null {
 export function validateCode(value: string): string | null {
   const v = value.trim()
   if (v === '') return 'Please enter the code we sent.'
-  if (!/^[0-9]{4,10}$/.test(v)) return 'That code does not look right - check the email or text.'
+  if (!/^[0-9]{6}$/.test(v)) return 'The code is 6 digits - check the email or text.'
   return null
 }
 
