@@ -35,6 +35,15 @@ Scenario: The bundled screens keep the account the dashboard hands them, and tak
   When click "nav-app"
   Then text "acct": "Account: Citre"
 
+Scenario: The bundled screens remember the account when they restart
+  Given signed in as "Bea"
+  And in the store app
+  When click "nav-app"
+  Then text "acct": "Account: Bea Two"
+
+  When reload
+  Then text "acct": "Account: Bea Two"
+
 Scenario: An ordinary browser has no link to the bundled screens
   Given signed in as "Bea"
   Then see not "nav-app"

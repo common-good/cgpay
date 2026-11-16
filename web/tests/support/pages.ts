@@ -83,6 +83,8 @@ export default {
 
   async onPage(app: App, path: string) { await app.page.goto('/' + path) },
 
+  async reload(app: App) { await app.page.reload() },
+
   /**
    * Scan this account's QR code to pay or charge it ("pay" or "charge"), starting from the dashboard: the camera shows the code,
    * then the dashboard's Pay or Charge button leads to the scanner (through the start page, which companies skip).

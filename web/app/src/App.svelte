@@ -1,21 +1,18 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import { Html5Qrcode } from 'html5-qrcode'
+  import { store } from './storage'
 
   // Trial screen for the hybrid app: proves offline start, the camera scanner and the round trip to the live site.
   const live = (import.meta.env.VITE_LIVE_URL || 'https://pay.test.commongood.earth').replace(/\/$/, '')
   const hash = new URLSearchParams(location.hash.slice(1))
 
-  const store = (k: string, v?: string) => {
-    try { return v === undefined ? localStorage.getItem(k) : (localStorage.setItem(k, v), v) } catch { return null }
-  }
   // The live dashboard hands over the account's device credentials in the hash; keep them and take them out of the address.
-  if (hash.get('device')) store('device', hash.get('device')!)
+  const handed = hash.get('device')
   hash.delete('device')
   history.replaceState(null, '', location.pathname + (hash.size ? '#' + hash : ''))
-  const device = (() => { try { return JSON.parse(store('device') || 'null') } catch { return null } })()
 
-  let name = $state<string | null>(device?.name ?? null)
+  let name = $state<string | null>(null)
   let intent = $state(hash.get('intent') || '')
   let msg = $state('')
   let qr = $state('')
@@ -24,9 +21,15 @@
   let scanner: Html5Qrcode | null = null
 
   onMount(() => {
+    keepDevice()
     if (intent === 'pay' || intent === 'charge') scan()
     return () => { scanner?.stop().catch(() => {}) }
   })
+
+  async function keepDevice() {
+    if (handed) await store.set('device', JSON.parse(handed))
+    name = (await store.get<{ name: string }>('device'))?.name ?? null
+  }
 
   async function reachable() {
     const ctl = new AbortController()
