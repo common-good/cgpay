@@ -39,10 +39,13 @@ export default {
     await app.page.goto('/')
   },
 
-  /** Give the device a camera or take it away ("present" or "absent"). The browser has a fake camera, so "present" needs nothing; "absent" hides it, then reload so the dashboard notices. */
+  /**
+   * Give the device a camera or take it away ("present" or "absent"). The browser has a fake camera, so "present" only waits
+   * until the dashboard has found it (until then Pay and Receive lead to PHP); "absent" hides it, then reload so the dashboard notices.
+   */
   async camera(app: App, state: string) {
     if (state !== 'present' && state !== 'absent') throw new Error(`camera "${state}": say "present" or "absent".`)
-    if (state === 'present') return
+    if (state === 'present') return await expect(app.page.getByTestId('btn-pay'), 'camera "present": the dashboard found the camera').toHaveAttribute('href', /\/handoff#intent=/)
     await app.page.addInitScript((hasCamera: boolean) => {
       Object.defineProperty(navigator, 'mediaDevices', {
         configurable: true,
@@ -77,9 +80,8 @@ export default {
     if (!btn) throw new Error(`scan "${who}" to "${why}": say "pay" or "charge".`)
     writeCameraVideo(qrOf(who))
     await app.page.goto('/')
-    const link = app.page.getByTestId(btn)
-    await expect(link, `scan "${who}": the dashboard found the camera`).toHaveAttribute('href', /\/handoff#intent=/) // until then the button leads to PHP
-    await link.click()
+    await this.camera(app, 'present')
+    await app.page.getByTestId(btn).click()
     await app.page.waitForURL(/\/(tx-start|scan)$/, { timeout: 15_000 })
     if (app.page.url().endsWith('/tx-start')) await app.page.getByTestId('btn-scan').click()
     await app.page.waitForURL(/\/(tx|)$/, { timeout: 15_000 }) // the transaction page, or the dashboard when the scan fails

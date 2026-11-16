@@ -20,6 +20,7 @@ Rule: A member pays in the legacy app and returns to the dashboard
 Scenario: A member pays another member and comes back to the dashboard
   Given signed in as "Bea"
   And camera shows "Dee"
+  And camera "present"
   When click "btn-pay"
   Then on page "tx-start"
   And see "btn-scan"
@@ -46,6 +47,7 @@ Scenario: A member pays another member and comes back to the dashboard
 Scenario: A member undoes the payment and the dashboard shows no transaction
   Given signed in as "Bea"
   And camera shows "Dee"
+  And camera "present"
   When click "btn-pay"
   And click "btn-scan"
   Then text "theirName": "Dee Four"
@@ -66,6 +68,7 @@ Rule: A company goes straight to scanning
 Scenario: A company has nothing to show, so it starts on the scan page and can go back
   Given signed in as "Bea"
   And acting as "Cit"
+  And camera "present"
   When click "btn-receive"
   Then on page "scan"
   And see not "btn-nav"
@@ -78,6 +81,7 @@ Rule: A problem in the legacy app returns the member to the dashboard with a mes
 Scenario: A member scans their own QR code
   Given signed in as "Bea"
   And camera shows "Bea"
+  And camera "present"
   When click "btn-pay"
   And click "btn-scan"
   Then on page ""
