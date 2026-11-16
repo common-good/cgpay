@@ -58,6 +58,15 @@ export default {
   /** The camera sees this account's QR code (set before the scan page opens). */
   async cameraShows(app: App, who: string) { writeCameraVideo(qrOf(who)) },
 
+  /** The page runs inside the store app's WebView, which marks its user agent (see web/app/capacitor.config.ts). */
+  async inStoreApp(app: App) {
+    await app.page.addInitScript(() => {
+      const ua = navigator.userAgent + ' CGPayApp'
+      Object.defineProperty(navigator, 'userAgent', { configurable: true, get: () => ua })
+    })
+    await app.page.reload()
+  },
+
   async click(app: App, id: string) { await app.page.getByTestId(id).click() },
 
   async input(app: App, id: string, value: unknown) { await setField(app, id, value) },
@@ -125,7 +134,7 @@ export default {
     await expect(app.page, `on PHP page "${path}"`).toHaveURL(new RegExp(`/cgmembers/${escapeRegExp(path)}$`), { timeout: 15_000 })
   },
 
-  /** The Pay and Charge buttons lead to the legacy app ("legacy app") or to the PHP pages ("PHP"). */
+  /** The Pay and Charge buttons lead to the legacy app ("legacy app"), the PHP pages ("PHP") or the store app's bundled screens ("bundled screens"). */
   async soPayAndChargeGoTo(app: App, where: string) {
     const link = (n: number) => app.page.locator('.actions .action-btn').nth(n)
     const at = `pay and charge go to "${where}"`
@@ -135,7 +144,10 @@ export default {
     } else if (where === 'PHP') {
       await expect(link(0), at).toHaveAttribute('href', /tx\/pay$/)
       await expect(link(1), at).toHaveAttribute('href', /tx\/charge$/)
-    } else throw new Error(`${at}: say "legacy app" or "PHP".`)
+    } else if (where === 'bundled screens') {
+      await expect(link(0), at).toHaveAttribute('href', /^https:\/\/localhost\/#intent=pay&/)
+      await expect(link(1), at).toHaveAttribute('href', /^https:\/\/localhost\/#intent=charge&/)
+    } else throw new Error(`${at}: say "legacy app", "PHP" or "bundled screens".`)
   },
 
   /** Something is visible: an element if the text looks like an element id, otherwise literal text. */

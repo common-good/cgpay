@@ -15,6 +15,18 @@ Scenario: A device without a camera keeps the PHP transaction links
   When camera "absent"
   Then pay and charge go to "PHP"
 
+Rule: In the store app, Pay, Charge and Scan lead to the app's bundled screens
+
+Scenario: The live dashboard inside the store app hands transactions to the bundled screens
+  Given signed in as "Bea"
+  When in the store app
+  Then pay and charge go to "bundled screens"
+  And see "nav-app"
+
+Scenario: An ordinary browser has no link to the bundled screens
+  Given signed in as "Bea"
+  Then see not "nav-app"
+
 Rule: A member pays in the legacy app and returns to the dashboard
 
 Scenario: A member pays another member and comes back to the dashboard
