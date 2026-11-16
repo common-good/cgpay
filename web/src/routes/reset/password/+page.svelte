@@ -5,7 +5,7 @@
   import {
     validatePassword, validateConfirmPassword, type FieldErrors
   } from '$lib/reset-validation'
-  import { readResetSession, clearResetSession } from '$lib/reset-session'
+  import { readResetSession, writeResetSession, clearResetSession } from '$lib/reset-session'
   import { pwScore, pwStrengthRatio, PW_MIN_SCORE } from '$lib/pw-score'
 
   let password = $state('')
@@ -69,8 +69,10 @@
         // PHP keeps the code usable when only the password was refused, so the member
         // can pick a stronger one without starting over. A bad code sends them back.
         if (body?.errors?.code) {
-          clearResetSession()
-          submitError = body.errors.code
+          // Keep identifier + channel so /reset/verify loads cleanly and asks for a fresh code;
+          // drop the stale code. (An inline error carry-over to /reset/verify would be a nice follow-up.)
+          const sess = readResetSession()
+          if (sess) writeResetSession({ identifier: sess.identifier, channel: sess.channel })
           await goto('/reset/verify')
           return
         }
