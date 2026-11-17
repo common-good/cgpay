@@ -19,7 +19,7 @@ describe('appCall', () => {
     const r = await appCall('signin', post({ identifier: 'a', password: 'p', evil: 'x', label: { no: 1 } }), '1.2.3.4', ['identifier', 'password', 'label'])
     expect(r).toEqual({ status: 200, data: { token: 't' } })
     expect(JSON.parse(f.mock.calls[0][1].body)).toEqual({ ip: '1.2.3.4', identifier: 'a', password: 'p' })
-    expect(f.mock.calls[0][0]).toContain('/cgpay/app-signin')
+    expect(f.mock.calls[0][0]).toContain('/cgpay/signin')
   })
 
   it('adds the transaction API address to the device credentials', async () => {

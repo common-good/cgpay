@@ -1,4 +1,4 @@
-// The store app's token sign-in: node is a thin proxy to PHP's /cgpay/app-* endpoints (PHP owns passwords, MFA, flood control and the tokens).
+// The store app's token sign-in: node is a thin proxy to PHP's /cgpay/{signin,mfa,device,enter,redeem,revoke} endpoints (PHP owns passwords, MFA, flood control and the tokens).
 // No cookies in or out; the app keeps the token itself. CORS for the app's origins is in hooks.server.ts (appCors).
 
 import { json, type RequestHandler } from '@sveltejs/kit'
@@ -12,7 +12,7 @@ const NO_STORE = { 'Cache-Control': 'no-store' }
 const errCode = (status: number, body: unknown) => (body && typeof body === 'object' && typeof (body as { error?: unknown }).error === 'string') ? (body as { error: string }).error : status === 400 ? 'bad-request' : 'failed'
 
 /**
- * Ask PHP's /cgpay/app-<op>, passing on only these string fields of the app's JSON body (plus the member's address, for PHP's flood control).
+ * Ask PHP's /cgpay/<op>, passing on only these string fields of the app's JSON body (plus the member's address, for PHP's flood control).
  * limit: also count the call against a per-address limit (sign-in steps, where someone may be guessing).
  */
 export async function appCall(op: string, request: Request, ip: string, fields: string[], limit = false) {
@@ -25,7 +25,7 @@ export async function appCall(op: string, request: Request, ip: string, fields: 
   const body: Record<string, string | number | boolean> = { ip }
   for (const f of fields) if (['string', 'number', 'boolean'].includes(typeof b[f])) body[f] = b[f]
   try {
-    const r = await callPhp<Record<string, unknown>>(`cgpay/app-${op}`, { body })
+    const r = await callPhp<Record<string, unknown>>(`cgpay/${op}`, { body })
     if (r.ok && r.data.device && typeof r.data.device === 'object') r.data.device = { ...r.data.device, api: phpEndpointUrl('api/') } // where the app sends transactions (see Device)
     return r.ok ? { status: 200, data: r.data } : { status: r.status === 429 || r.status === 401 || r.status === 403 || r.status === 400 ? r.status : 502, data: { error: errCode(r.status, r.body) } }
   } catch (e) {
