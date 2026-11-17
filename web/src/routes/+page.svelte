@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte'
-  import { goto, replaceState } from '$app/navigation'
+  import { goto } from '$app/navigation'
   import { env } from '$env/dynamic/public'
   import type { PageData } from './$types'
   import Icon from '$lib/components/Icon.svelte'
@@ -79,7 +79,7 @@
     let raw = hash.get('msg')
     if (raw !== null) {
       hash.delete('msg')
-      replaceState(location.pathname + location.search + (hash.size ? '#' + hash : ''), {})
+      history.replaceState(history.state, '', location.pathname + location.search + (hash.size ? '#' + hash : '')) // not $app/navigation's replaceState, which throws before the router is up (this runs in onMount); keeping history.state keeps SvelteKit's
     } else {
       const found = document.cookie.split('; ').find(c => c.startsWith('cgpay-msg='))
       const parts = location.hostname.split('.')
