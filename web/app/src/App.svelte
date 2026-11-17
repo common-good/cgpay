@@ -1,5 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte'
+  import { App as CapApp } from '@capacitor/app'
+  import { Capacitor } from '@capacitor/core'
   import type { Device } from '$lib/app-shell'
   import { store } from './storage'
   import { flush, waiting } from './lib/tx'
@@ -21,6 +23,7 @@
   let qr = $state('')
   let queued = $state(0)
   let txView = $state<Tx>()
+  let seen = '' // the card the scanner returned last: still in view when Back returns to the scanner, so it is not taken again
   const fail = (msg: string) => toDashboard(live, msg, 'error')
 
   // Send what waited for a connection, and show how much still waits.
@@ -33,6 +36,7 @@
     if (handed) await store.set('device', JSON.parse(handed))
     device = (await store.get<Device>('device')) ?? null
     window.addEventListener('online', sendQueued)
+    if (Capacitor.isNativePlatform()) CapApp.addListener('backButton', () => screen && screen !== 'home' ? back() : CapApp.exitApp())
     setInterval(() => queued && sendQueued(), 5000) // the online event is not reliable on phones
     sendQueued()
     if (device && (intent === 'pay' || intent === 'charge')) start(intent); else screen = 'home'
@@ -42,10 +46,10 @@
   // Back goes to the screen before: from the summary it means undo, and a company, which skips the start page, goes home from the scanner.
   function back() {
     if (screen === 'tx') txView?.back()
-    else screen = screen === 'scan' && device && !device.isCo ? 'tx-start' : 'home'
+    else { screen = screen === 'scan' && device && !device.isCo ? 'tx-start' : 'home'; seen = '' }
   }
 
-  function start(what: string) { intent = what; screen = device!.isCo ? 'scan' : 'tx-start' }
+  function start(what: string) { intent = what; seen = ''; screen = device!.isCo ? 'scan' : 'tx-start' }
 </script>
 
 <main data-screen={screen}>
@@ -53,7 +57,7 @@
   {#if screen === 'tx-start' && device}
     <TxStart {device} {intent} onscan={() => screen = 'scan'} phpBase={device.api.replace(/api\/?$/, '')} />
   {:else if screen === 'scan'}
-    <Scan {intent} onscan={text => { qr = text; screen = 'tx' }} onfail={fail} />
+    <Scan {intent} ignore={seen} onscan={text => { qr = seen = text; screen = 'tx' }} onfail={fail} />
   {:else if screen === 'tx' && device}
     <Tx bind:this={txView} {device} {intent} {qr} onfail={fail} onrescan={() => screen = 'scan'} ondone={(msg, offline) => offline ? (queued = 1, screen = 'home', sendQueued()) : toDashboard(live, msg)} />
   {:else if screen === 'home'}

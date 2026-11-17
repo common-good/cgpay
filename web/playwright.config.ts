@@ -20,7 +20,7 @@ const fakeCamera = ['--use-fake-device-for-media-stream', '--use-fake-ui-for-med
 // Always called, so `bddgen` finds its config even when the project is skipped.
 const bddProject = defineBddProject({
   name: 'bdd',
-  features: 'tests/features/**/*.feature',
+  features: ['tests/features/**/*.feature', ...(process.env.E2E_SCREENS === 'bundled' ? ['!tests/features/dashboard-handoff.feature'] : [])], // the handoff to the legacy app does not exist in bundled mode
   steps: 'tests/steps/**/*.ts',
   matchKeywords: true // the same step text can mean setup/action after Given and When, and a check after Then
 })

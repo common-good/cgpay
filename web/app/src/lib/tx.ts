@@ -1,7 +1,7 @@
 // Transactions on the bundled screens: amount rules, the proof the server checks, and the queue that survives a closed app.
 import type { Device } from '$lib/app-shell'
 import { store } from '../storage'
-import { post, unreachable, VERSION, type Identity } from './api'
+import { post, TX_TIMEOUT_MS, unreachable, VERSION, type Identity } from './api'
 import { noCardCode, type Card } from './qr'
 
 export const ONLINE_LIMIT = 10000 // the most any account can be charged on the app
@@ -45,7 +45,7 @@ export async function flush(d: Device): Promise<boolean> {
   for (const [k, t] of await store.all<Tx>('tx:')) {
     if (t.error) continue
     try {
-      const res = await (await post(d, 'transactions', { ...t })).json().catch(() => ({ ok: true }))
+      const res = await (await post(d, 'transactions', { ...t }, TX_TIMEOUT_MS)).json().catch(() => ({ ok: true }))
       if (res?.ok === false) await store.set(k, { ...t, error: String(res.message ?? 'refused') }); else await store.del(k)
     } catch (er) {
       if (unreachable(er)) return true

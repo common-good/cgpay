@@ -173,6 +173,7 @@ export default {
 
   async soOnPage(app: App, path: string) {
     if ((BUNDLED_MODE || app.storeApp) && ['home', 'tx-start', 'scan', 'tx'].includes(path)) return await expect(app.page.locator(`[data-screen="${path}"]`), `on page "${path}" (bundled screen)`).toBeVisible({ timeout: 15_000 })
+    if (app.storeApp && !path) await expect(app.page, 'on page "" (left the bundled screens)').not.toHaveURL(new RegExp(`^${escapeRegExp(BUNDLED)}`), { timeout: 15_000 })
     await expect(app.page, `on page "${path}"`).toHaveURL(new RegExp(`^[^/]+//[^/]+/${escapeRegExp(path)}$`), { timeout: 15_000 })
   },
 

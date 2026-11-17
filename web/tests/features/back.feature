@@ -29,8 +29,6 @@ Scenario: A member completes a transaction and goes back
 
 Rule: Everywhere else, back goes to the screen before
 
-  Back from the transaction screen to the scanner is not tested: the fake camera still shows the card just scanned, so the scanner returns at once to the transaction screen.
-
 Scenario: An individual goes back from the scanner to the start page, then to the home screen
   Given signed in as "Bea"
   And in the store app
@@ -56,3 +54,12 @@ Scenario: A company, which skips the start page, goes back from the scanner to t
   And click "btn-receive"
   And click "btn-back"
   Then on page "home"
+
+Scenario: A member goes back from the transaction screen to the scanner, with the card still in view
+  Given signed in as "Bea"
+  And acting as "Cit"
+  And in the store app
+  When scan "Dee" to "charge"
+  And click "btn-back"
+  And wait 3 seconds
+  Then on page "scan"

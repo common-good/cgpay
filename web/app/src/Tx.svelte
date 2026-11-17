@@ -5,7 +5,7 @@
   import { mainId, parseQr, type Card } from './lib/qr'
   import { cacheProfile, checkAmount, enqueue, flush, makeTx, money, offlineProfile, unqueue, type Tx } from './lib/tx'
 
-  let { device, intent, qr, onfail, ondone }: { device: Device, intent: string, qr: string, onfail: (msg: string) => void, onrescan: () => void, ondone: (msg?: string, offline?: boolean) => void } = $props()
+  let { device, intent, qr, onfail, onrescan, ondone }: { device: Device, intent: string, qr: string, onfail: (msg: string) => void, onrescan: () => void, ondone: (msg?: string, offline?: boolean) => void } = $props()
   const paying = intent === 'pay'
   let who = $state<Identity | null>(null)
   let photo = $state('')
