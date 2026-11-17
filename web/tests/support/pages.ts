@@ -73,7 +73,7 @@ export default {
     })
     await app.page.reload()
     app.storeApp = true
-    await expect(app.page.getByTestId('nav-app'), 'in the store app: the dashboard got the device credentials').toHaveAttribute('href', /device=/)
+    if (!app.page.url().includes('/login')) await expect(app.page.getByTestId('nav-app'), 'in the store app: the dashboard got the device credentials').toHaveAttribute('href', /device=/)
   },
 
   async click(app: App, id: string) { await app.page.getByTestId(id).click() },

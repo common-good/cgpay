@@ -17,7 +17,7 @@
   // Hide the app header on preview routes (they use their own layout + white-bg TopNav).
   const isPreview = $derived(page.url.pathname.startsWith('/preview'))
   const isLogin   = $derived(page.url.pathname.startsWith('/login'))
-  const showHeader = $derived(!isPreview)
+  const showHeader = $derived(!isPreview && !(app && isLogin)) // the login card carries the brand itself
 
   const phpBase = env.PUBLIC_PHP_BASE_URL ?? ''
   const PHP_PATH: Record<string, string> = {
@@ -55,7 +55,7 @@
 </svelte:head>
 
 {#if showHeader}
-  <nav class="topnav">
+  <nav class="topnav" data-testid="topnav">
     <Brand size={32} />
     {#if data.user && !isLogin}
       <ul class="nav-links">

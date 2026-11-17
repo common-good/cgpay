@@ -13,6 +13,13 @@ Scenario: Someone runs the app, not signed in
   And see "btn-signin"
   And see "lnk-signup"
   And see "lnk-reset"
+  And see "topnav"
+
+Scenario: In the store app the sign-in page shows the brand once and fills the screen
+  Given in the store app
+  Then on page "login"
+  And see not "topnav"
+  And see "btn-signin"
 
 Scenario: A member signs in
   When input:
