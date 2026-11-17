@@ -1,11 +1,11 @@
 <script lang="ts">
-  import { onMount } from 'svelte'
+  import { onDestroy, onMount } from 'svelte'
   import type { Device } from '$lib/app-shell'
   import { identity, idPhoto, unreachable, type Identity } from './lib/api'
   import { mainId, parseQr, type Card } from './lib/qr'
   import { cacheProfile, checkAmount, enqueue, flush, makeTx, money, offlineProfile, unqueue, type Tx } from './lib/tx'
 
-  let { device, intent, qr, onfail, ondone }: { device: Device, intent: string, qr: string, onfail: (msg: string) => void, ondone: (msg?: string, offline?: boolean) => void } = $props()
+  let { device, intent, qr, onfail, ondone }: { device: Device, intent: string, qr: string, onfail: (msg: string) => void, onrescan: () => void, ondone: (msg?: string, offline?: boolean) => void } = $props()
   const paying = intent === 'pay'
   let who = $state<Identity | null>(null)
   let photo = $state('')
@@ -14,8 +14,14 @@
   let description = $state('')
   let dialog = $state<{ text: string, yes?: () => void, no?: () => void } | null>(null)
   let sent = $state<{ tx: Tx, key: string } | null>(null)
+  let timer: ReturnType<typeof setTimeout>
+  const TIMEOUT_S = +(import.meta.env.VITE_TX_TIMEOUT_S || 10)
+
+  // With nobody doing anything, the summary finishes itself, so a payment is not undone by accident.
+  const arm = () => { clearTimeout(timer); timer = setTimeout(done, TIMEOUT_S * 1000) }
 
   const alert = (text: string) => dialog = { text, yes: () => dialog = null }
+  onDestroy(() => clearTimeout(timer))
   const word = paying ? 'Pay' : 'Charge'
 
   async function submit(e: Event) {
@@ -25,16 +31,23 @@
     if (err) return alert(err)
     const tx = await makeTx(device, card, paying, a, description)
     sent = { tx, key: await enqueue(tx) }
+    arm()
   }
 
-  const askUndo = () => dialog = {
-    text: 'Reverse the transaction?',
-    yes: async () => { await unqueue(sent!.key); ondone('The transaction has been reversed.') },
-    no: () => dialog = null
+  const askUndo = () => {
+    clearTimeout(timer)
+    dialog = {
+      text: 'Reverse the transaction?',
+      yes: async () => { await unqueue(sent!.key); ondone('The transaction has been reversed.') },
+      no: () => { dialog = null; arm() }
+    }
   }
+
+  /** The Back button: on the summary it means undo, before that it returns to the scanner. */
+  export function back() { if (sent) askUndo(); else onrescan() }
 
   // Sending waits for Done, so that Undo can still take the transaction back before the server has it.
-  async function done() { let off = false; try { off = await flush(device) } finally { ondone('', off) } }
+  async function done() { clearTimeout(timer); let off = false; try { off = await flush(device) } finally { ondone('', off) } }
 
   // The other account's profile. Anything wrong with the scanned code sends the member back to the dashboard with the reason.
   onMount(async () => {

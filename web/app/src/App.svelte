@@ -20,6 +20,7 @@
   let screen = $state<Screen | ''>('')
   let qr = $state('')
   let queued = $state(0)
+  let txView = $state<Tx>()
   const fail = (msg: string) => toDashboard(live, msg, 'error')
 
   // Send what waited for a connection, and show how much still waits.
@@ -38,16 +39,23 @@
   })
 
   // Companies have nothing to show, so they go straight to scanning.
+  // Back goes to the screen before: from the summary it means undo, and a company, which skips the start page, goes home from the scanner.
+  function back() {
+    if (screen === 'tx') txView?.back()
+    else screen = screen === 'scan' && device && !device.isCo ? 'tx-start' : 'home'
+  }
+
   function start(what: string) { intent = what; screen = device!.isCo ? 'scan' : 'tx-start' }
 </script>
 
 <main data-screen={screen}>
+  {#if screen && screen !== 'home'}<button class="back" data-testid="btn-back" onclick={back}>Back</button>{/if}
   {#if screen === 'tx-start' && device}
     <TxStart {device} {intent} onscan={() => screen = 'scan'} phpBase={device.api.replace(/api\/?$/, '')} />
   {:else if screen === 'scan'}
     <Scan {intent} onscan={text => { qr = text; screen = 'tx' }} onfail={fail} />
   {:else if screen === 'tx' && device}
-    <Tx {device} {intent} {qr} onfail={fail} ondone={(msg, offline) => offline ? (queued = 1, screen = 'home', sendQueued()) : toDashboard(live, msg)} />
+    <Tx bind:this={txView} {device} {intent} {qr} onfail={fail} onrescan={() => screen = 'scan'} ondone={(msg, offline) => offline ? (queued = 1, screen = 'home', sendQueued()) : toDashboard(live, msg)} />
   {:else if screen === 'home'}
     <h1>CGPay</h1>
     {#if queued}<p data-testid="queued">{queued} transaction{queued == 1 ? '' : 's'} waiting to send</p>{/if}
@@ -66,5 +74,6 @@
   main { padding: max(16px, env(safe-area-inset-top)) 16px 16px; max-width: 480px; margin: 0 auto; }
   h1 { color: #0946A6; font-size: 1.5rem; }
   :global(button) { font: inherit; padding: 14px; border-radius: 8px; border: 0; background: #1e7a3a; color: #fff; }
+  .back { background: none; color: #0946A6; padding: 4px 0; }
   .foot { margin-top: 32px; font-size: 0.75rem; color: #5a615e; word-break: break-all; }
 </style>

@@ -25,6 +25,7 @@ GWhen('var {string} rows:', async ({ app }, name: string, table: DataTable) => t
 GWhen('var {string} rows pivoted:', async ({ app }, name: string, table: DataTable) => t.setVarTable(app, name, table, 'rows pivoted'))
 GWhen('var {string} values:', async ({ app }, name: string, table: DataTable) => t.setVarTable(app, name, table, 'values'))
 GWhen('var {string} values pivoted:', async ({ app }, name: string, table: DataTable) => t.setVarTable(app, name, table, 'values pivoted'))
+GWhen('wait {int} seconds', async ({}, n: number) => t.wait(n))
 
 Then('address has no {string}', async ({ app }, part: string) => t.soAddressHasNo(app, part))
 Then('count {string} is {int}', async ({ app }, name: string, n: number) => t.soCount(app, name, n))

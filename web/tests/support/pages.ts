@@ -63,7 +63,7 @@ export default {
   },
 
   /** The camera sees this account's QR code (set before the scan page opens). */
-  async cameraShows(app: App, who: string) { writeCameraVideo(qrOf(who)) },
+  async cameraShows(app: App, who: string) { writeCameraVideo(who === 'nobody' ? '' : qrOf(who)) }, // a white picture, for "nobody"
 
   /** The page runs inside the store app's WebView, which marks its user agent (see web/app/capacitor.config.ts). */
   async inStoreApp(app: App) {
@@ -134,6 +134,8 @@ export default {
     if (await screen('tx-start').count()) await app.page.getByTestId('btn-scan').click()
     await expect(screen('tx').or(app.page.getByTestId('balance')), 'scan: the transaction screen, or the dashboard when the scan fails').toBeVisible({ timeout: 15_000 })
   },
+
+  async wait(seconds: number) { await new Promise(ok => setTimeout(ok, seconds * 1000)) },
 
   async select(app: App, id: string, label: string) { await setField(app, id, label) },
 
