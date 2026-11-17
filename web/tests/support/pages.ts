@@ -102,6 +102,14 @@ export default {
     await app.page.context().addCookies([{ name: process.env.PHP_SSO_COOKIE_NAME as string, value: 'stale', domain: 'localhost', path: '/api', secure: true, httpOnly: true }])
   },
 
+  async soCookie(app: App, name: string, value: string) {
+    const cookies = await app.page.context().cookies()
+    const hit = cookies.find(c => c.name === name)
+    if (!hit) throw new Error(`cookie "${name}": not set (got: ${cookies.map(c => c.name).join(', ') || 'none'})`)
+    const got = decodeURIComponent(hit.value)
+    if (got !== value) throw new Error(`cookie "${name}": expected "${value}", got "${got}"`)
+  },
+
   async soError(app: App, message: string) {
     await expect(app.page.getByRole('alert').filter({ hasText: message }).first(), `error "${message}"`).toBeVisible({ timeout: 10_000 })
   },
