@@ -3,7 +3,7 @@
 # No-ops (exit 0, does nothing) if this box is currently the standby.
 # Promotion (see the promotion checklist) removes the marker file, which re-arms every job
 # wrapped in this without editing any crontab.
-if [ -f /etc/commongood-standby ]; then
+if [ -f /etc/{{ORG}}-standby ]; then
   exit 0
 fi
 exec "$@"

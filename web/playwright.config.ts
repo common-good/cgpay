@@ -6,8 +6,8 @@ import { CAMERA_FILE, writeCameraVideo } from './tests/support/camera'
 // The PHP server runs in this time zone; magic dates in the tests (%now0, %ymd, ...) must agree with it wherever the tests run.
 process.env.TZ = 'America/New_York'
 
-// The steps need the session cookie's name, which is in .env with the app's other settings.
-try { process.loadEnvFile('.env') } catch {}
+// The steps read settings from .env (the session cookie's name, and DB_* and PHP_SSO_SECRET for the data steps). Values already exported win.
+try { process.loadEnvFile('.env') } catch { /* no .env: CI, or everything is exported */ }
 // Ports of the preview server and the legacy app. Concurrent local test slots each set their own (E2E_PORT, E2E_PWA_PORT in .env).
 const PORT = process.env.E2E_PORT ?? '4173'
 const PWA = process.env.E2E_PWA_PORT ?? '3000'
