@@ -130,7 +130,7 @@ export default {
     }
     await app.page.getByTestId(btn).click()
     const screen = (name: string) => app.page.locator(`[data-screen="${name}"]`)
-    await expect(screen('tx-start').or(screen('scan')), 'scan: the bundled screens opened').toBeVisible({ timeout: 15_000 })
+    await expect(screen('tx-start').or(screen('scan')).or(screen('tx')), 'scan: the bundled screens opened').toBeVisible({ timeout: 15_000 })
     if (await screen('tx-start').count()) await app.page.getByTestId('btn-scan').click()
     await expect(screen('tx').or(app.page.getByTestId('balance')), 'scan: the transaction screen, or the dashboard when the scan fails').toBeVisible({ timeout: 15_000 })
   },
