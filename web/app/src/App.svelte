@@ -60,7 +60,8 @@
 
   // Forget the account on this phone (token, credentials, anything waiting to send) and show the sign-in screen.
   async function leave() {
-    await signOut()
+    // The live site's cookie session would outlive the app's sign-out in the WebView, so the live site clears it and sends the app back here.
+    if (await signOut()) return location.assign(`${live}/app-signout?${new URLSearchParams({ back: location.origin + '/' })}`)
     device = null; signedIn = confirming = false; queued = 0; seen = ''
     screen = 'signin'
   }

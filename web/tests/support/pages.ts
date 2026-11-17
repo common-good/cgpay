@@ -115,7 +115,10 @@ export default {
   async reload(app: App) { await app.page.reload() },
 
   /** Open the store app's own screens on a phone with no account on it (each scenario's browser starts with empty storage). */
-  async storeAppNoAccount(app: App) {
+  async storeAppNoAccount(app: App) { await this.storeAppOpens(app) },
+
+  /** Open the store app's own screens, as when the member opens the app (what the phone keeps stays). */
+  async storeAppOpens(app: App) {
     await app.page.goto(BUNDLED + '/')
     app.storeApp = true
   },

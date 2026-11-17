@@ -60,11 +60,15 @@ export async function enterUrl(to = 'dashboard'): Promise<string> {
   } catch { return '' }
 }
 
-/** Sign out: end the token on the server if it can be reached, then forget the token, the device credentials and anything still waiting to send. */
+/**
+ * Sign out: end the token on the server if it can be reached, then forget the token, the device credentials and anything still waiting to send.
+ * Returns whether the server was reached (so the live site's cookie can be cleared too, see App.svelte).
+ */
 export async function signOut() {
   const t = await token()
-  if (t) await call('revoke', { token: t }, 8000).catch(() => {})
+  const reached = !!t && await call('revoke', { token: t }, 8000).then(() => true, () => false)
   await secret.del('token')
   await store.del('device')
   for (const [k] of await store.all('tx:')) await store.del(k)
+  return reached
 }

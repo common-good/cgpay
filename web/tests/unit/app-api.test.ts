@@ -6,7 +6,7 @@ vi.mock('$env/dynamic/private', () => ({ get env() { return privateEnvState } })
 vi.mock('$env/dynamic/public', () => ({ get env() { return publicEnvState } }))
 
 const { appCall } = await import('../../src/lib/server/app-api')
-const { appCors } = await import('../../src/lib/server/app-cors')
+const { appCors, appBack } = await import('../../src/lib/server/app-cors')
 
 const post = (body: unknown) => new Request('https://pay.example/api/app/signin', { method: 'POST', body: typeof body === 'string' ? body : JSON.stringify(body) })
 const reply = (status: number, body: unknown) => vi.fn().mockResolvedValue(new Response(JSON.stringify(body), { status }))
@@ -73,4 +73,9 @@ describe('appCors', () => {
     expect(res.status).toBe(204)
     expect(res.headers.get('Access-Control-Allow-Methods')).toContain('POST')
   })
+})
+
+describe('appBack', () => {
+  it.each(['https://localhost/', 'capacitor://localhost/', 'http://localhost:5183/'])('goes back to the app at %s', back => expect(appBack(back)).toBe(back))
+  it.each(['https://evil.example/', 'https://localhost.evil.example/', 'capacitor://localhostx/', ''])('goes nowhere else (%s)', back => expect(appBack(back)).toBe('/'))
 })

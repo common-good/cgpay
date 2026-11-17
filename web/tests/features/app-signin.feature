@@ -139,6 +139,75 @@ Scenario: A member signs out
   When reload
   Then on page "signin"
 
+Scenario: Signing out of the app also signs out of the live site
+  Given store app has no account
+  When input:
+  | identifier | password |
+  | Bea Two    | k        |
+  And click "btn-signin"
+  And click "btn-dashboard"
+  Then on page ""
+  And signed in as "Bea"
+
+  When store app opens
+  And click "btn-signout"
+  Then on page "signin"
+
+  When on page ""
+  Then signed in as "nobody"
+
+Rule: A member with transactions still waiting to send is warned before signing out, and can cancel
+
+Scenario: A member cancels signing out
+  Given signed in as "Bea"
+  And acting as "Cit"
+  And in the store app
+  And camera shows "Dee"
+  When click "nav-app"
+  Then text "acct": "Account: Citre"
+
+  When network off
+  And scan "Dee" to "charge"
+  And click "btn1"
+  And input:
+  | input-amount | input-description |
+  | 234.50       | food!             |
+  And click "btn-submit"
+  And click "btn-done"
+  And click "btn-signout"
+  Then see "signout-warning"
+  And see "queued"
+
+  When click "btn-cancel-signout"
+  Then see not "signout-warning"
+  And on page "home"
+  And see "queued"
+
+Scenario: A member signs out anyway and the waiting transactions are dropped
+  Given signed in as "Bea"
+  And acting as "Cit"
+  And in the store app
+  And camera shows "Dee"
+  When click "nav-app"
+  Then text "acct": "Account: Citre"
+
+  When network off
+  And scan "Dee" to "charge"
+  And click "btn1"
+  And input:
+  | input-amount | input-description |
+  | 234.50       | food!             |
+  And click "btn-submit"
+  And click "btn-done"
+  And click "btn-signout"
+  And click "btn-signout-anyway"
+  Then on page "signin"
+
+  When network on
+  And reload
+  Then on page "signin"
+  And count "txs" is 0
+
 Rule: The live dashboard opens signed in from the token, with no sign-in on the live site
 
 Scenario: The dashboard button opens the live site as the member

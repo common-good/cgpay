@@ -20,6 +20,7 @@ GWhen('select {string}: {string}', async ({ app }, id: string, label: string) =>
 GWhen('signed in as {string}', async ({ app }, who: string) => t.signedIn(app, who))
 GWhen('stale session cookie', async ({ app }) => t.staleSessionCookie(app))
 GWhen('store app has no account', async ({ app }) => t.storeAppNoAccount(app))
+GWhen('store app opens', async ({ app }) => t.storeAppOpens(app))
 GWhen('these {string} rows:', async ({ app }, name: string, table: DataTable) => t.setThese(app, name, table))
 GWhen('var {string} is {value}', async ({ app }, name: string, value: unknown) => t.setVar(app, name, value))
 GWhen('var {string} row:', async ({ app }, name: string, table: DataTable) => t.setVarTable(app, name, table, 'row'))

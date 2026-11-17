@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte'
-  import { goto } from '$app/navigation'
+  import { goto, replaceState } from '$app/navigation'
   import { env } from '$env/dynamic/public'
   import type { PageData } from './$types'
   import Icon from '$lib/components/Icon.svelte'
@@ -73,14 +73,22 @@
     }
   }
 
-  // A message the legacy app left for us in a cookie (see setDashboardMessage in the legacy app's handoff.js): show it once, as text.
+  // A message to show once, as text: from the store app's screens in the address (#msg=kind:text), or from the legacy app in a cookie (see setDashboardMessage in its handoff.js).
   function takeMessage(): { kind: 'info' | 'error', text: string } | null {
-    const found = document.cookie.split('; ').find(c => c.startsWith('cgpay-msg='))
-    const parts = location.hostname.split('.')
-    const domains = ['', ...(parts.length > 1 && !/^\d+(\.\d+){3}$/.test(location.hostname) ? [`; domain=.${parts.slice(-2).join('.')}`] : [])]
-    for (const d of domains) document.cookie = `cgpay-msg=; path=/; max-age=0${d}`
-    if (!found) return null
-    const m = decodeURIComponent(found.slice('cgpay-msg='.length)).match(/^(error|info):([\s\S]*)$/)
+    const hash = new URLSearchParams(location.hash.slice(1))
+    let raw = hash.get('msg')
+    if (raw !== null) {
+      hash.delete('msg')
+      replaceState(location.pathname + location.search + (hash.size ? '#' + hash : ''), {})
+    } else {
+      const found = document.cookie.split('; ').find(c => c.startsWith('cgpay-msg='))
+      const parts = location.hostname.split('.')
+      const domains = ['', ...(parts.length > 1 && !/^\d+(\.\d+){3}$/.test(location.hostname) ? [`; domain=.${parts.slice(-2).join('.')}`] : [])]
+      for (const d of domains) document.cookie = `cgpay-msg=; path=/; max-age=0${d}`
+      if (!found) return null
+      raw = decodeURIComponent(found.slice('cgpay-msg='.length))
+    }
+    const m = raw.match(/^(error|info):([\s\S]*)$/)
     return { kind: m?.[1] === 'error' ? 'error' : 'info', text: (m ? m[2] : '').slice(0, 300) }
   }
 
