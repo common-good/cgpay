@@ -22,6 +22,11 @@ describe('appCall', () => {
     expect(f.mock.calls[0][0]).toContain('/cgpay/app-signin')
   })
 
+  it('adds the transaction API address to the device credentials', async () => {
+    global.fetch = reply(200, { uid: 1, device: { accountId: 'K6A' } })
+    expect((await appCall('device', post({ token: 't' }), '1.1.1.1', ['token'])).data).toEqual({ uid: 1, device: { accountId: 'K6A', api: 'https://demo.example/cgmembers/api/' } })
+  })
+
   it('shows only the error code PHP gave, with its status', async () => {
     global.fetch = reply(401, { error: 'bad-login', secret: 'x' })
     expect(await appCall('signin', post({}), '1.1.1.1', [])).toEqual({ status: 401, data: { error: 'bad-login' } })

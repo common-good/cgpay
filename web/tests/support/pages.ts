@@ -3,7 +3,7 @@ import type { App } from '../steps/fixtures'
 import { acct } from './accounts'
 import { resolve } from './magic'
 import { writeCameraVideo } from './camera'
-import { qrOf } from './accounts'
+import { qrOf, uidOf } from './accounts'
 
 // What the steps do in the browser. The only place that knows element ids (data-testid) and URLs.
 // Checks are named so... and say what they were looking for when they fail.
@@ -101,9 +101,24 @@ export default {
     } else await ctx.route('**/*', cutOff)
   },
 
+  /** Turn multi-factor authentication on for this account, so signing in asks for the emailed passcode. */
+  async mfaOn(app: App, who: string) { await app.testDb.mfaOn(uidOf(who)) },
+
+  /** Read the passcode PHP emailed for the sign-in that asked for one into the variable "passcode" (the email itself is out of reach of a test). */
+  async passcodeEmailed(app: App) {
+    await expect.poll(() => app.mfa, 'passcode emailed: the sign-in asked for one').toBeTruthy()
+    app.vars.set('passcode', await app.testDb.passcode(app.mfa!))
+  },
+
   async onPage(app: App, path: string) { await app.page.goto('/' + path) },
 
   async reload(app: App) { await app.page.reload() },
+
+  /** Open the store app's own screens on a phone with no account on it (each scenario's browser starts with empty storage). */
+  async storeAppNoAccount(app: App) {
+    await app.page.goto(BUNDLED + '/')
+    app.storeApp = true
+  },
 
   /**
    * Scan this account's QR code to pay or charge it ("pay" or "charge"), starting from the dashboard: the camera shows the code,
@@ -172,7 +187,7 @@ export default {
   },
 
   async soOnPage(app: App, path: string) {
-    if ((BUNDLED_MODE || app.storeApp) && ['home', 'tx-start', 'scan', 'tx'].includes(path)) return await expect(app.page.locator(`[data-screen="${path}"]`), `on page "${path}" (bundled screen)`).toBeVisible({ timeout: 15_000 })
+    if ((BUNDLED_MODE || app.storeApp) && ['signin', 'home', 'tx-start', 'scan', 'tx'].includes(path)) return await expect(app.page.locator(`[data-screen="${path}"]`), `on page "${path}" (bundled screen)`).toBeVisible({ timeout: 15_000 })
     if (app.storeApp && !path) await expect(app.page, 'on page "" (left the bundled screens)').not.toHaveURL(new RegExp(`^${escapeRegExp(BUNDLED)}`), { timeout: 15_000 })
     await expect(app.page, `on page "${path}"`).toHaveURL(new RegExp(`^[^/]+//[^/]+/${escapeRegExp(path)}$`), { timeout: 15_000 })
   },

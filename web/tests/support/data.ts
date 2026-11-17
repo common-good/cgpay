@@ -7,7 +7,7 @@ import { resolve } from './magic'
 // Data in the test database (through the PHP test endpoint, see test-db.ts) and scenario variables.
 type Rows = Record<string, unknown>[]
 
-const readers: Record<string, (app: App) => Promise<Rows>> = { grants: app => app.testDb.rows('grants'), txs: app => app.testDb.rows('txs'), tx_requests: app => app.testDb.rows('tx_requests') }
+const readers: Record<string, (app: App) => Promise<Rows>> = { grants: app => app.testDb.rows('grants'), txs: app => app.testDb.rows('txs'), tx_requests: app => app.testDb.rows('tx_requests'), app_tokens: app => app.testDb.rows('app_tokens') }
 const writers: Record<string, (app: App, rows: Rows) => Promise<unknown>> = { users: (app, rows) => app.testDb.updateUsers(rows) }
 
 // Retry a data check for a while: the legacy app uploads its queued transactions in the background, after the screen moves on.
@@ -40,7 +40,7 @@ export default {
     app.vars.set(name, tableData(table, shape, app, { nicknames: false }))
   },
 
-  /** The app has this many records ("txs", "tx_requests" and "grants", so far). */
+  /** The app has this many records ("txs", "tx_requests", "grants" and "app_tokens", so far). */
   async soCount(app: App, name: string, n: number) {
     await settled(async () => {
       const got = (await read(app, name)).length

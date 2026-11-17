@@ -4,6 +4,7 @@
 import { json, type RequestHandler } from '@sveltejs/kit'
 import { callPhp, PhpCallError } from './php-client'
 import { rateLimit } from './rate-limit'
+import { phpEndpointUrl } from './env'
 
 const NO_STORE = { 'Cache-Control': 'no-store' }
 
@@ -25,6 +26,7 @@ export async function appCall(op: string, request: Request, ip: string, fields: 
   for (const f of fields) if (['string', 'number', 'boolean'].includes(typeof b[f])) body[f] = b[f]
   try {
     const r = await callPhp<Record<string, unknown>>(`cgpay/app-${op}`, { body })
+    if (r.ok && r.data.device && typeof r.data.device === 'object') r.data.device = { ...r.data.device, api: phpEndpointUrl('api/') } // where the app sends transactions (see Device)
     return r.ok ? { status: 200, data: r.data } : { status: r.status === 429 || r.status === 401 || r.status === 403 || r.status === 400 ? r.status : 502, data: { error: errCode(r.status, r.body) } }
   } catch (e) {
     if (!(e instanceof PhpCallError)) throw e
