@@ -37,12 +37,13 @@ export async function keep(s: Signed) {
 
 export const token = () => secret.get('token')
 
-/** Fetch the device credentials again, and keep them. 'out' means the token is no longer good (signed out elsewhere, expired), 'offline' that nobody answered. */
+/** Fetch the device credentials again, and keep them. 'out' means the token is no longer good (signed out elsewhere, expired), 'offline' that nobody answered (or the answer is stale). */
 export async function refresh(): Promise<{ state: 'ok', device: Device | null } | { state: 'out' | 'offline' }> {
   const t = await token()
   if (!t) return { state: 'out' }
   try {
     const { status, data } = await call('device', { token: t })
+    if (await token() !== t) return { state: 'offline' } // signed out (or in again) meanwhile: what came back is stale, so keep nothing
     if (status === 401) return { state: 'out' }
     if (status !== 200) return { state: 'offline' }
     if (data.device) await store.set('device', data.device); else await store.del('device')
