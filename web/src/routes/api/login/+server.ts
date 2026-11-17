@@ -6,6 +6,7 @@ import { checkPassword } from '$lib/server/drupal-password'
 import { phpUrl } from '$lib/utils'
 import { setSsoCookies } from '$lib/server/sso-cookies'
 import { rateLimit } from '$lib/server/rate-limit'
+import { phpSso } from '$lib/server/php-sso'
 import type { RowDataPacket } from 'mysql2'
 
 // Admin bypass on non-production. Mirrors the PHP-side dev bypass in
@@ -30,15 +31,6 @@ type UserRow = RowDataPacket & { uid: number; name: string; pass: string }
 const DUMMY_HASH = '$S$DummyHashUsedForConstantTimeWhenUserNotFound00000000'
 
 const DEFAULT_MENU = ['Dashboard', 'History', 'Community', 'Settings']
-
-type SsoResponse = {
-  cookieName: string
-  sid: string
-  ssid: string
-  menu: string[]
-  boxCookieName?: string
-  boxCookieValue?: string
-}
 
 /**
  * Resolve a user-supplied identifier (account code, username, full name, email,
@@ -84,50 +76,6 @@ async function phpLookup(identifier: string): Promise<number | null> {
     console.error('[login] PHP lookup network error:', e)
     return null
   }
-}
-
-/**
- * Hand off the verified login to the PHP cgmembers site so menu links land
- * pre-authenticated. Returns the session cookie info + the user's menu
- * categories, or null if SSO is not configured (we degrade gracefully — login
- * still succeeds, but PHP links will require a second login).
- */
-async function phpSso(uid: number): Promise<SsoResponse | null> {
-  const secret = env.PHP_SSO_SECRET
-  if (!secret) {
-    console.warn('[login] PHP_SSO_SECRET not configured — skipping PHP session handoff')
-    return null
-  }
-
-  let res: Response
-  try {
-    const url = phpUrl('cgpay/sso')
-    dbg('sso request:', { url, body: { uid }, tokenLength: secret.length })
-    res = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-cg-internal-token': secret
-      },
-      body: JSON.stringify({ uid })
-    })
-  } catch (e) {
-    console.error('[login] PHP SSO network error:', e)
-    throw error(502, 'Unable to complete sign-in — please try again.')
-  }
-
-  dbg('sso response status:', res.status)
-  if (!res.ok) {
-    console.error(`[login] PHP SSO returned ${res.status}`)
-    throw error(502, 'Unable to complete sign-in — please try again.')
-  }
-
-  const data = await res.json().catch(() => null)
-  if (!data || typeof data.cookieName !== 'string' || typeof data.ssid !== 'string') {
-    console.error('[login] PHP SSO returned unexpected body:', data)
-    throw error(502, 'Unable to complete sign-in — please try again.')
-  }
-  return data as SsoResponse
 }
 
 export const POST: RequestHandler = async ({ request, getClientAddress, cookies }) => {

@@ -11,6 +11,7 @@ Three kinds of tests:
 ```
 tests/
 ├── unit/       # Vitest tests — run with `npm run test:unit`
+│   ├── app-api.test.ts            The store app's token sign-in proxies (/api/app/*: fields passed on, errors shown, limits) and their CORS origins
 │   ├── drupal-password.test.ts    phpass prefix dispatch + guard behaviour
 │   ├── env.test.ts                Required-env check, PHP URLs and cookie domain derived from PUBLIC_PHP_BASE_URL
 │   ├── php-client.test.ts         Server-to-server calls to PHP (config and error handling)
