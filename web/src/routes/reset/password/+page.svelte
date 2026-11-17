@@ -124,7 +124,7 @@
             </div>
             <span class="meter-label" class:strong={strength >= 1}>{strengthLabel}</span>
           {/if}
-          {#if fieldErrors.newPassword}<span class="field-err">{fieldErrors.newPassword}</span>{/if}
+          {#if fieldErrors.newPassword}<span class="field-err" role="alert">{fieldErrors.newPassword}</span>{/if}
         </div>
 
         <div class="field" class:has-err={fieldErrors.confirmPassword}>
@@ -138,7 +138,7 @@
             onblur={onConfirmBlur}
             aria-invalid={!!fieldErrors.confirmPassword}
           />
-          {#if fieldErrors.confirmPassword}<span class="field-err">{fieldErrors.confirmPassword}</span>{/if}
+          {#if fieldErrors.confirmPassword}<span class="field-err" role="alert">{fieldErrors.confirmPassword}</span>{/if}
         </div>
 
         {#if submitError}

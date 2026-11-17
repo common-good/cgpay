@@ -68,7 +68,7 @@
             placeholder="123456"
             aria-invalid={!!codeError}
           />
-          {#if codeError}<span class="field-err">{codeError}</span>{/if}
+          {#if codeError}<span class="field-err" role="alert">{codeError}</span>{/if}
         </div>
 
         <button type="submit" class="primary" data-testid="btn-verify" disabled={submitting}>

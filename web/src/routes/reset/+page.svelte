@@ -77,7 +77,7 @@
             placeholder="How you sign in"
             aria-invalid={!!fieldErrors.identifier}
           />
-          {#if fieldErrors.identifier}<span class="field-err">{fieldErrors.identifier}</span>{/if}
+          {#if fieldErrors.identifier}<span class="field-err" role="alert">{fieldErrors.identifier}</span>{/if}
         </div>
 
         <fieldset class="field channel" class:has-err={fieldErrors.channel}>
@@ -90,7 +90,7 @@
             <input type="radio" name="channel" value="sms" data-testid="channel-sms" bind:group={channel} />
             <span>Text message</span>
           </label>
-          {#if fieldErrors.channel}<span class="field-err">{fieldErrors.channel}</span>{/if}
+          {#if fieldErrors.channel}<span class="field-err" role="alert">{fieldErrors.channel}</span>{/if}
         </fieldset>
 
         {#if submitError}
