@@ -8,6 +8,7 @@
 
 import type { Handle } from '@sveltejs/kit'
 import { sequence } from '@sveltejs/kit/hooks'
+import { env } from '$env/dynamic/private'
 import { assertRequiredEnv } from '$lib/server/env'
 import { healSsoCookies } from '$lib/server/sso-cookies'
 import { phpWhoami } from '$lib/server/php-whoami'
@@ -30,7 +31,11 @@ try {
 // matched attribution request short-circuits with a 302 and never touches an
 // app route, so there is nothing to heal.
 const qrAttribution: Handle = async ({ event, resolve }) => {
-  const redirect = handleQrAttribution(event.url, event.cookies.get('ad'), adCookieDomain(event.url.hostname))
+  const redirect = handleQrAttribution(
+    event.url,
+    event.cookies.get('ad'),
+    adCookieDomain(event.url.hostname, env.AD_COOKIE_DOMAIN),
+  )
   if (redirect) {
     return new Response(null, { status: 302, headers: redirect.headers })
   }

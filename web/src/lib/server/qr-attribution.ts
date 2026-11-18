@@ -73,14 +73,16 @@ export function appendToken(current: string, token: string): string {
 
 /**
  * Cookie Domain for the ad cookie.
- *   - Production (`pay.commongood.earth`): the apex `.commongood.earth`, so
- *     the WP site on commongood.earth and future pay subdomains both see it.
- *   - Every other env (`pay.test.*`, `pay.staging.*`, `pay.dev.*`, localhost,
- *     IPv4): the hostname itself, so a scan on a test host never leaks into
- *     prod's cookie jar (which would happen with a blanket apex scope).
+ *   - When `configuredDomain` is set (production sets `AD_COOKIE_DOMAIN=.commongood.earth`
+ *     so the WP site on commongood.earth and every pay subdomain under the
+ *     apex both see the cookie), use it. Any pay host under the apex may name
+ *     it as its cookie Domain - the browser accepts a parent-domain scope.
+ *   - Otherwise (unset on test / staging / dev), scope to the hostname so a
+ *     scan on a test host never leaks into prod's cookie jar.
  */
-export function adCookieDomain(hostname: string): string {
-  if (hostname === 'pay.commongood.earth') return '.commongood.earth'
+export function adCookieDomain(hostname: string, configuredDomain: string | undefined): string {
+  const trimmed = configuredDomain?.trim()
+  if (trimmed) return trimmed
   return hostname
 }
 
