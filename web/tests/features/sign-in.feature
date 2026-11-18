@@ -40,4 +40,4 @@ Scenario: Someone tries to sign in with a wrong password
 
 Scenario: Someone who forgot their password asks for a new one
   When click "lnk-reset"
-  Then on PHP page "settings/password"
+  Then on page "reset"

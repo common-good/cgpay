@@ -5,7 +5,7 @@ runbook "Production and Standby VPS setup". The runbook says where each one goes
 and which server it belongs on; the files themselves live here so they are versioned
 with the app. The test-server environments use `config/deploy.rb` and the ENV runbook.
 
-The files contain `{{NAME}}` placeholders (domain, standby marker prefix, alert addresses, the ssh alias for lsyncd). Copy `site.env.example` to `site.env` (gitignored) and fill it in, then install each file with `sudo server/install MODE server/<path> <destination>`, which fills the placeholders in and installs the result owned by root. `server/render FILE` prints the filled-in file without installing it.
+The files contain `{{NAME}}` placeholders (domain, alert addresses, the ssh alias for lsyncd). Copy `site.env.example` to `site.env` (gitignored) and fill it in, then install each file with `sudo server/install MODE server/<path> <destination>`, which fills the placeholders in and installs the result owned by root. `server/render FILE` prints the filled-in file without installing it.
 
 The scripts and the lsyncd conf need the ssh client settings (port, and the alias named by `SYNC_HOST`) from the private runbook in `/etc/ssh/ssh_config.d/` first. Hardening files and server-specific checks are kept in the private runbook, not here, because this repo is public.
 
