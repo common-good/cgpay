@@ -114,7 +114,7 @@ Set per environment in `.env` on the deploy target (see [PR #155](https://github
 - `cd web && npm run test:unit` - Vitest unit tests
 - `cd web && npm run test:e2e` - Playwright E2E: runs `bddgen` (compiles Gherkin features), then the plain specs and the Gherkin features. Builds and previews the app itself.
 - `cd web && npm run build` - production build (verifies adapter-node output)
-- Test accounts (non-production PHP side): the standard accounts Abe One, Bea Two, Citre, ... Ida Nine (`.ZPA` ... `.ZPI`), made by `makeTestAccounts()` in cgmembers-frame `admin/admin.inc`. The individual ones have password `k`; the companies (Citre, Gisette) have none. Abe is an administrator. Bea manages Citre (Abe sells for it). Gisette is a fiscally sponsored company, managed by Flo.
+- Test accounts (non-production PHP side): the standard accounts Abe One, Bea Two, Citre, ... Ida Nine (`.ZPA` ... `.ZPI`), made by `makeTestAccounts()` in cgmembers-frame `admin/admin.inc`. The individual ones have password `k`; the companies (Citre, Gisette) have none. Abe is an administrator. Bea manages Citre, its only agent. Gisette is a fiscally sponsored company, managed by Flo.
 
 Always run at least `svelte-check` + `npm run build` before opening a PR.
 
