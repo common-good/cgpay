@@ -19,8 +19,9 @@ The scripts and the lsyncd conf need the ssh client settings (port, and the alia
 | `bin/fix-pay-env`, `systemd/fix-pay-env.{service,path}` | `/usr/local/bin/`, `/etc/systemd/system/` | 755, 644 | standby (re-owns the synced pay `.env` files) |
 | `bin/make-superadmin` | run in place: `server/bin/make-superadmin <env> <uid or email>` | - | test server (makes an account a superAdmin and saves its scan-QR PNG; refuses main and beta; needs cgmembers-frame `admin/makeSuperAdmin.php`) |
 | `bin/bootstrap-lock` | run in place: `server/bin/bootstrap-lock on or off <env>` | - | main and beta first-time setup (locks an env to your IP and sets a one-time admin password while the temporary admin account exists; see the superadmin bootstrap runbook section) |
+| `bin/ws-cert-sync` | `/usr/local/bin/`, plus a symlink in `/etc/cron.daily/` | 755 | members, standby (copies the cert where the legacy app's websocket expects it; on standby set `L=/etc/letsencrypt-synced`) |
 | `lsyncd/lsyncd.conf.lua` | `/etc/lsyncd/` | 644 | members |
-| `nginx/{main,pay.main,beta,pay.beta,rc2}.conf` | `/etc/nginx/sites-available/` | 644 | members as is; standby with the cert path rewritten (below) |
+| `nginx/{main,pay.main,beta,pay.beta,rc2,cgpay}.conf` | `/etc/nginx/sites-available/` | 644 | members as is; standby with the cert path rewritten (below) |
 
 Standby nginx confs differ only in the TLS cert path:
 
