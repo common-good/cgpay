@@ -37,6 +37,11 @@ describe('appCall', () => {
     expect(await appCall('signin', post({}), '1.1.1.1', [])).toEqual({ status: 401, data: { error: 'bad-login' } })
   })
 
+  it('passes on a card of the wrong kind as refused, not as a failure', async () => {
+    global.fetch = reply(406, { error: 'wrong-kind' })
+    expect(await appCall('card', post({}), '1.1.1.1', [])).toEqual({ status: 406, data: { error: 'wrong-kind' } })
+  })
+
   it('maps any other failure to a bad gateway without internals', async () => {
     global.fetch = reply(500, 'PHP fatal at /srv/secret/path.php')
     expect(await appCall('signin', post({}), '1.1.1.1', [])).toEqual({ status: 502, data: { error: 'failed' } })

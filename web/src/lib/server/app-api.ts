@@ -1,4 +1,4 @@
-// The store app's token sign-in: node is a thin proxy to PHP's /cgpay/{signin,mfa,device,account,enter,redeem,unlock,revoke} endpoints (PHP owns passwords, MFA, flood control and the tokens).
+// The store app's token sign-in: node is a thin proxy to PHP's /cgpay/{signin,card,mfa,device,account,enter,redeem,unlock,revoke} endpoints (PHP owns passwords, MFA, flood control and the tokens).
 // No cookies in or out; the app keeps the token itself. CORS for the app's origins is in hooks.server.ts (appCors).
 
 import { json, type RequestHandler } from '@sveltejs/kit'
@@ -36,7 +36,7 @@ export async function appCall(op: string, request: Request, ip: string, fields: 
   for (const f of fields) if (['string', 'number', 'boolean'].includes(typeof b[f])) body[f] = b[f]
   try {
     const r = await callPhp<Record<string, unknown>>(`cgpay/${op}`, { body })
-    return r.ok ? { status: 200, data: withApi(r.data) } : { status: r.status === 429 || r.status === 401 || r.status === 403 || r.status === 400 ? r.status : 502, data: { error: errCode(r.status, r.body) } }
+    return r.ok ? { status: 200, data: withApi(r.data) } : { status: [400, 401, 403, 406, 429].includes(r.status) ? r.status : 502, data: { error: errCode(r.status, r.body) } }
   } catch (e) {
     if (!(e instanceof PhpCallError)) throw e
     console.error(`[app-${op}]`, e.message)
