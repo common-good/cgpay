@@ -20,7 +20,7 @@ The scripts and the lsyncd conf need the ssh client settings (port, and the alia
 | `bin/make-superadmin` | run in place: `server/bin/make-superadmin <env> <uid or email>` | - | test server (makes an account a superAdmin and saves its scan-QR PNG; refuses main and beta; needs cgmembers-frame `admin/makeSuperAdmin.php`) |
 | `bin/bootstrap-lock` | run in place: `server/bin/bootstrap-lock on or off <env>` | - | main and beta first-time setup (locks an env to your IP and sets a one-time admin password while the temporary admin account exists; see the superadmin bootstrap runbook section) |
 | `lsyncd/lsyncd.conf.lua` | `/etc/lsyncd/` | 644 | members |
-| `nginx/{main,pay.main,beta,pay.beta,rc2,pay.redirect}.conf` | `/etc/nginx/sites-available/` | 644 | members as is; standby with the cert path rewritten (below) |
+| `nginx/{main,pay.main,pay.members,beta,pay.beta,rc2,pay.redirect}.conf` | `/etc/nginx/sites-available/` | 644 | members as is; standby with the cert path rewritten (below) |
 
 Standby nginx confs differ only in the TLS cert path:
 
