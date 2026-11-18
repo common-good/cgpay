@@ -1,16 +1,17 @@
 import { describe, it, expect } from 'vitest'
-import { handleQrAttribution, appendToken, apexCookieDomain } from '../../src/lib/server/qr-attribution'
+import { handleQrAttribution, appendToken, adCookieDomain } from '../../src/lib/server/qr-attribution'
 
-describe('apexCookieDomain', () => {
-  it('scopes to the last two labels so pay.* and commongood.earth both see it', () => {
-    expect(apexCookieDomain('pay.main.commongood.earth')).toBe('.commongood.earth')
-    expect(apexCookieDomain('pay.commongood.earth')).toBe('.commongood.earth')
-    expect(apexCookieDomain('commongood.earth')).toBe('.commongood.earth')
+describe('adCookieDomain', () => {
+  it('stamps the apex only on production so test envs cannot leak into prod', () => {
+    expect(adCookieDomain('pay.commongood.earth')).toBe('.commongood.earth')
+    expect(adCookieDomain('pay.test.commongood.earth')).toBe('pay.test.commongood.earth')
+    expect(adCookieDomain('pay.staging.commongood.earth')).toBe('pay.staging.commongood.earth')
+    expect(adCookieDomain('pay.dev.commongood.earth')).toBe('pay.dev.commongood.earth')
   })
 
   it('leaves localhost + IPv4 untouched for local dev', () => {
-    expect(apexCookieDomain('localhost')).toBe('localhost')
-    expect(apexCookieDomain('127.0.0.1')).toBe('127.0.0.1')
+    expect(adCookieDomain('localhost')).toBe('localhost')
+    expect(adCookieDomain('127.0.0.1')).toBe('127.0.0.1')
   })
 })
 
@@ -28,17 +29,17 @@ describe('appendToken', () => {
     expect(appendToken('a:cge2606 w:card2606', 'w:card2606')).toBe('a:cge2606 w:card2606')
   })
 
-  it('moves an earlier duplicate to the end', () => {
-    // Re-touching a source promotes it to the most recent.
+  it('moves an earlier duplicate to the end (most-recent-last is intentional)', () => {
     expect(appendToken('a:cge2606 w:card2606', 'a:cge2606')).toBe('w:card2606 a:cge2606')
   })
 
-  it('trims from the left when crossing the length cap', () => {
+  it('trims from the left when the URL-encoded value crosses the 2048 cap', () => {
+    // 500 short tokens: raw length is well under 2048 but encoded blows past it,
+    // so the trim has to measure the encoded form (what the browser transmits).
     const long = Array.from({ length: 500 }, (_, i) => `a:token${i}`).join(' ')
     const result = appendToken(long, 'a:newest')
-    expect(result.length).toBeLessThanOrEqual(2048)
+    expect(encodeURIComponent(result).length).toBeLessThanOrEqual(2048)
     expect(result.endsWith('a:newest')).toBe(true)
-    // Oldest tokens should be gone.
     expect(result.includes('a:token0')).toBe(false)
   })
 })
@@ -96,9 +97,10 @@ describe('handleQrAttribution', () => {
     expect(handleQrAttribution(new URL('https://pay.commongood.earth/' + tooLong), undefined, domain)).toBeNull()
   })
 
-  it('sets Secure + SameSite=Lax + Max-Age on the cookie', () => {
+  it('sets HttpOnly + Secure + SameSite=Lax + Max-Age on the cookie', () => {
     const r = handleQrAttribution(new URL('https://pay.commongood.earth/a=cge2606'), undefined, domain)
     const setCookie = r!.headers.get('Set-Cookie')!
+    expect(setCookie).toContain('HttpOnly')
     expect(setCookie).toContain('Secure')
     expect(setCookie).toContain('SameSite=Lax')
     expect(setCookie).toMatch(/Max-Age=\d+/)

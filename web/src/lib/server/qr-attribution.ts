@@ -2,18 +2,22 @@
 //
 // cg4.us sends every QR scan (and every tagged marketing link) to
 // pay.commongood.earth/<a|w|q>=<token>. We set the `ad` cookie on
-// `.commongood.earth` so both the pay app and the WordPress site see it,
-// then 302 the visitor to the real destination:
+// `.commongood.earth` (prod only) so both the pay app and the WordPress site
+// at commongood.earth see it, then 302 the visitor to the real destination:
 //   a= (go-to-app)     -> /welcome (this app)
 //   w= (go-to-website) -> https://commongood.earth (WordPress)
 //   q= (company ID)    -> /welcome (this app)
 //
 // The `ad` cookie accumulates every tag the visitor touched before signing up,
 // space-separated, so later reports can score by any path (any-three-sources,
-// website+two-merchants, etc.) rather than only the last touch.
+// website+two-merchants, etc.) rather than only the last touch. The order is
+// most-recent-last: re-touching an earlier source promotes it to the end
+// instead of preserving first-touch order. That's intentional so a staff view
+// of the raw cookie reads the same as a sign-in log.
 
-// Max cookie length. 4KB is the browser limit; we cap well below so other
-// cookies on the same domain have headroom.
+// Max cookie length. Browsers cap each cookie at 4096 bytes including the
+// name + attributes; we cap the sent value (URL-encoded) well below that so
+// other cookies on the same domain have headroom.
 const MAX_AD_COOKIE_BYTES = 2048
 
 // How long the cookie lives. Long enough that the member can wander through
@@ -52,47 +56,46 @@ export function handleQrAttribution(
 
 /**
  * Append a token to the space-separated ad cookie, dedupe exact matches so a
- * refresh doesn't grow the cookie unbounded, and trim from the left if we
- * cross the length cap (the oldest sources go first).
+ * refresh doesn't grow the cookie unbounded, and trim from the left when the
+ * URL-encoded value crosses the length cap (the oldest sources go first, and
+ * the measurement is on the encoded value because that's what the browser
+ * actually transmits).
  */
 export function appendToken(current: string, token: string): string {
   const existing = current.split(' ').filter(Boolean)
   if (existing[existing.length - 1] === token) return current
   const next = [...existing.filter(t => t !== token), token]
-  let combined = next.join(' ')
-  while (combined.length > MAX_AD_COOKIE_BYTES && next.length > 1) {
+  while (encodeURIComponent(next.join(' ')).length > MAX_AD_COOKIE_BYTES && next.length > 1) {
     next.shift()
-    combined = next.join(' ')
   }
-  return combined
+  return next.join(' ')
 }
 
 /**
- * Apex cookie domain for the ad cookie. Scopes to `.commongood.earth` so the
- * cookie is visible at both pay.* (any env) AND the WordPress site at
- * commongood.earth. Different from env.ts's cookieDomainFor(), which scopes
- * the SSO cookie to the PHP host per-env on purpose.
- *   - IPv4 literal   -> hostname as-is (local dev)
- *   - localhost      -> localhost (local dev)
- *   - a.b.c.foo.tld  -> .foo.tld (last two labels, apex)
+ * Cookie Domain for the ad cookie.
+ *   - Production (`pay.commongood.earth`): the apex `.commongood.earth`, so
+ *     the WP site on commongood.earth and future pay subdomains both see it.
+ *   - Every other env (`pay.test.*`, `pay.staging.*`, `pay.dev.*`, localhost,
+ *     IPv4): the hostname itself, so a scan on a test host never leaks into
+ *     prod's cookie jar (which would happen with a blanket apex scope).
  */
-export function apexCookieDomain(hostname: string): string {
-  if (/^\d+\.\d+\.\d+\.\d+$/.test(hostname)) return hostname
-  const parts = hostname.split('.')
-  if (parts.length < 2) return hostname
-  return '.' + parts.slice(-2).join('.')
+export function adCookieDomain(hostname: string): string {
+  if (hostname === 'pay.commongood.earth') return '.commongood.earth'
+  return hostname
 }
 
 function serializeAdCookie(value: string, domain: string): string {
-  // Not HttpOnly: /api/signup reads it via request headers (same as HttpOnly),
-  // but staff reports sometimes inspect it in DevTools, which HttpOnly blocks.
-  // SameSite=Lax so the cookie is sent on cross-site top-level navigations
-  // (the QR scan + redirect itself), which is the whole point.
+  // HttpOnly: the cookie is read server-side on /api/signup (see cgmembers-frame
+  // #86's cgpay/signup.inc) and nothing in the browser reads it, so HttpOnly
+  // closes an XSS exfil path at no cost. SameSite=Lax so the cookie is sent on
+  // cross-site top-level navigations (the QR scan + redirect itself), which is
+  // the whole point.
   const parts = [
     `ad=${encodeURIComponent(value)}`,
     `Domain=${domain}`,
     'Path=/',
     `Max-Age=${AD_COOKIE_MAX_AGE_SECS}`,
+    'HttpOnly',
     'SameSite=Lax',
     'Secure'
   ]
