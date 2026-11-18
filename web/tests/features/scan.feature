@@ -17,12 +17,12 @@ Scenario: A member scans an individual's QR
   And text "theirLocation": "Aton, MA"
 
 Scenario: A member scans a company agent's QR
-  Given signed in as "Bea"
-  When scan "Abe/Cit" to "charge"
+  Given signed in as "Dee"
+  When scan "Bea/Cit" to "charge"
   Then on page "tx"
   And see "charge-profile"
   And see "theirPhoto"
-  And text "theirAgent": "Abe One"
+  And text "theirAgent": "Bea Two"
   And text "theirCompany": "Citre"
   And text "theirLocation": "Cton, MA"
 

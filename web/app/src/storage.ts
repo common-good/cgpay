@@ -31,7 +31,7 @@ export function indexedDbStore(): Store {
     set: async (k, v) => { await run('readwrite', t => t.put(v, k)) },
     del: async k => { await run('readwrite', t => t.delete(k)) },
     all: async prefix => {
-      const range = IDBKeyRange.bound(prefix, prefix + '￿')
+      const range = IDBKeyRange.bound(prefix, prefix + '\uffff')
       const [keys, vals] = await Promise.all([run('readonly', t => t.getAllKeys(range)), run('readonly', t => t.getAll(range))])
       return keys.map((k: string, i: number) => [k, vals[i]])
     }

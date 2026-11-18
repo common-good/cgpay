@@ -45,9 +45,9 @@ export function nicknameFor(nick: string, field: string | undefined): string | n
 }
 
 // Cards that are not an account's own, as in the legacy app's tests. Agents' cards for companies are the company's account ID with
-// the agent's number (u_relations.otherNum - 1: Bea and Flo are 1, Abe is 2) and the agent's card code. Invalid is Flo's card for Gisette with a wrong card code (lost or stolen).
+// the agent's number (u_relations.otherNum - 1; a company's only agent has otherNum 1, so 0) and the agent's card code. Invalid is Flo's card for Gisette with a wrong card code (lost or stolen).
 const cards: Record<string, string> = {
-  'Abe/Cit': 'HTTP://6VM.RC4.ME/LDCC198765a', 'Bea/Cit': 'HTTP://6VM.RC4.ME/LDCC098765b', 'Flo/Gis': 'HTTP://6VM.RC4.ME/LDCG098765f',
+  'Bea/Cit': 'HTTP://6VM.RC4.ME/LDCC098765b', 'Flo/Gis': 'HTTP://6VM.RC4.ME/LDCG098765f',
   Invalid: 'HTTP://6VM.RC4.ME/LDCG098765x', Other: 'garbage'
 }
 

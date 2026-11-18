@@ -1,6 +1,6 @@
 #!/bin/bash
 # usage: standby-web <on [minutes]|off|status>
-BLOCK_FILE=/etc/commongood-standby-web-blocked
+BLOCK_FILE=/etc/{{ORG}}-standby-web-blocked
 
 case "$1" in
   on)

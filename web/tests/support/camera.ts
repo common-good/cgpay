@@ -5,7 +5,8 @@ import QRCode from 'qrcode'
 
 // The browser's fake camera (Chromium's --use-fake-device-for-media-stream) plays this video file.
 // The file is read when a page starts the camera, so a step can rewrite it before the legacy app's scan page opens.
-export const CAMERA_FILE = join(tmpdir(), 'cgpay-bdd-camera.y4m')
+// One file per test slot (they differ in E2E_PORT), so runs in different slots do not overwrite each other's picture.
+export const CAMERA_FILE = join(tmpdir(), `cgpay-bdd-camera-${process.env.E2E_PORT ?? 'default'}.y4m`)
 
 const W = 640
 const H = 480

@@ -54,7 +54,7 @@ function passwordCryptSha512(password: string, setting: string): string | null {
 }
 
 /**
- * Verify a plaintext password against a stored `$S$` hash from users.pass.
+ * Verify a plaintext password against a stored `$S$` hash from upeople.pass.
  * Returns false for empty hashes (company accounts) and anything not `$S$`.
  */
 export function checkPassword(password: string, storedHash: string): boolean {

@@ -27,7 +27,7 @@ cgpay and cgmembers-frame are one application in two parts: this SvelteKit app (
 - SvelteKit 2 with Svelte 5 runes (`$state`, `$derived`, `$props`, `$effect`)
 - TypeScript throughout (`web/src/**/*.ts`, `<script lang="ts">`)
 - Node 20+ via `@sveltejs/adapter-node`, run under pm2
-- MySQL 5.7+ (shared read-only user against the cgmembers DB - see `web/src/lib/server/db.ts`)
+- MySQL 5.7+ (`<DB_NAME>_cgpay` user against the cgmembers DB: SELECT on the whole DB plus INSERT/UPDATE/DELETE on the tables allowlisted in `web/src/lib/server/data.ts` - see `web/src/lib/server/db.ts`)
 - Vitest for unit tests, Playwright for E2E
 - Capistrano (Ruby) for deploys
 
@@ -53,7 +53,8 @@ routes/
   forgot/                  redirect to the password reset page (link on the store app's sign-in screen)
 lib/
   server/                  server-only code
-    db.ts                  MySQL pool (READ-ONLY user - most reads work directly; writes go via PHP)
+    db.ts                  MySQL pool (`<DB_NAME>_cgpay` user: SELECT everywhere; writes only to allowlisted tables via data.ts, all other writes go via PHP)
+    data.ts                allowlisted insert/update/remove for tables node owns; read the comment above ALLOWLIST before adding a table
     drupal-password.ts     verifies $S$-prefixed Drupal 7 hashes
     auth.ts                cookie auth: reads the SSO cookie and asks PHP who owns it (currentUser, requireUser)
     php-whoami.ts          server-to-server client for /cgpay/whoami
@@ -63,7 +64,7 @@ lib/
     rate-limit.ts          in-memory rate limiter for auth endpoints
     app-api.ts             the /api/app/* proxies (fields passed on, error codes, per-IP limit)
     app-cors.ts            the store app's origins: CORS for /api/app/*, and where /app-signout may send it back
-    php-sso.ts             server-to-server client for /cgpay/sso (login, /app-enter)
+    php-login.ts           server-to-server clients for /cgpay/lookup and /cgpay/sso (login, reset, /app-enter)
   components/              shared Svelte components (Brand, etc.)
     AcctMenu.svelte        the account picture and its menu (change account, settings, sign out); live header and the store app's screens
   assets/                  static assets bundled at build time
@@ -103,7 +104,7 @@ When adding a new PHP endpoint: implement the PHP side under `cgmembers/rcredits
 Set per environment in `.env` on the deploy target (see [PR #155](https://github.com/common-good/cgpay/pull/155) - loaded via `node --env-file`):
 
 - `PORT` - pm2 port (per environment, e.g. 3001 for test)
-- `DB_HOST` / `DB_USER` / `DB_PASSWORD` / `DB_NAME` - MySQL (read-only user)
+- `DB_HOST` / `DB_USER` / `DB_PASSWORD` / `DB_NAME` - MySQL (the `<DB_NAME>_cgpay` user: SELECT on the whole DB, write grants only on the tables allowlisted in `data.ts`)
 - `PHP_SSO_SECRET` - shared secret with PHP (matches `cgpaySsoSecret` in cgmembers config.json)
 - `PHP_SSO_COOKIE_NAME` - the `SSESS...` cookie name PHP sets
 - `PUBLIC_PHP_BASE_URL` - PHP host base URL (exposed to browser). The `/cgpay/sso` and `/cgpay/grants` URLs and the cookie domain (the PHP host, e.g. `.test.commongood.earth`) are derived from it
@@ -122,7 +123,7 @@ Set per environment in `.env` on the deploy target (see [PR #155](https://github
 - `cd web && npm run test:unit` - Vitest unit tests
 - `cd web && npm run test:e2e` - Playwright E2E: runs `bddgen` (compiles Gherkin features), then the plain specs and the Gherkin features. Builds and previews the app itself.
 - `cd web && npm run build` - production build (verifies adapter-node output)
-- Test accounts (non-production PHP side): the standard accounts Abe One, Bea Two, Citre, ... Ida Nine (`.ZPA` ... `.ZPI`), made by `makeTestAccounts()` in cgmembers-frame `admin/admin.inc`. The individual ones have password `k`; the companies (Citre, Gisette) have none. Abe is an administrator. Bea manages Citre (Abe sells for it). Gisette is a fiscally sponsored company, managed by Flo.
+- Test accounts (non-production PHP side): the standard accounts Abe One, Bea Two, Citre, ... Ida Nine (`.ZPA` ... `.ZPI`), made by `makeTestAccounts()` in cgmembers-frame `admin/admin.inc`. The individual ones have password `k`; the companies (Citre, Gisette) have none. Abe is an administrator. Bea manages Citre, its only agent. Gisette is a fiscally sponsored company, managed by Flo.
 
 Always run at least `svelte-check` + `npm run build` before opening a PR.
 
@@ -164,7 +165,6 @@ See also Shared guidance above.
 ## Common gotchas
 
 - **PWA-era files at repo root** (`src/`, `constants.js`, `vite.config.js`) - do not confuse for the SvelteKit app. All new work goes in `web/`.
-- **`u_company` table lacks SELECT for `cgweb_ro`** in some environments - `/api/me/info` has a defensive fallback that treats `sponsored=false` when the query denies (see [PR #151](https://github.com/common-good/cgpay/pull/151)).
 - **Stale cookies from the old shared scope:** login used to set the SSO cookie on `.commongood.earth`. A browser holding one of those next to the new `.<env>.commongood.earth` cookie sends both, and PHP may pick the stale one (the user looks signed out). Clear the `SSESS...` cookies for `commongood.earth` and sign in again.
 - **`+layout.server.ts` load does NOT rerun when cookies change.** SvelteKit doesn't track `cookies.get()` as a dependency; a server load reruns only on URL/param changes it uses, `depends()` keys, or an explicit `invalidate`/`invalidateAll`. So anything that sets or clears the SSO cookie client-side must then navigate with `goto(path, { invalidateAll: true })` (login) or call `invalidateAll()` (sign out), or the header keeps showing the old user.
 - **Stale same-named SSO cookies shadow the right one.** A browser can hold `SSESS...` cookies at older scopes (`.commongood.earth`, host-only); it sends all of them and the server reads the wrong one, so sign-in looks broken until cookies are cleared. node expires stale copies of its own env's cookie in `hooks.server.ts`; PHP does the same for the host-only copy. Expire only this env's cookie name, since other `SSESS` names may belong to another site.

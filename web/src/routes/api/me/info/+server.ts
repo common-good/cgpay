@@ -73,7 +73,7 @@ export const GET: RequestHandler = async ({ cookies, url }) => {
 
   // 1) Balance + bestName for the user.
   const [userRows] = await pool.query<UserRow[]>(
-    'SELECT balance, fullName, name FROM users WHERE uid = ? LIMIT 1',
+    'SELECT a.balance, p.fullName, p.name FROM accounts a JOIN upeople p ON p.id = a.id WHERE a.id = ? LIMIT 1',
     [me.uid]
   )
   if (!userRows[0]) throw error(404, 'user not found')
@@ -82,7 +82,7 @@ export const GET: RequestHandler = async ({ cookies, url }) => {
   const bestName = userRows[0].fullName || userRows[0].name
 
   // Sponsored-status lookup - separate query so a missing SELECT grant on u_company
-  // (as on the cgweb_ro user, 2026-08-04) doesn't 500 the whole dashboard.
+  // (as on the old read-only user) doesn't 500 the whole dashboard.
   // sponsored = u_company.coFlags bit 2 (CO_SPONSORED); persons have no u_company row -> false.
   let sponsored = false
   try {
@@ -137,7 +137,7 @@ export const GET: RequestHandler = async ({ cookies, url }) => {
   if (otherUids.length > 0) {
     const placeholders = otherUids.map(() => '?').join(',')
     const [nameRows] = await pool.query<NameRow[]>(
-      `SELECT uid, fullName, name FROM users WHERE uid IN (${placeholders})`,
+      `SELECT id AS uid, fullName, name FROM upeople WHERE id IN (${placeholders})`,
       otherUids
     )
     names = new Map(nameRows.map(r => [r.uid, r.fullName || r.name || `Member ${r.uid}`]))

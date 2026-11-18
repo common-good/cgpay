@@ -1,7 +1,7 @@
 import { error, redirect } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
 import { callPhp } from '$lib/server/php-client'
-import { phpSso } from '$lib/server/php-sso'
+import { phpSso } from '$lib/server/php-login'
 import { setSsoCookies } from '$lib/server/sso-cookies'
 
 // The store app opens a live page with a one-time code (from /api/app/enter): trade it for a PHP session, set the cookies, and go to the page.
