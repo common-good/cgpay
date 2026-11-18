@@ -41,7 +41,7 @@ routes/
   login/                   sign-in page
   grants/                  fiscal-sponsorship grant intake + list
   api/                     server endpoints (JSON)
-    app/                   store app token sign-in: signin, mfa, device, enter, revoke (proxies to PHP /cgpay/{signin,mfa,device,enter,redeem,revoke}; CORS for the app's origins only)
+    app/                   store app token sign-in: signin, mfa, device, account, enter, unlock, revoke (proxies to PHP /cgpay/*; CORS for the app's origins only)
     login/                 POST /api/login - verifies password, hands off to PHP SSO
     logout/                POST /api/logout - clears the PHP session cookie
     me/                    /api/me/info, /api/me/balance
@@ -65,6 +65,7 @@ lib/
     app-cors.ts            the store app's origins: CORS for /api/app/*, and where /app-signout may send it back
     php-sso.ts             server-to-server client for /cgpay/sso (login, /app-enter)
   components/              shared Svelte components (Brand, etc.)
+    AcctMenu.svelte        the account picture and its menu (change account, settings, sign out); live header and the store app's screens
   assets/                  static assets bundled at build time
 ```
 
