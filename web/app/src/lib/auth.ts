@@ -1,12 +1,12 @@
 // The app's sign-in: a revocable token (kept in secure storage) instead of a password or a cookie. The server side is /api/app/* on the live site.
 import { Capacitor } from '@capacitor/core'
-import type { Device } from '$lib/app-shell'
 import { store } from '../storage'
 import { secret } from './secure'
 import { live } from './live'
+import { current, forget, keepMember, type Account, type Member } from './accounts'
 
 export type Reply = { status: number, data: Record<string, any> }
-export type Signed = { token: string, uid: number, device: Device | null }
+export type Signed = Member & { token: string }
 
 /** POST JSON to the live site's /api/app/<op>. Rejects when there is no answer (no connection, or too slow). */
 async function call(op: string, body: object, ms = 20000): Promise<Reply> {
@@ -29,16 +29,16 @@ export const signIn = async (identifier: string, password: string) => call('sign
 /** Step 2: the emailed passcode, and whether to skip this step on this device from now on. */
 export const confirmCode = (mfa: string, code: string, trust: boolean) => call('mfa', { mfa, code, trust: trust ? 1 : 0 })
 
-/** Keep what a sign-in gave: the token (secret) and the device credentials the transaction screens use. */
+/** Keep what a sign-in gave: the token (secret) and the member's accounts, choosing the phone's default one. */
 export async function keep(s: Signed) {
   await secret.set('token', s.token)
-  if (s.device) await store.set('device', s.device); else await store.del('device')
+  await keepMember({ uid: s.uid, admin: s.admin, accounts: s.accounts }, true)
 }
 
 export const token = () => secret.get('token')
 
-/** Fetch the device credentials again, and keep them. 'out' means the token is no longer good (signed out elsewhere, expired), 'offline' that nobody answered (or the answer is stale). */
-export async function refresh(): Promise<{ state: 'ok', device: Device | null } | { state: 'out' | 'offline' }> {
+/** Fetch the member's accounts and their credentials again, and keep them. 'out' means the token is no longer good (signed out elsewhere, expired), 'offline' that nobody answered (or the answer is stale). */
+export async function refresh(): Promise<{ state: 'ok', account: Account | null } | { state: 'out' | 'offline' }> {
   const t = await token()
   if (!t) return { state: 'out' }
   try {
@@ -46,8 +46,8 @@ export async function refresh(): Promise<{ state: 'ok', device: Device | null } 
     if (await token() !== t) return { state: 'offline' } // signed out (or in again) meanwhile: what came back is stale, so keep nothing
     if (status === 401) return { state: 'out' }
     if (status !== 200) return { state: 'offline' }
-    if (data.device) await store.set('device', data.device); else await store.del('device')
-    return { state: 'ok', device: data.device ?? null }
+    await keepMember(data as Member)
+    return { state: 'ok', account: await current() }
   } catch { return { state: 'offline' } }
 }
 
@@ -56,7 +56,7 @@ export async function enterUrl(to = 'dashboard'): Promise<string> {
   const t = await token()
   if (!t) return ''
   try {
-    const { status, data } = await call('enter', { token: t, to }, 8000)
+    const { status, data } = await call('enter', { token: t, to, account: (await current())?.uid ?? 0 }, 8000)
     return status === 200 ? data.url : ''
   } catch { return '' }
 }
@@ -69,7 +69,13 @@ export async function signOut() {
   const t = await token()
   const reached = !!t && await call('revoke', { token: t }, 8000).then(() => true, () => false)
   await secret.del('token')
-  await store.del('device')
+  await forget()
   for (const [k] of await store.all('tx:')) await store.del(k)
   return reached
 }
+
+/** An account an admin typed (code, email, phone or name): the reply has account, or an error code. Rejects with no connection. */
+export const typeAccount = async (who: string) => call('account', { token: await token(), who })
+
+/** The password again, before changing account or settings (when the settings ask for it). Rejects with no connection. */
+export const unlock = async (password: string) => call('unlock', { token: await token(), password })

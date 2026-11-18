@@ -27,7 +27,7 @@ Scenario: The sign-in screen shows with no connection, and says so when asked to
   Then error "No connection. Connect to the internet to sign in."
   And on page "signin"
 
-Rule: The right password signs the app in and gives it its account
+Rule: The right password signs the app in and opens the member's dashboard
 
 Scenario: A member signs in
   Given store app has no account
@@ -35,9 +35,8 @@ Scenario: A member signs in
   | identifier | password |
   | Bea Two    | k        |
   And click "btn-signin"
-  Then on page "home"
-  And text "acct": "Account: Bea Two"
-  And see "btn-pay"
+  Then on page ""
+  And signed in as "Bea"
   And count "app_tokens" is 1
   And these "app_tokens" rows:
   | uid | label   | trusted | revoked |
@@ -59,12 +58,26 @@ Scenario: The app stays signed in when it is opened again
   | identifier | password |
   | Bea Two    | k        |
   And click "btn-signin"
-  Then on page "home"
+  Then on page ""
 
-  When reload
+  When store app opens
+  Then on page ""
+  And signed in as "Bea"
+  And count "app_tokens" is 1
+
+Scenario: With no connection the app opens on its own home screen
+  Given store app has no account
+  When input:
+  | identifier | password |
+  | Bea Two    | k        |
+  And click "btn-signin"
+  Then on page ""
+
+  When network off
+  And store app opens
   Then on page "home"
   And text "acct": "Account: Bea Two"
-  And count "app_tokens" is 1
+  And see "btn-pay"
 
 Rule: A member with multi-factor authentication also gives the passcode PHP emails
 
@@ -81,8 +94,8 @@ Scenario: The member gives the emailed passcode
   When passcode emailed
   And input "code": "%passcode"
   And click "btn-confirm"
-  Then on page "home"
-  And text "acct": "Account: Bea Two"
+  Then on page ""
+  And signed in as "Bea"
   And count "app_tokens" is 1
 
 Scenario: A wrong passcode is refused
@@ -108,53 +121,55 @@ Scenario: A trusted device skips the passcode the next time
   And input "code": "%passcode"
   And click "trust"
   And click "btn-confirm"
-  Then on page "home"
+  Then on page ""
 
-  When click "btn-signout"
+  When click "btn-acct-menu"
+  And click "menu-signout"
   Then on page "signin"
 
   When input:
   | identifier | password |
   | Bea Two    | k        |
   And click "btn-signin"
-  Then on page "home"
+  Then on page ""
   And count "app_tokens" is 2
 
 Rule: Signing out ends the token and forgets the account on the phone
 
-Scenario: A member signs out
+Scenario: A member signs out from the dashboard's account menu, which also signs out of the live site
   Given store app has no account
   When input:
   | identifier | password |
   | Bea Two    | k        |
   And click "btn-signin"
-  Then on page "home"
+  Then on page ""
 
-  When click "btn-signout"
+  When click "btn-acct-menu"
+  And click "menu-signout"
   Then on page "signin"
   And these "app_tokens" rows:
   | uid | revoked |
   | Bea | !       |
 
-  When reload
+  When store app opens
   Then on page "signin"
 
-Scenario: Signing out of the app also signs out of the live site
+  When on page ""
+  Then signed in as "nobody"
+
+Scenario: A member signs out from the app's home screen with no connection
   Given store app has no account
   When input:
   | identifier | password |
   | Bea Two    | k        |
   And click "btn-signin"
-  And click "btn-dashboard"
   Then on page ""
-  And signed in as "Bea"
 
-  When store app opens
-  And click "btn-signout"
+  When network off
+  And store app opens
+  And click "btn-acct-menu"
+  And click "menu-signout"
   Then on page "signin"
-
-  When on page ""
-  Then signed in as "nobody"
 
 Rule: A member with transactions still waiting to send is warned before signing out, and can cancel
 
@@ -174,7 +189,8 @@ Scenario: A member cancels signing out
   | 234.50       | food!             |
   And click "btn-submit"
   And click "btn-done"
-  And click "btn-signout"
+  And click "btn-acct-menu"
+  And click "menu-signout"
   Then see "signout-warning"
   And see "queued"
 
@@ -199,7 +215,8 @@ Scenario: A member signs out anyway and the waiting transactions are dropped
   | 234.50       | food!             |
   And click "btn-submit"
   And click "btn-done"
-  And click "btn-signout"
+  And click "btn-acct-menu"
+  And click "menu-signout"
   And click "btn-signout-anyway"
   Then on page "signin"
 
@@ -210,14 +227,163 @@ Scenario: A member signs out anyway and the waiting transactions are dropped
 
 Rule: The live dashboard opens signed in from the token, with no sign-in on the live site
 
-Scenario: The dashboard button opens the live site as the member
+Scenario: The home screen's dashboard button opens the live site as the member
   Given store app has no account
   When input:
   | identifier | password |
   | Bea Two    | k        |
   And click "btn-signin"
+  Then on page ""
+
+  When click "nav-app"
   Then on page "home"
 
   When click "btn-dashboard"
   Then on page ""
   And signed in as "Bea"
+
+Rule: The account menu changes the account the app acts for, and can make it the one that comes up after signing in on this phone
+
+Scenario: A member changes account from the dashboard's menu
+  Given store app has no account
+  When input:
+  | identifier | password |
+  | Bea Two    | k        |
+  And click "btn-signin"
+  Then on page ""
+
+  When click "btn-acct-menu"
+  And click "menu-accounts"
+  Then on page "accounts"
+
+  When select "account": "Citre"
+  And click "btn-use"
+  Then on page ""
+  And signed in as "Cit"
+
+  When click "nav-app"
+  Then text "acct": "Account: Citre"
+
+Scenario: The default account comes up after signing in again
+  Given store app has no account
+  When input:
+  | identifier | password |
+  | Bea Two    | k        |
+  And click "btn-signin"
+  And click "btn-acct-menu"
+  And click "menu-accounts"
+  And select "account": "Citre"
+  And click "dft"
+  And click "btn-use"
+  Then signed in as "Cit"
+
+  When click "btn-acct-menu"
+  And click "menu-signout"
+  Then on page "signin"
+
+  When input:
+  | identifier | password |
+  | Bea Two    | k        |
+  And click "btn-signin"
+  Then signed in as "Cit"
+
+Scenario: A member changes account with no connection
+  Given store app has no account
+  When input:
+  | identifier | password |
+  | Bea Two    | k        |
+  And click "btn-signin"
+  Then on page ""
+
+  When network off
+  And store app opens
+  And click "btn-acct-menu"
+  And click "menu-accounts"
+  And select "account": "Citre"
+  And click "btn-use"
+  Then on page "home"
+  And text "acct": "Account: Citre"
+
+Scenario: An admin types the account to act for
+  Given store app has no account
+  When input:
+  | identifier | password |
+  | Abe One    | k        |
+  And click "btn-signin"
+  And click "btn-acct-menu"
+  And click "menu-accounts"
+  And input "who": "Dee Four"
+  And click "btn-use"
+  Then on page ""
+  And signed in as "Dee"
+
+Scenario: A member who is not an admin only chooses from their accounts
+  Given store app has no account
+  When input:
+  | identifier | password |
+  | Bea Two    | k        |
+  And click "btn-signin"
+  And click "btn-acct-menu"
+  And click "menu-accounts"
+  Then see "account"
+  And see not "who"
+
+Rule: The app's settings stay on the phone, and can require the password before changing account or settings
+
+Scenario: A member chooses the front camera
+  Given store app has no account
+  When input:
+  | identifier | password |
+  | Bea Two    | k        |
+  And click "btn-signin"
+  And click "btn-acct-menu"
+  And click "menu-settings"
+  Then on page "settings"
+  And unchecked "set-frontCamera"
+
+  When click "set-frontCamera"
+  And store app opens
+  And click "btn-acct-menu"
+  And click "menu-settings"
+  Then checked "set-frontCamera"
+
+Scenario: With sign-in required, changing account asks for the password
+  Given store app has no account
+  When input:
+  | identifier | password |
+  | Bea Two    | k        |
+  And click "btn-signin"
+  And click "btn-acct-menu"
+  And click "menu-settings"
+  And click "set-locked"
+  And store app opens
+  And click "btn-acct-menu"
+  And click "menu-accounts"
+  Then on page "unlock"
+
+  When input "password": "wrong"
+  And click "btn-unlock"
+  Then error "That password is not right."
+  And on page "unlock"
+
+  When input "password": "k"
+  And click "btn-unlock"
+  Then on page "accounts"
+
+Scenario: With sign-in required and no connection, settings stay locked
+  Given store app has no account
+  When input:
+  | identifier | password |
+  | Bea Two    | k        |
+  And click "btn-signin"
+  And click "btn-acct-menu"
+  And click "menu-settings"
+  And click "set-locked"
+  And network off
+  And store app opens
+  And click "btn-acct-menu"
+  And click "menu-settings"
+  And input "password": "k"
+  And click "btn-unlock"
+  Then error "No connection. Connect to the internet to unlock."
+  And on page "unlock"

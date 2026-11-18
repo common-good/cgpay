@@ -32,6 +32,7 @@ GWhen('var {string} values pivoted:', async ({ app }, name: string, table: DataT
 GWhen('wait {int} seconds', async ({}, n: number) => t.wait(n))
 
 Then('address has no {string}', async ({ app }, part: string) => t.soAddressHasNo(app, part))
+Then('checked {string}', async ({ app }, id: string) => t.soChecked(app, id))
 Then('count {string} is {int}', async ({ app }, name: string, n: number) => t.soCount(app, name, n))
 Then('error {string}', async ({ app }, message: string) => t.soError(app, message))
 Then('on page {string}', async ({ app }, path: string) => t.soOnPage(app, path))
@@ -42,3 +43,4 @@ Then('see not {string}', async ({ app }, what: string) => t.soSeeNot(app, what))
 Then('signed in as {string}', async ({ app }, who: string) => t.soSignedIn(app, who))
 Then('text {string}: {string}', async ({ app }, id: string, value: string) => t.soText(app, id, value))
 Then('these {string} rows:', async ({ app }, name: string, table: DataTable) => t.soThese(app, name, table))
+Then('unchecked {string}', async ({ app }, id: string) => t.soChecked(app, id, false))

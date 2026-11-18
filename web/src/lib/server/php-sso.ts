@@ -19,8 +19,9 @@ export type SsoResponse = {
  * pre-authenticated. Returns the session cookie info + the user's menu
  * categories, or null if SSO is not configured (we degrade gracefully - login
  * still succeeds, but PHP links will require a second login).
+ * acct: the account the member acts for (the store app's choice), if not their own.
  */
-export async function phpSso(uid: number): Promise<SsoResponse | null> {
+export async function phpSso(uid: number, acct = 0): Promise<SsoResponse | null> {
   const secret = env.PHP_SSO_SECRET
   if (!secret) {
     console.warn('[login] PHP_SSO_SECRET not configured - skipping PHP session handoff')
@@ -30,14 +31,14 @@ export async function phpSso(uid: number): Promise<SsoResponse | null> {
   let res: Response
   try {
     const url = phpUrl('cgpay/sso')
-    dbg('sso request:', { url, body: { uid }, tokenLength: secret.length })
+    dbg('sso request:', { url, body: { uid, acct }, tokenLength: secret.length })
     res = await fetch(url, {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
         'x-cg-internal-token': secret
       },
-      body: JSON.stringify({ uid })
+      body: JSON.stringify(acct && acct !== uid ? { uid, acct } : { uid })
     })
   } catch (e) {
     console.error('[login] PHP SSO network error:', e)

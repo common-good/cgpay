@@ -1,4 +1,4 @@
-// The store app's token sign-in: node is a thin proxy to PHP's /cgpay/{signin,mfa,device,enter,redeem,revoke} endpoints (PHP owns passwords, MFA, flood control and the tokens).
+// The store app's token sign-in: node is a thin proxy to PHP's /cgpay/{signin,mfa,device,account,enter,redeem,unlock,revoke} endpoints (PHP owns passwords, MFA, flood control and the tokens).
 // No cookies in or out; the app keeps the token itself. CORS for the app's origins is in hooks.server.ts (appCors).
 
 import { json, type RequestHandler } from '@sveltejs/kit'
@@ -7,6 +7,16 @@ import { rateLimit } from './rate-limit'
 import { phpEndpointUrl } from './env'
 
 const NO_STORE = { 'Cache-Control': 'no-store' }
+
+type Acct = { device?: Record<string, unknown> | null }
+/** Add where the app sends transactions (see Device) to each account's device credentials. */
+function withApi(data: Record<string, unknown>) {
+  const api = phpEndpointUrl('api/')
+  const fix = (a: Acct) => { if (a?.device && typeof a.device === 'object') a.device = { ...a.device, api } }
+  if (Array.isArray(data.accounts)) data.accounts.forEach(fix)
+  if (data.account && typeof data.account === 'object') fix(data.account as Acct)
+  return data
+}
 
 /** The error code PHP sent, or one made from its status. Never anything else, so internals do not leak to the app. */
 const errCode = (status: number, body: unknown) => (body && typeof body === 'object' && typeof (body as { error?: unknown }).error === 'string') ? (body as { error: string }).error : status === 400 ? 'bad-request' : 'failed'
@@ -26,8 +36,7 @@ export async function appCall(op: string, request: Request, ip: string, fields: 
   for (const f of fields) if (['string', 'number', 'boolean'].includes(typeof b[f])) body[f] = b[f]
   try {
     const r = await callPhp<Record<string, unknown>>(`cgpay/${op}`, { body })
-    if (r.ok && r.data.device && typeof r.data.device === 'object') r.data.device = { ...r.data.device, api: phpEndpointUrl('api/') } // where the app sends transactions (see Device)
-    return r.ok ? { status: 200, data: r.data } : { status: r.status === 429 || r.status === 401 || r.status === 403 || r.status === 400 ? r.status : 502, data: { error: errCode(r.status, r.body) } }
+    return r.ok ? { status: 200, data: withApi(r.data) } : { status: r.status === 429 || r.status === 401 || r.status === 403 || r.status === 400 ? r.status : 502, data: { error: errCode(r.status, r.body) } }
   } catch (e) {
     if (!(e instanceof PhpCallError)) throw e
     console.error(`[app-${op}]`, e.message)

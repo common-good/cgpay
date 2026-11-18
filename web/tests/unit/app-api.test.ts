@@ -22,9 +22,14 @@ describe('appCall', () => {
     expect(f.mock.calls[0][0]).toContain('/cgpay/signin')
   })
 
-  it('adds the transaction API address to the device credentials', async () => {
-    global.fetch = reply(200, { uid: 1, device: { accountId: 'K6A' } })
-    expect((await appCall('device', post({ token: 't' }), '1.1.1.1', ['token'])).data).toEqual({ uid: 1, device: { accountId: 'K6A', api: 'https://demo.example/cgmembers/api/' } })
+  it('adds the transaction API address to each account\'s device credentials', async () => {
+    global.fetch = reply(200, { uid: 1, accounts: [{ uid: 1, device: { accountId: 'K6A' } }, { uid: 2, device: null }] })
+    expect((await appCall('device', post({ token: 't' }), '1.1.1.1', ['token'])).data).toEqual({ uid: 1, accounts: [{ uid: 1, device: { accountId: 'K6A', api: 'https://demo.example/cgmembers/api/' } }, { uid: 2, device: null }] })
+  })
+
+  it('adds the transaction API address to a typed account', async () => {
+    global.fetch = reply(200, { account: { uid: 3, device: { accountId: 'K6C' } } })
+    expect((await appCall('account', post({ token: 't', who: 'c' }), '1.1.1.1', ['token', 'who'])).data).toEqual({ account: { uid: 3, device: { accountId: 'K6C', api: 'https://demo.example/cgmembers/api/' } } })
   })
 
   it('shows only the error code PHP gave, with its status', async () => {

@@ -117,8 +117,15 @@ export default {
   /** Open the store app's own screens on a phone with no account on it (each scenario's browser starts with empty storage). */
   async storeAppNoAccount(app: App) { await this.storeAppOpens(app) },
 
-  /** Open the store app's own screens, as when the member opens the app (what the phone keeps stays). */
+  /**
+   * Open the store app's own screens, as when the member opens the app (what the phone keeps stays).
+   * Pages it opens on the live site run in its WebView, which marks the user agent (see inStoreApp).
+   */
   async storeAppOpens(app: App) {
+    if (!app.storeApp) await app.page.addInitScript(() => {
+      const ua = navigator.userAgent + ' CGPayApp'
+      Object.defineProperty(navigator, 'userAgent', { configurable: true, get: () => ua })
+    })
     await app.page.goto(BUNDLED + '/')
     app.storeApp = true
   },
@@ -148,7 +155,7 @@ export default {
     }
     await app.page.getByTestId(btn).click()
     const screen = (name: string) => app.page.locator(`[data-screen="${name}"]`)
-    await expect(screen('tx-start').or(screen('scan')), 'scan: the bundled screens opened').toBeVisible({ timeout: 15_000 })
+    await expect(screen('tx-start').or(screen('scan')).or(screen('tx')), 'scan: the bundled screens opened').toBeVisible({ timeout: 15_000 }) // a quick camera can reach tx first
     if (await screen('tx-start').count()) await app.page.getByTestId('btn-scan').click()
     await expect(screen('tx').or(app.page.getByTestId('balance')), 'scan: the transaction screen, or the dashboard when the scan fails').toBeVisible({ timeout: 15_000 })
   },
@@ -185,12 +192,18 @@ export default {
     await expect.poll(() => app.page.url(), `address has no "${part}"`).not.toContain(part)
   },
 
+  /** The checkbox is ticked (yes) or not. */
+  async soChecked(app: App, id: string, yes = true) {
+    const el = app.page.getByTestId(id)
+    await (yes ? expect(el, `checked "${id}"`).toBeChecked({ timeout: 10_000 }) : expect(el, `unchecked "${id}"`).not.toBeChecked({ timeout: 10_000 }))
+  },
+
   async soError(app: App, message: string) {
     await expect(app.page.getByRole('alert').filter({ hasText: message }).first(), `error "${message}"`).toBeVisible({ timeout: 10_000 })
   },
 
   async soOnPage(app: App, path: string) {
-    if ((BUNDLED_MODE || app.storeApp) && ['signin', 'home', 'tx-start', 'scan', 'tx'].includes(path)) return await expect(app.page.locator(`[data-screen="${path}"]`), `on page "${path}" (bundled screen)`).toBeVisible({ timeout: 15_000 })
+    if ((BUNDLED_MODE || app.storeApp) && ['signin', 'home', 'tx-start', 'scan', 'tx', 'accounts', 'settings', 'unlock'].includes(path)) return await expect(app.page.locator(`[data-screen="${path}"]`), `on page "${path}" (bundled screen)`).toBeVisible({ timeout: 15_000 })
     if (app.storeApp && !path) await expect(app.page, 'on page "" (left the bundled screens)').not.toHaveURL(new RegExp(`^${escapeRegExp(BUNDLED)}`), { timeout: 15_000 })
     await expect(app.page, `on page "${path}"`).toHaveURL(new RegExp(`^[^/]+//[^/]+/${escapeRegExp(path)}$`), { timeout: 15_000 })
   },
