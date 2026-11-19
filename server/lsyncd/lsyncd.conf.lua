@@ -32,18 +32,3 @@ sync {
     _extra = { "--omit-dir-times" }
   }
 }
-
-sync {
-  default.rsync,
-  source = "/home/beta/pay/shared/web/",
-  target = "{{SYNC_HOST}}:/home/beta/pay/shared/web/",
-  delay = 2,
-  exclude = { "node_modules/" },
-  rsync = {
-    binary = "/usr/bin/rsync",
-    archive = true,
-    compress = true,
-    rsh = "/usr/bin/ssh",
-    _extra = { "--omit-dir-times" }
-  }
-}
