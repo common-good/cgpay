@@ -31,7 +31,8 @@ export async function keepMember(m: Member, signingIn = false) {
   m = { ...m, accounts: [...m.accounts, ...typed] }
   await store.set('member', m)
   const want = signingIn ? await dftAcct() : await store.get<number>('acct') // read last, so a choice made meanwhile is kept
-  await choose(m.accounts.find(a => a.uid === want) ?? m.accounts.find(a => a.uid === m.uid) ?? m.accounts[0])
+  const a = m.accounts.find(a => a.uid === want) ?? m.accounts.find(a => a.uid === m.uid) ?? m.accounts[0]
+  if (a) await choose(a)
 }
 
 /** Add an account an admin typed, and choose it. */
