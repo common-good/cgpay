@@ -1,12 +1,12 @@
 import { test as base, createBdd, defineParameterType } from 'playwright-bdd'
-import type { Page } from '@playwright/test'
+import type { Page, APIResponse } from '@playwright/test'
 import { TestDb } from '../support/test-db'
 import { Vars, parseValue } from '../support/vars'
 import { writeCameraVideo } from '../support/camera'
 import resetCodes from '../support/reset-codes'
 
 // What the steps work with: the page, the test database, the scenario's variables, and the time the scenario started (unix seconds).
-export type App = { page: Page, testDb: TestDb, vars: Vars, now: number, reply?: Record<string, unknown> }
+export type App = { page: Page, testDb: TestDb, vars: Vars, now: number, reply?: Record<string, unknown>, lastFetch?: APIResponse }
 
 type Fixtures = { testDb: TestDb, app: App }
 
