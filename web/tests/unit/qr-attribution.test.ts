@@ -1,25 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { handleQrAttribution, appendToken, adCookieDomain } from '../../src/lib/server/qr-attribution'
-
-describe('adCookieDomain', () => {
-  it('uses AD_COOKIE_DOMAIN when set (production sets it to .commongood.earth)', () => {
-    expect(adCookieDomain('pay.commongood.earth', '.commongood.earth')).toBe('.commongood.earth')
-    // Prod pay may be served under any env-style host that redirects from the apex;
-    // the cookie still scopes to the apex when configured, so WP on commongood.earth sees it.
-    expect(adCookieDomain('pay.prod.commongood.earth', '.commongood.earth')).toBe('.commongood.earth')
-  })
-
-  it('falls back to the hostname when AD_COOKIE_DOMAIN is not set (test/staging/dev)', () => {
-    expect(adCookieDomain('pay.test.commongood.earth', undefined)).toBe('pay.test.commongood.earth')
-    expect(adCookieDomain('pay.staging.commongood.earth', '')).toBe('pay.staging.commongood.earth')
-    expect(adCookieDomain('pay.dev.commongood.earth', '   ')).toBe('pay.dev.commongood.earth')
-  })
-
-  it('leaves localhost + IPv4 untouched for local dev', () => {
-    expect(adCookieDomain('localhost', undefined)).toBe('localhost')
-    expect(adCookieDomain('127.0.0.1', undefined)).toBe('127.0.0.1')
-  })
-})
+import { handleQrAttribution, appendToken } from '../../src/lib/server/qr-attribution'
 
 describe('appendToken', () => {
   it('appends to an empty cookie', () => {

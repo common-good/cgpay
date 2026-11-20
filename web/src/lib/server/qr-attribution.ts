@@ -1,9 +1,13 @@
 // QR attribution redirect handler. Pure logic + testable.
 //
 // cg4.us sends every QR scan (and every tagged marketing link) to
-// pay.commongood.earth/<a|w|q>=<token>. We set the `ad` cookie on
-// `.commongood.earth` (prod only) so both the pay app and the WordPress site
-// at commongood.earth see it, then 302 the visitor to the real destination:
+// pay.commongood.earth/<a|w|q>=<token>. We set the `ad` cookie on the same
+// domain as the SSO cookie (phpCookieDomain, e.g. .members.commongood.earth in
+// production, .test.commongood.earth on test), so only the members/pay side
+// reads it. Every reader is on that side: cgmembers-frame's legacy forms
+// (signup.inc, sponsor.inc, investinterest.inc) read $_COOKIE['ad'] on the PHP
+// host, and cgpay's /api/signup forwards it as source2. WordPress neither sets
+// nor reads it. Then we 302 the visitor to the real destination:
 //   a= (go-to-app)     -> /welcome (this app)
 //   w= (go-to-website) -> https://commongood.earth (WordPress)
 //   q= (company ID)    -> /welcome (this app)
@@ -69,21 +73,6 @@ export function appendToken(current: string, token: string): string {
     next.shift()
   }
   return next.join(' ')
-}
-
-/**
- * Cookie Domain for the ad cookie.
- *   - When `configuredDomain` is set (production sets `AD_COOKIE_DOMAIN=.commongood.earth`
- *     so the WP site on commongood.earth and every pay subdomain under the
- *     apex both see the cookie), use it. Any pay host under the apex may name
- *     it as its cookie Domain - the browser accepts a parent-domain scope.
- *   - Otherwise (unset on test / staging / dev), scope to the hostname so a
- *     scan on a test host never leaks into prod's cookie jar.
- */
-export function adCookieDomain(hostname: string, configuredDomain: string | undefined): string {
-  const trimmed = configuredDomain?.trim()
-  if (trimmed) return trimmed
-  return hostname
 }
 
 function serializeAdCookie(value: string, domain: string): string {

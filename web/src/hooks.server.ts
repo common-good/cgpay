@@ -8,11 +8,10 @@
 
 import type { Handle } from '@sveltejs/kit'
 import { sequence } from '@sveltejs/kit/hooks'
-import { env } from '$env/dynamic/private'
-import { assertRequiredEnv } from '$lib/server/env'
+import { assertRequiredEnv, phpCookieDomain } from '$lib/server/env'
 import { healSsoCookies } from '$lib/server/sso-cookies'
 import { phpWhoami } from '$lib/server/php-whoami'
-import { handleQrAttribution, adCookieDomain } from '$lib/server/qr-attribution'
+import { handleQrAttribution } from '$lib/server/qr-attribution'
 
 try {
   assertRequiredEnv()
@@ -23,18 +22,18 @@ try {
 
 // Catch cg4.us attribution redirects (pay.commongood.earth/a=..., /w=..., /q=...)
 // before SvelteKit's route table: the a/w/q request is not a real page, just a
-// marker. We stamp the `ad` cookie on `.commongood.earth` (apex, so both the
-// pay app and the WordPress site at commongood.earth see it) and bounce the
-// visitor to the real destination. This cookie's scope is DIFFERENT from the
-// SSO cookie (per-host since #209) because attribution is cross-site by design,
-// while identity is per-env on purpose. Runs before the SSO healer because a
-// matched attribution request short-circuits with a 302 and never touches an
-// app route, so there is nothing to heal.
+// marker. We stamp the `ad` cookie on the PHP host's cookie domain (same scope
+// as the SSO cookie, so .members.commongood.earth in production) and bounce
+// the visitor to the real destination. Only the members/pay side reads this
+// cookie (cgmembers-frame's legacy forms + cgpay's /api/signup); WordPress
+// neither sets nor reads it, so the apex scope is unnecessary. Runs before
+// the SSO healer because a matched attribution request short-circuits with a
+// 302 and never touches an app route, so there is nothing to heal.
 const qrAttribution: Handle = async ({ event, resolve }) => {
   const redirect = handleQrAttribution(
     event.url,
     event.cookies.get('ad'),
-    adCookieDomain(event.url.hostname, env.AD_COOKIE_DOMAIN),
+    phpCookieDomain(),
   )
   if (redirect) {
     return new Response(null, { status: 302, headers: redirect.headers })
