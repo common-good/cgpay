@@ -43,6 +43,8 @@ describe('which env a card belongs to', () => {
   it('puts each env at its own pay site', () => {
     expect(liveOf('demo')).toBe('https://pay.demo.commongood.earth')
     expect(liveOf('main')).toBe('https://pay.main.commongood.earth')
+    expect(liveOf('beta')).toBe('https://pay.beta.commongood.earth')
+    expect(liveOf('staging')).toBe('https://pay.staging.commongood.earth')
   })
 })
 
@@ -91,6 +93,43 @@ describe('dropShelved', () => {
     expect(await secret.get('token')).toBeUndefined()
     expect(kv.get('member')).toBeUndefined()
     expect(kv.get('dftAcct')).toBe(7)
+  })
+})
+
+describe('a switch cut short', () => {
+  const realT = 'test.aaa', demoT = 'demo.bbb'
+  it('after the shelf copy: still in the start env, with its token', async () => {
+    await secret.set('token', realT); await secret.set('env:test:token', realT)
+    await restoreEnv()
+    expect(env()).toBe(START)
+    expect(await secret.get('token')).toBe(realT)
+  })
+  it('after the demo token came down but before the pointer moved: in demo, the real token still shelved', async () => {
+    await secret.set('env:test:token', realT); await secret.set('token', demoT); await secret.set('env', START)
+    await restoreEnv()
+    expect(env()).toBe('demo')
+    expect(await secret.get('env:test:token')).toBe(realT)
+  })
+  it('after the current token went (demo had none) but before the pointer moved: back in the start env with its token', async () => {
+    await secret.set('env:test:token', realT); kv.set('env:test:member', { uid: 1 }); await secret.set('env', START)
+    await restoreEnv()
+    expect(env()).toBe(START)
+    expect(await secret.get('token')).toBe(realT)
+    expect(kv.get('member')).toEqual({ uid: 1 })
+  })
+  it('a finished switch clears the shelf it took down, so signing out there cannot bring a token back', async () => {
+    await secret.set('token', realT)
+    await switchTo('demo'); await secret.set('token', demoT)
+    await switchTo(START)
+    expect(await secret.get('env:test:token')).toBeUndefined()
+    await secret.del('token'); await dropShelved()
+    await restoreEnv()
+    expect(await secret.get('token')).toBeUndefined()
+  })
+  it('a token in the current slot says which env the app is in, whatever the pointer says', async () => {
+    ls.set('env', START); await secret.set('token', demoT)
+    await restoreEnv()
+    expect(env()).toBe('demo')
   })
 })
 

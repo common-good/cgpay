@@ -409,3 +409,27 @@ Scenario: Demo and pass do nothing where there is no demo
   And click "btn-signin"
   Then error "Sign in failed. Try again."
   And on page "signin"
+
+Rule: Signing out also ends the sign-in the app keeps for its other env
+
+Scenario: A member who switched to demo signs out of both envs
+  Given store app has no account
+  When input:
+  | identifier | password |
+  | Bea Two    | k        |
+  And click "btn-signin"
+  Then on page ""
+
+  Given server is demo
+  When scan "Abe test card" to "charge"
+  And click "btn-switch"
+  Then on page ""
+  And signed in as "Abe"
+
+  When click "btn-acct-menu"
+  And click "menu-signout"
+  Then on page "signin"
+  And these "app_tokens" rows:
+  | uid | revoked |
+  | Bea | !       |
+  | Abe | !       |
