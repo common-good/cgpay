@@ -111,10 +111,7 @@ Deploy branches to the following URLs:
 | Git Branch | Environment |  URL | Shortcut | Server URL | API/data |
 | :-- | :-- | :-- | :-- |:-- |:-- |
 | `main` | `production` | https://cgpay.commongood.earth | cg4.us/pay | new.commongood.earth |  prod |
-| `staging` | `staging` | https://cgpay-staging.commongood.earth | cg4.us/pay1 | new1.commongood.earth | prod |
-| `develop` | `dev` | https://cgpay-dev.commongood.earth | cg4.us/pay2 | new1.commongood.earth | dev |
 | `(other)` | `local` | https://localhost:3000 | (none) | localhost | dev or local |
-| `demo` | `staging` | https://cgpay-demo.commongood.earth | cg4.us/demo | new1.commongood.earth | prod |
 
 The node dashboard links camera-enabled transactions to this PWA using
 `CGPAY_PWA_URL`. Set `VITE_CGPAY_DASHBOARD_URL` when building the PWA (see
