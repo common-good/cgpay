@@ -7,3 +7,4 @@ export async function toDashboard(live: string, msg = '', kind: 'info' | 'error'
   const hash = msg ? '#' + new URLSearchParams({ msg: kind + ':' + msg.slice(0, 300) }) : ''
   location.assign((await enterUrl() || live + '/') + hash)
 }
+

@@ -39,6 +39,7 @@
   let txView = $state<Tx>()
   let seen = '' // the card the scanner returned last: still in view when Back returns to the scanner, so it is not taken again
   const fail = (msg: string) => toDashboard(live, msg, 'error')
+  const parse = (s: string | null) => { try { return s && JSON.parse(s) } catch { return null } } // a garbled handoff must not stop the app from starting
 
   // Send what waited for a connection, and show how much still waits.
   async function sendQueued() {
@@ -47,11 +48,12 @@
   }
 
   onMount(async () => {
-    if (handed) await store.set('device', JSON.parse(handed))
+    const d = parse(handed)
+    if (d) await store.set('device', d)
     device = (await store.get<Device>('device')) ?? null
     window.addEventListener('online', sendQueued)
-    if (Capacitor.isNativePlatform()) CapApp.addListener('backButton', () => screen && screen !== 'home' ? back() : CapApp.exitApp())
-    setInterval(() => queued && sendQueued(), 5000) // the online event is not reliable on phones
+    const tick = setInterval(() => queued && sendQueued(), 5000) // the online event is not reliable on phones
+    if (Capacitor.isNativePlatform()) CapApp.addListener('backButton', () => screen && screen !== 'home' ? back() : (clearInterval(tick), CapApp.exitApp()))
     sendQueued()
     const hasToken = !!await token()
     signedIn = !!device || hasToken
