@@ -6,7 +6,7 @@
   import Icon from '$lib/components/Icon.svelte'
   import type { InfoResponse, InfoTx } from './api/me/info/+server'
   import { phpUrl } from '$lib/utils'
-  import { inApp, appUrl } from '$lib/app-shell'
+  import { inApp, appLink, device, type Device } from '$lib/app-shell'
 
   let { data }: { data: PageData } = $props()
 
@@ -15,6 +15,7 @@
   let info = $state<InfoResponse | null>(null)
   let hasCamera = $state(false)
   let app = $state(false)
+  let dev = $state<Device | null>(null)
   let message = $state<{ kind: 'info' | 'error', text: string } | null>(null)
 
   type ModalKind = 'pay' | 'receive' | null
@@ -24,18 +25,23 @@
   // Empty string = no PHP target configured; we render the menu as disabled.
   const phpBase = env.PUBLIC_PHP_BASE_URL ?? ''
 
-  async function detectCamera(): Promise<boolean> {
+  // A device's camera list can come back empty for a moment (seen with Chromium's fake camera), so look a few times before settling on the PHP links.
+  async function detectCamera(tries = 4): Promise<boolean> {
     if (!navigator.mediaDevices?.enumerateDevices) return false
-    try {
-      return (await navigator.mediaDevices.enumerateDevices()).some(device => device.kind === 'videoinput')
-    } catch (cameraError) {
-      console.warn('Could not detect a camera; keeping the PHP transaction links.', cameraError)
-      return false
+    for (let i = 0; i < tries; i++) {
+      try {
+        if ((await navigator.mediaDevices.enumerateDevices()).some(device => device.kind === 'videoinput')) return true
+      } catch (cameraError) {
+        console.warn('Could not detect a camera; keeping the PHP transaction links.', cameraError)
+        return false
+      }
+      if (i < tries - 1) await new Promise(resolve => setTimeout(resolve, 500))
     }
+    return false
   }
 
   function transactionUrl(intent: 'pay' | 'charge'): string {
-    if (app) return appUrl({ intent, name: data.user?.name ?? '' })
+    if (app) return appLink(dev, { intent }, env.PUBLIC_APP_URL)
     const pwaBase = data.cgpayPwaUrl.replace(/\/+$/, '')
     return hasCamera && pwaBase
       ? `${pwaBase}/handoff#intent=${intent}`
@@ -70,8 +76,8 @@
   // A message the legacy app left for us in a cookie (see setDashboardMessage in the legacy app's handoff.js): show it once, as text.
   function takeMessage(): { kind: 'info' | 'error', text: string } | null {
     const found = document.cookie.split('; ').find(c => c.startsWith('cgpay-msg='))
-    const parts = location.hostname.split('.')
-    const domains = ['', ...(parts.length > 1 && !/^\d+(\.\d+){3}$/.test(location.hostname) ? [`; domain=.${parts.slice(-2).join('.')}`] : [])]
+    const parts = location.hostname.split('.'), ip = /^\d+(\.\d+){3}$/.test(location.hostname)
+    const domains = ['', ...(ip ? [] : parts.slice(0, -1).map((_, i) => `; domain=.${parts.slice(i).join('.')}`))] // whichever scope the sender chose (the legacy app's is the whole site)
     for (const d of domains) document.cookie = `cgpay-msg=; path=/; max-age=0${d}`
     if (!found) return null
     const m = decodeURIComponent(found.slice('cgpay-msg='.length)).match(/^(error|info):([\s\S]*)$/)
@@ -81,7 +87,8 @@
   onMount(async () => {
     message = takeMessage()
     app = inApp()
-    hasCamera = await detectCamera()
+    if (app && data.user) device(data.user.name).then(d => dev = d)
+    detectCamera().then(found => hasCamera = found) // without a camera this takes a moment; the account info need not wait
     await loadInfo()
   })
 

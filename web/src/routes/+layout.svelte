@@ -6,16 +6,18 @@
   import { appVersion } from '$lib/version'
   import favicon from '$lib/assets/favicon.svg'
   import { onMount } from 'svelte'
-  import { inApp, appUrl } from '$lib/app-shell'
+  import { inApp, appLink, device, type Device } from '$lib/app-shell'
 
   let { data, children } = $props()
   let app = $state(false)
+  let dev = $state<Device | null>(null)
   onMount(() => app = inApp())
+  $effect(() => { if (app && data.user) device(data.user.name).then(d => dev = d) })
 
   // Hide the app header on preview routes (they use their own layout + white-bg TopNav).
   const isPreview = $derived(page.url.pathname.startsWith('/preview'))
   const isLogin   = $derived(page.url.pathname.startsWith('/login'))
-  const showHeader = $derived(!isPreview)
+  const showHeader = $derived(!isPreview && !(app && isLogin)) // the login card carries the brand itself
 
   const phpBase = env.PUBLIC_PHP_BASE_URL ?? ''
   const PHP_PATH: Record<string, string> = {
@@ -53,7 +55,7 @@
 </svelte:head>
 
 {#if showHeader}
-  <nav class="topnav">
+  <nav class="topnav" data-testid="topnav">
     <Brand size={32} />
     {#if data.user && !isLogin}
       <ul class="nav-links">
@@ -65,7 +67,7 @@
           {/if}
         {/each}
         {#if app}
-          <li><a data-testid="nav-app" href={appUrl({ name: data.user.name })}>Scan</a></li>
+          <li><a data-testid="nav-app" href={appLink(dev, {}, env.PUBLIC_APP_URL) || '#'} aria-disabled={!dev || undefined}>Scan</a></li>
         {/if}
         {#if data.user.sponsored}
           <li><a class:active={activeLabel === 'Grants'} href="/grants">Grants</a></li>

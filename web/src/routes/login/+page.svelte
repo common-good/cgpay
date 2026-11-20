@@ -2,7 +2,11 @@
   import { goto } from '$app/navigation'
   import { env } from '$env/dynamic/public'
   import Brand from '$lib/components/Brand.svelte'
+  import { onMount } from 'svelte'
+  import { inApp } from '$lib/app-shell'
 
+  let app = $state(false)
+  onMount(() => app = inApp())
   let identifier = $state('')
   let password = $state('')
   let error = $state<string | null>(null)
@@ -40,7 +44,7 @@
   }
 </script>
 
-<main class="page">
+<main class="page" class:app>
   <div class="card" role="region" aria-labelledby="signin-h1">
     <div class="card-top">
       <Brand size={40} />
@@ -106,6 +110,10 @@
 </main>
 
 <style>
+  /* In the store app the page fills the screen: no window-in-a-window card (the app's top bar is hidden on this page, see +layout.svelte). */
+  .page.app { padding: 0; background: var(--cg-surface); align-items: start; }
+  .page.app .card { max-width: none; border: 0; border-radius: 0; box-shadow: none; }
+
   .page {
     min-height: 100vh;
     display: grid;

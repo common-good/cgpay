@@ -23,6 +23,27 @@ Scenario: The live dashboard inside the store app hands transactions to the bund
   Then pay and charge go to "bundled screens"
   And see "nav-app"
 
+Scenario: The bundled screens keep the account the dashboard hands them, and take the credentials out of the address
+  Given signed in as "Bea"
+  And in the store app
+  When click "nav-app"
+  Then text "acct": "Account: Bea Two"
+  And address has no "device"
+
+  Given acting as "Cit"
+  And in the store app
+  When click "nav-app"
+  Then text "acct": "Account: Citre"
+
+Scenario: The bundled screens remember the account when they restart
+  Given signed in as "Bea"
+  And in the store app
+  When click "nav-app"
+  Then text "acct": "Account: Bea Two"
+
+  When reload
+  Then text "acct": "Account: Bea Two"
+
 Scenario: An ordinary browser has no link to the bundled screens
   Given signed in as "Bea"
   Then see not "nav-app"
@@ -32,6 +53,7 @@ Rule: A member pays in the legacy app and returns to the dashboard
 Scenario: A member pays another member and comes back to the dashboard
   Given signed in as "Bea"
   And camera shows "Dee"
+  And camera "present"
   When click "btn-pay"
   Then on page "tx-start"
   And see "btn-scan"
@@ -58,6 +80,7 @@ Scenario: A member pays another member and comes back to the dashboard
 Scenario: A member undoes the payment and the dashboard shows no transaction
   Given signed in as "Bea"
   And camera shows "Dee"
+  And camera "present"
   When click "btn-pay"
   And click "btn-scan"
   Then text "theirName": "Dee Four"
@@ -78,6 +101,7 @@ Rule: A company goes straight to scanning
 Scenario: A company has nothing to show, so it starts on the scan page and can go back
   Given signed in as "Bea"
   And acting as "Cit"
+  And camera "present"
   When click "btn-receive"
   Then on page "scan"
   And see not "btn-nav"
@@ -90,6 +114,7 @@ Rule: A problem in the legacy app returns the member to the dashboard with a mes
 Scenario: A member scans their own QR code
   Given signed in as "Bea"
   And camera shows "Bea"
+  And camera "present"
   When click "btn-pay"
   And click "btn-scan"
   Then on page ""

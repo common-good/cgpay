@@ -1,3 +1,4 @@
+import { expect } from '@playwright/test'
 import type { App } from '../steps/fixtures'
 import { rowProblems } from './compare'
 import { tableData, type Shape } from './table'
@@ -7,17 +8,11 @@ import resetCodes from './reset-codes'
 // Data in the test database (through the PHP test endpoint, see test-db.ts) and scenario variables.
 type Rows = Record<string, unknown>[]
 
-const readers: Record<string, (app: App) => Promise<Rows>> = { grants: app => app.testDb.rows('grants'), txs: app => app.testDb.rows('txs'), reset_codes: () => resetCodes.rows() }
+const readers: Record<string, (app: App) => Promise<Rows>> = { grants: app => app.testDb.rows('grants'), txs: app => app.testDb.rows('txs'), tx_requests: app => app.testDb.rows('tx_requests'), reset_codes: () => resetCodes.rows() }
 const writers: Record<string, (app: App, rows: Rows) => Promise<unknown>> = { users: (app, rows) => app.testDb.updateUsers(rows), reset_codes: (app, rows) => resetCodes.insert(rows, app.now) }
 
-// Some writes land after the reply (reset-request answers before the code is made), so data checks retry for a moment.
-async function eventually(problem: () => Promise<string | null>, ms = 3000) {
-  for (const end = Date.now() + ms; ; await new Promise(r => setTimeout(r, 100))) {
-    const p = await problem()
-    if (!p) return
-    if (Date.now() > end) throw new Error(p)
-  }
-}
+// Retry a data check for a while: some writes land after the screen moves on (the app uploads queued transactions in the background; reset-request answers before the code is made).
+const settled = (check: () => Promise<void>) => expect(check).toPass({ timeout: 10_000, intervals: [250, 500, 1000] })
 
 async function read(app: App, name: string): Promise<Rows> {
   const reader = readers[name]
@@ -46,14 +41,20 @@ export default {
     app.vars.set(name, tableData(table, shape, app, { nicknames: false }))
   },
 
-  /** The app has this many records ("txs", "grants" and "reset_codes"). */
+  /** The app has this many records ("txs", "tx_requests", "grants" and "reset_codes"). */
   async soCount(app: App, name: string, n: number) {
-    await eventually(async () => { const got = (await read(app, name)).length; return got === n ? null : `count "${name}" is ${n}: got ${got}.` })
+    await settled(async () => {
+      const got = (await read(app, name)).length
+      if (got !== n) throw new Error(`count "${name}" is ${n}: got ${got}.`)
+    })
   },
 
-  /** The app has all of these records (and maybe more), comparing only the columns the table lists ("txs", "grants" and "reset_codes"). */
+  /** The app has all of these records (and maybe more), comparing only the columns the table lists ("txs", "tx_requests", "grants" and "reset_codes"). */
   async soThese(app: App, name: string, table: { raw(): string[][] }) {
     const want = tableData(table, 'rows', app) as Rows
-    await eventually(async () => { const ps = rowProblems(await read(app, name), want, app); return ps.length ? `these "${name}" rows: ${ps.join('; ')}` : null })
+    await settled(async () => {
+      const problems = rowProblems(await read(app, name), want, app)
+      if (problems.length) throw new Error(`these "${name}" rows: ${problems.join('; ')}`)
+    })
   }
 }
