@@ -17,6 +17,11 @@ Scenario: The app starts with no account
   And see not "btn-pay"
   And count "app_tokens" is 0
 
+Scenario: Forgot password opens the live site's reset flow
+  Given store app has no account
+  When click "lnk-reset"
+  Then on page "reset"
+
 Scenario: The sign-in screen shows with no connection, and says so when asked to sign in
   Given network off
   When store app has no account
