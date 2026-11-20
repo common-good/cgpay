@@ -78,3 +78,29 @@ Scenario: A company charges offline, then the connection returns
   | uid1 | uid2 | agt1 | agt2 | amt    | for2  |
   | Dee  | Cit  | Dee  | Bea  | 234.50 | food! |
   And see not "queued"
+
+Rule: A broken answer from the server is not taken for a lost connection, and does not count as a yes
+
+Scenario: The server answers a scan with an error page
+  When server answers "identity" with an error page
+  And scan "Dee" to "charge"
+  Then on page ""
+  And see "notice-error"
+  And text "msg": "An unexpected error occurred. Please alert Common Good's support team."
+
+Scenario: The server answers a queued transaction with an error page
+  When network off
+  And scan "Dee" to "charge"
+  And click "btn1"
+  And input:
+  | input-amount | input-description |
+  | 12.34        | food!             |
+  And click "btn-submit"
+  And click "btn-done"
+  Then see "queued"
+
+  When server answers "transactions" with an error page
+  And network on
+  Then app keeps 1 refused
+  And see not "queued"
+  And count "txs" is 0

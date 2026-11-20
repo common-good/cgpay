@@ -164,6 +164,11 @@ export default {
 
   async select(app: App, id: string, label: string) { await setField(app, id, label) },
 
+  /** From now on PHP's API answers this endpoint with an error page (status 200, not JSON), as when PHP crashes. */
+  async serverErrorPage(app: App, endpoint: string) {
+    await app.page.context().route(`**/api/${endpoint}`, r => r.fulfill({ status: 200, contentType: 'text/html', body: '<html><body>Fatal error</body></html>' }))
+  },
+
   /**
    * Make sure this person is signed in: run the app (for "nobody") or sign in through the form, with the standard password.
    * Fails if somebody else is already signed in.
@@ -190,6 +195,19 @@ export default {
   /** The page's address (hash included) no longer mentions this, for example a parameter the page should have removed. */
   async soAddressHasNo(app: App, part: string) {
     await expect.poll(() => app.page.url(), `address has no "${part}"`).not.toContain(part)
+  },
+
+  /** The store app still holds this many transactions the server did not clearly accept (each kept with the reason). */
+  async soAppKeepsRefused(app: App, n: number) {
+    const count = () => app.page.evaluate(() => new Promise<number>((ok, no) => {
+      const db = indexedDB.open('cgpay')
+      db.onerror = () => no(db.error)
+      db.onsuccess = () => {
+        const q = db.result.transaction('kv').objectStore('kv').getAll(IDBKeyRange.bound('tx:', 'tx:\uffff'))
+        q.onsuccess = () => ok(q.result.filter((t: { error?: string }) => t.error).length)
+      }
+    }))
+    await expect.poll(count, { message: `the app keeps ${n} refused transactions` }).toBe(n)
   },
 
   /** The checkbox is ticked (yes) or not. */

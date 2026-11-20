@@ -18,6 +18,7 @@ GWhen('post {string}:', async ({ app }, path: string, table: DataTable) => t.pos
 GWhen('reload', async ({ app }) => t.reload(app))
 GWhen('scan {string} to {string}', async ({ app }, who: string, why: string) => t.scan(app, who, why))
 GWhen('select {string}: {string}', async ({ app }, id: string, label: string) => t.select(app, id, label))
+GWhen('server answers {string} with an error page', async ({ app }, endpoint: string) => t.serverErrorPage(app, endpoint))
 GWhen('signed in as {string}', async ({ app }, who: string) => t.signedIn(app, who))
 GWhen('stale session cookie', async ({ app }) => t.staleSessionCookie(app))
 GWhen('store app has no account', async ({ app }) => t.storeAppNoAccount(app))
@@ -33,6 +34,7 @@ GWhen('var {string} values pivoted:', async ({ app }, name: string, table: DataT
 GWhen('wait {int} seconds', async ({}, n: number) => t.wait(n))
 
 Then('address has no {string}', async ({ app }, part: string) => t.soAddressHasNo(app, part))
+Then('app keeps {int} refused', async ({ app }, n: number) => t.soAppKeepsRefused(app, n))
 Then('checked {string}', async ({ app }, id: string) => t.soChecked(app, id))
 Then('count {string} is {int}', async ({ app }, name: string, n: number) => t.soCount(app, name, n))
 Then('error {string}', async ({ app }, message: string) => t.soError(app, message))
