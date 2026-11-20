@@ -76,7 +76,7 @@ export async function signOut() {
   const reached = !!t && await call('revoke', { token: t }, 8000).then(() => true, () => false)
   await secret.del('token')
   await forget()
-  for (const o of await dropShelved()) call('revoke', { token: o.token }, 8000, liveOf(o.env)).catch(() => {}) // the other env's sign-in goes too; its server forgets it when it can be reached
+  await Promise.all((await dropShelved()).map(o => call('revoke', { token: o.token }, 8000, liveOf(o.env)).catch(() => {}))) // the other env's sign-in goes too (awaited: the page leaves next, which would cut the request off)
   await resetEnv()
   for (const [k] of await store.all('tx:')) await store.del(k)
   return reached
