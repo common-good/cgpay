@@ -1,10 +1,10 @@
 <script lang="ts">
   import Brand from '$lib/components/Brand.svelte'
-  import { signIn, confirmCode, type Signed } from './lib/auth'
-  import { live } from './lib/live'
+  import { signIn, confirmCode, demoSignIn, type Signed } from './lib/auth'
+  import { live, START } from './lib/env'
 
   // The store app's own sign-in screen: shown when no account is on the phone, so it works without the live site.
-  let { onsignedin }: { onsignedin: (s: Signed) => void } = $props()
+  let { onsignedin, ondemo }: { onsignedin: (s: Signed) => void, ondemo: (s: Signed) => void } = $props()
 
   let identifier = $state(''), password = $state(''), code = $state(''), trust = $state(false)
   let mfa = $state(''), error = $state(''), busy = $state(false)
@@ -20,12 +20,18 @@
     offline: 'No connection. Connect to the internet to sign in.'
   }
 
+  const signInStep = () => signIn(identifier.trim(), password)
+
   // Run a sign-in step; its reply is a token (done), an mfa handle (next step) or an error code.
+  // "demo" and "pass" (what store reviewers are told to type) go to the demo server for a fresh demo account.
+  const isDemo = () => START !== 'demo' && identifier.trim().toLowerCase() === 'demo' && password === 'pass'
+
   async function go(step: () => ReturnType<typeof signIn>) {
     error = ''; busy = true
     try {
-      const { data } = await step()
-      if (data.token) onsignedin(data as Signed)
+      const demo = step === signInStep && isDemo()
+      const { data } = await (demo ? demoSignIn() : step())
+      if (data.token) (demo ? ondemo : onsignedin)(data as Signed)
       else if (data.mfa) { mfa = data.mfa; code = '' }
       else { error = MESSAGES[data.error] ?? 'Sign in failed. Try again.'; if (data.error === 'expired' || data.error === 'bad-handle') mfa = '' }
     } catch { error = MESSAGES.offline } finally { busy = false }
@@ -37,14 +43,14 @@
   <div class="body">
     {#if !mfa}
       <h1>Sign in</h1>
-      <form onsubmit={e => { e.preventDefault(); go(() => signIn(identifier.trim(), password)) }}>
+      <form onsubmit={e => { e.preventDefault(); go(signInStep) }}>
         <label>Account ID<input data-testid="identifier" id="identifier" bind:value={identifier} autocomplete="username" autocapitalize="none" placeholder="account code, name, email, or phone" /></label>
         <label>Password<input data-testid="password" id="password" type="password" bind:value={password} autocomplete="current-password" /></label>
         {#if error}<p class="err" role="alert">{error}</p>{/if}
         <button class="primary" data-testid="btn-signin" disabled={busy || !identifier || !password}>{busy ? 'Signing in...' : 'Sign in'}</button>
       </form>
-      <p class="links"><a data-testid="lnk-reset" href="{live}/forgot">Forgot password?</a></p>
-      <p class="links">New to Common Good? <a data-testid="lnk-signup" href="{live}/signup">Create an account</a></p>
+      <p class="links"><a data-testid="lnk-reset" href="{live()}/forgot">Forgot password?</a></p>
+      <p class="links">New to Common Good? <a data-testid="lnk-signup" href="{live()}/signup">Create an account</a></p>
     {:else}
       <h1>Confirm</h1>
       <p>To be sure it is really you, we sent you a passcode by email. Enter it below.</p>

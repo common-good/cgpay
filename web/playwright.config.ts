@@ -12,6 +12,8 @@ try { process.loadEnvFile('.env') } catch { /* no .env: CI, or everything is exp
 const PORT = process.env.E2E_PORT ?? '4173'
 const PWA = process.env.E2E_PWA_PORT ?? '3000'
 const APP = process.env.E2E_APP_PORT ?? '5180' // the store app's bundled screens (web/app)
+// The transaction features run against the bundled screens. E2E_SCREENS=legacy runs them through the legacy app instead, which cannot pass any more: it refuses real (RC2.ME) cards, and every env but demo shows those.
+const LEGACY = process.env.E2E_SCREENS === 'legacy'
 
 // The BDD browser has a fake camera that plays this file (a step rewrites it to show a QR code; see camera.ts).
 if (!existsSync(CAMERA_FILE)) writeCameraVideo('')
@@ -20,7 +22,7 @@ const fakeCamera = ['--use-fake-device-for-media-stream', '--use-fake-ui-for-med
 // Always called, so `bddgen` finds its config even when the project is skipped.
 const bddProject = defineBddProject({
   name: 'bdd',
-  features: ['tests/features/**/*.feature', ...(process.env.E2E_SCREENS === 'bundled' ? ['!tests/features/dashboard-handoff.feature'] : [])], // the handoff to the legacy app does not exist in bundled mode
+  features: ['tests/features/**/*.feature', ...(LEGACY ? [] : ['!tests/features/dashboard-handoff.feature'])], // the handoff to the legacy app exists only in legacy mode
   steps: 'tests/steps/**/*.ts',
   matchKeywords: true // the same step text can mean setup/action after Given and When, and a check after Then
 })
@@ -72,7 +74,7 @@ export default defineConfig({
     stderr: 'pipe'
   },
   // The legacy app, which the dashboard hands off to (port 3000), pointed at the local PHP. Local only: CI skips the BDD project.
-  ...(process.env.CI ? [] : [{
+  ...(process.env.CI ? [] : [...(LEGACY ? [{
     command: `npm run dev -- --port ${PWA}`,
     cwd: '..',
     url: `http://localhost:${PWA}`,
@@ -81,13 +83,13 @@ export default defineConfig({
     timeout: 120_000,
     stdout: 'pipe' as const,
     stderr: 'pipe' as const
-  }, {
+  }] : []), {
     // The store app's bundled screens, served from a port instead of the app package.
     command: `npm run dev -- --port ${APP} --strictPort`,
     cwd: 'app',
     url: `http://localhost:${APP}`,
     reuseExistingServer: true,
-    env: { VITE_LIVE_URL: process.env.E2E_BASE_URL ?? `http://localhost:${PORT}`, VITE_TX_TIMEOUT_S: '6' }, // a shorter summary timeout, so a test can wait it out
+    env: { VITE_LIVE_URL: process.env.E2E_BASE_URL ?? `http://localhost:${PORT}`, VITE_DEMO_URL: process.env.E2E_BASE_URL ?? `http://localhost:${PORT}`, VITE_TX_TIMEOUT_S: '6' }, // a shorter summary timeout, so a test can wait it out
     timeout: 120_000,
     stdout: 'pipe' as const,
     stderr: 'pipe' as const
