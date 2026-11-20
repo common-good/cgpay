@@ -10,9 +10,9 @@ vi.mock('../../app/src/storage', () => ({
   }
 }))
 const ls = new Map<string, string>()
-vi.stubGlobal('localStorage', { getItem: (k: string) => ls.get(k) ?? null, setItem: (k: string, v: string) => void ls.set(k, v) })
+vi.stubGlobal('localStorage', { getItem: (k: string) => ls.get(k) ?? null, setItem: (k: string, v: string) => void ls.set(k, v), removeItem: (k: string) => void ls.delete(k) })
 
-const { env, isDemo, mismatch, target, switchTo, signedInFor, dropShelved, liveOf, START } = await import('../../app/src/lib/env')
+const { env, isDemo, mismatch, target, switchTo, signedInFor, dropShelved, liveOf, restoreEnv, resetEnv, START } = await import('../../app/src/lib/env')
 const { cardKind } = await import('../../app/src/lib/qr')
 const { secret } = await import('../../app/src/lib/secure')
 
@@ -91,5 +91,28 @@ describe('dropShelved', () => {
     expect(await secret.get('token')).toBeUndefined()
     expect(kv.get('member')).toBeUndefined()
     expect(kv.get('dftAcct')).toBe(7)
+  })
+})
+
+describe('restoreEnv', () => {
+  it('takes the Keychain\'s pointer back when the phone cleared localStorage', async () => {
+    await switchTo('demo')
+    ls.clear()
+    expect(env()).toBe(START)
+    await restoreEnv()
+    expect(env()).toBe('demo')
+  })
+  it('changes nothing when there is no kept pointer', async () => {
+    await restoreEnv()
+    expect(env()).toBe(START)
+  })
+})
+
+describe('resetEnv', () => {
+  it('puts the app back at its own env', async () => {
+    await switchTo('demo')
+    await resetEnv()
+    await restoreEnv()
+    expect(env()).toBe(START)
   })
 })

@@ -10,8 +10,8 @@ import { qrOf, uidOf } from './accounts'
 
 // Where the Pay and Charge buttons lead when the device has a camera (the legacy app, see CGPAY_PWA_URL).
 const LEGACY_APP = `http://localhost:${process.env.E2E_PWA_PORT ?? '3000'}`
-// E2E_SCREENS=bundled runs the transaction features against the store app's bundled screens instead of the legacy app.
-const BUNDLED_MODE = process.env.E2E_SCREENS === 'bundled'
+// The transaction features run against the store app's bundled screens; E2E_SCREENS=legacy uses the legacy app instead (see playwright.config.ts).
+const BUNDLED_MODE = process.env.E2E_SCREENS !== 'legacy'
 // Where the tests serve the store app's bundled screens (PUBLIC_APP_URL in playwright.config.ts).
 const BUNDLED = `http://localhost:${process.env.E2E_APP_PORT ?? '5180'}`
 

@@ -387,3 +387,25 @@ Scenario: With sign-in required and no connection, settings stay locked
   And click "btn-unlock"
   Then error "No connection. Connect to the internet to unlock."
   And on page "unlock"
+
+Rule: Typing "demo" and "pass" on the sign-in screen signs in to a fresh demo account (for store reviewers)
+
+Scenario: A reviewer types demo and pass
+  Given server is demo
+  And store app has no account
+  When input:
+  | identifier | password |
+  | demo       | pass     |
+  And click "btn-signin"
+  Then on page ""
+  And see "Hi, Demo"
+  And count "app_tokens" is 0
+
+Scenario: Demo and pass do nothing where there is no demo
+  Given store app has no account
+  When input:
+  | identifier | password |
+  | demo       | pass     |
+  And click "btn-signin"
+  Then error "Sign in failed. Try again."
+  And on page "signin"

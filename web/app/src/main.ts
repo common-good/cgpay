@@ -1,4 +1,5 @@
 import { mount } from 'svelte'
 import App from './App.svelte'
+import { restoreEnv } from './lib/env'
 
-mount(App, { target: document.getElementById('app')! })
+restoreEnv().catch(() => {}).finally(() => mount(App, { target: document.getElementById('app')! }))

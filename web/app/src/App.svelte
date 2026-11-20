@@ -103,8 +103,9 @@
   // Forget the account on this phone (token, credentials, anything waiting to send) and show the sign-in screen.
   async function leave() {
     // The live site's cookie session would outlive the app's sign-out in the WebView, so the live site clears it and sends the app back here.
-    if (await signOut()) return location.assign(`${live()}/app-signout?${new URLSearchParams({ back: location.origin + '/' })}`)
-    device = acct = null; signedIn = confirming = false; queued = 0; seen = ''
+    const base = live() // signOut returns the app to its own env, but the cookie to clear is the one of the env being left
+    if (await signOut()) return location.assign(`${base}/app-signout?${new URLSearchParams({ back: location.origin + '/' })}`)
+    device = acct = null; signedIn = confirming = demo = false; queued = 0; seen = ''
     screen = 'signin'
   }
 
@@ -154,7 +155,7 @@
   {#if demo}<p class="demo" data-testid="demo-mark">DEMO</p>{/if}
   {#if screen && screen !== 'home' && screen !== 'signin'}<button class="back" data-testid="btn-back" onclick={back}>Back</button>{/if}
   {#if screen === 'signin'}
-    <Signin {onsignedin} />
+    <Signin {onsignedin} ondemo={s => { to = 'demo'; onswitched(s) }} />
   {:else if screen === 'unlock'}
     <Unlock onunlocked={() => screen = unlocking} />
   {:else if screen === 'accounts'}

@@ -2,7 +2,7 @@
 import { Capacitor } from '@capacitor/core'
 import { store } from '../storage'
 import { secret } from './secure'
-import { dropShelved, live, liveOf } from './env'
+import { dropShelved, live, liveOf, resetEnv } from './env'
 import { current, forget, keepMember, type Account, type Member } from './accounts'
 
 export type Reply = { status: number, data: Record<string, any> }
@@ -28,6 +28,9 @@ export const signIn = async (identifier: string, password: string) => call('sign
 
 /** Step 2: the emailed passcode, and whether to skip this step on this device from now on (base: another env's pay site, for a card sign-in). */
 export const confirmCode = (mfa: string, code: string, trust: boolean, base?: string) => call('mfa', { mfa, code, trust: trust ? 1 : 0 }, 20000, base)
+
+/** The demo sign-in: a fresh demo account on the demo server (the reply is as for signIn). */
+export const demoSignIn = async () => call('demo', { label: label(), deviceKey: await deviceKey() }, 20000, liveOf('demo'))
 
 /** Sign in to another env by a scanned card (before the app moves there): demo takes the card alone, the real env also wants the cardholder's password. The reply is as for signIn, plus the account to act for. */
 export const cardSignIn = async (to: string, qr: string, password: string, skipMfa: boolean) => call('card', { qr, password, skipMfa, label: label(), deviceKey: await deviceKey() }, 20000, liveOf(to))
@@ -74,6 +77,7 @@ export async function signOut() {
   await secret.del('token')
   await forget()
   for (const o of await dropShelved()) call('revoke', { token: o.token }, 8000, liveOf(o.env)).catch(() => {}) // the other env's sign-in goes too; its server forgets it when it can be reached
+  await resetEnv()
   for (const [k] of await store.all('tx:')) await store.del(k)
   return reached
 }

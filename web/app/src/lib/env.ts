@@ -6,9 +6,21 @@ import { secret } from './secure'
 export const START: string = import.meta.env.VITE_START_ENV || 'test'
 const urls: Record<string, string | undefined> = { [START]: import.meta.env.VITE_LIVE_URL, demo: import.meta.env.VITE_DEMO_URL }
 
-/** The env the app is in now (a pointer in localStorage, so it can be read at once; the sign-in itself is in the store). */
+/** The env the app is in now: a pointer in localStorage so it can be read at once, and also kept with the tokens (restoreEnv), since a phone can clear a WebView's storage and leave the Keychain alone. */
 export const env = (): string => { try { return localStorage.getItem('env') || START } catch { return START } }
 export const isDemo = () => env() === 'demo'
+
+/** At startup: if the phone cleared localStorage but the Keychain still has the pointer, take it back, so a token is never used on the wrong env's server. */
+export async function restoreEnv() {
+  const kept = await secret.get('env')
+  if (kept && kept !== env()) try { localStorage.setItem('env', kept) } catch { /* no localStorage: the Keychain's pointer is then all there is */ }
+}
+
+/** Back to the build's own env (after signing out of everything). */
+export async function resetEnv() {
+  await secret.del('env')
+  try { localStorage.removeItem('env') } catch { /* nothing kept */ }
+}
 
 /** The pay site of an env (the tests point the envs at the server under test). */
 export const liveOf = (e: string) => (urls[e] || `https://pay.${e}.commongood.earth`).replace(/\/$/, '')
@@ -32,6 +44,7 @@ export async function switchTo(to: string) {
   const t = await secret.get('token'), t2 = await secret.get(at(to, 'token'))
   if (t) await secret.set(at(from, 'token'), t); else await secret.del(at(from, 'token'))
   if (t2) await secret.set('token', t2); else await secret.del('token')
+  await secret.set('env', to)
   localStorage.setItem('env', to)
 }
 
