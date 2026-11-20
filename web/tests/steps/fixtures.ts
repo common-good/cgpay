@@ -6,7 +6,7 @@ import { writeCameraVideo } from '../support/camera'
 import resetCodes from '../support/reset-codes'
 
 // What the steps work with: the page, the test database, the scenario's variables, and the time the scenario started (unix seconds).
-export type App = { page: Page, testDb: TestDb, vars: Vars, now: number, reply?: Record<string, unknown>, storeApp?: boolean, offline?: boolean }
+export type App = { page: Page, testDb: TestDb, vars: Vars, now: number, reply?: Record<string, unknown>, storeApp?: boolean, offline?: boolean, mfa?: string }
 
 type Fixtures = { testDb: TestDb, app: App }
 
@@ -30,7 +30,10 @@ export const test = base.extend<Fixtures>({
       const body = JSON.stringify({ ...(await res.json()), dashboardUrl: baseURL })
       await route.fulfill({ response: res, body, headers: { ...res.headers(), 'content-length': String(Buffer.byteLength(body)) } })
     })
-    await use({ page, testDb, vars: new Vars(), now: Math.floor(Date.now() / 1000) })
+    const app: App = { page, testDb, vars: new Vars(), now: Math.floor(Date.now() / 1000) }
+    // The store app's sign-in answers with an MFA handle when the member must give the emailed passcode; the test endpoint can read the passcode from it.
+    page.on('response', async res => { if (res.url().endsWith('/api/app/signin')) app.mfa = (await res.json().catch(() => null))?.mfa ?? app.mfa })
+    await use(app)
   }
 })
 

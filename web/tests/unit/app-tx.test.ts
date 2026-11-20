@@ -13,7 +13,6 @@ vi.mock('../../app/src/storage', () => ({
 const { flush, waiting } = await import('../../app/src/lib/tx')
 const { identity, unreachable } = await import('../../app/src/lib/api')
 const { parseQr } = await import('../../app/src/lib/qr')
-const { msgDomain } = await import('../../app/src/lib/leave')
 
 const d = { api: 'https://x/api/', deviceId: 'dev', accountId: 'NEWZPC0abc' } as any
 const card = { acct: 'NEWZPD', main: 'NEWZPD', code: 'xyz' }
@@ -83,15 +82,5 @@ describe('parseQr', () => {
   it('takes an address part in lowercase, keeping the card code as it is', () => {
     expect(parseQr('http://6vm.rc4.me/KDJJ34kjdfKJ4', false)).toEqual(parseQr('HTTP://6VM.RC4.ME/KDJJ34kjdfKJ4', false))
     expect(() => parseQr('HTTP://6VM.RC4.ME/kdjj34', false)).toThrow()
-  })
-})
-
-describe('msgDomain', () => {
-  it('scopes the message to the smallest domain both hosts share', () => {
-    expect(msgDomain('app.test.commongood.earth', 'https://pay.test.commongood.earth')).toBe('; domain=.test.commongood.earth')
-    expect(msgDomain('test.commongood.earth', 'https://pay.test.commongood.earth')).toBe('; domain=.test.commongood.earth')
-    expect(msgDomain('app.commongood.earth', 'https://pay.members.commongood.earth')).toBe('; domain=.commongood.earth')
-    for (const [h, live] of [['localhost', 'http://localhost:5173'], ['localhost', 'https://pay.test.commongood.earth'], ['10.0.0.2', 'http://10.0.0.2'], ['a.org', 'https://b.org']])
-      expect(msgDomain(h, live)).toBe('')
   })
 })

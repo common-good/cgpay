@@ -6,7 +6,8 @@
   import { appVersion } from '$lib/version'
   import favicon from '$lib/assets/favicon.svg'
   import { onMount } from 'svelte'
-  import { inApp, appLink, device, type Device } from '$lib/app-shell'
+  import { inApp, appLink, appUrl, device, type Device } from '$lib/app-shell'
+  import AcctMenu, { type Item } from '$lib/components/AcctMenu.svelte'
 
   let { data, children } = $props()
   let app = $state(false)
@@ -35,6 +36,17 @@
     if (p.startsWith('/grants')) return 'Grants'
     return ''
   })
+
+  // In the store app, changing account, settings and signing out belong to the app's own screens (they work offline and keep the app's token in step).
+  const acctItems = $derived<Item[]>(app ? [
+    { id: 'accounts', label: 'Change account', href: appUrl({ screen: 'accounts' }, env.PUBLIC_APP_URL) },
+    { id: 'settings', label: 'Settings', href: appUrl({ screen: 'settings' }, env.PUBLIC_APP_URL) },
+    { id: 'signout', label: 'Sign out', href: appUrl({ screen: 'signout' }, env.PUBLIC_APP_URL) }
+  ] : [
+    { id: 'accounts', label: 'Change account', href: menuHref('Dashboard') }, // the member site's dashboard has its account switcher
+    { id: 'settings', label: 'Settings', href: menuHref('Settings') },
+    { id: 'signout', label: 'Sign out', onclick: signOut }
+  ])
 
   async function signOut() {
     try {
@@ -75,7 +87,7 @@
       </ul>
       <div class="account">
         <span class="hi">Hi, {data.user.name}</span>
-        <button class="ghost" onclick={signOut}>Sign out</button>
+        <AcctMenu name={data.user.name} photo={phpBase ? phpBase.replace(/\/$/, '') + '/account-thumb' : null} items={acctItems} />
       </div>
     {:else}
       <div class="spacer"></div>
@@ -172,16 +184,6 @@
     gap: 1rem;
   }
   .hi { color: var(--cg-on-navy); font-size: 0.9rem; }
-  .ghost {
-    background: transparent;
-    color: var(--cg-on-navy);
-    border: 1px solid var(--cg-on-navy-muted);
-    border-radius: var(--cg-radius-sm);
-    padding: 0.35rem 0.85rem;
-    font-size: 0.85rem;
-    cursor: pointer;
-  }
-  .ghost:hover { background: var(--cg-navy-soft); }
   .spacer { flex: 1; }
 
   .app-version {
@@ -217,6 +219,5 @@
     }
     .account { gap: 0.6rem; margin-left: auto; }
     .hi { display: none; }
-    .ghost { padding: 0.3rem 0.7rem; }
   }
 </style>

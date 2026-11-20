@@ -3,7 +3,7 @@ import type { App } from '../steps/fixtures'
 import { acct } from './accounts'
 import { resolve } from './magic'
 import { writeCameraVideo } from './camera'
-import { qrOf } from './accounts'
+import { qrOf, uidOf } from './accounts'
 
 // What the steps do in the browser. The only place that knows element ids (data-testid) and URLs.
 // Checks are named so... and say what they were looking for when they fail.
@@ -101,9 +101,42 @@ export default {
     } else await ctx.route('**/*', cutOff)
   },
 
+  /** Turn multi-factor authentication on for this account, so signing in asks for the emailed passcode. */
+  async mfaOn(app: App, who: string) { await app.testDb.mfaOn(uidOf(who)) },
+
+  /** Read the passcode PHP emailed for the sign-in that asked for one into the variable "passcode" (the email itself is out of reach of a test). */
+  async passcodeEmailed(app: App) {
+    await expect.poll(() => app.mfa, 'passcode emailed: the sign-in asked for one').toBeTruthy()
+    app.vars.set('passcode', await app.testDb.passcode(app.mfa!))
+  },
+
   async onPage(app: App, path: string) { await app.page.goto('/' + path) },
 
   async reload(app: App) { await app.page.reload() },
+
+  /** Sign this member out of every device on the server, as from another phone: sign in there, then sign out everywhere. */
+  async allSignedOut(app: App, who: string) {
+    const req = app.page.request, a = acct(who)
+    const { token } = await (await req.post('/api/app/signin', { data: { identifier: a.fullName, password: a.password, label: 'elsewhere' } })).json()
+    if (!token) throw new Error(`all devices signed out for "${who}": signing in elsewhere gave no token`)
+    expect((await req.post('/api/app/revoke', { data: { token, everywhere: true } })).ok(), 'all devices signed out: the server signed them out').toBeTruthy()
+  },
+
+  /** Open the store app's own screens on a phone with no account on it (each scenario's browser starts with empty storage). */
+  async storeAppNoAccount(app: App) { await this.storeAppOpens(app) },
+
+  /**
+   * Open the store app's own screens, as when the member opens the app (what the phone keeps stays).
+   * Pages it opens on the live site run in its WebView, which marks the user agent (see inStoreApp).
+   */
+  async storeAppOpens(app: App) {
+    if (!app.storeApp) await app.page.addInitScript(() => {
+      const ua = navigator.userAgent + ' CGPayApp'
+      Object.defineProperty(navigator, 'userAgent', { configurable: true, get: () => ua })
+    })
+    await app.page.goto(BUNDLED + '/')
+    app.storeApp = true
+  },
 
   /**
    * Scan this account's QR code to pay or charge it ("pay" or "charge"), starting from the dashboard: the camera shows the code,
@@ -130,7 +163,7 @@ export default {
     }
     await app.page.getByTestId(btn).click()
     const screen = (name: string) => app.page.locator(`[data-screen="${name}"]`)
-    await expect(screen('tx-start').or(screen('scan')).or(screen('tx')), 'scan: the bundled screens opened').toBeVisible({ timeout: 15_000 })
+    await expect(screen('tx-start').or(screen('scan')).or(screen('tx')), 'scan: the bundled screens opened').toBeVisible({ timeout: 15_000 }) // a quick camera can reach tx first
     if (await screen('tx-start').count()) await app.page.getByTestId('btn-scan').click()
     await expect(screen('tx').or(app.page.getByTestId('balance')), 'scan: the transaction screen, or the dashboard when the scan fails').toBeVisible({ timeout: 15_000 })
   },
@@ -185,12 +218,18 @@ export default {
     await expect.poll(count, { message: `the app keeps ${n} refused transactions` }).toBe(n)
   },
 
+  /** The checkbox is ticked (yes) or not. */
+  async soChecked(app: App, id: string, yes = true) {
+    const el = app.page.getByTestId(id)
+    await (yes ? expect(el, `checked "${id}"`).toBeChecked({ timeout: 10_000 }) : expect(el, `unchecked "${id}"`).not.toBeChecked({ timeout: 10_000 }))
+  },
+
   async soError(app: App, message: string) {
     await expect(app.page.getByRole('alert').filter({ hasText: message }).first(), `error "${message}"`).toBeVisible({ timeout: 10_000 })
   },
 
   async soOnPage(app: App, path: string) {
-    if ((BUNDLED_MODE || app.storeApp) && ['home', 'tx-start', 'scan', 'tx'].includes(path)) return await expect(app.page.locator(`[data-screen="${path}"]`), `on page "${path}" (bundled screen)`).toBeVisible({ timeout: 15_000 })
+    if ((BUNDLED_MODE || app.storeApp) && ['signin', 'home', 'tx-start', 'scan', 'tx', 'accounts', 'settings', 'unlock'].includes(path)) return await expect(app.page.locator(`[data-screen="${path}"]`), `on page "${path}" (bundled screen)`).toBeVisible({ timeout: 15_000 })
     if (app.storeApp && !path) await expect(app.page, 'on page "" (left the bundled screens)').not.toHaveURL(new RegExp(`^${escapeRegExp(BUNDLED)}`), { timeout: 15_000 })
     await expect(app.page, `on page "${path}"`).toHaveURL(new RegExp(`^[^/]+//[^/]+/${escapeRegExp(path)}$`), { timeout: 15_000 })
   },
