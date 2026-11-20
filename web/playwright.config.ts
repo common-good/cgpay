@@ -87,7 +87,7 @@ export default defineConfig({
     cwd: 'app',
     url: `http://localhost:${APP}`,
     reuseExistingServer: true,
-    env: { VITE_LIVE_URL: process.env.E2E_BASE_URL ?? `http://localhost:${PORT}`, VITE_TX_TIMEOUT_S: '6' }, // a shorter summary timeout, so a test can wait it out
+    env: { VITE_LIVE_URL: process.env.E2E_BASE_URL ?? `http://localhost:${PORT}`, VITE_DEMO_URL: process.env.E2E_BASE_URL ?? `http://localhost:${PORT}`, VITE_TX_TIMEOUT_S: '6' }, // a shorter summary timeout, so a test can wait it out
     timeout: 120_000,
     stdout: 'pipe' as const,
     stderr: 'pipe' as const

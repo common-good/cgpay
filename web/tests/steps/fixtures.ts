@@ -32,7 +32,7 @@ export const test = base.extend<Fixtures>({
     })
     const app: App = { page, testDb, vars: new Vars(), now: Math.floor(Date.now() / 1000) }
     // The store app's sign-in answers with an MFA handle when the member must give the emailed passcode; the test endpoint can read the passcode from it.
-    page.on('response', async res => { if (res.url().endsWith('/api/app/signin')) app.mfa = (await res.json().catch(() => null))?.mfa ?? app.mfa })
+    page.on('response', async res => { if (/\/api\/app\/(signin|card)$/.test(res.url())) app.mfa = (await res.json().catch(() => null))?.mfa ?? app.mfa })
     await use(app)
   }
 })

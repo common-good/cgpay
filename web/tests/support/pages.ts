@@ -157,8 +157,11 @@ export default {
     const screen = (name: string) => app.page.locator(`[data-screen="${name}"]`)
     await expect(screen('tx-start').or(screen('scan')).or(screen('tx')), 'scan: the bundled screens opened').toBeVisible({ timeout: 15_000 }) // a quick camera can reach tx first
     if (await screen('tx-start').count()) await app.page.getByTestId('btn-scan').click()
-    await expect(screen('tx').or(app.page.getByTestId('balance')), 'scan: the transaction screen, or the dashboard when the scan fails').toBeVisible({ timeout: 15_000 })
+    await expect(screen('tx').or(screen('switch')).or(app.page.getByTestId('balance')), 'scan: the transaction screen, the switch screen, or the dashboard when the scan fails').toBeVisible({ timeout: 15_000 })
   },
+
+  /** Make the server act as demo (the store app switches to demo by a test card there), or not. */
+  async serverIsDemo(app: App, on: boolean) { await app.testDb.demo(on) },
 
   async wait(seconds: number) { await new Promise(ok => setTimeout(ok, seconds * 1000)) },
 
@@ -221,7 +224,7 @@ export default {
   },
 
   async soOnPage(app: App, path: string) {
-    if ((BUNDLED_MODE || app.storeApp) && ['signin', 'home', 'tx-start', 'scan', 'tx', 'accounts', 'settings', 'unlock'].includes(path)) return await expect(app.page.locator(`[data-screen="${path}"]`), `on page "${path}" (bundled screen)`).toBeVisible({ timeout: 15_000 })
+    if ((BUNDLED_MODE || app.storeApp) && ['signin', 'home', 'tx-start', 'scan', 'switch', 'tx', 'accounts', 'settings', 'unlock'].includes(path)) return await expect(app.page.locator(`[data-screen="${path}"]`), `on page "${path}" (bundled screen)`).toBeVisible({ timeout: 15_000 })
     if (app.storeApp && !path) await expect(app.page, 'on page "" (left the bundled screens)').not.toHaveURL(new RegExp(`^${escapeRegExp(BUNDLED)}`), { timeout: 15_000 })
     await expect(app.page, `on page "${path}"`).toHaveURL(new RegExp(`^[^/]+//[^/]+/${escapeRegExp(path)}$`), { timeout: 15_000 })
   },

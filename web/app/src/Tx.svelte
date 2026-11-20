@@ -2,6 +2,7 @@
   import { onDestroy, onMount } from 'svelte'
   import type { Device } from '$lib/app-shell'
   import { identity, idPhoto, unreachable, type Identity } from './lib/api'
+  import { isDemo } from './lib/env'
   import { mainId, parseQr, type Card } from './lib/qr'
   import { cacheProfile, checkAmount, enqueue, flush, makeTx, money, offlineProfile, unqueue, type Tx } from './lib/tx'
 
@@ -52,7 +53,7 @@
   // The other account's profile. Anything wrong with the scanned code sends the member back to the dashboard with the reason.
   onMount(async () => {
     try {
-      card = parseQr(qr, device.real)
+      card = parseQr(qr, !isDemo())
       if (!paying && !card.code) throw new Error('That QR is for payments only.')
       if (card.main === mainId(device.accountId)) throw new Error('That QR is for the same account as yours.')
       try {

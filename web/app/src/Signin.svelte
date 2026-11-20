@@ -1,7 +1,7 @@
 <script lang="ts">
   import Brand from '$lib/components/Brand.svelte'
   import { signIn, confirmCode, type Signed } from './lib/auth'
-  import { live } from './lib/live'
+  import { live } from './lib/env'
 
   // The store app's own sign-in screen: shown when no account is on the phone, so it works without the live site.
   let { onsignedin }: { onsignedin: (s: Signed) => void } = $props()
@@ -43,8 +43,8 @@
         {#if error}<p class="err" role="alert">{error}</p>{/if}
         <button class="primary" data-testid="btn-signin" disabled={busy || !identifier || !password}>{busy ? 'Signing in...' : 'Sign in'}</button>
       </form>
-      <p class="links"><a data-testid="lnk-reset" href="{live}/forgot">Forgot password?</a></p>
-      <p class="links">New to Common Good? <a data-testid="lnk-signup" href="{live}/signup">Create an account</a></p>
+      <p class="links"><a data-testid="lnk-reset" href="{live()}/forgot">Forgot password?</a></p>
+      <p class="links">New to Common Good? <a data-testid="lnk-signup" href="{live()}/signup">Create an account</a></p>
     {:else}
       <h1>Confirm</h1>
       <p>To be sure it is really you, we sent you a passcode by email. Enter it below.</p>

@@ -7,15 +7,17 @@
   import { flush, waiting } from './lib/tx'
   import { toDashboard } from './lib/leave'
   import { enterUrl, keep, refresh, signOut, token, type Signed } from './lib/auth'
-  import { current, type Account } from './lib/accounts'
+  import { choose, current, type Account } from './lib/accounts'
   import { settings } from './lib/settings'
-  import { live } from './lib/live'
+  import { cardKind } from './lib/qr'
+  import { isDemo, live, mismatch, switchTo, target } from './lib/env'
   import AcctMenu from '$lib/components/AcctMenu.svelte'
   import Signin from './Signin.svelte'
   import Accounts from './Accounts.svelte'
   import Settings from './Settings.svelte'
   import Unlock from './Unlock.svelte'
   import Scan from './Scan.svelte'
+  import Switch from './Switch.svelte'
   import Tx from './Tx.svelte'
   import TxStart from './TxStart.svelte'
 
@@ -27,18 +29,20 @@
   let intent = $state(hash.get('intent') || '')
   history.replaceState(null, '', location.pathname)
 
-  type Screen = 'signin' | 'home' | 'tx-start' | 'scan' | 'tx' | 'accounts' | 'settings' | 'unlock'
+  type Screen = 'signin' | 'home' | 'tx-start' | 'scan' | 'switch' | 'tx' | 'accounts' | 'settings' | 'unlock'
   let device = $state<Device | null>(null)
   let acct = $state<Account | null>(null) // the account chosen on this phone (null before a token sign-in)
   let unlocking: 'accounts' | 'settings' = 'accounts' // what the password opens
   let screen = $state<Screen | ''>('')
   let qr = $state('')
+  let to = $state('') // the env a scanned card of the other kind would take the app to
+  let demo = $state(isDemo()) // shows the DEMO mark
   let queued = $state(0)
   let signedIn = $state(false) // a token or device credentials are on the phone
   let confirming = $state(false) // asking whether to sign out with transactions still waiting
   let txView = $state<Tx>()
   let seen = '' // the card the scanner returned last: still in view when Back returns to the scanner, so it is not taken again
-  const fail = (msg: string) => toDashboard(live, msg, 'error')
+  const fail = (msg: string) => toDashboard(live(), msg, 'error')
   const parse = (s: string | null) => { try { return s && JSON.parse(s) } catch { return null } } // a garbled handoff must not stop the app from starting
 
   // Send what waited for a connection, and show how much still waits.
@@ -99,7 +103,7 @@
   // Forget the account on this phone (token, credentials, anything waiting to send) and show the sign-in screen.
   async function leave() {
     // The live site's cookie session would outlive the app's sign-out in the WebView, so the live site clears it and sends the app back here.
-    if (await signOut()) return location.assign(`${live}/app-signout?${new URLSearchParams({ back: location.origin + '/' })}`)
+    if (await signOut()) return location.assign(`${live()}/app-signout?${new URLSearchParams({ back: location.origin + '/' })}`)
     device = acct = null; signedIn = confirming = false; queued = 0; seen = ''
     screen = 'signin'
   }
@@ -120,10 +124,34 @@
     else { screen = screen === 'scan' && device && !device.isCo ? 'tx-start' : 'home'; seen = '' }
   }
 
+  // A card of the kind that belongs to the other env asks to switch (anything else is an ordinary scan). Transactions waiting here belong to this env's server, so they go first.
+  async function scanned(text: string) {
+    qr = seen = text
+    const kind = cardKind(text), t = kind && mismatch(kind) ? target(kind) : undefined
+    if (t === null) return fail('That card cannot be used in this app.')
+    if (t === undefined) return void (screen = 'tx')
+    if (await waiting()) return fail('Wait for the waiting transactions to send, then scan the card again.')
+    to = t; screen = 'switch'
+  }
+
+  // Signed in to the other env: move the app there (the shelf swaps the sign-ins), act for the card's account, and open its dashboard.
+  async function onswitched(s: Signed & { account?: number }) {
+    await switchTo(to); await keep(s)
+    const a = s.accounts.find(a => a.uid === s.account)
+    if (a) await choose(a)
+    await arrived()
+  }
+
+  async function arrived() {
+    demo = isDemo(); acct = await current(); device = acct?.device ?? null; signedIn = true; seen = ''
+    if (!await goLive()) screen = 'home'
+  }
+
   function start(what: string) { intent = what; seen = ''; screen = device!.isCo ? 'scan' : 'tx-start' }
 </script>
 
 <main data-screen={screen}>
+  {#if demo}<p class="demo" data-testid="demo-mark">DEMO</p>{/if}
   {#if screen && screen !== 'home' && screen !== 'signin'}<button class="back" data-testid="btn-back" onclick={back}>Back</button>{/if}
   {#if screen === 'signin'}
     <Signin {onsignedin} />
@@ -136,9 +164,11 @@
   {:else if screen === 'tx-start' && device}
     <TxStart {device} {intent} onscan={() => screen = 'scan'} phpBase={device.api.replace(/api\/?$/, '')} />
   {:else if screen === 'scan'}
-    <Scan {intent} ignore={seen} onscan={text => { qr = seen = text; screen = 'tx' }} onfail={fail} />
+    <Scan {intent} ignore={seen} onscan={scanned} onfail={fail} />
+  {:else if screen === 'switch'}
+    <Switch {qr} {to} {onswitched} onreuse={async () => { await switchTo(to); await arrived() }} oncancel={() => { screen = 'scan' }} />
   {:else if screen === 'tx' && device}
-    <Tx bind:this={txView} {device} {intent} {qr} onfail={fail} onrescan={() => screen = 'scan'} ondone={(msg, offline) => offline ? (queued = 1, screen = 'home', sendQueued()) : toDashboard(live, msg)} />
+    <Tx bind:this={txView} {device} {intent} {qr} onfail={fail} onrescan={() => screen = 'scan'} ondone={(msg, offline) => offline ? (queued = 1, screen = 'home', sendQueued()) : toDashboard(live(), msg)} />
   {:else if screen === 'home'}
     <div class="head">
       <h1>CGPay</h1>
@@ -156,7 +186,7 @@
       <button data-testid="btn-pay" onclick={() => start('pay')}>Pay</button>
       <button data-testid="btn-receive" onclick={() => start('charge')}>Charge</button>
     {/if}
-    <button data-testid="btn-dashboard" onclick={() => toDashboard(live)}>Dashboard (live site)</button>
+    <button data-testid="btn-dashboard" onclick={() => toDashboard(live())}>Dashboard (live site)</button>
     {#if confirming}
       <div class="warn" role="alertdialog" data-testid="signout-warning">
         <p>{queued} transaction{queued == 1 ? '' : 's'} still waiting to send will be lost if you sign out now.</p>
@@ -164,7 +194,7 @@
         <button class="out" data-testid="btn-cancel-signout" onclick={() => confirming = false}>Cancel</button>
       </div>
     {/if}
-    <p class="foot">Live site: {live}</p>
+    <p class="foot">Live site: {live()}</p>
   {/if}
 </main>
 
@@ -174,6 +204,7 @@
   h1 { color: #0946A6; font-size: 1.5rem; }
   .head { display: flex; align-items: center; justify-content: space-between; }
   :global(button) { font: inherit; padding: 14px; border-radius: 8px; border: 0; background: #1e7a3a; color: #fff; }
+  .demo { margin: 0 0 8px; padding: 4px; text-align: center; font-weight: 700; letter-spacing: 0.2em; background: #f5b301; color: #1a1f1c; border-radius: 6px; }
   .back { background: none; color: #0946A6; padding: 4px 0; }
   .out { background: none; color: #0946A6; }
   .warn { margin-top: 16px; padding: 12px; border: 1px solid #fecaca; background: #fef2f2; border-radius: 8px; }

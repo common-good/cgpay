@@ -4,7 +4,7 @@ import type { APIRequestContext } from '@playwright/test'
 // cgmembers/rcredits/forms/api.inc). It refuses to run on production/stage.
 //
 // Ops: initialize (reset to the default test accounts), update (users table
-// only), rows ("txs", "tx_requests", "grants" or "app_tokens"), mfaOn, passcode. Same protocol the old app's tests used.
+// only), rows ("txs", "tx_requests", "grants" or "app_tokens"), mfaOn, passcode, demo. Same protocol the old app's tests used.
 const API = (process.env.TEST_API_URL ?? 'http://localhost/cg/cgmembers/api/').replace(/\/?$/, '/')
 
 // Must match the format fixVersion() in cgmembers/rcredits/forms/api.inc accepts.
@@ -50,6 +50,9 @@ export class TestDb {
 
   /** Turn multi-factor authentication on for a test account (initialize turns it off). */
   mfaOn(uid: number) { return this.post('mfaOn', { uid: String(uid) }) }
+
+  /** Make the server act as demo (cards of the other kind, no MFA) or stop; initialize turns it off. */
+  demo(on: boolean) { return this.post('demo', { on: on ? '1' : '0' }) }
 
   /** The passcode PHP emailed for a store app sign-in, read from the sign-in's MFA handle. */
   async passcode(handle: string): Promise<string> { return (await this.post('passcode', { handle })).nonce }
