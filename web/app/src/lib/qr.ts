@@ -28,6 +28,7 @@ export function qrUrl(id: string, real: boolean) {
 
 /** Split a scanned QR code into account and card code. Throws an Error whose message is for the member. */
 export function parseQr(qr: string, real: boolean): Card {
+  qr = qr.replace(/^[^/]*\/\/[^/]*\//, s => s.toUpperCase()) // a scanner may hand over the address part in lowercase; the card code after it is case-sensitive
   if (!QR_REGEX.test(qr)) throw new Error('That is not a valid Common Good QR Code format.')
   const parts = qr.split(/[\/.]/)
   const acct = parts[5][0] + parts[2] + parts[5].substring(1)

@@ -1,7 +1,7 @@
 // Transactions on the bundled screens: amount rules, the proof the server checks, and the queue that survives a closed app.
 import type { Device } from '$lib/app-shell'
 import { store } from '../storage'
-import { post, TX_TIMEOUT_MS, unreachable, VERSION, type Identity } from './api'
+import { body, post, TX_TIMEOUT_MS, unreachable, VERSION, type Identity } from './api'
 import { noCardCode, type Card } from './qr'
 
 export const ONLINE_LIMIT = 10000 // the most any account can be charged on the app
@@ -37,16 +37,24 @@ export async function enqueue(t: Tx) { const k = key(t); await store.set(k, t); 
 /** Forget a transaction that was never sent. */
 export const unqueue = (k: string) => store.del(k)
 
+let running: Promise<boolean> | null = null, next: Promise<boolean> | null = null
+
 /**
- * Send every queued transaction, each on its own: one the server refuses is kept with the reason and does not hold up the others.
+ * Send every queued transaction, each on its own: one the server refuses, or answers with anything but a clear yes, is kept with the reason and does not hold up the others.
  * A network failure stops the run (the rest would fail the same way; returns true) and they go out next time.
+ * Never two runs at once, or a transaction could go out twice: a call during a run waits for it, then all such calls share one more run (for what was queued meanwhile).
  */
-export async function flush(d: Device): Promise<boolean> {
+export function flush(d: Device): Promise<boolean> {
+  if (!running) return running = sendAll(d).finally(() => running = null)
+  return next ??= running.then(() => { next = null; return flush(d) })
+}
+
+async function sendAll(d: Device) {
   for (const [k, t] of await store.all<Tx>('tx:')) {
     if (t.error) continue
     try {
-      const res = await (await post(d, 'transactions', { ...t }, TX_TIMEOUT_MS)).json().catch(() => ({ ok: true }))
-      if (res?.ok === false) await store.set(k, { ...t, error: String(res.message ?? 'refused') }); else await store.del(k)
+      const res = await body(await post(d, 'transactions', { ...t }, TX_TIMEOUT_MS))
+      if (res?.ok === true) await store.del(k); else await store.set(k, { ...t, error: String(res?.message ?? 'refused') })
     } catch (er) {
       if (unreachable(er)) return true
       await store.set(k, { ...t, error: (er as Error).message })
