@@ -176,6 +176,21 @@ Scenario: A member signs out from the app's home screen with no connection
   And click "menu-signout"
   Then on page "signin"
 
+Scenario: A token signed out on the server signs the app out the next time it opens
+  Given store app has no account
+  When input:
+  | identifier | password |
+  | Bea Two    | k        |
+  And click "btn-signin"
+  Then on page ""
+
+  When all devices signed out for "Bea"
+  And store app opens
+  Then on page "signin"
+  And these "app_tokens" rows:
+  | uid | label   | revoked |
+  | Bea | web app | !       |
+
 Rule: A member with transactions still waiting to send is warned before signing out, and can cancel
 
 Scenario: A member cancels signing out

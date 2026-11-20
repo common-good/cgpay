@@ -114,6 +114,14 @@ export default {
 
   async reload(app: App) { await app.page.reload() },
 
+  /** Sign this member out of every device on the server, as from another phone: sign in there, then sign out everywhere. */
+  async allSignedOut(app: App, who: string) {
+    const req = app.page.request, a = acct(who)
+    const { token } = await (await req.post('/api/app/signin', { data: { identifier: a.fullName, password: a.password, label: 'elsewhere' } })).json()
+    if (!token) throw new Error(`all devices signed out for "${who}": signing in elsewhere gave no token`)
+    expect((await req.post('/api/app/revoke', { data: { token, everywhere: true } })).ok(), 'all devices signed out: the server signed them out').toBeTruthy()
+  },
+
   /** Open the store app's own screens on a phone with no account on it (each scenario's browser starts with empty storage). */
   async storeAppNoAccount(app: App) { await this.storeAppOpens(app) },
 
