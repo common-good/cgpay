@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { goto, invalidateAll } from '$app/navigation'
+  import '$lib/styles/app.css'
+  import { goto, invalidateAll, onNavigate } from '$app/navigation'
   import { page } from '$app/state'
   import { env } from '$env/dynamic/public'
   import Brand from '$lib/components/Brand.svelte'
@@ -36,6 +37,15 @@
     return ''
   })
 
+  // Cross-fade between pages where the browser supports it; app.css shortens it to nothing under reduced motion.
+  onNavigate(nav => {
+    if (!document.startViewTransition || nav.from?.url.pathname === nav.to?.url.pathname) return
+    return new Promise(done => document.startViewTransition(async () => { done(); await nav.complete }))
+  })
+
+  let links = $state<HTMLElement>()
+  $effect(() => { activeLabel; links?.querySelector('.active')?.scrollIntoView({ block: 'nearest', inline: 'center' }) })
+
   async function signOut() {
     try {
       await fetch('/api/logout', { method: 'POST' })
@@ -54,11 +64,12 @@
   <link rel="icon" href={favicon} />
 </svelte:head>
 
+<div class="shell">
 {#if showHeader}
   <nav class="topnav" data-testid="topnav">
     <Brand size={32} />
     {#if data.user && !isLogin}
-      <ul class="nav-links">
+      <ul class="nav-links" bind:this={links}>
         {#each data.user.menu as label}
           {#if menuHref(label)}
             <li><a class:active={label === activeLabel} href={label === 'Dashboard' ? '/' : menuHref(label)}>{label}</a></li>
@@ -75,7 +86,7 @@
       </ul>
       <div class="account">
         <span class="hi">Hi, {data.user.name}</span>
-        <button class="ghost" onclick={signOut}>Sign out</button>
+        <button class="signout" onclick={signOut}>Sign out</button>
       </div>
     {:else}
       <div class="spacer"></div>
@@ -83,7 +94,7 @@
   </nav>
 {/if}
 
-{@render children()}
+<div class="shell-main">{@render children()}</div>
 
 <footer class="app-version" title="Currently deployed build">
   <span class="ver-branch">{appVersion.branch}</span>
@@ -94,129 +105,58 @@
     <span class="ver-time">{new Date(appVersion.builtAt).toLocaleString()}</span>
   {/if}
 </footer>
+</div>
 
 <style>
-  :global(:root) {
-    --cg-green: #1e7a3a;
-    --cg-green-hover: #155a2b;
-    --cg-green-soft: rgba(30, 122, 58, 0.08);
-    --cg-navy: #0946A6;            /* matches the commongood.earth promo-site header */
-    --cg-navy-soft: rgba(255, 255, 255, 0.1);
-    --cg-bg: #f5f7f4;
-    --cg-surface: #ffffff;
-    --cg-border: #e4e8e4;
-    --cg-text: #1a1f1c;
-    --cg-text-muted: #5a615e;
-    --cg-on-navy: #ffffff;
-    --cg-on-navy-muted: rgba(255, 255, 255, 0.7);
-    --cg-error: #b3261e;
-    --cg-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.06);
-    --cg-radius: 12px;
-    --cg-radius-sm: 8px;
-  }
-
-  :global(*) { box-sizing: border-box; }
-  :global(html, body) {
-    margin: 0;
-    padding: 0;
-    background: var(--cg-bg);
-    color: var(--cg-text);
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-    -webkit-font-smoothing: antialiased;
-  }
-  :global(button) { font-family: inherit; }
-  :global(input) { font-family: inherit; }
-  :global(a) { color: var(--cg-green); text-decoration: none; }
-  :global(a:hover) { text-decoration: underline; }
+  .shell { min-height: 100dvh; display: flex; flex-direction: column; }
+  .shell-main { flex: 1; display: flex; flex-direction: column; }
 
   .topnav {
-    display: flex;
+    view-transition-name: topnav;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas: "brand links account";
     align-items: center;
-    gap: 2rem;
-    padding: 0.85rem 1.75rem;
+    column-gap: var(--sp-6);
+    padding: 0 var(--gutter);
+    min-height: 60px;
     background: var(--cg-navy);
     color: var(--cg-on-navy);
-    border-bottom: none;
-    flex-wrap: wrap;
   }
-  .nav-links {
-    list-style: none; padding: 0; margin: 0;
-    display: flex; gap: 1.5rem; flex: 1;
-    flex-wrap: wrap;
-    min-width: 0;
+  .topnav > :global(.brand) { grid-area: brand; }
+  .nav-links { grid-area: links; list-style: none; padding: 0; margin: 0; display: flex; gap: var(--sp-1); min-width: 0; }
+  .nav-links a, .nav-disabled {
+    display: flex; align-items: center; min-height: var(--tap); padding: 0 var(--sp-3);
+    color: var(--cg-on-navy-muted); font-size: var(--fs-sm); font-weight: 500; white-space: nowrap;
+    border-radius: var(--r-sm); text-decoration: none; position: relative;
+    transition: color var(--dur-fast), background-color var(--dur-fast);
   }
-  .nav-links a {
-    color: var(--cg-on-navy-muted);
-    font-size: 0.92rem;
-    font-weight: 500;
-    padding: 0.4rem 0.1rem;
-    border-bottom: 2px solid transparent;
-    text-decoration: none;
+  .nav-links a.active { color: var(--cg-on-navy); }
+  .nav-links a.active::after { content: ''; position: absolute; left: var(--sp-3); right: var(--sp-3); bottom: 4px; height: 2px; border-radius: 2px; background: currentColor; }
+  @media (hover: hover) { .nav-links a:hover { color: var(--cg-on-navy); background: var(--cg-navy-soft); text-decoration: none; } }
+  .nav-disabled { background: none; border: 0; opacity: 0.55; cursor: not-allowed; }
+  .account { grid-area: account; display: flex; align-items: center; gap: var(--sp-3); }
+  .hi { font-size: var(--fs-sm); }
+  .signout {
+    min-height: 36px; padding: 0 var(--sp-3); background: transparent; color: var(--cg-on-navy);
+    border: 1px solid var(--cg-on-navy-muted); border-radius: var(--r-sm); font-size: var(--fs-sm); cursor: pointer;
   }
-  .nav-links a:hover { color: var(--cg-on-navy); text-decoration: none; }
-  .nav-links a.active { color: var(--cg-on-navy); border-bottom-color: var(--cg-green); }
-  .nav-disabled {
-    background: transparent;
-    border: none;
-    padding: 0.4rem 0.1rem;
-    color: var(--cg-on-navy-muted);
-    font-size: 0.92rem;
-    font-weight: 500;
-    opacity: 0.55;
-    cursor: not-allowed;
-    font-family: inherit;
+  @media (hover: hover) { .signout:hover { background: var(--cg-navy-soft); } }
+  .spacer { grid-area: links; }
+
+  /* Phones: brand and account on one row, the menu as one row below that scrolls sideways instead of wrapping. */
+  @media (max-width: 799px) {
+    .topnav { grid-template-columns: 1fr auto; grid-template-areas: "brand account" "links links"; row-gap: var(--sp-1); padding-top: var(--sp-2); }
+    .nav-links { overflow-x: auto; scrollbar-width: none; margin: 0 calc(-1 * var(--gutter)); padding: 0 calc(var(--gutter) - var(--sp-3)); scroll-padding: 0 var(--gutter); }
+    .nav-links::-webkit-scrollbar { display: none; }
+    .hi { display: none; }
   }
-  .account {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-  }
-  .hi { color: var(--cg-on-navy); font-size: 0.9rem; }
-  .ghost {
-    background: transparent;
-    color: var(--cg-on-navy);
-    border: 1px solid var(--cg-on-navy-muted);
-    border-radius: var(--cg-radius-sm);
-    padding: 0.35rem 0.85rem;
-    font-size: 0.85rem;
-    cursor: pointer;
-  }
-  .ghost:hover { background: var(--cg-navy-soft); }
-  .spacer { flex: 1; }
 
   .app-version {
-    position: fixed;
-    right: 0.75rem;
-    bottom: 0.5rem;
-    z-index: 5;
-    padding: 0.15rem 0.55rem;
-    background: rgba(255, 255, 255, 0.85);
-    border: 1px solid var(--cg-border);
-    border-radius: 999px;
-    font-size: 0.7rem;
-    color: var(--cg-text-muted);
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    line-height: 1.2;
-    pointer-events: none;
-    user-select: text;
+    padding: var(--sp-3) var(--gutter);
+    text-align: center;
+    font: var(--fs-xs)/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+    color: var(--cg-text-subtle);
   }
   .app-version .ver-sep { margin: 0 0.35rem; opacity: 0.5; }
-  .app-version .ver-branch { color: var(--cg-text); font-weight: 500; }
-
-  /* Phone-width tweaks: tighten the header so brand + nav + account fit on
-     narrow screens without the right side running off (per cgpay #183). */
-  @media (max-width: 640px) {
-    .topnav {
-      gap: 0.75rem;
-      padding: 0.7rem 1rem;
-    }
-    .nav-links {
-      gap: 0.9rem;
-      order: 3;
-      flex-basis: 100%;
-    }
-    .account { gap: 0.6rem; margin-left: auto; }
-    .hi { display: none; }
-    .ghost { padding: 0.3rem 0.7rem; }
-  }
 </style>
