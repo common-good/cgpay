@@ -49,6 +49,7 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; }
+html.locked { overflow: hidden; }
 body {
   margin: 0;
   background: var(--cg-bg);
@@ -100,7 +101,9 @@ a { color: var(--cg-green); text-decoration: none; }
 /* Forms */
 form.stack { gap: var(--sp-4); }
 .field { display: grid; gap: 6px; min-width: 0; border: 0; padding: 0; margin: 0; }
-.field > label, .field > legend { font-size: var(--fs-sm); font-weight: 600; color: var(--cg-text); padding: 0; }
+.field > label, .field > legend, .label-row > label { font-size: var(--fs-sm); font-weight: 600; color: var(--cg-text); padding: 0; }
+.label-row { display: flex; justify-content: space-between; align-items: center; gap: var(--sp-3); min-height: 20px; }
+.label-row > .link-button, .label-row > .link { font-size: var(--fs-sm); min-height: 0; padding: var(--sp-2) 0; margin: calc(-1 * var(--sp-2)) 0; }
 .field-hint { font-size: var(--fs-sm); color: var(--cg-text-muted); }
 .field-err { font-size: var(--fs-sm); color: var(--cg-error); }
 input:not([type="checkbox"], [type="radio"], [type="file"]), select, textarea {

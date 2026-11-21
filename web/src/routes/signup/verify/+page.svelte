@@ -2,13 +2,10 @@
   import { onMount } from 'svelte'
   import { goto } from '$app/navigation'
   import { page } from '$app/state'
-  import Brand from '$lib/components/Brand.svelte'
-  import { validateCode } from '$lib/signup-validation'
   import { readSignupSession, writeSignupSession } from '$lib/signup-session'
+  import SignupCodeForm from '$lib/components/SignupCodeForm.svelte'
 
   let code = $state('')
-  let codeError = $state<string | null>(null)
-  let submitting = $state(false)
   let qid = $state('')
 
   onMount(() => {
@@ -39,21 +36,6 @@
     }
   })
 
-  function onBlur() {
-    codeError = validateCode(code)
-  }
-
-  async function submit(e: Event) {
-    e.preventDefault()
-    const err = validateCode(code)
-    codeError = err
-    if (err) return
-
-    submitting = true
-    const session = readSignupSession()
-    writeSignupSession({ uid: session?.uid ?? 0, qid: qid || session?.qid || '', code: code.trim() })
-    await goto('/signup/password')
-  }
 </script>
 
 <svelte:head><title>Verify your email - Common Good</title></svelte:head>
@@ -66,27 +48,7 @@
       <p>Enter the code from the email we sent you{qid ? `, so we can finish setting up account ${qid}` : ''}.</p>
     </div>
 
-    <form class="stack" onsubmit={submit} novalidate>
-      <div class="field">
-        <label for="code">Verification code</label>
-        <input
-          id="code"
-          data-testid="code"
-          type="text"
-          inputmode="text"
-          autocomplete="one-time-code"
-          bind:value={code}
-          onblur={onBlur}
-          placeholder="paste or type the code"
-          aria-invalid={!!codeError}
-        />
-        {#if codeError}<span class="field-err">{codeError}</span>{/if}
-      </div>
-
-      <button type="submit" class="btn btn-primary btn-block" data-testid="btn-verify" disabled={submitting}>
-        {submitting ? 'Checking...' : 'Continue'}
-      </button>
-    </form>
+    <SignupCodeForm bind:code {qid} />
 
     <div class="auth-foot">
       <a class="link" href="/signup/check-email">Didn't get the email?</a>

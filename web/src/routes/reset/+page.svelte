@@ -56,8 +56,7 @@
 <main class="auth">
   <div class="auth-card" role="region" aria-labelledby="reset-h1">
     <div class="auth-head">
-      <p class="auth-eyebrow">Reset your password</p>
-      <h1 id="reset-h1">Forgot your password?</h1>
+      <h1 id="reset-h1">Reset your password</h1>
       <p>Tell us how to send you a one-time code.</p>
     </div>
 

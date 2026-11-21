@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Brand from '$lib/components/Brand.svelte'
+  import SignupCodeForm from '$lib/components/SignupCodeForm.svelte'
 </script>
 
 <svelte:head><title>Check your email - Common Good</title></svelte:head>
@@ -11,7 +11,7 @@
       <p>We just sent you a message with a short code. Click the link in the email, or enter the code below to finish setting up your account.</p>
     </div>
 
-    <a class="btn btn-primary btn-block" href="/signup/verify">Enter your code</a>
+    <SignupCodeForm />
 
     <p class="muted">Didn't get the email? Check your spam folder, or <a class="link" href="/signup">try signing up again</a>.</p>
 

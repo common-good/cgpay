@@ -13,7 +13,6 @@
   let submitting = $state(false)
 
   const phpBase = (env.PUBLIC_PHP_BASE_URL ?? '').replace(/\/$/, '')
-  const helpHref   = phpBase ? phpBase + '/help' : 'mailto:support@commongood.earth'
   const signupHref = phpBase ? phpBase + '/signup' : ''
   const forgotHref = '/reset'
 
@@ -78,16 +77,12 @@
       {#if signupHref}
         <p>New to Common Good? <a class="link" data-testid="lnk-signup" href={signupHref}>Create an account</a></p>
       {/if}
-      <p><a class="help-link" href={helpHref}>Need help signing in?</a></p>
     </div>
   </div>
 </main>
 
 <style>
-  .label-row { display: flex; justify-content: space-between; align-items: baseline; }
-  .label-row label { font-size: var(--fs-sm); font-weight: 600; }
   .forgot { font-size: var(--fs-sm); font-weight: 500; padding: var(--sp-2) 0; margin: calc(-1 * var(--sp-2)) 0; }
-  .help-link { color: var(--cg-text-muted); display: inline-block; padding: var(--sp-2); }
   /* In the store app the top bar is hidden on this page (see +layout.svelte), so the card shows the brand and fills the screen. */
   .auth.app { background: var(--cg-surface); padding-top: max(var(--sp-6), env(safe-area-inset-top)); }
   .auth.app .auth-card { border: 0; box-shadow: none; padding: 0; }

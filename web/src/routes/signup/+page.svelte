@@ -169,7 +169,12 @@
       </div>
 
       <div class="field">
-        <label for="zip">ZIP code</label>
+        <div class="label-row">
+          <label for="zip">ZIP code</label>
+          <button type="button" class="link-button" onclick={() => (outsideUS = !outsideUS)} aria-expanded={outsideUS} aria-controls="non-us">
+            {outsideUS ? 'I am in the US' : 'Not in the US?'}
+          </button>
+        </div>
         <input
           id="zip"
           data-testid="zip"
@@ -182,14 +187,8 @@
           aria-invalid={!!fieldErrors.zip}
         />
         {#if fieldErrors.zip}<span class="field-err" role="alert">{fieldErrors.zip}</span>{/if}
-      </div>
-
-      <div class="field">
-        <button type="button" class="link-button" onclick={() => (outsideUS = !outsideUS)} aria-expanded={outsideUS}>
-          {outsideUS ? 'I am in the US' : 'Not in the US?'}
-        </button>
         {#if outsideUS}
-          <p class="alert alert-warn">Non-US sign-up isn't supported in this flow yet. Please use the <a class="link" href="/login">classic sign-up on the member site</a>.</p>
+          <p class="alert alert-warn" id="non-us">Non-US sign-up isn't supported in this flow yet. Please use the <a class="link" href="/login">classic sign-up on the member site</a>.</p>
         {/if}
       </div>
 
