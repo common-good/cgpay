@@ -9,7 +9,7 @@
   import { inApp, appLink, device, type Device } from '$lib/app-shell'
   import { fade, fly } from 'svelte/transition'
   import { cubicOut } from 'svelte/easing'
-  import { ms, focusIn, swipeDown } from '$lib/motion'
+  import { ms, focusIn, swipeDown, lockScroll } from '$lib/motion'
 
   let { data }: { data: PageData } = $props()
 
@@ -103,12 +103,6 @@
     return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   }
 
-  function fmtDate(unixSec: number) {
-    return new Date(unixSec * 1000).toLocaleDateString('en-US', {
-      month: 'short', day: 'numeric', year: 'numeric'
-    })
-  }
-
   function payPendingItems(i: InfoResponse): InfoTx[] {
     return i.txs.filter(t => t.pending && t.amount < 0)
   }
@@ -119,6 +113,7 @@
   function openPayPending() { modal = 'pay' }
   function openReceivePending() { modal = 'receive' }
   function closeModal() { modal = null }
+  $effect(() => lockScroll(!!modal))
 
   function onKeydown(e: KeyboardEvent) {
     if (e.key === 'Escape' && modal) closeModal()
@@ -140,6 +135,10 @@
 <svelte:window onkeydown={onKeydown} onpageshow={onPageShow} onvisibilitychange={onVisible} />
 
 {#snippet chevron()}<span class="row-end"><Icon name="chevron" size={18} /></span>{/snippet}
+{#snippet pending(amt: string)}<span>Pending:</span> <span class="nowrap">{amt}<Icon name="chevron" size={14} /></span>{/snippet}
+{#snippet txDate(t: number)}{@const d = new Date(t * 1000)}<time class="tx-date" datetime={d.toISOString().slice(0, 10)}>
+  <span class="md">{d.toLocaleDateString('en-US', { month: 'short' })} {String(d.getDate()).padStart(2, '0')}</span><span class="yr">{d.getFullYear()}</span>
+</time>{/snippet}
 
 <div class="dash">
   {#if loading}
@@ -159,82 +158,62 @@
       {/if}
 
       <div class="layout">
-        <div class="stack">
-          <section class="card balance">
-            <h1>Welcome back, {firstName(info.name)}</h1>
-            <div class="bal">
-              <span class="bal-label">Available funds</span>
-              <span class="bal-value" data-testid="balance">{fmtMoney(info.balance)}</span>
-            </div>
-            <div class="actions">
+        <section class="card balance">
+          <h1>Welcome back, {firstName(info.name)}</h1>
+          <div class="bal">
+            <span class="bal-label">Available funds</span>
+            <span class="bal-value" data-testid="balance">{fmtMoney(info.balance)}</span>
+          </div>
+          <div class="actions">
+            <div class="action">
               <a class="action-btn" data-testid="btn-pay" href={transactionUrl('pay') || '#'} aria-disabled={!phpBase && !(hasCamera && data.cgpayPwaUrl) || undefined}>
                 <span class="action-icon out"><Icon name="upload" size={22} /></span>
                 <span class="action-label">Pay</span>
-                <span class="action-desc">Send funds to another member</span>
               </a>
+              {#if info.summary.pendingPay > 0}
+                <button type="button" class="pending" onclick={openPayPending}>{@render pending(fmtMoney(info.summary.pendingPay))}</button>
+              {/if}
+            </div>
+            <div class="action">
               <a class="action-btn" data-testid="btn-receive" href={transactionUrl('charge') || '#'} aria-disabled={!phpBase && !(hasCamera && data.cgpayPwaUrl) || undefined}>
                 <span class="action-icon"><Icon name="download" size={22} /></span>
                 <span class="action-label">Receive</span>
-                <span class="action-desc">Request funds from a member</span>
               </a>
+              {#if info.summary.pendingReceive > 0}
+                <button type="button" class="pending" onclick={openReceivePending}>{@render pending(fmtMoney(info.summary.pendingReceive))}</button>
+              {/if}
+            </div>
+            <div class="action">
               <a class="action-btn" href={phpUrl('get') || '#'} aria-disabled={!phpBase || undefined}>
                 <span class="action-icon info"><Icon name="bank" size={22} /></span>
                 <span class="action-label">Transfer</span>
-                <span class="action-desc">Move funds in or out</span>
               </a>
+              {#if transferLabel(info)}<span class="pending static">{transferLabel(info)}</span>{/if}
             </div>
-          </section>
+          </div>
+        </section>
 
-          {#if info.summary.pendingPay > 0 || info.summary.pendingReceive > 0 || transferLabel(info)}
-            <section class="card">
-              <h2 class="card-title">Pending</h2>
-              <ul class="list-rows">
-                {#if info.summary.pendingPay > 0}
-                  <li><button type="button" class="row-link pending-link" onclick={openPayPending}>
-                    <span class="icon-dot out"><Icon name="clock" size={18} /></span>
-                    <span class="row-text"><span class="row-title">To pay</span><span class="row-sub">Invoices waiting on you</span></span>
-                    <span class="amt">{fmtMoney(info.summary.pendingPay)}</span>{@render chevron()}
-                  </button></li>
-                {/if}
-                {#if info.summary.pendingReceive > 0}
-                  <li><button type="button" class="row-link pending-link" onclick={openReceivePending}>
-                    <span class="icon-dot"><Icon name="clock" size={18} /></span>
-                    <span class="row-text"><span class="row-title">To receive</span><span class="row-sub">Invoices you're waiting on</span></span>
-                    <span class="amt in">{fmtMoney(info.summary.pendingReceive)}</span>{@render chevron()}
-                  </button></li>
-                {/if}
-                {#if transferLabel(info)}
-                  <li><div class="row-link static">
-                    <span class="icon-dot info"><Icon name="bank" size={18} /></span>
-                    <span class="row-text"><span class="row-title">Bank transfer</span><span class="row-sub pending-static">{transferLabel(info)}</span></span>
-                  </div></li>
-                {/if}
-              </ul>
-            </section>
+        <section class="card recent">
+          <h2 class="card-title">Recent activity</h2>
+          {#if info.txs.filter(t => !t.pending).length === 0}
+            <p class="empty">No activity yet. Payments you make and receive will show up here.</p>
+          {:else}
+            <ul class="list-rows">
+              {#each info.txs.filter(t => !t.pending) as tx (tx.xid)}
+                <li class="tx">
+                  {@render txDate(tx.created)}
+                  <span class="row-text">
+                    <span class="row-title"><span class="sr-only">{tx.amount >= 0 ? 'Received from' : 'Paid to'}</span> {tx.counterparty}</span>
+                    {#if tx.description}<span class="row-sub">{tx.description}</span>{/if}
+                  </span>
+                  <span class="amt" class:in={tx.amount >= 0}>{tx.amount >= 0 ? '+' : '-'}{fmtMoney(Math.abs(tx.amount))}</span>
+                </li>
+              {/each}
+            </ul>
           {/if}
+        </section>
 
-          <section class="card">
-            <h2 class="card-title">Recent activity</h2>
-            {#if info.txs.filter(t => !t.pending).length === 0}
-              <p class="empty">No activity yet. Payments you make and receive will show up here.</p>
-            {:else}
-              <ul class="list-rows">
-                {#each info.txs.filter(t => !t.pending) as tx (tx.xid)}
-                  <li class="tx">
-                    <span class="icon-dot {tx.amount >= 0 ? '' : 'out'}"><Icon name={tx.amount >= 0 ? 'download' : 'upload'} size={18} /></span>
-                    <span class="row-text">
-                      <span class="row-title"><span class="sr-only">{tx.amount >= 0 ? 'Received from' : 'Paid to'}</span> {tx.counterparty}</span>
-                      <span class="row-sub">{tx.description ? `${tx.description} - ` : ''}{fmtDate(tx.created)}</span>
-                    </span>
-                    <span class="amt" class:in={tx.amount >= 0}>{tx.amount >= 0 ? '+' : '-'}{fmtMoney(Math.abs(tx.amount))}</span>
-                  </li>
-                {/each}
-              </ul>
-            {/if}
-          </section>
-        </div>
-
-        <aside class="card">
+        <aside class="card quick">
           <h2 class="card-title">Quick Actions</h2>
           <ul class="list-rows">
             {#if info.sponsored}
@@ -282,9 +261,10 @@
       <ul class="list-rows">
         {#each pay ? payPendingItems(info) : receivePendingItems(info) as tx}
           <li class="tx">
+            {@render txDate(tx.created)}
             <span class="row-text">
               <span class="row-title">{tx.counterparty}</span>
-              <span class="row-sub">{tx.description ? `${tx.description} - ` : ''}{fmtDate(tx.created)}</span>
+              {#if tx.description}<span class="row-sub">{tx.description}</span>{/if}
             </span>
             <span class="amt" class:in={!pay}>{fmtMoney(Math.abs(tx.amount))}</span>
           </li>
@@ -304,7 +284,12 @@
   .notice-close { border: 0; background: none; color: inherit; cursor: pointer; display: grid; place-items: center; width: var(--tap); height: var(--tap); margin: -12px -12px -12px 0; }
 
   .layout { display: grid; gap: var(--sp-4); align-items: start; }
-  @media (min-width: 960px) { .layout { grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr); gap: var(--sp-5); } }
+  @media (min-width: 960px) {
+    .layout { grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr); grid-template-areas: "bal quick" "recent recent"; gap: var(--sp-5); }
+    .balance { grid-area: bal; }
+    .quick { grid-area: quick; align-self: stretch; }
+    .recent { grid-area: recent; }
+  }
 
   .card-title { font-size: var(--fs-base); padding: var(--sp-4) var(--sp-4) var(--sp-2); }
   .empty { padding: var(--sp-2) var(--sp-4) var(--sp-5); color: var(--cg-text-muted); }
@@ -318,31 +303,42 @@
   .bal-value { font-size: var(--fs-num); font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; font-variant-numeric: tabular-nums; }
 
   .actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-2); }
+  .action { display: grid; grid-template-rows: 1fr auto; background: var(--cg-surface-2); border-radius: var(--r-md); overflow: hidden; }
   .action-btn {
     display: grid; justify-items: center; align-content: center; gap: var(--sp-2);
     min-height: 92px; padding: var(--sp-3) var(--sp-2);
-    background: var(--cg-surface-2); border-radius: var(--r-md); color: var(--cg-text); text-align: center; text-decoration: none;
+    color: var(--cg-text); text-align: center; text-decoration: none;
     transition: background-color var(--dur-fast), transform var(--dur-fast) var(--ease-out);
   }
   .action-btn:hover { text-decoration: none; }
   .action-btn:active { transform: scale(0.97); background: var(--cg-border); }
-  @media (hover: hover) { .action-btn:hover { background: var(--cg-border); } }
+  @media (hover: hover) { .action-btn:hover, .pending:not(.static):hover { background: var(--cg-border); } }
   .action-icon { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--cg-surface); color: var(--cg-green); box-shadow: var(--shadow-1); }
   .action-icon.out { color: var(--cg-out); }
   .action-icon.info { color: var(--cg-info); }
   .action-label { font-weight: 600; }
-  .action-desc { display: none; font-size: var(--fs-xs); color: var(--cg-text-muted); line-height: 1.3; }
+  .pending {
+    display: block; width: 100%; min-height: var(--tap); padding: var(--sp-2); border: 0; border-top: 1px solid var(--cg-border-strong);
+    background: none; color: var(--cg-text-muted); font: inherit; font-size: var(--fs-xs); line-height: 1.35; text-align: center; cursor: pointer;
+    transition: background-color var(--dur-fast);
+  }
+  .pending :global(svg) { vertical-align: -2px; margin-left: 2px; }
+  .pending.static { cursor: default; display: grid; place-items: center; }
+  .nowrap { white-space: nowrap; }
   @media (min-width: 640px) {
     .balance { padding: var(--sp-5); }
-    .action-btn { min-height: 120px; }
-    .action-desc { display: block; }
+    .action-btn { min-height: 112px; }
+    .pending { font-size: var(--fs-sm); }
   }
 
-  .static { cursor: default; }
-  .static:active, .static:hover { background: none; }
-  .tx { display: flex; align-items: center; gap: var(--sp-3); min-height: 64px; padding: var(--sp-3) var(--sp-4); }
+  .tx { display: flex; align-items: center; gap: var(--sp-3); min-height: 56px; padding: var(--sp-2) var(--sp-4); }
+  .tx-date { display: inline-grid; justify-items: start; flex: none; min-width: 3.4em; color: var(--cg-text-muted); line-height: 1.15; font-variant-numeric: tabular-nums; }
+  .tx-date .md { font-size: var(--fs-sm); font-weight: 600; color: var(--cg-text); }
+  .tx-date .yr { font-size: 11px; letter-spacing: 0.22em; }
+  .tx .row-title { font-size: 15px; font-weight: 500; }
+  .tx .row-sub { font-size: 13px; }
   .row-text .row-title, .row-text .row-sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .amt { font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .amt { font-size: 15px; font-variant-numeric: tabular-nums; white-space: nowrap; }
   .amt.in { color: var(--cg-green); }
 
   .footer { padding: var(--sp-5) var(--gutter) var(--sp-2); text-align: center; border-top: 1px solid var(--cg-border); }

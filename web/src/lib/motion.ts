@@ -3,6 +3,9 @@ import { browser } from '$app/environment'
 /** A transition length in ms, or 0 when the user asks the system for reduced motion. */
 export const ms = (n: number) => browser && matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : n
 
+/** Keep the page behind an open sheet or menu from scrolling. */
+export const lockScroll = (on: boolean) => { if (browser) document.documentElement.classList.toggle('locked', on) }
+
 /** Move keyboard focus into an element when it appears (dialogs, sheets). */
 export function focusIn(node: HTMLElement) { node.focus({ preventScroll: true }) }
 
