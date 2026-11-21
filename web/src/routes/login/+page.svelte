@@ -44,228 +44,51 @@
   }
 </script>
 
-<main class="page" class:app>
-  <div class="card" role="region" aria-labelledby="signin-h1">
-    <div class="card-top">
-      <Brand size={40} />
-      <p class="tagline">A fiscally sponsored economy for the common good</p>
+<main class="auth" class:app>
+  <div class="auth-card" role="region" aria-labelledby="signin-h1">
+    {#if app}<Brand size={40} />{/if}
+    <div class="auth-head">
+      <h1 id="signin-h1">Sign in</h1>
+      <p>Welcome back. Sign in to access your account.</p>
     </div>
 
-    <div class="card-body">
-      <h1 id="signin-h1">Sign in</h1>
-      <p class="subtitle">Welcome back. Sign in to access your account.</p>
-
-      <form onsubmit={submit} novalidate>
-        <div class="field">
-          <label for="identifier">Account ID</label>
-          <input
-            id="identifier"
-            data-testid="identifier"
-            type="text"
-            bind:value={identifier}
-            autocomplete="username"
-            placeholder="account code, name, email, or phone"
-            required
-          />
-        </div>
-
-        <div class="field">
-          <label for="password">Password</label>
-          <input
-            id="password"
-            data-testid="password"
-            type="password"
-            bind:value={password}
-            autocomplete="current-password"
-            placeholder="••••••••"
-            required
-          />
-        </div>
-
-        {#if error}
-          <p class="err" role="alert">{error}</p>
-        {/if}
-
-        <div class="form-actions">
-          <button type="submit" class="primary" data-testid="btn-signin" disabled={submitting}>
-            {submitting ? 'Signing in…' : 'Sign in'}
-          </button>
-          {#if forgotHref}
-            <a class="inline-link" data-testid="lnk-reset" href={forgotHref}>Reset password</a>
-          {/if}
-        </div>
-      </form>
-
-      {#if signupHref}
-        <p class="signup-prompt">
-          New to Common Good? <a class="signup-link" data-testid="lnk-signup" href={signupHref}>Create an account</a>
-        </p>
-      {/if}
-
-      <div class="foot">
-        <a class="help-link" href={helpHref}>Need help signing in?</a>
+    <form class="stack" onsubmit={submit} novalidate>
+      <div class="field">
+        <label for="identifier">Account ID</label>
+        <input id="identifier" data-testid="identifier" type="text" bind:value={identifier} autocomplete="username"
+          autocapitalize="none" spellcheck="false" placeholder="Account code, name, email or phone" required />
       </div>
+
+      <div class="field">
+        <div class="label-row">
+          <label for="password">Password</label>
+          {#if forgotHref}<a class="forgot" data-testid="lnk-reset" href={forgotHref}>Reset password</a>{/if}
+        </div>
+        <input id="password" data-testid="password" type="password" bind:value={password} autocomplete="current-password" required />
+      </div>
+
+      {#if error}<p class="alert alert-error" role="alert">{error}</p>{/if}
+
+      <button type="submit" class="btn btn-primary btn-block" data-testid="btn-signin" disabled={submitting}>
+        {submitting ? 'Signing in...' : 'Sign in'}
+      </button>
+    </form>
+
+    <div class="auth-foot">
+      {#if signupHref}
+        <p>New to Common Good? <a class="link" data-testid="lnk-signup" href={signupHref}>Create an account</a></p>
+      {/if}
+      <p><a class="help-link" href={helpHref}>Need help signing in?</a></p>
     </div>
   </div>
 </main>
 
 <style>
-  /* In the store app the page fills the screen: no window-in-a-window card (the app's top bar is hidden on this page, see +layout.svelte). */
-  .page.app { padding: 0; background: var(--cg-surface); align-items: start; }
-  .page.app .card { max-width: none; border: 0; border-radius: 0; box-shadow: none; }
-
-  .page {
-    min-height: 100vh;
-    display: grid;
-    place-items: center;
-    padding: 2rem 1.25rem;
-    background:
-      radial-gradient(ellipse at top, #e6f0e6 0%, transparent 55%),
-      linear-gradient(180deg, #eaf1ea 0%, var(--cg-bg) 45%);
-  }
-
-  .card {
-    width: 100%;
-    max-width: 420px;
-    background: var(--cg-surface);
-    border: 1px solid var(--cg-border);
-    border-radius: var(--cg-radius);
-    box-shadow: var(--cg-shadow);
-    overflow: hidden;
-  }
-
-  .card-top {
-    padding: 1.75rem 2rem 1.25rem;
-    background: var(--cg-navy);
-    color: var(--cg-on-navy);
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.6rem;
-  }
-  .tagline {
-    margin: 0;
-    color: var(--cg-on-navy-muted);
-    font-size: 0.88rem;
-    font-weight: 400;
-    letter-spacing: 0.01em;
-  }
-
-  .card-body {
-    padding: 1.75rem 2rem 1.5rem;
-  }
-
-  h1 {
-    margin: 0 0 0.35rem;
-    font-size: 1.55rem;
-    font-weight: 600;
-    letter-spacing: -0.01em;
-    color: var(--cg-text);
-  }
-  .subtitle {
-    margin: 0 0 1.5rem;
-    color: var(--cg-text-muted);
-    font-size: 0.92rem;
-  }
-
-  form { display: grid; gap: 1rem; }
-  .field { display: grid; gap: 0.35rem; }
-  label {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--cg-text);
-  }
-
-  input {
-    padding: 0.65rem 0.8rem;
-    font-size: 0.95rem;
-    border: 1px solid var(--cg-border);
-    border-radius: var(--cg-radius-sm);
-    background: var(--cg-surface);
-    color: var(--cg-text);
-    transition: border-color 0.15s, box-shadow 0.15s;
-  }
-  input::placeholder { color: #aab1ad; }
-  input:focus {
-    outline: none;
-    border-color: var(--cg-green);
-    box-shadow: 0 0 0 3px var(--cg-green-soft);
-  }
-
-  .err {
-    margin: -0.25rem 0 0;
-    padding: 0.65rem 0.8rem;
-    background: #fef2f2;
-    border: 1px solid #fecaca;
-    color: #991b1b;
-    border-radius: var(--cg-radius-sm);
-    font-size: 0.88rem;
-  }
-
-  .primary {
-    margin-top: 0.4rem;
-    padding: 0.75rem 1rem;
-    background: var(--cg-green);
-    color: white;
-    border: none;
-    border-radius: var(--cg-radius-sm);
-    font-size: 0.95rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.15s;
-  }
-  .primary:hover:not(:disabled) { background: var(--cg-green-hover); }
-  .primary:disabled { opacity: 0.6; cursor: not-allowed; }
-
-  .form-actions {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-top: 0.4rem;
-  }
-  .form-actions .primary { margin-top: 0; flex: 1; }
-  .inline-link {
-    color: var(--cg-navy);
-    font-size: 0.85rem;
-    font-weight: 500;
-    text-decoration: none;
-    white-space: nowrap;
-  }
-  .inline-link:hover { text-decoration: underline; }
-
-  .signup-prompt {
-    margin: 1.25rem 0 0;
-    text-align: center;
-    font-size: 0.9rem;
-    color: var(--cg-text-muted);
-  }
-  .signup-link {
-    color: var(--cg-green);
-    font-weight: 600;
-    text-decoration: none;
-  }
-  .signup-link:hover { text-decoration: underline; }
-
-  .foot {
-    margin-top: 1.25rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--cg-border);
-    text-align: center;
-  }
-  .help-link {
-    color: var(--cg-text-muted);
-    font-size: 0.85rem;
-    text-decoration: none;
-  }
-  .help-link:hover { color: var(--cg-green); text-decoration: underline; }
-
-  /* Phone-width tweaks (#183): tighten card padding and the outer page gutter
-     so the login card doesn't crowd the edges of a small device. */
-  @media (max-width: 420px) {
-    .page { padding: 1.25rem 0.75rem; }
-    .card-top { padding: 1.25rem 1.25rem 1rem; }
-    .card-body { padding: 1.25rem 1.25rem 1.25rem; }
-    h1 { font-size: 1.35rem; }
-  }
+  .label-row { display: flex; justify-content: space-between; align-items: baseline; }
+  .label-row label { font-size: var(--fs-sm); font-weight: 600; }
+  .forgot { font-size: var(--fs-sm); font-weight: 500; padding: var(--sp-2) 0; margin: calc(-1 * var(--sp-2)) 0; }
+  .help-link { color: var(--cg-text-muted); display: inline-block; padding: var(--sp-2); }
+  /* In the store app the top bar is hidden on this page (see +layout.svelte), so the card shows the brand and fills the screen. */
+  .auth.app { background: var(--cg-surface); padding-top: max(var(--sp-6), env(safe-area-inset-top)); }
+  .auth.app .auth-card { border: 0; box-shadow: none; padding: 0; }
 </style>
