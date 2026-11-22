@@ -4,7 +4,7 @@
   import { Capacitor } from '@capacitor/core'
   import type { Device } from '$lib/app-shell'
   import { store } from './storage'
-  import { dropUnused, flush, waiting } from './lib/tx'
+  import { dropUnused, flush, refusals, unqueue, waiting } from './lib/tx'
   import { toDashboard } from './lib/leave'
   import { enterUrl, keep, refresh, signOut, token, type Signed } from './lib/auth'
   import { choose, current, member, type Account } from './lib/accounts'
@@ -40,6 +40,7 @@
   let to = $state('') // the env a scanned card of the other kind would take the app to
   let demo = $state(isDemo()) // shows the DEMO mark
   let queued = $state(0)
+  let refused = $state<[string, string][]>([]) // transactions the server refused, to show once on the home screen
   let offlineMsg = $state('')
   let otherAcct = $state('') // the account the live site acted for, when it is not the one this app acts for
   let otherA: Account | undefined // that account, when this app has it too
@@ -51,10 +52,16 @@
   let seen = '' // the card the scanner returned last: still in view when Back returns to the scanner, so it is not taken again
   const fail = (msg: string) => toDashboard(live(), msg, 'error')
 
-  // Send what waited for a connection, and show how much still waits.
+  // Send what waited for a connection, and show how much still waits and what the server refused.
   async function sendQueued() {
     await flush().catch(() => {})
-    queued = await waiting()
+    queued = await waiting(); refused = await refusals()
+  }
+
+  // The member has seen the refusals: forget them here (the server keeps them).
+  async function forgetRefused() {
+    for (const [k] of refused) await unqueue(k)
+    refused = []
   }
 
   onMount(async () => {
@@ -62,7 +69,7 @@
     window.addEventListener('online', sendQueued)
     const tick = setInterval(() => queued && sendQueued(), 5000) // the online event is not reliable on phones
     if (Capacitor.isNativePlatform()) CapApp.addListener('backButton', () => screen && screen !== 'home' ? back() : (clearInterval(tick), CapApp.exitApp()))
-    sendQueued()
+    const sending = sendQueued()
     dropUnused().catch(() => {})
     const hasToken = !!await token()
     signedIn = hasToken
@@ -77,8 +84,9 @@
     queued = await waiting()
     if (want === 'signout') return void (queued ? (screen = 'home', confirming = true) : leave())
     if (want === 'accounts' || want === 'settings') return void open(want)
-    if (device && !otherAcct && (intent === 'pay' || intent === 'charge')) start(intent)
-    else if (!(cold && hasToken && await goLive())) screen = 'home'
+    if (device && !otherAcct && (intent === 'pay' || intent === 'charge')) return start(intent)
+    await sending // a refusal is shown here before the app goes on to the live site
+    if (refused.length || !(cold && hasToken && await goLive())) screen = 'home'
   })
 
   /** Open a live page (the dashboard, by default) signed in as the chosen account, if it can be reached; false if not. */
@@ -209,6 +217,13 @@
         {#if otherA}<button data-testid="btn-acct-switch" onclick={() => change(otherA)}>Switch to {otherAcct}</button>{/if}
         <button data-testid="btn-acct-change" onclick={() => change()}>Change account</button>
         <button class="out" data-testid="btn-acct-cancel" onclick={() => toDashboard(live())}>Cancel</button>
+      </div>
+    {/if}
+    {#if refused.length}
+      <div class="warn" role="alertdialog" data-testid="refusals">
+        <p>Common Good could not complete {refused.length === 1 ? 'this transaction' : 'these transactions'}. It has the details and has emailed them to the account.</p>
+        {#each refused as [k, text] (k)}<p data-testid="refusal">{text}</p>{/each}
+        <button data-testid="btn-refusals-ok" onclick={forgetRefused}>OK</button>
       </div>
     {/if}
     {#if offlineMsg}<p class="err" data-testid="offline-msg">{offlineMsg}</p>{/if}

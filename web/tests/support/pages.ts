@@ -216,6 +216,9 @@ export default {
 
   async select(app: App, id: string, label: string) { await setField(app, id, label) },
 
+  /** The live site answers this /api/app endpoint as it should again (after serverErrorPage). */
+  async serverAnswersAgain(app: App, endpoint: string) { await app.page.context().unroute(`**/api/app/${endpoint}`) },
+
   /** From now on the live site answers this /api/app endpoint with an error page (status 200, not JSON), as when a proxy in between fails. */
   async serverErrorPage(app: App, endpoint: string) {
     await app.page.context().route(`**/api/app/${endpoint}`, r => r.fulfill({ status: 200, contentType: 'text/html', body: '<html><body>Fatal error</body></html>' }))

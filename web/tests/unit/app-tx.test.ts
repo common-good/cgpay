@@ -12,7 +12,7 @@ vi.mock('../../app/src/storage', () => ({
   }
 }))
 
-const { cachePhoto, cacheProfile, dropUnused, enqueue, flush, offlinePhoto, waiting } = await import('../../app/src/lib/tx')
+const { cachePhoto, cacheProfile, dropUnused, enqueue, flush, offlinePhoto, refusals, waiting } = await import('../../app/src/lib/tx')
 const { identity, unreachable } = await import('../../app/src/lib/api')
 const { parseQr } = await import('../../app/src/lib/qr')
 
@@ -64,13 +64,13 @@ describe('identity', () => {
 })
 
 describe('flush', () => {
-  it('deletes a queued transaction only on a clear yes, and keeps it with the reason otherwise', async () => {
-    for (const [i, t] of [1, 2, 3, 4, 5].entries()) kv.set(`tx:${i}`, tx(t))
-    answer('{"ok":true}', ['{"error":"failed"}', 502], '{"ok":false,"message":"no funds"}', '{}', ['{"error":"bad-request","message":"bad proof"}', 400])
+  it('deletes a queued transaction on a clear yes, marks it with the reason when the server refuses it, and keeps it to send again on anything else (a fault, an error page)', async () => {
+    for (const [i, t] of [1, 2, 3, 4, 5, 6].entries()) kv.set(`tx:${i}`, tx(t))
+    answer('{"ok":true}', ['{"error":"failed"}', 502], '{"ok":false,"message":"no funds"}', '{}', ['{"error":"bad-request","message":"bad proof"}', 400], ['{"error":"bad-actor"}', 403])
     expect(await flush()).toBe(false)
     const errs = [...kv.entries()].filter(([k]) => k.startsWith('tx:')).map(([k, v]) => [k, (v as any).error])
-    expect(errs).toEqual([['tx:1', 'failed'], ['tx:2', 'no funds'], ['tx:3', 'refused'], ['tx:4', 'bad proof']])
-    expect(await waiting()).toBe(0)
+    expect(errs).toEqual([['tx:1', undefined], ['tx:2', 'no funds'], ['tx:3', undefined], ['tx:4', 'bad proof'], ['tx:5', 'bad-actor']])
+    expect(await waiting()).toBe(2)
   })
   it('sends each transaction with the token to the live site', async () => {
     kv.set('tx:0', tx(0))
@@ -102,6 +102,21 @@ describe('flush', () => {
     expect(f).toHaveBeenCalledTimes(2)
     expect(await waiting()).toBe(0)
     expect([...kv.keys()].filter(k => k.startsWith('tx:'))).toEqual([])
+  })
+})
+
+describe('refusals', () => {
+  it('tells each refused transaction once, with the name saved for the account, and nothing about the others', async () => {
+    const who = { name: 'Dee Four', agent: '', location: '', limit: 1, selling: [], isell: [] }
+    kv.set('acct:test:B', { who, h: '', t: 1 })
+    const at = new Date(2026, 10, 3, 12).getTime() / 1000
+    kv.set('tx:1', { ...tx(at), amount: '40.00', error: 'That account is not active.' })
+    kv.set('tx:2', { ...tx(at), amount: '-5.00', otherId: 'C', error: 'bad-actor' })
+    kv.set('tx:3', tx(at))
+    expect(await refusals()).toEqual([
+      ['tx:1', 'Charge of $40.00 to Dee Four on Nov 3: That account is not active.'],
+      ['tx:2', 'Payment of $5.00 to C on Nov 3: You may not act for that account.']
+    ])
   })
 })
 

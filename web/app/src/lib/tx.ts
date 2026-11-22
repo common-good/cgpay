@@ -42,14 +42,18 @@ export const unqueue = (k: string) => store.del(k)
 let running: Promise<boolean> | null = null, next: Promise<boolean> | null = null
 
 /**
- * Send every queued transaction, each on its own: one the server refuses, or answers with anything but a clear yes, is kept with the reason and does not hold up the others.
+ * Send every queued transaction, each on its own. One the server refuses is marked with the reason, to be shown once (see refusals): the server keeps it too, and tells the account.
  * No answer, the server's own server unavailable, or a sign-in that no longer works stops the run (the rest would fail the same way; returns true), and they go out next time.
+ * Any other answer (a fault on the server) leaves the transaction to go out next time, without holding up the others.
  * Never two runs at once, or a transaction could go out twice: a call during a run waits for it, then all such calls share one more run (for what was queued meanwhile).
  */
 export function flush(): Promise<boolean> {
   if (!running) return running = sendAll().finally(() => running = null)
   return next ??= running.then(() => { next = null; return flush() })
 }
+
+/** The server's own refusal, which it keeps (not an error page, or a fault on the way): no, with the reason. */
+const refusal = (status: number, data: Record<string, unknown>) => (status === 200 && data.ok === false && !!data.message) || (status === 400 && !!data.message) || (status === 403 && data.error === 'bad-actor')
 
 async function sendAll() {
   for (const [k, t] of await store.all<Tx>('tx:')) {
@@ -59,13 +63,26 @@ async function sendAll() {
     const { status, data } = r
     if (status === 401 || data.error === 'unavailable') return true
     if (status === 200 && data.ok === true) { await store.del(k); await seen(t.otherId, t.created * 1000) }
-    else await store.set(k, { ...t, error: String(data.message ?? data.error ?? 'refused') })
+    else if (refusal(status, data)) await store.set(k, { ...t, error: String(data.message ?? data.error) })
   }
   return false
 }
 
 /** How many queued transactions still wait for the server (not counting refused ones). */
 export const waiting = async () => (await store.all<Tx>('tx:')).filter(([, t]) => !t.error).length
+
+const REASONS: Record<string, string> = { 'bad-actor': 'You may not act for that account.' }
+
+/** The refused transactions, each as its key and what to tell the member. Forget each (unqueue) once shown: the server keeps them. */
+export async function refusals(): Promise<[string, string][]> {
+  const out: [string, string][] = []
+  for (const [k, t] of await store.all<Tx>('tx:')) if (t.error) {
+    const name = (await store.get<Saved>(profileKey(t.otherId)))?.who.name || t.otherId
+    const when = new Date(t.created * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    out.push([k, `${+t.amount < 0 ? 'Payment' : 'Charge'} of $${money(Math.abs(+t.amount))} to ${name} on ${when}: ${REASONS[t.error] ?? t.error}`])
+  }
+  return out
+}
 
 // What is kept of accounts seen before, for when the server cannot be reached, per env (an account number may mean another account on another server):
 // a profile and, for an account charged, a small copy of its photo. The profile is kept with a hash of the card code, so a different code gets neither,
