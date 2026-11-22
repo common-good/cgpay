@@ -107,6 +107,7 @@ describe('flush', () => {
 
 describe('out of space', () => {
   const who = { name: 'Dee', agent: '', location: '', limit: 1, selling: [], isell: [] }
+  beforeEach(() => { kv.delete('secure:token') })
   const keep = (...acctTs: [string, number][]) => { for (const [a, t] of acctTs) { kv.set(`acct:test:${a}`, { who, h: '', t }); kv.set(`photo:test:${a}`, { src: '', h: '' }) } }
   it('forgets the two least recently used accounts kept (profile and photo) to keep a transaction', async () => {
     keep(['A', 3], ['B', 1], ['C', 4], ['D', 2])
@@ -118,7 +119,7 @@ describe('out of space', () => {
     kv.set('acct:test:B', { who, h: '', t: 5000 }); kv.set('acct:test:C', { who, h: '', t: 1000 })
     kv.set('tx:9', { ...tx(3), otherId: 'B' }); kv.set('tx:8', { ...tx(2), otherId: 'C' })
     answer('{"ok":true}', '{"ok":true}')
-    await flush(d)
+    await flush()
     expect([(kv.get('acct:test:B') as any).t, (kv.get('acct:test:C') as any).t]).toEqual([5000, 2000])
   })
   it('fails when there is still no room, so the transaction is not taken for kept', async () => {
