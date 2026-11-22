@@ -99,6 +99,41 @@ Scenario: The card of someone who does not manage the company does not unlock
   Then see "unlock-error"
   And on page "register-unlock"
 
+Rule: Another manager's card opens only the company
+
+Scenario: Another manager's card unlocks the company alone
+  Given these "u_relations" rows:
+  | main | other | permission |
+  | Cit  | Dee   | manage     |
+  And click "btn-use"
+  And click "btn-back"
+  And click "btn-manager"
+  And camera shows "Dee"
+  When click "btn-scan-manager"
+  Then see "btn-lock"
+  And these "app_tokens" rows:
+  | uid | lockedTo | unlockedBy |
+  | Bea | Cit      | Dee        |
+
+  When click "btn-acct-menu"
+  Then see "menu-settings"
+  And see not "menu-accounts"
+
+Scenario: Another manager's live session cannot change account
+  Given these "u_relations" rows:
+  | main | other | permission |
+  | Cit  | Dee   | manage     |
+  And click "btn-use"
+  And click "btn-back"
+  And click "btn-manager"
+  And camera shows "Dee"
+  And click "btn-scan-manager"
+  And click "btn-dashboard"
+  Then on page ""
+
+  When acting as "Bea"
+  Then signed in as "Cit"
+
 Rule: The unlock ends when its activity is over
 
 Scenario: Closing the settings locks it again
@@ -154,6 +189,54 @@ Scenario: A touch keeps it unlocked another two minutes
   When 90 seconds pass
   Then see "btn-lock"
 
+Rule: A live-site session opened from the cash register lasts only while it is unlocked
+
+Scenario: The live site goes back to the app after two minutes untouched
+  Given click "btn-use"
+  And click "btn-back"
+  And click "btn-manager"
+  And input "password": "k"
+  And click "btn-unlock"
+  And click "btn-dashboard"
+  Then on page ""
+
+  When 121 seconds pass
+  Then on page "scan"
+  And these "app_tokens" rows:
+  | uid | lockedTo | unlockedUntil |
+  | Bea | Cit      |               |
+
+Scenario: The live site goes back to the app when the unlock has ended on the server
+  Given click "btn-use"
+  And click "btn-back"
+  And click "btn-manager"
+  And input "password": "k"
+  And click "btn-unlock"
+  And click "btn-dashboard"
+  Then on page ""
+
+  Given these "app_tokens" rows:
+  | uid | unlockedUntil |
+  | Bea | %now-1n       |
+  When reload
+  Then on page "scan"
+
+Scenario: A member-site page goes back to the app when the unlock has ended on the server
+  Given click "btn-use"
+  And click "btn-back"
+  And click "btn-manager"
+  And input "password": "k"
+  And click "btn-unlock"
+  And click "btn-dashboard"
+  Then on page ""
+
+  Given on PHP page "history"
+  And these "app_tokens" rows:
+  | uid | unlockedUntil |
+  | Bea | %now-1n       |
+  When reload
+  Then on page "scan"
+
 Rule: Offline, a manager's card unlocks if it unlocked this device online before
 
 Scenario: A card that unlocked online before unlocks offline
@@ -168,6 +251,10 @@ Scenario: A card that unlocked online before unlocks offline
   And click "btn-scan-manager"
   Then on page "home"
   And see "btn-lock"
+
+  When click "btn-acct-menu"
+  Then see "menu-settings"
+  And see not "menu-accounts"
 
 Scenario: A card that never unlocked online does not unlock offline
   Given click "btn-use"

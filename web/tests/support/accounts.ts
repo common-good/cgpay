@@ -29,7 +29,7 @@ export function uidOf(nick: string): number {
   return UID_FIRST + nicks.indexOf(nick)
 }
 
-const uidFields = 'uid uid1 uid2 agt1 agt2 actorUid payer payee lockedTo unlockedBy'.split(' ')
+const uidFields = 'uid uid1 uid2 agt1 agt2 actorUid payer payee lockedTo unlockedBy main other'.split(' ')
 const qidFields = 'qid identifier'.split(' ')
 
 /**

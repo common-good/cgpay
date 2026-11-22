@@ -112,6 +112,8 @@ export default {
 
   async onPage(app: App, path: string) { await app.page.goto('/' + path) },
 
+  async onPhpPage(app: App, path: string) { await app.page.goto(`${(process.env.PUBLIC_PHP_BASE_URL ?? 'http://localhost/cg/cgmembers').replace(/\/+$/, '')}/${path}`) },
+
   async reload(app: App) { await app.page.reload() },
 
   /** Sign this member out of every device on the server, as from another phone: sign in there, then sign out everywhere. */
@@ -170,9 +172,12 @@ export default {
       if (!app.storeApp) await this.inStoreApp(app)
       await expect(app.page.getByTestId('nav-app'), 'scan: the dashboard got the device credentials').toHaveAttribute('href', /device=/)
     }
+    const main = app.page.mainFrame(), onLive = !app.page.url().startsWith(BUNDLED)
+    const opened = onLive && app.page.waitForEvent('framenavigated', { predicate: f => f === main && f.url().startsWith(BUNDLED), timeout: 15_000 })
     await app.page.getByTestId(btn).click()
+    await opened // a quick camera and a quick refusal can be back on the dashboard before any check sees the bundled screens
     const screen = (name: string) => app.page.locator(`[data-screen="${name}"]`)
-    await expect(screen('tx-start').or(screen('scan')).or(screen('tx')), 'scan: the bundled screens opened').toBeVisible({ timeout: 15_000 }) // a quick camera can reach tx first
+    await expect(screen('tx-start').or(screen('scan')).or(screen('tx')).or(screen('switch')).or(app.page.getByTestId('balance')), 'scan: the bundled screens opened').toBeVisible({ timeout: 15_000 })
     if (await screen('tx-start').count()) await app.page.getByTestId('btn-scan').click()
     await expect(screen('tx').or(screen('switch')).or(app.page.getByTestId('balance')), 'scan: the transaction screen, the switch screen, or the dashboard when the scan fails').toBeVisible({ timeout: 15_000 })
   },
