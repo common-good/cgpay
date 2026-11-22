@@ -357,7 +357,10 @@
   .sheet:focus { outline: none; }
   .grip { width: 40px; height: 5px; border-radius: 3px; background: var(--cg-border-strong); justify-self: center; margin-bottom: var(--sp-2); }
   .sheet h3 { font-size: var(--fs-lg); }
-  .sheet .tx { padding: var(--sp-3) 0; }
+  .sheet .tx { padding: var(--sp-3) 0; align-items: baseline; }
+  .sheet .tx-date { min-width: 40px; }
+  .sheet .tx-date .md { font-size: 10px; }
+  .sheet .tx-date .yr { font-size: 9px; letter-spacing: 0.4em; }
   @media (min-width: 640px) {
     .sheet { inset: 0; margin: auto; width: min(460px, calc(100% - 2 * var(--gutter))); height: fit-content; max-height: 80vh; border-radius: var(--r-md); padding: var(--sp-5); }
     .grip { display: none; }
