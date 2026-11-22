@@ -124,7 +124,7 @@ Plain specs (`web/tests/e2e/`) are being replaced gradually by Gherkin features 
 
 - All steps are one-liners in `tests/steps/steps.ts` that call `t.something` (`tests/support/t.ts`). Run `npm run bddgen` after editing a feature or step.
 - One worker only (shared test DB, in-memory rate limiter). Scenarios must be independent: set up state in fixtures, never rely on a previous scenario.
-- The Gherkin project is skipped in CI: its `testDb` fixture needs the PHP test endpoint (`testops()` in cgmembers-frame `forms/api.inc`, which refuses to run on production or stage).
+- The Gherkin project is skipped in CI: its `testDb` fixture needs the PHP test endpoint (`testops()` in cgmembers-frame `forms/api.inc`, which answers only on a developer's own machine and in the feature tests).
 - Scenarios refer to the standard test accounts by first name (Abe, Bea, Cit, ...). These are the PHP accounts `.ZPA`, `.ZPB`, ... (`NEWZPA`...; the same accounts as the legacy app's `K6...` ids). cgmembers-frame's own features use other uids (`.ZZA`...); in cgpay features always use the names.
 - Write a BDD feature test for every new feature, and for existing functionality you touch.
 - Reuse existing steps as much as possible.
