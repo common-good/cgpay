@@ -152,6 +152,13 @@ export default {
   },
 
   /** Open the store app's own screens on a phone with no account on it (each scenario's browser starts with empty storage). */
+  /** The phone has no room left: every write to the bundled screens' store fails, now and after a reload (deleting still works). */
+  async storageFull(app: App) {
+    const full = () => { IDBObjectStore.prototype.put = () => { throw new DOMException('The quota has been exceeded.', 'QuotaExceededError') } }
+    await app.page.addInitScript(full)
+    await app.page.evaluate(full)
+  },
+
   /** The store app acts for this account, whatever the live site acts for (as after switching account on a PHP page). */
   async storeAppActsAs(app: App, who: string) { await this.appSignIn(app, who) },
 

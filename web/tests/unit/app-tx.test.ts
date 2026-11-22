@@ -1,16 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const kv = new Map<string, unknown>()
+let cap = Infinity // how many entries the phone has room for
 vi.mock('../../app/src/storage', () => ({
   store: {
     get: async (k: string) => kv.get(k),
-    set: async (k: string, v: unknown) => { kv.set(k, v) },
+    set: async (k: string, v: unknown) => { if (!kv.has(k) && kv.size >= cap) throw new Error('full'); kv.set(k, v) },
     del: async (k: string) => { kv.delete(k) },
     all: async (p: string) => [...kv].filter(([k]) => k.startsWith(p)).sort(([a], [b]) => a < b ? -1 : 1)
   }
 }))
 
-const { flush, waiting } = await import('../../app/src/lib/tx')
+const { cacheProfile, enqueue, flush, waiting } = await import('../../app/src/lib/tx')
 const { identity, unreachable } = await import('../../app/src/lib/api')
 const { parseQr } = await import('../../app/src/lib/qr')
 
@@ -24,7 +25,7 @@ const answer = (...bodies: (string | (() => Promise<Response>))[]) => {
   return f
 }
 
-beforeEach(() => { kv.clear(); vi.unstubAllGlobals() })
+beforeEach(() => { kv.clear(); cap = Infinity; vi.unstubAllGlobals() })
 
 describe('unreachable', () => {
   it('is true only when no answer came', () => {
@@ -74,6 +75,25 @@ describe('flush', () => {
     release()
     await Promise.all(runs)
     expect(f).toHaveBeenCalledTimes(2)
+    expect(kv.size).toBe(0)
+  })
+})
+
+describe('out of space', () => {
+  const who = { name: 'Dee', agent: '', location: '', limit: 1, selling: [], isell: [] }
+  it('drops the least recently seen half of the saved profiles to keep a transaction', async () => {
+    for (const [acct, t] of [['A', 3], ['B', 1], ['C', 4], ['D', 2]] as const) kv.set(`acct:${acct}`, { who, h: '', t })
+    cap = 4
+    await enqueue(tx(1))
+    expect([...kv.keys()].sort()).toEqual(['acct:A', 'acct:C', 'tx:1:proof1'])
+  })
+  it('fails when there is still no room, so the transaction is not taken for kept', async () => {
+    cap = 0
+    await expect(enqueue(tx(1))).rejects.toThrow()
+  })
+  it('never fails a scan for want of room to keep the profile', async () => {
+    cap = 0
+    await expect(cacheProfile(card, who)).resolves.toBeUndefined()
     expect(kv.size).toBe(0)
   })
 })

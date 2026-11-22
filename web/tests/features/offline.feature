@@ -55,6 +55,20 @@ Scenario: A cashier charges more than the offline limit
   Then text "messageText": "This transaction is limited to $250.00."
   And count "txs" is 0
 
+Rule: When the phone is out of space, a transaction that cannot be saved is not taken
+
+Scenario: A cashier charges offline on a phone that is out of space
+  When network off
+  And storage full
+  And scan "Dee" to "charge"
+  And click "btn1"
+  And input:
+  | input-amount | input-description |
+  | 12.34        | food!             |
+  And click "btn-submit"
+  Then text "messageText": "This phone is out of space, so the transaction could not be saved. Free some space on the phone and try again."
+  And see not "tx-summary"
+
 Rule: What was charged offline is sent when the connection is back
 
 Scenario: A company charges offline, then the connection returns

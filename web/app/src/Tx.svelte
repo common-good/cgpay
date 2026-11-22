@@ -30,7 +30,7 @@
     amount = a
     if (err) return alert(err)
     const tx = await makeTx(device, card, paying, a, description)
-    sent = { tx, key: await enqueue(tx) }
+    try { sent = { tx, key: await enqueue(tx) } } catch { return alert('This phone is out of space, so the transaction could not be saved. Free some space on the phone and try again.') }
     arm()
   }
 
