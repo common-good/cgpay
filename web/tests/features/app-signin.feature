@@ -297,10 +297,10 @@ Scenario: The default account comes up after signing in again
   Then on page "scan"
 
   When click "btn-back"
-  And click "btn-manager"
+  And click "btn-acct-menu"
+  And click "btn-password"
   And input "password": "k"
   And click "btn-unlock"
-  And click "btn-acct-menu"
   And click "menu-signout"
   Then on page "signin"
 

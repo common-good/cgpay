@@ -17,7 +17,8 @@
   import Accounts from './Accounts.svelte'
   import Settings from './Settings.svelte'
   import Unlock from './Unlock.svelte'
-  import RegisterUnlock from './RegisterUnlock.svelte'
+  import ManagerSignin from './ManagerSignin.svelte'
+  import ManagerBanner from '$lib/components/ManagerBanner.svelte'
   import Scan from './Scan.svelte'
   import Switch from './Switch.svelte'
   import Tx from './Tx.svelte'
@@ -33,11 +34,11 @@
   const sent = Number(hash.get('acct')) || 0
   history.replaceState(null, '', location.pathname)
 
-  type Screen = 'signin' | 'home' | 'tx-start' | 'scan' | 'switch' | 'tx' | 'accounts' | 'settings' | 'unlock' | 'register-unlock'
+  type Screen = 'signin' | 'home' | 'tx-start' | 'scan' | 'switch' | 'tx' | 'accounts' | 'settings' | 'unlock'
   let device = $state<Device | null>(null)
   let acct = $state<Account | null>(null) // the account chosen on this phone (null before a token sign-in)
   let unlocking: 'accounts' | 'settings' = 'accounts' // what the password opens
-  let after: 'accounts' | 'settings' | '' = '' // what a manager's unlock of a locked cash register goes on to (see open)
+  let after: 'accounts' | 'settings' | 'pay' | 'menu' | '' = '' // what a manager's unlock of a locked cash register goes on to (what was pressed, see ask)
   let screen = $state<Screen | ''>('')
   let qr = $state('')
   let to = $state('') // the env a scanned card of the other kind would take the app to
@@ -56,7 +57,8 @@
   let register = $state(false) // the chosen account is a company's cash register on this phone (see lib/register)
   let scope = $state<Scope | ''>('') // what a manager's unlock opens ('' while locked)
   let notice = $state(''), unlockError = $state(''), busy = $state(false)
-  let idle: ReturnType<typeof setTimeout> | undefined, touched = 0
+  let asking = $state(false), menuOpen = $state(false), owner = $state('') // the Manager Sign-in dialog; the account menu, opened after an unlock from it; whose password unlocks
+  let idle: ReturnType<typeof setTimeout> | undefined, touched = 0, until = $state(0) // until: when Manager Mode ends, unless the device is used
   let manager: Card | null = null // the card of the manager whose unlock is on, kept only in memory: a payment carries its proof (see makeTx)
   const fail = (msg: string) => register ? void (notice = msg, screen = 'home') : toDashboard(live(), msg, 'error') // a cash register never leaves for the live site on its own
   const UNLOCK_ERRORS: Record<string, string> = {
@@ -117,7 +119,7 @@
    * A locked cash register asks for a manager first, and another manager's unlock does not reach Change account.
    */
   async function open(which: 'accounts' | 'settings') {
-    if (register && !scope) return void (after = which, unlockError = '', screen = 'register-unlock')
+    if (register && !scope) return ask(which)
     if (register && scope === 'company' && which === 'accounts') return void (notice = 'Only the manager signed in on this device can change account.', screen = 'home')
     if (!scope && (await settings()).locked) { unlocking = which; screen = 'unlock' } else screen = which
   }
@@ -125,21 +127,24 @@
   /** Whether the chosen account is a cash register here (and note it). */
   async function settle() { return register = await isRegister(acct) }
 
-  // Lock the cash register again (the unlock is over): only the company stays on the phone, and the home screen offers just Charge.
+  // A locked cash register asks for a manager, then goes on to what was pressed.
+  function ask(next: typeof after) { after = next; unlockError = ''; asking = true; screen = 'home' }
+
+  // Lock the cash register again (Manager Mode is over): only the company stays on the phone, and the home screen offers just Charge and the Manager Sign-in.
   async function relock() {
-    clearTimeout(idle); scope = ''; manager = null
+    clearTimeout(idle); scope = ''; manager = null; until = 0; asking = menuOpen = false
     if (!acct) return
-    await lock(acct); acct = await current(); device = acct?.device ?? null
+    await lock(acct); acct = await current(); device = acct?.device ?? null; owner = (await member())?.name ?? ''
     screen = 'home'
   }
 
   // A cash register opens to Charge, locked. ignore: a card still in front of the camera (the one that switched envs), not to be taken as a customer's.
   async function openRegister(ignore = '') { await relock(); if (device) { start('charge'); seen = ignore } }
 
-  // Someone touched the screen: an unlocked cash register stays unlocked another IDLE_MS (kept on the phone too, for the trip to the live site and back).
-  function active() {
-    if (!scope) return
-    clearTimeout(idle); idle = setTimeout(relock, IDLE_MS)
+  // Someone touched the screen (not the Manager Mode banner): an unlocked cash register stays unlocked another IDLE_MS (kept on the phone too, for the trip to the live site and back).
+  function active(e?: Event) {
+    if (!scope || (e?.target instanceof Element && e.target.closest('.manager-banner'))) return
+    clearTimeout(idle); idle = setTimeout(relock, IDLE_MS); until = Date.now() + IDLE_MS
     if (Date.now() - touched > 10000) { touched = Date.now(); touch(scope) }
   }
 
@@ -148,10 +153,12 @@
     unlockError = ''; busy = true
     try {
       const r = await unlockBy(how, device?.real ?? true)
-      if (r.error) return void (unlockError = UNLOCK_ERRORS[r.error] ?? 'That did not work. Try again.', screen = 'register-unlock')
-      scope = r.scope!; manager = r.card ?? null; acct = await current(); device = acct?.device ?? null; notice = ''; touched = 0; active()
+      if (r.error) return void (unlockError = UNLOCK_ERRORS[r.error] ?? 'That did not work. Try again.', asking = true, screen = 'home')
+      scope = r.scope!; manager = r.card ?? null; acct = await current(); device = acct?.device ?? null; notice = ''; touched = 0; asking = false; active()
       const next = after; after = ''
-      if (next) await open(next); else screen = 'home'
+      if (next === 'pay' && device) { start('pay'); seen = how.qr ?? '' } // the manager's card is still in front of the camera
+      else if (next === 'accounts' || next === 'settings') await open(next)
+      else { screen = 'home'; menuOpen = next === 'menu' }
     } finally { busy = false }
   }
 
@@ -209,7 +216,6 @@
   // Companies have nothing to show, so they go straight to scanning.
   // Back goes to the screen before: from the summary it means undo, and a company, which skips the start page, goes home from the scanner.
   function back() {
-    if (register && scope && (screen === 'settings' || screen === 'accounts')) return void relock() // the activity the unlock was for is over
     if (screen === 'tx') txView?.back()
     else { screen = screen === 'scan' && device && !device.isCo ? 'tx-start' : 'home'; seen = ''; wanted = undefined; resume = '' }
   }
@@ -253,11 +259,12 @@
 
   function start(what: string) { intent = what; seen = ''; notice = ''; otherAcct = ''; screen = device!.isCo ? 'scan' : 'tx-start' }
 
-  // A transaction is done. A cash register stays in the app: back to its home screen with the message, locked again if a manager had unlocked it (the payment was the unlock's purpose).
+  // A transaction is done. A cash register stays in the app: back to its home screen with the message, locked again after a payment (a refund is usually a one-off,
+  // and right after it is when a manager walks away).
   async function txDone(msg = '', offline = false) {
     if (offline) { queued = 1; sendQueued() }
     if (!register) return offline ? void (screen = 'home') : toDashboard(live(), msg)
-    if (scope) await relock()
+    if (scope && intent === 'pay') await relock()
     notice = msg || (offline ? 'Done. It will be sent when there is a connection.' : 'Done.'); screen = 'home'
   }
 </script>
@@ -274,13 +281,12 @@
 
 <main data-screen={screen}>
   {#if demo}<p class="demo" data-testid="demo-mark">DEMO</p>{/if}
+  {#if register && scope && screen && screen !== 'signin'}<ManagerBanner {until} onexit={relock} slim={screen === 'scan'} />{/if}
   {#if screen && screen !== 'home' && screen !== 'signin'}<button class="back" data-testid="btn-back" onclick={back}>Back</button>{/if}
   {#if screen === 'signin'}
     <Signin {onsignedin} ondemo={s => { to = 'demo'; onswitched(s) }} />
   {:else if screen === 'unlock'}
     <Unlock onunlocked={() => screen = unlocking} />
-  {:else if screen === 'register-unlock'}
-    <RegisterUnlock {busy} error={unlockError} onscan={() => { intent = 'unlock'; seen = ''; screen = 'scan' }} onpassword={p => doUnlock({ password: p })} />
   {:else if screen === 'accounts'}
     <Accounts ondone={chosen} />
   {:else if screen === 'settings'}
@@ -288,24 +294,26 @@
   {:else if screen === 'tx-start' && device}
     <TxStart {device} {intent} onscan={() => screen = 'scan'} phpBase={device.php} />
   {:else if screen === 'scan'}
-    <Scan {intent} ignore={seen} onscan={scanned} onfail={fail} />
+    {#key intent}<Scan {intent} ignore={seen} onscan={scanned} onfail={fail} />{/key}<!-- a new scanner after a card unlock goes on to paying: the one that read the card has stopped -->
   {:else if screen === 'switch'}
     <Switch {qr} {to} {onswitched} onreuse={async () => { await switchTo(to); await arrived() }} oncancel={() => { screen = 'scan' }} />
   {:else if screen === 'tx' && device}
     <Tx bind:this={txView} {device} {intent} {qr} manager={scope ? manager : null} onfail={fail} onrescan={() => screen = 'scan'} ondone={txDone} />
   {:else if screen === 'home' && register && !scope}
-    <div class="head"><h1>CGPay</h1></div>
+    <div class="head"><h1>CGPay</h1><AcctMenu name={acct?.name ?? device?.name ?? ''} photo={acct?.photo} items={[]} gate={() => ask('menu')} /></div>
     {#if notice}<p class="notice" data-testid="notice">{notice}</p>{/if}
     {@render refusalBox()}
     {#if queued}<p data-testid="queued">{queued} transaction{queued == 1 ? '' : 's'} waiting to send</p>{/if}
     <p data-testid="acct">Account: {device?.name ?? acct?.name}</p>
-    {#if device}<button data-testid="btn-receive" onclick={() => start('charge')}>Charge</button>{/if}
-    <button class="out" data-testid="btn-manager" onclick={() => { unlockError = ''; after = ''; screen = 'register-unlock' }}>Manager</button>
+    {#if device}<TxStart {device} intent="charge" onscan={() => start('charge')} onpay={() => ask('pay')} phpBase={device.php} />{/if}
+    {#if asking}
+      <ManagerSignin {busy} {owner} error={unlockError} onscan={() => { intent = 'unlock'; seen = ''; screen = 'scan' }} onpassword={p => doUnlock({ password: p })} oncancel={() => { asking = false; after = '' }} />
+    {/if}
   {:else if screen === 'home'}
     <div class="head">
       <h1>CGPay</h1>
       {#if signedIn}
-        <AcctMenu name={acct?.name ?? device?.name ?? ''} photo={acct?.photo} items={[
+        <AcctMenu bind:open={menuOpen} name={acct?.name ?? device?.name ?? ''} photo={acct?.photo} items={[
           ...(scope === 'company' ? [] : [{ id: 'accounts', label: 'Change account', onclick: () => open('accounts') }]), // another manager's unlock opens only the company
           { id: 'settings', label: 'Settings', onclick: () => open('settings') },
           { id: 'feedback', label: 'Feedback', onclick: async () => { if (!await goLive('feedback')) offlineMsg = 'Feedback needs a connection. Try again when you have a signal.' } },
@@ -332,7 +340,6 @@
       <button data-testid="btn-receive" onclick={() => start('charge')}>Charge</button>
     {/if}
     <button data-testid="btn-dashboard" onclick={() => toDashboard(live())}>Dashboard (live site)</button>
-    {#if register}<button class="out" data-testid="btn-lock" onclick={relock}>Lock</button>{/if}
     {#if confirming}
       <div class="warn" role="alertdialog" data-testid="signout-warning">
         <p>{queued} transaction{queued == 1 ? '' : 's'} still waiting to send will be lost if you sign out now.</p>

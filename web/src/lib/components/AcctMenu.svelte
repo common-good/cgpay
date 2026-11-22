@@ -5,9 +5,10 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   // The account's picture (or its initials), which opens a menu of account-related choices. Used by the live site's header and the store app's screens.
-  let { name, photo = null, items }: { name: string, photo?: string | null, items: Item[] } = $props()
+  // gate: called instead of opening the menu (a locked cash register asks for a manager first).
+  let { name, photo = null, items, gate, open = $bindable(false) }: { name: string, photo?: string | null, items: Item[], gate?: () => void, open?: boolean } = $props()
 
-  let open = $state(false), broken = $state(false), ready = $state(false)
+  let broken = $state(false), ready = $state(false)
   onMount(() => ready = true) // the server-rendered button does nothing until the page is live
   const initials = $derived(name.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join(''))
 </script>
@@ -15,7 +16,7 @@
 <svelte:window onclick={() => open = false} />
 
 <div class="acct-menu">
-  <button class="pic" data-testid="btn-acct-menu" aria-haspopup="menu" aria-expanded={open} disabled={!ready} title={name} onclick={e => { e.stopPropagation(); open = !open }}>
+  <button class="pic" data-testid="btn-acct-menu" aria-haspopup="menu" aria-expanded={open} disabled={!ready} title={name} onclick={e => { e.stopPropagation(); if (gate) gate(); else open = !open }}>
     {#if photo && !broken}<img src={photo} alt={name} onerror={() => broken = true} />{:else}<span>{initials}</span>{/if}
   </button>
   {#if open}
