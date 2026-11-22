@@ -9,7 +9,7 @@ import { env } from './env'
 export const ONLINE_LIMIT = 10000 // the most any account can be charged on the app
 export const money = (n: number | string) => (+n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
-export type Tx = { actorId: string, otherId: string, amount: string, description: string, created: number, proof: string, offline: boolean, pending: boolean, error?: string }
+export type Tx = { actorId: string, otherId: string, amount: string, description: string, created: number, proof: string, offline: boolean, pending: boolean, manager?: string, managerProof?: string, error?: string }
 
 export const OFFLINE_LIMIT = 250 // how much an account not seen before can be charged without the server's word on what it has
 
@@ -25,10 +25,15 @@ export function checkAmount(typed: number, limit: number): [number, string] {
   return [a, err]
 }
 
-/** The transaction as the server wants it, with proof that this device made it (a hash of the amount, the accounts and the other's card code). */
-export async function makeTx(d: Device, card: Card, paying: boolean, amount: number, description: string): Promise<Tx> {
+/**
+ * The transaction as the server wants it, with proof that this device made it (a hash of the amount, the accounts and the other's card code).
+ * A payment from a cash register unlocked by a manager's card (manager) also carries that card's proof, since the server may see the register locked by the time it arrives.
+ */
+export async function makeTx(d: Device, card: Card, paying: boolean, amount: number, description: string, manager?: Card | null): Promise<Tx> {
   const actorId = noCardCode(d.accountId), amt = (paying ? -amount : amount).toFixed(2), created = Math.floor(Date.now() / 1000)
-  return { actorId, otherId: card.acct, amount: amt, description, created, proof: await sha256(actorId + amt + card.acct + card.code + created), offline: true, pending: !(paying || d.isCo) }
+  const proofWith = (code: string) => sha256(actorId + amt + card.acct + code + created)
+  const tx: Tx = { actorId, otherId: card.acct, amount: amt, description, created, proof: await proofWith(card.code), offline: true, pending: !(paying || d.isCo) }
+  return paying && manager ? { ...tx, manager: manager.acct, managerProof: await proofWith(manager.code) } : tx
 }
 
 const key = (t: Tx) => `tx:${t.created}:${t.proof.slice(0, 8)}`
@@ -53,7 +58,7 @@ export function flush(): Promise<boolean> {
 }
 
 /** The server's own refusal, which it keeps (not an error page, or a fault on the way): no, with the reason. */
-const refusal = (status: number, data: Record<string, unknown>) => (status === 200 && data.ok === false && !!data.message) || (status === 400 && !!data.message) || (status === 403 && data.error === 'bad-actor')
+const refusal = (status: number, data: Record<string, unknown>) => (status === 200 && data.ok === false && !!data.message) || (status === 400 && !!data.message) || (status === 403 && ['bad-actor', 'locked'].includes(String(data.error)))
 
 async function sendAll() {
   for (const [k, t] of await store.all<Tx>('tx:')) {
@@ -71,7 +76,7 @@ async function sendAll() {
 /** How many queued transactions still wait for the server (not counting refused ones). */
 export const waiting = async () => (await store.all<Tx>('tx:')).filter(([, t]) => !t.error).length
 
-const REASONS: Record<string, string> = { 'bad-actor': 'You may not act for that account.' }
+const REASONS: Record<string, string> = { 'bad-actor': 'You may not act for that account.', locked: 'This device is a cash register. Only a manager can pay from it.' }
 
 /** The refused transactions, each as its key and what to tell the member. Forget each (unqueue) once shown: the server keeps them. */
 export async function refusals(): Promise<[string, string][]> {

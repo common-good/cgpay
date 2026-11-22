@@ -10,7 +10,7 @@
   import { choose, current, member, type Account } from './lib/accounts'
   import { IDLE_MS, isRegister, lock, release, sendLock, setOwnerOperated, touch, unlockBy, unlocked, type Scope } from './lib/register'
   import { settings } from './lib/settings'
-  import { cardKind } from './lib/qr'
+  import { cardKind, type Card } from './lib/qr'
   import { isDemo, live, mismatch, switchTo, target } from './lib/env'
   import AcctMenu from '$lib/components/AcctMenu.svelte'
   import Signin from './Signin.svelte'
@@ -57,6 +57,7 @@
   let scope = $state<Scope | ''>('') // what a manager's unlock opens ('' while locked)
   let notice = $state(''), unlockError = $state(''), busy = $state(false)
   let idle: ReturnType<typeof setTimeout> | undefined, touched = 0
+  let manager: Card | null = null // the card of the manager whose unlock is on, kept only in memory: a payment carries its proof (see makeTx)
   const fail = (msg: string) => register ? void (notice = msg, screen = 'home') : toDashboard(live(), msg, 'error') // a cash register never leaves for the live site on its own
   const UNLOCK_ERRORS: Record<string, string> = {
     'bad-login': 'That password is not right.', 'not-manager': 'That card is not a manager\'s card for this company.', 'bad-card': 'That card is not valid.',
@@ -126,7 +127,7 @@
 
   // Lock the cash register again (the unlock is over): only the company stays on the phone, and the home screen offers just Charge.
   async function relock() {
-    clearTimeout(idle); scope = ''
+    clearTimeout(idle); scope = ''; manager = null
     if (!acct) return
     await lock(acct); acct = await current(); device = acct?.device ?? null
     screen = 'home'
@@ -148,7 +149,7 @@
     try {
       const r = await unlockBy(how, device?.real ?? true)
       if (r.error) return void (unlockError = UNLOCK_ERRORS[r.error] ?? 'That did not work. Try again.', screen = 'register-unlock')
-      scope = r.scope!; acct = await current(); device = acct?.device ?? null; notice = ''; touched = 0; active()
+      scope = r.scope!; manager = r.card ?? null; acct = await current(); device = acct?.device ?? null; notice = ''; touched = 0; active()
       const next = after; after = ''
       if (next) await open(next); else screen = 'home'
     } finally { busy = false }
@@ -291,7 +292,7 @@
   {:else if screen === 'switch'}
     <Switch {qr} {to} {onswitched} onreuse={async () => { await switchTo(to); await arrived() }} oncancel={() => { screen = 'scan' }} />
   {:else if screen === 'tx' && device}
-    <Tx bind:this={txView} {device} {intent} {qr} onfail={fail} onrescan={() => screen = 'scan'} ondone={txDone} />
+    <Tx bind:this={txView} {device} {intent} {qr} manager={scope ? manager : null} onfail={fail} onrescan={() => screen = 'scan'} ondone={txDone} />
   {:else if screen === 'home' && register && !scope}
     <div class="head"><h1>CGPay</h1></div>
     {#if notice}<p class="notice" data-testid="notice">{notice}</p>{/if}

@@ -6,7 +6,7 @@
   import { cachePhoto, cacheProfile, checkAmount, enqueue, flush, makeTx, money, offlinePhoto, offlineProfile, refusals, unqueue, type Tx } from './lib/tx'
   import { shrink } from './lib/photo'
 
-  let { device, intent, qr, onfail, onrescan, ondone }: { device: Device, intent: string, qr: string, onfail: (msg: string) => void, onrescan: () => void, ondone: (msg?: string, offline?: boolean) => void } = $props()
+  let { device, intent, qr, manager = null, onfail, onrescan, ondone }: { device: Device, intent: string, qr: string, manager?: Card | null, onfail: (msg: string) => void, onrescan: () => void, ondone: (msg?: string, offline?: boolean) => void } = $props()
   const paying = intent === 'pay'
   let who = $state<Identity | null>(null)
   let photo = $state('')
@@ -30,7 +30,7 @@
     const [a, err] = checkAmount(amount ?? 0, who!.limit)
     amount = a
     if (err) return alert(err)
-    const tx = await makeTx(device, card, paying, a, description)
+    const tx = await makeTx(device, card, paying, a, description, manager)
     try { sent = { tx, key: await enqueue(tx) } } catch { return alert('This phone is out of space, so the transaction could not be saved. Free some space on the phone and try again.') }
     arm()
   }

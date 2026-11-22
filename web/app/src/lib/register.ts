@@ -4,7 +4,7 @@
 import { store } from '../storage'
 import { lockCall, token, unlock } from './auth'
 import { keepMember, member, type Account, type Member } from './accounts'
-import { parseQr } from './qr'
+import { parseQr, type Card } from './qr'
 import { env } from './env'
 
 export const IDLE_MS = 120000
@@ -69,7 +69,7 @@ export async function release() {
  * Unlock with the token owner's password or a manager's card (qr). Online, the server checks and sends back what the unlock opens;
  * offline, a card unlocks (the company only) if it unlocked this phone online before. Returns the scope, or an error code.
  */
-export async function unlockBy(how: { password?: string, qr?: string }, real: boolean): Promise<{ scope?: Scope, error?: string }> {
+export async function unlockBy(how: { password?: string, qr?: string }, real: boolean): Promise<{ scope?: Scope, card?: Card, error?: string }> {
   await sendLock()
   try {
     const { data } = await unlock(how)
@@ -78,11 +78,11 @@ export async function unlockBy(how: { password?: string, qr?: string }, real: bo
     const scope: Scope = how.password || data.unlockedBy === (await member())?.uid ? 'full' : 'company'
     if (how.qr) await keepCard(how.qr, real)
     await touch(scope)
-    return { scope }
+    return { scope, card: how.qr ? cardOf(how.qr, real) ?? undefined : undefined }
   } catch {
     if (!how.qr || !await knownCard(how.qr, real)) return { error: 'offline' }
     await touch('company')
-    return { scope: 'company' }
+    return { scope: 'company', card: cardOf(how.qr, real) ?? undefined }
   }
 }
 

@@ -256,6 +256,40 @@ Scenario: A card that unlocked online before unlocks offline
   Then see "menu-settings"
   And see not "menu-accounts"
 
+Scenario: A payment after an offline card unlock is sent when the connection returns
+  Given click "btn-use"
+  And click "btn-back"
+  And click "btn-manager"
+  And camera shows "Bea"
+  And click "btn-scan-manager"
+  And click "btn-lock"
+  Then these "app_tokens" rows:
+  | uid | lockedTo | unlockedUntil |
+  | Bea | Cit      |               |
+
+  Given network off
+  And click "btn-manager"
+  And click "btn-scan-manager"
+  Then see "btn-lock"
+
+  Given camera shows "Dee"
+  When click "btn-pay"
+  And click "btn1"
+  And input:
+  | input-amount | input-description |
+  | 12.50        | refund!           |
+  And click "btn-submit"
+  And click "btn-done"
+  Then on page "home"
+  And see "queued"
+  And see "btn-manager"
+  And count "txs" is 0
+
+  When network on
+  Then these "txs" rows:
+  | uid1 | uid2 | agt1 | amt   | for2    |
+  | Cit  | Dee  | Bea  | 12.50 | refund! |
+
 Scenario: A card that never unlocked online does not unlock offline
   Given click "btn-use"
   And click "btn-back"
