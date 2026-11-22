@@ -103,6 +103,8 @@
     return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   }
 
+  const yearAgo = Date.now() / 1000 - 365 * 86400
+
   function payPendingItems(i: InfoResponse): InfoTx[] {
     return i.txs.filter(t => t.pending && t.amount < 0)
   }
@@ -137,7 +139,7 @@
 {#snippet chevron()}<span class="row-end"><Icon name="chevron" size={18} /></span>{/snippet}
 {#snippet pending(amt: string)}<span>Pending:</span> <span class="nowrap">{amt}<Icon name="chevron" size={14} /></span>{/snippet}
 {#snippet txDate(t: number)}{@const d = new Date(t * 1000)}<time class="tx-date" datetime={d.toISOString().slice(0, 10)}>
-  <span class="md">{d.toLocaleDateString('en-US', { month: 'short' })} {String(d.getDate()).padStart(2, '0')}</span><span class="yr">{d.getFullYear()}</span>
+  <span class="md">{d.toLocaleDateString('en-US', { month: 'short' })} {String(d.getDate()).padStart(2, '0')}</span>{#if t < yearAgo}<span class="yr">{d.getFullYear()}</span>{/if}
 </time>{/snippet}
 
 <div class="dash">
@@ -257,7 +259,6 @@
       use:focusIn use:swipeDown={closeModal} transition:fly={{ y: 64, duration: ms(280), easing: cubicOut }}>
       <div class="grip" aria-hidden="true"></div>
       <h3 id="modal-title">{pay ? 'Pending payments' : 'Pending receivables'}</h3>
-      <p class="muted">{pay ? 'Invoices waiting on you.' : "Invoices you're waiting on."}</p>
       <ul class="list-rows">
         {#each pay ? payPendingItems(info) : receivePendingItems(info) as tx}
           <li class="tx">
@@ -334,7 +335,7 @@
   .tx { display: flex; align-items: center; gap: var(--sp-3); min-height: 56px; padding: var(--sp-2) var(--sp-4); }
   .tx-date { display: inline-grid; justify-items: start; flex: none; min-width: 3.4em; color: var(--cg-text-muted); line-height: 1.15; font-variant-numeric: tabular-nums; }
   .tx-date .md { font-size: var(--fs-sm); font-weight: 600; color: var(--cg-text); }
-  .tx-date .yr { font-size: 11px; letter-spacing: 0.22em; }
+  .tx-date .yr { font-size: 11px; }
   .tx .row-title { font-size: 15px; font-weight: 500; }
   .tx .row-sub { font-size: 13px; }
   .row-text .row-title, .row-text .row-sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -359,8 +360,8 @@
   .sheet h3 { font-size: var(--fs-lg); }
   .sheet .tx { padding: var(--sp-3) 0; align-items: baseline; }
   .sheet .tx-date { min-width: 40px; }
-  .sheet .tx-date .md { font-size: 10px; }
-  .sheet .tx-date .yr { font-size: 9px; letter-spacing: 0.4em; }
+  .sheet .tx-date .md { font-size: 11px; }
+  .sheet .tx-date .yr { font-size: 10px; }
   @media (min-width: 640px) {
     .sheet { inset: 0; margin: auto; width: min(460px, calc(100% - 2 * var(--gutter))); height: fit-content; max-height: 80vh; border-radius: var(--r-md); padding: var(--sp-5); }
     .grip { display: none; }
