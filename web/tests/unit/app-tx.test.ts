@@ -87,6 +87,13 @@ describe('out of space', () => {
     await enqueue(tx(1))
     expect([...kv.keys()].sort()).toEqual(['acct:A', 'acct:C', 'tx:1:proof1'])
   })
+  it('counts a profile as used when a transaction with it is accepted, unless it was seen online later', async () => {
+    kv.set('acct:B', { who, h: '', t: 5000 }); kv.set('acct:C', { who, h: '', t: 1000 })
+    kv.set('tx:9', { ...tx(3), otherId: 'B' }); kv.set('tx:8', { ...tx(2), otherId: 'C' })
+    answer('{"ok":true}', '{"ok":true}')
+    await flush(d)
+    expect([(kv.get('acct:B') as any).t, (kv.get('acct:C') as any).t]).toEqual([5000, 2000])
+  })
   it('fails when there is still no room, so the transaction is not taken for kept', async () => {
     cap = 0
     await expect(enqueue(tx(1))).rejects.toThrow()

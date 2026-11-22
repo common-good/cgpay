@@ -54,7 +54,7 @@ async function sendAll(d: Device) {
     if (t.error) continue
     try {
       const res = await body(await post(d, 'transactions', { ...t }, TX_TIMEOUT_MS))
-      if (res?.ok === true) await store.del(k); else await store.set(k, { ...t, error: String(res?.message ?? 'refused') })
+      if (res?.ok === true) { await store.del(k); await seen(t.otherId, t.created * 1000) } else await store.set(k, { ...t, error: String(res?.message ?? 'refused') })
     } catch (er) {
       if (unreachable(er)) return true
       await store.set(k, { ...t, error: (er as Error).message })
@@ -67,10 +67,17 @@ async function sendAll(d: Device) {
 export const waiting = async () => (await store.all<Tx>('tx:')).filter(([, t]) => !t.error).length
 
 // Profiles of accounts seen before, for when the server cannot be reached. Kept with a hash of the card code, so a different code does not get the old profile,
-// and with when it was last seen online (t), so the least used go first when the phone is short of space. A profile not kept is only a convenience lost.
+// and with when it was last used (t: seen online, or a transaction with it accepted), so the least used go first when the phone is short of space.
+// A profile not kept is only a convenience lost.
 type Saved = { who: Identity, h: string, t?: number }
-const profileKey = (c: Card) => `acct:${c.acct}`
-export const cacheProfile = async (c: Card, who: Identity) => roomFor(async () => store.set(profileKey(c), { who, h: await sha256(c.code), t: Date.now() })).catch(() => {})
+const profileKey = (acct: string) => `acct:${acct}`
+export const cacheProfile = async (c: Card, who: Identity) => roomFor(async () => store.set(profileKey(c.acct), { who, h: await sha256(c.code), t: Date.now() })).catch(() => {})
+
+// A transaction with the account was accepted: its profile counts as used then, unless it was seen online since.
+async function seen(acct: string, when: number) {
+  const p = await store.get<Saved>(profileKey(acct))
+  if (p && (p.t ?? 0) < when) await store.set(profileKey(acct), { ...p, t: when }).catch(() => {})
+}
 
 /** Write; if that fails (the phone may be out of space), drop the least recently seen half of the saved profiles and try once more. */
 async function roomFor(write: () => Promise<void>) {
@@ -82,6 +89,6 @@ async function roomFor(write: () => Promise<void>) {
 
 /** The profile to go by when offline: the one saved earlier for this card, else a blank one with the offline limit. */
 export async function offlineProfile(c: Card): Promise<Identity> {
-  const saved = await store.get<Saved>(profileKey(c))
+  const saved = await store.get<Saved>(profileKey(c.acct))
   return saved && saved.h === await sha256(c.code) ? saved.who : { name: '', agent: '', location: '', limit: OFFLINE_LIMIT, selling: [], isell: [] }
 }
