@@ -13,7 +13,19 @@
   let { data, children } = $props()
   let app = $state(false)
   let dev = $state<Device | null>(null)
-  onMount(() => app = inApp())
+  onMount(() => { app = inApp(); if (app) register() })
+
+  // A cash register's live session ends when the register locks again (after REGISTER_IDLE_MS without a touch, see PHP's appGate): then the page goes back to the app's own (locked) screens.
+  const REGISTER_IDLE_MS = 120000
+  function register() {
+    const back = () => location.assign(appUrl({}, env.PUBLIC_APP_URL))
+    const key = 'register', mark = (on: boolean) => { try { on ? sessionStorage.setItem(key, '1') : sessionStorage.removeItem(key) } catch { /* no storage: the server still ends the session */ } }
+    let was = false; try { was = !!sessionStorage.getItem(key) } catch { /* as above */ }
+    if (!data.user?.register) { mark(false); if (was && !data.user) back(); return }
+    mark(true)
+    let t = setTimeout(back, REGISTER_IDLE_MS)
+    for (const e of ['pointerdown', 'keydown', 'scroll']) addEventListener(e, () => { clearTimeout(t); t = setTimeout(back, REGISTER_IDLE_MS) }, { passive: true })
+  }
   $effect(() => { if (app && data.user) device(data.user.name).then(d => dev = d) })
 
   // Hide the app header on preview routes (they use their own layout + white-bg TopNav).

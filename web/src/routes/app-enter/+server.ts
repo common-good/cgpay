@@ -9,9 +9,9 @@ import { setSsoCookies } from '$lib/server/sso-cookies'
 export const GET: RequestHandler = async ({ url, cookies }) => {
   const c = url.searchParams.get('c')
   if (!c) throw error(400, 'Missing code.')
-  const r = await callPhp<{ uid: number, account: number, to: string }>('cgpay/redeem', { body: { code: c } })
+  const r = await callPhp<{ uid: number, account: number, to: string, tokenId?: number }>('cgpay/redeem', { body: { code: c } })
   if (!r.ok) throw error(401, 'This link has expired. Open it again from the app.')
-  const sso = await phpSso(r.data.uid, r.data.account)
+  const sso = await phpSso(r.data.uid, r.data.account, r.data.tokenId ?? 0)
   if (!sso) throw error(502, 'Unable to sign you in. Please try again.')
   setSsoCookies(cookies, sso)
   const to = r.data.to
