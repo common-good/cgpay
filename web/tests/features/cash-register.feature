@@ -169,7 +169,7 @@ Scenario: Two minutes untouched lock it again
   And click "btn-unlock"
   Then see "btn-lock"
 
-  When 121 seconds pass
+  When wait 121 seconds
   Then see "btn-manager"
   And see not "btn-pay"
   And these "app_tokens" rows:
@@ -184,9 +184,9 @@ Scenario: A touch keeps it unlocked another two minutes
   And click "btn-unlock"
   Then see "btn-lock"
 
-  Given 90 seconds pass
+  Given wait 90 seconds
   And click "btn-acct-menu"
-  When 90 seconds pass
+  When wait 90 seconds
   Then see "btn-lock"
 
 Rule: A live-site session opened from the cash register lasts only while it is unlocked
@@ -200,7 +200,7 @@ Scenario: The live site goes back to the app after two minutes untouched
   And click "btn-dashboard"
   Then on page ""
 
-  When 121 seconds pass
+  When wait 121 seconds
   Then on page "scan"
   And these "app_tokens" rows:
   | uid | lockedTo | unlockedUntil |

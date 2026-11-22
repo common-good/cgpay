@@ -15,6 +15,8 @@ const BUNDLED_MODE = process.env.E2E_SCREENS !== 'legacy'
 // Where the tests serve the store app's bundled screens (PUBLIC_APP_URL in playwright.config.ts).
 const BUNDLED = `http://localhost:${process.env.E2E_APP_PORT ?? '5180'}`
 
+const REAL_WAIT_MAX = 5 // seconds
+
 // An element id (like btn-signin or ckNum) starts with a lowercase letter and has no spaces or punctuation except - and _.
 const looksLikeId = (s: string) => /^[a-z][A-Za-z0-9_-]*$/.test(s)
 
@@ -132,21 +134,12 @@ export default {
    * Pages it opens on the live site run in its WebView, which marks the user agent (see inStoreApp).
    */
   async storeAppOpens(app: App) {
-    if (!app.storeApp) {
-      await app.page.clock.install() // time still flows, but secondsPass can jump it ahead
-      await app.page.addInitScript(() => {
-        const ua = navigator.userAgent + ' CGPayApp'
-        Object.defineProperty(navigator, 'userAgent', { configurable: true, get: () => ua })
-      })
-    }
+    if (!app.storeApp) await app.page.addInitScript(() => {
+      const ua = navigator.userAgent + ' CGPayApp'
+      Object.defineProperty(navigator, 'userAgent', { configurable: true, get: () => ua })
+    })
     await app.page.goto(BUNDLED + '/')
     app.storeApp = true
-  },
-
-  /** Jump the store app's clock ahead, as if the phone lay untouched that long (its timers due by then fire). */
-  async secondsPass(app: App, n: number) {
-    await app.page.waitForLoadState('networkidle') // what the last click started (an unlock, say) is done, so its timers start before the jump
-    await app.page.clock.fastForward(n * 1000)
   },
 
   /**
@@ -185,7 +178,15 @@ export default {
   /** Make the server act as demo (the store app switches to demo by a test card there), or not. */
   async serverIsDemo(app: App, on: boolean) { await app.testDb.demo(on) },
 
-  async wait(seconds: number) { await new Promise(ok => setTimeout(ok, seconds * 1000)) },
+  /**
+   * Let this many seconds pass. Up to REAL_WAIT_MAX they pass for real; longer waits jump the page's clock ahead (see the app fixture),
+   * as if the device lay untouched that long, so a long timeout costs no testing time.
+   */
+  async wait(app: App, seconds: number) {
+    if (seconds <= REAL_WAIT_MAX) return await new Promise(ok => setTimeout(ok, seconds * 1000))
+    await app.page.waitForLoadState('networkidle') // what the last click started (an unlock, say) is done, so its timers start before the jump
+    await app.page.clock.fastForward(seconds * 1000)
+  },
 
   async select(app: App, id: string, label: string) { await setField(app, id, label) },
 
