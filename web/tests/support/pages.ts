@@ -130,12 +130,21 @@ export default {
    * Pages it opens on the live site run in its WebView, which marks the user agent (see inStoreApp).
    */
   async storeAppOpens(app: App) {
-    if (!app.storeApp) await app.page.addInitScript(() => {
-      const ua = navigator.userAgent + ' CGPayApp'
-      Object.defineProperty(navigator, 'userAgent', { configurable: true, get: () => ua })
-    })
+    if (!app.storeApp) {
+      await app.page.clock.install() // time still flows, but secondsPass can jump it ahead
+      await app.page.addInitScript(() => {
+        const ua = navigator.userAgent + ' CGPayApp'
+        Object.defineProperty(navigator, 'userAgent', { configurable: true, get: () => ua })
+      })
+    }
     await app.page.goto(BUNDLED + '/')
     app.storeApp = true
+  },
+
+  /** Jump the store app's clock ahead, as if the phone lay untouched that long (its timers due by then fire). */
+  async secondsPass(app: App, n: number) {
+    await app.page.waitForLoadState('networkidle') // what the last click started (an unlock, say) is done, so its timers start before the jump
+    await app.page.clock.fastForward(n * 1000)
   },
 
   /**

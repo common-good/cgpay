@@ -5,18 +5,23 @@ import { store } from '../storage'
 import { lockCall, token, unlock } from './auth'
 import { keepMember, member, type Account, type Member } from './accounts'
 import { parseQr } from './qr'
+import { env } from './env'
 
 export const IDLE_MS = 120000
 export type Scope = 'full' | 'company' // another manager's card opens only the company; the token owner's password or own card opens everything
 
-const OWNER_OP = 'ownerOp', CARDS = 'mgrCards', PENDING = 'pendingLock', UNLOCKED = 'unlocked'
+const CARDS = 'mgrCards', PENDING = 'pendingLock', UNLOCKED = 'unlocked'
 type Card = { acct: string, salt: string, hash: string }
 
-/** The companies that act as personal accounts on this phone (the owner-operated setting): no lock. */
-export const ownerOperated = async () => (await store.get<number[]>(OWNER_OP)) ?? []
+/**
+ * The companies that act as personal accounts on this phone (the owner-operated setting): no lock. Like every account setting, it survives changes of account
+ * (and sign-outs); it is kept per env, since a uid names different accounts on different servers.
+ */
+const ownerKey = () => `ownerOp:${env()}`
+export const ownerOperated = async () => (await store.get<number[]>(ownerKey())) ?? []
 export async function setOwnerOperated(uid: number, on: boolean) {
   const list = (await ownerOperated()).filter(u => u !== uid)
-  await store.set(OWNER_OP, on ? [...list, uid] : list)
+  await store.set(ownerKey(), on ? [...list, uid] : list)
 }
 
 /** Whether the account is a cash register on this phone: a company, not owner-operated, signed in with a token (the lock needs the server). */

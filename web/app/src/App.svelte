@@ -35,6 +35,7 @@
   let device = $state<Device | null>(null)
   let acct = $state<Account | null>(null) // the account chosen on this phone (null before a token sign-in)
   let unlocking: 'accounts' | 'settings' = 'accounts' // what the password opens
+  let after: 'accounts' | 'settings' | '' = '' // what a manager's unlock of a locked cash register goes on to (see open)
   let screen = $state<Screen | ''>('')
   let qr = $state('')
   let to = $state('') // the env a scanned card of the other kind would take the app to
@@ -96,8 +97,13 @@
     return !!url
   }
 
-  /** Change account or settings, after the password if the settings ask for it (not on an unlocked cash register: the manager's unlock was enough). */
+  /**
+   * Change account or settings, after the password if the settings ask for it (not on an unlocked cash register: the manager's unlock was enough).
+   * A locked cash register asks for a manager first, and another manager's unlock does not reach Change account.
+   */
   async function open(which: 'accounts' | 'settings') {
+    if (register && !scope) return void (after = which, unlockError = '', screen = 'register-unlock')
+    if (register && scope === 'company' && which === 'accounts') return void (notice = 'Only the manager signed in on this device can change account.', screen = 'home')
     if (!scope && (await settings()).locked) { unlocking = which; screen = 'unlock' } else screen = which
   }
 
@@ -129,16 +135,19 @@
       const r = await unlockBy(how, device?.real ?? true)
       if (r.error) return void (unlockError = UNLOCK_ERRORS[r.error] ?? 'That did not work. Try again.', screen = 'register-unlock')
       scope = r.scope!; acct = await current(); device = acct?.device ?? null; notice = ''; touched = 0; active()
-      screen = 'home'
+      const next = after; after = ''
+      if (next) await open(next); else screen = 'home'
     } finally { busy = false }
   }
 
   // The owner-operated setting: the company acts as a personal account on this phone (no lock), or becomes a cash register again.
   async function ownerOp(on: boolean) {
     if (!acct) return false
-    if (on && !await release().catch(() => false)) return false
+    const was = scope
+    if (on) { register = false; scope = ''; clearTimeout(idle) } // before asking the server, so leaving the settings meanwhile does not lock it again
+    if (on && !await release().catch(() => false)) { register = true; scope = was; touched = 0; active(); return false }
     await setOwnerOperated(acct.uid, on)
-    if (on) { register = false; scope = ''; clearTimeout(idle) } else { register = true; await relock() }
+    if (!on) { register = true; await relock() }
     return true
   }
 
@@ -251,7 +260,7 @@
     {#if queued}<p data-testid="queued">{queued} transaction{queued == 1 ? '' : 's'} waiting to send</p>{/if}
     <p data-testid="acct">Account: {device?.name ?? acct?.name}</p>
     {#if device}<button data-testid="btn-receive" onclick={() => start('charge')}>Charge</button>{/if}
-    <button class="out" data-testid="btn-manager" onclick={() => { unlockError = ''; screen = 'register-unlock' }}>Manager</button>
+    <button class="out" data-testid="btn-manager" onclick={() => { unlockError = ''; after = ''; screen = 'register-unlock' }}>Manager</button>
   {:else if screen === 'home'}
     <div class="head">
       <h1>CGPay</h1>

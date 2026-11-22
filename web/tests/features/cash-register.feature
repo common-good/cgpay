@@ -126,6 +126,34 @@ Scenario: Lock locks it again
   Then see "btn-manager"
   And see not "btn-pay"
 
+Scenario: Two minutes untouched lock it again
+  Given click "btn-use"
+  And click "btn-back"
+  And click "btn-manager"
+  And input "password": "k"
+  And click "btn-unlock"
+  Then see "btn-lock"
+
+  When 121 seconds pass
+  Then see "btn-manager"
+  And see not "btn-pay"
+  And these "app_tokens" rows:
+  | uid | lockedTo | unlockedUntil |
+  | Bea | Cit      |               |
+
+Scenario: A touch keeps it unlocked another two minutes
+  Given click "btn-use"
+  And click "btn-back"
+  And click "btn-manager"
+  And input "password": "k"
+  And click "btn-unlock"
+  Then see "btn-lock"
+
+  Given 90 seconds pass
+  And click "btn-acct-menu"
+  When 90 seconds pass
+  Then see "btn-lock"
+
 Rule: Offline, a manager's card unlocks if it unlocked this device online before
 
 Scenario: A card that unlocked online before unlocks offline
@@ -169,3 +197,27 @@ Scenario: A manager turns the lock off
   When store app opens
   Then on page ""
   And signed in as "Cit"
+
+Scenario: The owner-operated setting survives a change of account
+  Given click "btn-use"
+  And click "btn-back"
+  And click "btn-manager"
+  And input "password": "k"
+  And click "btn-unlock"
+  And click "btn-acct-menu"
+  And click "menu-settings"
+  And click "set-ownerOperated"
+  And click "btn-back"
+  And click "btn-acct-menu"
+  And click "menu-accounts"
+  And select "account": "Bea Two"
+  And click "btn-use"
+  And click "btn-acct-menu"
+  And click "menu-accounts"
+  And select "account": "Citre"
+  When click "btn-use"
+  Then on page ""
+  And signed in as "Cit"
+  And these "app_tokens" rows:
+  | uid | lockedTo |
+  | Bea |          |
