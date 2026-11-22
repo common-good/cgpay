@@ -103,6 +103,8 @@ export default {
 
   async onPage(app: App, path: string) { await app.page.goto('/' + path) },
 
+  async press(app: App, key: string, n = 1) { for (let i = 0; i < n; i++) await app.page.keyboard.press(key) },
+
   async reload(app: App) { await app.page.reload() },
 
   /**
@@ -188,6 +190,8 @@ export default {
   async soError(app: App, message: string) {
     await expect(app.page.getByRole('alert').filter({ hasText: message }).first(), `error "${message}"`).toBeVisible({ timeout: 10_000 })
   },
+
+  async soFocusOn(app: App, id: string) { await expect(app.page.getByTestId(id), `focus on "${id}"`).toBeFocused() },
 
   async soOnPage(app: App, path: string) {
     if ((BUNDLED_MODE || app.storeApp) && ['home', 'tx-start', 'scan', 'tx'].includes(path)) return await expect(app.page.locator(`[data-screen="${path}"]`), `on page "${path}" (bundled screen)`).toBeVisible({ timeout: 15_000 })
