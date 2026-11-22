@@ -42,6 +42,9 @@
   let queued = $state(0)
   let offlineMsg = $state('')
   let otherAcct = $state('') // the account the live site acted for, when it is not the one this app acts for
+  let otherA: Account | undefined // that account, when this app has it too
+  let wanted: Account | undefined // the account the mismatch dialog switches to, as soon as the accounts screen opens (after any unlock it needs)
+  let resume = '' // what the member came to do (pay or charge), to carry on with after changing account from the mismatch dialog
   let signedIn = $state(false) // a token is on the phone
   let confirming = $state(false) // asking whether to sign out with transactions still waiting
   let txView = $state<Tx>()
@@ -68,7 +71,7 @@
     if (hasToken) { if (!device) await check(); else if (cold) check() }
     if (screen === 'signin') return
     acct = await current()
-    if (sent && acct && acct.uid !== sent) otherAcct = (await member())?.accounts.find(a => a.uid === sent)?.name || 'another account'
+    if (sent && acct && acct.uid !== sent) { otherA = (await member())?.accounts.find(a => a.uid === sent); otherAcct = otherA?.name || 'another account' }
     const want = hash.get('screen')
     queued = await waiting()
     if (want === 'signout') return void (queued ? (screen = 'home', confirming = true) : leave())
@@ -92,7 +95,9 @@
   // Another account was chosen: show its dashboard (or, offline, its home screen).
   async function chosen() {
     acct = await current(); device = acct?.device ?? null; otherAcct = ''
-    if (!await goLive()) screen = 'home'
+    const r = resume; resume = ''
+    if (device && (r === 'pay' || r === 'charge')) start(r)
+    else if (!await goLive()) screen = 'home'
   }
 
   // Ask the server whether the token still works and fetch the device credentials again; a token that no longer works signs the member out here too.
@@ -124,7 +129,16 @@
   // Back goes to the screen before: from the summary it means undo, and a company, which skips the start page, goes home from the scanner.
   function back() {
     if (screen === 'tx') txView?.back()
-    else { screen = screen === 'scan' && device && !device.isCo ? 'tx-start' : 'home'; seen = '' }
+    else { screen = screen === 'scan' && device && !device.isCo ? 'tx-start' : 'home'; seen = ''; wanted = undefined; resume = '' }
+  }
+
+  $effect(() => { if (screen === 'accounts' && wanted) { const a = wanted; wanted = undefined; choose(a).then(chosen) } })
+
+  // From the mismatch dialog: change account (to a, if given), then carry on with the payment or charge the member came for.
+  async function change(a?: Account) {
+    wanted = a; resume = intent
+    await open('accounts')
+    if (screen === 'home') { wanted = undefined; resume = '' } // the change was refused
   }
 
   // A card of the kind that belongs to the other env asks to switch (anything else is an ordinary scan). Transactions waiting here belong to this env's server, so they go first.
@@ -191,7 +205,8 @@
       <div class="warn" role="alertdialog" data-testid="acct-warning">
         <p>The website is using {otherAcct}, but this app is set to {acct?.name}.</p>
         <button data-testid="btn-acct-proceed" onclick={proceed}>Continue as {acct?.name}</button>
-        <button data-testid="btn-acct-change" onclick={() => open('accounts')}>Change account</button>
+        {#if otherA}<button data-testid="btn-acct-switch" onclick={() => change(otherA)}>Switch to {otherAcct}</button>{/if}
+        <button data-testid="btn-acct-change" onclick={() => change()}>Change account</button>
         <button class="out" data-testid="btn-acct-cancel" onclick={() => toDashboard(live())}>Cancel</button>
       </div>
     {/if}

@@ -493,6 +493,15 @@ Scenario: A member acting for Citre on the live site taps Pay while the app acts
   And click "btn-acct-cancel"
   Then on page ""
 
+Scenario: A member acting for Citre on the live site taps Pay while the app acts for the member, and switches to Citre
+  Given signed in as "Bea"
+  And in the store app
+  And acting as "Cit"
+  And store app acts as "Bea"
+  When click "btn-pay"
+  And click "btn-acct-switch"
+  Then on page "scan"
+
 Scenario: A member taps Pay while the app acts for the same account as the live site
   Given signed in as "Bea"
   And in the store app
