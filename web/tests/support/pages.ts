@@ -1,4 +1,4 @@
-import { expect, type Route } from '@playwright/test'
+import { expect, type Frame, type Route } from '@playwright/test'
 import type { App } from '../steps/fixtures'
 import { acct } from './accounts'
 import { resolve } from './magic'
@@ -44,7 +44,37 @@ export default {
   async actingAs(app: App, who: string) {
     const php = (process.env.PUBLIC_PHP_BASE_URL ?? 'http://localhost/cg/cgmembers').replace(/\/+$/, '')
     await app.page.request.get(`${php}/change-account/acct=${acct(who).identifier}`, { maxRedirects: 0 }) // shares the page's cookies; PHP then redirects to a dashboard we don't need
+    app.acting = who
+    if (app.appToken) await this.appSignIn(app)
     await app.page.goto('/')
+  },
+
+  /**
+   * Sign the store app's screens in by token as the member signed in on the live site, acting for the account the live site acts for:
+   * put in the app's store what its own sign-in and choice of account would (the screens take no credentials from the dashboard).
+   * The app starts in the test env (ownerOp:test, see the app's lib/register).
+   */
+  async appSignIn(app: App, as = app.acting ?? app.who) {
+    if (!app.who || !as) return
+    const req = app.page.request, a = acct(app.who), uid = uidOf(as)
+    if (!app.appToken) app.appToken = (await (await req.post('/api/app/signin', { data: { identifier: a.fullName, password: a.password, label: 'test' } })).json()).token
+    if (!app.appToken) throw new Error(`in the store app: signing the app in as "${app.who}" gave no token`)
+    const m = await (await req.post('/api/app/device', { data: { token: app.appToken } })).json()
+    const device = m.accounts?.find((x: { uid: number }) => x.uid === uid)?.device
+    if (!device) throw new Error(`in the store app: "${app.who}" cannot use the app for "${as}"`)
+    const p = await app.page.context().newPage()
+    await p.goto(BUNDLED + '/#screen=home')
+    await p.evaluate(kv => new Promise((ok, no) => {
+      const r = indexedDB.open('cgpay', 1)
+      r.onupgradeneeded = () => r.result.createObjectStore('kv')
+      r.onsuccess = () => {
+        const tx = r.result.transaction('kv', 'readwrite')
+        for (const [k, v] of kv) tx.objectStore('kv').put(v, k as string)
+        tx.oncomplete = () => { r.result.close(); ok(null) }
+        tx.onerror = () => no(tx.error)
+      }
+    }), [['secure:token', app.appToken], ['member', m], ['acct', uid], ['device', device], ['ownerOp:test', [uid]]] as [string, unknown][]) // a company chosen here is owner-operated, not a cash register (cash-register.feature covers that)
+    await p.close()
   },
 
   /**
@@ -75,7 +105,7 @@ export default {
     })
     await app.page.reload()
     app.storeApp = true
-    if (!app.page.url().includes('/login')) await expect(app.page.getByTestId('nav-app'), 'in the store app: the dashboard got the device credentials').toHaveAttribute('href', /device=/)
+    if (!app.page.url().includes('/login')) await this.appSignIn(app)
   },
 
   async click(app: App, id: string) { await app.page.getByTestId(id).click() },
@@ -127,6 +157,16 @@ export default {
   },
 
   /** Open the store app's own screens on a phone with no account on it (each scenario's browser starts with empty storage). */
+  /** The phone has no room left: every write to the bundled screens' store fails, now and after a reload (deleting still works). */
+  async storageFull(app: App) {
+    const full = () => { IDBObjectStore.prototype.put = () => { throw new DOMException('The quota has been exceeded.', 'QuotaExceededError') } }
+    await app.page.addInitScript(full)
+    await app.page.evaluate(full)
+  },
+
+  /** The store app acts for this account, whatever the live site acts for (as after switching account on a PHP page). */
+  async storeAppActsAs(app: App, who: string) { await this.appSignIn(app, who) },
+
   async storeAppNoAccount(app: App) { await this.storeAppOpens(app) },
 
   /**
@@ -161,18 +201,17 @@ export default {
 
   // The store app's bundled screens: the dashboard (in the app) opens them, the start page is skipped by companies, and a failed scan returns to the dashboard.
   async scanInBundled(app: App, btn: string) {
-    if (!app.offline) {
-      if (!app.storeApp) await this.inStoreApp(app)
-      await expect(app.page.getByTestId('nav-app'), 'scan: the dashboard got the device credentials').toHaveAttribute('href', /device=/)
-    }
-    const main = app.page.mainFrame(), onLive = !app.page.url().startsWith(BUNDLED)
-    const opened = onLive && app.page.waitForEvent('framenavigated', { predicate: f => f === main && f.url().startsWith(BUNDLED), timeout: 15_000 })
+    if (!app.offline && !app.storeApp) await this.inStoreApp(app)
+    let opened = app.page.url().startsWith(BUNDLED) // the screens can open, scan and fail back to the dashboard before a locator sees them
+    const saw = (f: Frame) => { if (f === app.page.mainFrame() && f.url().startsWith(BUNDLED)) opened = true }
+    app.page.on('framenavigated', saw)
     await app.page.getByTestId(btn).click()
-    await opened // a quick camera and a quick refusal can be back on the dashboard before any check sees the bundled screens
-    const screen = (name: string) => app.page.locator(`[data-screen="${name}"]`)
-    await expect(screen('tx-start').or(screen('scan')).or(screen('tx')).or(screen('switch')).or(app.page.getByTestId('balance')), 'scan: the bundled screens opened').toBeVisible({ timeout: 15_000 })
-    if (await screen('tx-start').count()) await app.page.getByTestId('btn-scan').click()
-    await expect(screen('tx').or(screen('switch')).or(app.page.getByTestId('balance')), 'scan: the transaction screen, the switch screen, or the dashboard when the scan fails').toBeVisible({ timeout: 15_000 })
+    await expect.poll(() => opened, { message: 'scan: the bundled screens opened', timeout: 15_000 }).toBe(true)
+    app.page.off('framenavigated', saw)
+    const screen = (name: string) => app.page.locator(`[data-screen="${name}"]`), end = screen('tx').or(screen('switch')).or(app.page.getByTestId('balance'))
+    const at = 'scan: the transaction screen, the switch screen, or the dashboard when the scan fails'
+    await expect(screen('tx-start').or(end), at).toBeVisible({ timeout: 15_000 })
+    if (await screen('tx-start').count()) { await app.page.getByTestId('btn-scan').click(); await expect(end, at).toBeVisible({ timeout: 15_000 }) }
   },
 
   /** Make the server act as demo (the store app switches to demo by a test card there), or not. */
@@ -190,9 +229,12 @@ export default {
 
   async select(app: App, id: string, label: string) { await setField(app, id, label) },
 
-  /** From now on PHP's API answers this endpoint with an error page (status 200, not JSON), as when PHP crashes. */
+  /** The live site answers this /api/app endpoint as it should again (after serverErrorPage). */
+  async serverAnswersAgain(app: App, endpoint: string) { await app.page.context().unroute(`**/api/app/${endpoint}`) },
+
+  /** From now on the live site answers this /api/app endpoint with an error page (status 200, not JSON), as when a proxy in between fails. */
   async serverErrorPage(app: App, endpoint: string) {
-    await app.page.context().route(`**/api/${endpoint}`, r => r.fulfill({ status: 200, contentType: 'text/html', body: '<html><body>Fatal error</body></html>' }))
+    await app.page.context().route(`**/api/app/${endpoint}`, r => r.fulfill({ status: 200, contentType: 'text/html', body: '<html><body>Fatal error</body></html>' }))
   },
 
   /**
@@ -202,6 +244,7 @@ export default {
   async signedIn(app: App, who: string) {
     const { page } = app
     if (page.url() === 'about:blank') await page.goto('/')
+    app.who = who === 'nobody' ? undefined : who
     if (who === 'nobody' || await hi(app).count()) return await checkSignedIn(app, who)
     await page.goto('/login')
     await page.getByTestId('identifier').fill(acct(who).fullName)
@@ -268,8 +311,7 @@ export default {
       await expect(link(0), at).toHaveAttribute('href', /tx\/pay$/)
       await expect(link(1), at).toHaveAttribute('href', /tx\/charge$/)
     } else if (where === 'bundled screens') {
-      await expect(link(0), at).toHaveAttribute('href', new RegExp(`^${escapeRegExp(BUNDLED)}/#intent=pay&device=`))
-      await expect(link(1), at).toHaveAttribute('href', new RegExp(`^${escapeRegExp(BUNDLED)}/#intent=charge&device=`))
+      for (const [n, intent] of [[0, 'pay'], [1, 'charge']] as const) await expect(link(n), at).toHaveAttribute('href', new RegExp(`^${BUNDLED}/#intent=${intent}&acct=\\d+$`))
     } else throw new Error(`${at}: say "legacy app", "PHP" or "bundled screens".`)
   },
 

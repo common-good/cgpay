@@ -6,13 +6,12 @@
   import { appVersion } from '$lib/version'
   import favicon from '$lib/assets/favicon.svg'
   import { onMount } from 'svelte'
-  import { inApp, appLink, appUrl, device, type Device } from '$lib/app-shell'
+  import { inApp, appUrl } from '$lib/app-shell'
   import { isDemoSite } from '$lib/demo'
   import AcctMenu, { type Item } from '$lib/components/AcctMenu.svelte'
 
   let { data, children } = $props()
   let app = $state(false)
-  let dev = $state<Device | null>(null)
   onMount(() => { app = inApp(); if (app) register() })
 
   // A cash register's live session ends when the register locks again (after REGISTER_IDLE_MS without a touch, see PHP's appGate): then the page goes back to the app's own (locked) screens.
@@ -26,7 +25,6 @@
     let t = setTimeout(back, REGISTER_IDLE_MS)
     for (const e of ['pointerdown', 'keydown', 'scroll']) addEventListener(e, () => { clearTimeout(t); t = setTimeout(back, REGISTER_IDLE_MS) }, { passive: true })
   }
-  $effect(() => { if (app && data.user) device(data.user.name).then(d => dev = d) })
 
   // Hide the app header on preview routes (they use their own layout + white-bg TopNav).
   const isPreview = $derived(page.url.pathname.startsWith('/preview'))
@@ -54,10 +52,12 @@
   const acctItems = $derived<Item[]>(app ? [
     { id: 'accounts', label: 'Change account', href: appUrl({ screen: 'accounts' }, env.PUBLIC_APP_URL) },
     { id: 'settings', label: 'Settings', href: appUrl({ screen: 'settings' }, env.PUBLIC_APP_URL) },
+    { id: 'feedback', label: 'Feedback', href: '/feedback' },
     { id: 'signout', label: 'Sign out', href: appUrl({ screen: 'signout' }, env.PUBLIC_APP_URL) }
   ] : [
     { id: 'accounts', label: 'Change account', href: menuHref('Dashboard') }, // the member site's dashboard has its account switcher
     { id: 'settings', label: 'Settings', href: menuHref('Settings') },
+    { id: 'feedback', label: 'Feedback', href: '/feedback' },
     { id: 'signout', label: 'Sign out', onclick: signOut }
   ])
 
@@ -93,7 +93,7 @@
           {/if}
         {/each}
         {#if app}
-          <li><a data-testid="nav-app" href={appLink(dev, {}, env.PUBLIC_APP_URL) || '#'} aria-disabled={!dev || undefined}>Scan</a></li>
+          <li><a data-testid="nav-app" href={appUrl({ screen: 'home', acct: data.user.uid }, env.PUBLIC_APP_URL)}>Scan</a></li>
         {/if}
         {#if data.user.sponsored}
           <li><a class:active={activeLabel === 'Grants'} href="/grants">Grants</a></li>

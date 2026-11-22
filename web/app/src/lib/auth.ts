@@ -9,7 +9,7 @@ export type Reply = { status: number, data: Record<string, any> }
 export type Signed = Member & { token: string }
 
 /** POST JSON to the live site's /api/app/<op>. Rejects when there is no answer (no connection, or too slow). */
-async function call(op: string, body: object, ms = 20000, base = live()): Promise<Reply> {
+export async function call(op: string, body: object, ms = 20000, base = live()): Promise<Reply> {
   const res = await fetch(`${base}/api/app/${op}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: AbortSignal.timeout(ms) })
   return { status: res.status, data: await res.json().catch(() => ({})) }
 }
@@ -68,17 +68,17 @@ export async function enterUrl(to = 'dashboard'): Promise<string> {
 }
 
 /**
- * Sign out: end the token on the server if it can be reached, then forget the token, the device credentials and anything still waiting to send.
- * Returns whether the server was reached (so the live site's cookie can be cleared too, see App.svelte).
+ * Sign out: end the token on the server if it can be reached, then forget the token, the device credentials and (drop) anything still waiting to send.
+ * A sign-in that stopped working keeps what waits, so it goes out after the next sign-in. Returns whether the server was reached (so the live site's cookie can be cleared too, see App.svelte).
  */
-export async function signOut() {
+export async function signOut(drop = true) {
   const t = await token()
   const reached = !!t && await call('revoke', { token: t }, 8000).then(() => true, () => false)
   await secret.del('token')
   await forget()
   await Promise.all((await dropShelved()).map(o => call('revoke', { token: o.token }, 8000, liveOf(o.env)).catch(() => {}))) // the other env's sign-in goes too (awaited: the page leaves next, which would cut the request off)
   await resetEnv()
-  for (const [k] of await store.all('tx:')) await store.del(k)
+  if (drop) for (const [k] of await store.all('tx:')) await store.del(k)
   return reached
 }
 
