@@ -453,3 +453,31 @@ Scenario: A member who switched to demo signs out of both envs
   | uid | revoked |
   | Bea | !       |
   | Abe | !       |
+
+Rule: The live site hands the app's screens no credentials (the app has its own, from its token)
+
+Scenario: The dashboard's Pay and Charge open the app's screens with the intent alone
+  Given signed in as "Bea"
+  When in the store app
+  Then pay and charge go to "bundled screens"
+
+Rule: The app warns when the live site acts for another account than the app does (the app pays as its own choice)
+
+Scenario: A member acting for Citre on the live site taps Pay while the app acts for the member
+  Given signed in as "Bea"
+  And in the store app
+  And acting as "Cit"
+  And store app acts as "Bea"
+  When click "btn-pay"
+  Then see "acct-warning"
+  And on page "home"
+
+  When click "btn-acct-change"
+  Then on page "accounts"
+
+Scenario: A member taps Pay while the app acts for the same account as the live site
+  Given signed in as "Bea"
+  And in the store app
+  When click "btn-pay"
+  Then on page "tx-start"
+  And see not "acct-warning"

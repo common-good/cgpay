@@ -7,7 +7,7 @@
   import { flush, waiting } from './lib/tx'
   import { toDashboard } from './lib/leave'
   import { enterUrl, keep, refresh, signOut, token, type Signed } from './lib/auth'
-  import { choose, current, type Account } from './lib/accounts'
+  import { choose, current, member, type Account } from './lib/accounts'
   import { settings } from './lib/settings'
   import { cardKind } from './lib/qr'
   import { isDemo, live, mismatch, switchTo, target } from './lib/env'
@@ -21,12 +21,14 @@
   import Tx from './Tx.svelte'
   import TxStart from './TxStart.svelte'
 
-  // The bundled screens of the store app. The live dashboard opens them with #intent=pay|charge (or none) and the account's device credentials,
-  // or with #screen=accounts|settings|signout from its account menu. Opened with nothing (the app starting), they go on to the live dashboard when it can be reached.
+  // The bundled screens of the store app. The live dashboard opens them with #intent=pay|charge, or with #screen=home (its Scan link),
+  // accounts, settings or signout (its account menu); never with credentials, which come only from the app's store (fetched with its token).
+  // With intent and home it adds &acct=uid, the account the live site acts for, so the app can warn when it would act for another.
+  // Opened with nothing (the app starting), they go on to the live dashboard when it can be reached.
   const cold = !location.hash
   const hash = new URLSearchParams(location.hash.slice(1))
-  const handed = hash.get('device') // credentials stay out of the address
   let intent = $state(hash.get('intent') || '')
+  const sent = Number(hash.get('acct')) || 0
   history.replaceState(null, '', location.pathname)
 
   type Screen = 'signin' | 'home' | 'tx-start' | 'scan' | 'switch' | 'tx' | 'accounts' | 'settings' | 'unlock'
@@ -38,12 +40,13 @@
   let to = $state('') // the env a scanned card of the other kind would take the app to
   let demo = $state(isDemo()) // shows the DEMO mark
   let queued = $state(0)
-  let signedIn = $state(false) // a token or device credentials are on the phone
+  let offlineMsg = $state('')
+  let otherAcct = $state('') // the account the live site acted for, when it is not the one this app acts for
+  let signedIn = $state(false) // a token is on the phone
   let confirming = $state(false) // asking whether to sign out with transactions still waiting
   let txView = $state<Tx>()
   let seen = '' // the card the scanner returned last: still in view when Back returns to the scanner, so it is not taken again
   const fail = (msg: string) => toDashboard(live(), msg, 'error')
-  const parse = (s: string | null) => { try { return s && JSON.parse(s) } catch { return null } } // a garbled handoff must not stop the app from starting
 
   // Send what waited for a connection, and show how much still waits.
   async function sendQueued() {
@@ -52,32 +55,31 @@
   }
 
   onMount(async () => {
-    const d = parse(handed)
-    if (d) await store.set('device', d)
     device = (await store.get<Device>('device')) ?? null
     window.addEventListener('online', sendQueued)
     const tick = setInterval(() => queued && sendQueued(), 5000) // the online event is not reliable on phones
     if (Capacitor.isNativePlatform()) CapApp.addListener('backButton', () => screen && screen !== 'home' ? back() : (clearInterval(tick), CapApp.exitApp()))
     sendQueued()
     const hasToken = !!await token()
-    signedIn = !!device || hasToken
+    signedIn = hasToken
     if (!signedIn) return void (screen = 'signin') // no account on the phone: skip the home screen
     // With no credentials yet the screens wait for them; otherwise check in the background, but not when the live site sent us here
     // (it just checked the session, and a late refresh could undo an account the member is choosing now).
     if (hasToken) { if (!device) await check(); else if (cold) check() }
     if (screen === 'signin') return
     acct = await current()
+    if (sent && acct && acct.uid !== sent) otherAcct = (await member())?.accounts.find(a => a.uid === sent)?.name || 'another account'
     const want = hash.get('screen')
     queued = await waiting()
     if (want === 'signout') return void (queued ? (screen = 'home', confirming = true) : leave())
     if (want === 'accounts' || want === 'settings') return void open(want)
-    if (device && (intent === 'pay' || intent === 'charge')) start(intent)
+    if (device && !otherAcct && (intent === 'pay' || intent === 'charge')) start(intent)
     else if (!(cold && hasToken && await goLive())) screen = 'home'
   })
 
-  /** Open the live dashboard signed in (as the chosen account), if it can be reached; false if not. */
-  async function goLive() {
-    const url = await enterUrl()
+  /** Open a live page (the dashboard, by default) signed in as the chosen account, if it can be reached; false if not. */
+  async function goLive(to?: string) {
+    const url = await enterUrl(to)
     if (url) location.assign(url)
     return !!url
   }
@@ -89,7 +91,7 @@
 
   // Another account was chosen: show its dashboard (or, offline, its home screen).
   async function chosen() {
-    acct = await current(); device = acct?.device ?? null
+    acct = await current(); device = acct?.device ?? null; otherAcct = ''
     if (!await goLive()) screen = 'home'
   }
 
@@ -148,7 +150,7 @@
     if (!await goLive()) screen = 'home'
   }
 
-  function start(what: string) { intent = what; seen = ''; screen = device!.isCo ? 'scan' : 'tx-start' }
+  function start(what: string) { intent = what; seen = ''; otherAcct = ''; screen = device!.isCo ? 'scan' : 'tx-start' }
 </script>
 
 <main data-screen={screen}>
@@ -177,10 +179,18 @@
         <AcctMenu name={acct?.name ?? device?.name ?? ''} photo={acct?.photo} items={[
           { id: 'accounts', label: 'Change account', onclick: () => open('accounts') },
           { id: 'settings', label: 'Settings', onclick: () => open('settings') },
+          { id: 'feedback', label: 'Feedback', onclick: async () => { if (!await goLive('feedback')) offlineMsg = 'Feedback needs a connection. Try again when you have a signal.' } },
           { id: 'signout', label: 'Sign out', onclick: () => queued ? confirming = true : leave() }
         ]} />
       {/if}
     </div>
+    {#if otherAcct}
+      <div class="warn" data-testid="acct-warning">
+        <p>The website was acting for {otherAcct}, but this app pays and charges as {acct?.name}.</p>
+        <button data-testid="btn-acct-change" onclick={() => open('accounts')}>Change account</button>
+      </div>
+    {/if}
+    {#if offlineMsg}<p class="err" data-testid="offline-msg">{offlineMsg}</p>{/if}
     {#if queued}<p data-testid="queued">{queued} transaction{queued == 1 ? '' : 's'} waiting to send</p>{/if}
     <p data-testid="acct">{device ? `Account: ${device.name}` : 'This account cannot use the app yet. Open the dashboard to finish setting it up.'}</p>
     {#if device}
@@ -208,6 +218,7 @@
   .demo { margin: 0 0 8px; padding: 4px; text-align: center; font-weight: 700; letter-spacing: 0.2em; background: #f5b301; color: #1a1f1c; border-radius: 6px; }
   .back { background: none; color: #0946A6; padding: 4px 0; }
   .out { background: none; color: #0946A6; }
+  .err { color: #b91c1c; }
   .warn { margin-top: 16px; padding: 12px; border: 1px solid #fecaca; background: #fef2f2; border-radius: 8px; }
   .foot { margin-top: 32px; font-size: 0.75rem; color: #5a615e; word-break: break-all; }
 </style>
