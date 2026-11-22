@@ -1,14 +1,15 @@
 // Transactions on the bundled screens: amount rules, the proof the server checks, and the queue that survives a closed app.
 import type { Device } from '$lib/app-shell'
 import { store } from '../storage'
-import { body, post, TX_TIMEOUT_MS, unreachable, VERSION, type Identity } from './api'
+import { TX_TIMEOUT_MS, type Identity } from './api'
+import { call, token } from './auth'
 import { noCardCode, type Card } from './qr'
 import { env } from './env'
 
 export const ONLINE_LIMIT = 10000 // the most any account can be charged on the app
 export const money = (n: number | string) => (+n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
-export type Tx = { actorId: string, otherId: string, amount: string, description: string, created: number, proof: string, deviceId: string, offline: boolean, pending: boolean, version: number, error?: string }
+export type Tx = { actorId: string, otherId: string, amount: string, description: string, created: number, proof: string, offline: boolean, pending: boolean, error?: string }
 
 export const OFFLINE_LIMIT = 250 // how much an account not seen before can be charged without the server's word on what it has
 
@@ -27,7 +28,7 @@ export function checkAmount(typed: number, limit: number): [number, string] {
 /** The transaction as the server wants it, with proof that this device made it (a hash of the amount, the accounts and the other's card code). */
 export async function makeTx(d: Device, card: Card, paying: boolean, amount: number, description: string): Promise<Tx> {
   const actorId = noCardCode(d.accountId), amt = (paying ? -amount : amount).toFixed(2), created = Math.floor(Date.now() / 1000)
-  return { actorId, otherId: card.acct, amount: amt, description, created, proof: await sha256(actorId + amt + card.acct + card.code + created), deviceId: d.deviceId, offline: true, pending: !(paying || d.isCo), version: VERSION }
+  return { actorId, otherId: card.acct, amount: amt, description, created, proof: await sha256(actorId + amt + card.acct + card.code + created), offline: true, pending: !(paying || d.isCo) }
 }
 
 const key = (t: Tx) => `tx:${t.created}:${t.proof.slice(0, 8)}`
@@ -42,24 +43,23 @@ let running: Promise<boolean> | null = null, next: Promise<boolean> | null = nul
 
 /**
  * Send every queued transaction, each on its own: one the server refuses, or answers with anything but a clear yes, is kept with the reason and does not hold up the others.
- * A network failure stops the run (the rest would fail the same way; returns true) and they go out next time.
+ * No answer, the server's own server unavailable, or a sign-in that no longer works stops the run (the rest would fail the same way; returns true), and they go out next time.
  * Never two runs at once, or a transaction could go out twice: a call during a run waits for it, then all such calls share one more run (for what was queued meanwhile).
  */
-export function flush(d: Device): Promise<boolean> {
-  if (!running) return running = sendAll(d).finally(() => running = null)
-  return next ??= running.then(() => { next = null; return flush(d) })
+export function flush(): Promise<boolean> {
+  if (!running) return running = sendAll().finally(() => running = null)
+  return next ??= running.then(() => { next = null; return flush() })
 }
 
-async function sendAll(d: Device) {
+async function sendAll() {
   for (const [k, t] of await store.all<Tx>('tx:')) {
     if (t.error) continue
-    try {
-      const res = await body(await post(d, 'transactions', { ...t }, TX_TIMEOUT_MS))
-      if (res?.ok === true) { await store.del(k); await seen(t.otherId, t.created * 1000) } else await store.set(k, { ...t, error: String(res?.message ?? 'refused') })
-    } catch (er) {
-      if (unreachable(er)) return true
-      await store.set(k, { ...t, error: (er as Error).message })
-    }
+    let r
+    try { r = await call('tx', { token: await token(), ...t }, TX_TIMEOUT_MS) } catch { return true }
+    const { status, data } = r
+    if (status === 401 || data.error === 'unavailable') return true
+    if (status === 200 && data.ok === true) { await store.del(k); await seen(t.otherId, t.created * 1000) }
+    else await store.set(k, { ...t, error: String(data.message ?? data.error ?? 'refused') })
   }
   return false
 }

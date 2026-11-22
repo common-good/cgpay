@@ -216,9 +216,9 @@ export default {
 
   async select(app: App, id: string, label: string) { await setField(app, id, label) },
 
-  /** From now on PHP's API answers this endpoint with an error page (status 200, not JSON), as when PHP crashes. */
+  /** From now on the live site answers this /api/app endpoint with an error page (status 200, not JSON), as when a proxy in between fails. */
   async serverErrorPage(app: App, endpoint: string) {
-    await app.page.context().route(`**/api/${endpoint}`, r => r.fulfill({ status: 200, contentType: 'text/html', body: '<html><body>Fatal error</body></html>' }))
+    await app.page.context().route(`**/api/app/${endpoint}`, r => r.fulfill({ status: 200, contentType: 'text/html', body: '<html><body>Fatal error</body></html>' }))
   },
 
   /**

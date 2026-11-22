@@ -113,7 +113,7 @@ Scenario: The server answers a queued transaction with an error page
   And click "btn-done"
   Then see "queued"
 
-  When server answers "transactions" with an error page
+  When server answers "tx" with an error page
   And network on
   Then app keeps 1 refused
   And see not "queued"

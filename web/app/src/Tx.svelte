@@ -48,7 +48,7 @@
   export function back() { if (sent) askUndo(); else onrescan() }
 
   // Sending waits for Done, so that Undo can still take the transaction back before the server has it.
-  async function done() { clearTimeout(timer); let off = false; try { off = await flush(device) } finally { ondone('', off) } }
+  async function done() { clearTimeout(timer); let off = false; try { off = await flush() } finally { ondone('', off) } }
 
   // The other account's profile. Anything wrong with the scanned code sends the member back to the dashboard with the reason.
   onMount(async () => {
