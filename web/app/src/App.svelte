@@ -4,7 +4,7 @@
   import { Capacitor } from '@capacitor/core'
   import type { Device } from '$lib/app-shell'
   import { store } from './storage'
-  import { dropOldPhotos, flush, waiting } from './lib/tx'
+  import { dropUnused, flush, waiting } from './lib/tx'
   import { toDashboard } from './lib/leave'
   import { enterUrl, keep, refresh, signOut, token, type Signed } from './lib/auth'
   import { choose, current, member, type Account } from './lib/accounts'
@@ -63,7 +63,7 @@
     const tick = setInterval(() => queued && sendQueued(), 5000) // the online event is not reliable on phones
     if (Capacitor.isNativePlatform()) CapApp.addListener('backButton', () => screen && screen !== 'home' ? back() : (clearInterval(tick), CapApp.exitApp()))
     sendQueued()
-    dropOldPhotos().catch(() => {})
+    dropUnused().catch(() => {})
     const hasToken = !!await token()
     signedIn = hasToken
     if (!signedIn) return void (screen = 'signin') // no account on the phone: skip the home screen

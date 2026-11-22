@@ -64,7 +64,7 @@
         if (!unreachable(er)) throw er
         who = await offlineProfile(card)
         if (!paying) photo = await offlinePhoto(card)
-        alert('OFFLINE. Trust this member or ask for ID.')
+        if (!photo) alert('OFFLINE. Trust this member or ask for ID.') // with a photo, the cashier can check the face
         return
       }
       if (who.limit <= 0) throw new Error('This account has no remaining funds, so a transaction is not possible at this time.')

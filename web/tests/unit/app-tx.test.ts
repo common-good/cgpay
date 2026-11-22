@@ -12,7 +12,7 @@ vi.mock('../../app/src/storage', () => ({
   }
 }))
 
-const { cachePhoto, cacheProfile, dropOldPhotos, enqueue, flush, offlinePhoto, waiting } = await import('../../app/src/lib/tx')
+const { cachePhoto, cacheProfile, dropUnused, enqueue, flush, offlinePhoto, waiting } = await import('../../app/src/lib/tx')
 const { identity, unreachable } = await import('../../app/src/lib/api')
 const { parseQr } = await import('../../app/src/lib/qr')
 
@@ -82,18 +82,19 @@ describe('flush', () => {
 
 describe('out of space', () => {
   const who = { name: 'Dee', agent: '', location: '', limit: 1, selling: [], isell: [] }
-  it('drops the least recently seen half of the saved profiles to keep a transaction', async () => {
-    for (const [acct, t] of [['A', 3], ['B', 1], ['C', 4], ['D', 2]] as const) kv.set(`acct:${acct}`, { who, h: '', t })
-    cap = 4
+  const keep = (...acctTs: [string, number][]) => { for (const [a, t] of acctTs) { kv.set(`acct:test:${a}`, { who, h: '', t }); kv.set(`photo:test:${a}`, { src: '', h: '' }) } }
+  it('forgets the two least recently used accounts kept (profile and photo) to keep a transaction', async () => {
+    keep(['A', 3], ['B', 1], ['C', 4], ['D', 2])
+    cap = 8
     await enqueue(tx(1))
-    expect([...kv.keys()].sort()).toEqual(['acct:A', 'acct:C', 'tx:1:proof1'])
+    expect([...kv.keys()].sort()).toEqual(['acct:test:A', 'acct:test:C', 'photo:test:A', 'photo:test:C', 'tx:1:proof1'])
   })
   it('counts a profile as used when a transaction with it is accepted, unless it was seen online later', async () => {
-    kv.set('acct:B', { who, h: '', t: 5000 }); kv.set('acct:C', { who, h: '', t: 1000 })
+    kv.set('acct:test:B', { who, h: '', t: 5000 }); kv.set('acct:test:C', { who, h: '', t: 1000 })
     kv.set('tx:9', { ...tx(3), otherId: 'B' }); kv.set('tx:8', { ...tx(2), otherId: 'C' })
     answer('{"ok":true}', '{"ok":true}')
     await flush(d)
-    expect([(kv.get('acct:B') as any).t, (kv.get('acct:C') as any).t]).toEqual([5000, 2000])
+    expect([(kv.get('acct:test:B') as any).t, (kv.get('acct:test:C') as any).t]).toEqual([5000, 2000])
   })
   it('fails when there is still no room, so the transaction is not taken for kept', async () => {
     cap = 0
@@ -114,21 +115,19 @@ describe('offline photos', () => {
     expect(await offlinePhoto(card)).toBe('data:x')
     expect(await offlinePhoto(other)).toBe('')
   })
-  it('go before any profile when there is no room, the least recently used first', async () => {
-    for (const [acct, t] of [['A', 3], ['B', 1], ['C', 4], ['D', 2]] as const) { kv.set(`acct:${acct}`, { who, h: '', t }); kv.set(`photo:${acct}`, { src: '', h: '' }) }
-    cap = 8
-    await enqueue(tx(1))
-    expect([...kv.keys()].filter(k => k.startsWith('photo:')).sort()).toEqual(['photo:A', 'photo:C'])
-    expect([...kv.keys()].filter(k => k.startsWith('acct:')).length).toBe(4)
+  it('are kept per env', async () => {
+    await cachePhoto(card, 'data:x')
+    vi.stubGlobal('localStorage', { getItem: () => 'demo' })
+    expect(await offlinePhoto(card)).toBe('')
   })
-  it('are forgotten when not used for a year, checked at most once a day', async () => {
-    kv.set('acct:A', { who, h: '', t: now - 366 * day }); kv.set('acct:B', { who, h: '', t: now - 364 * day })
-    for (const a of 'ABC') kv.set(`photo:${a}`, { src: '', h: '' }) // C has no profile any more
-    await dropOldPhotos(now)
-    expect([...kv.keys()].filter(k => k.startsWith('photo:'))).toEqual(['photo:B'])
-    kv.set('photo:A', { src: '', h: '' })
-    await dropOldPhotos(now + day / 2)
-    expect(kv.has('photo:A')).toBe(true)
+  it('go with their profiles when not used for a year, checked at most once a day', async () => {
+    kv.set('acct:test:A', { who, h: '', t: now - 366 * day }); kv.set('acct:test:B', { who, h: '', t: now - 364 * day })
+    for (const a of 'ABC') kv.set(`photo:test:${a}`, { src: '', h: '' }) // C has no profile any more
+    await dropUnused(now)
+    expect([...kv.keys()].filter(k => !k.startsWith('unused')).sort()).toEqual(['acct:test:B', 'photo:test:B'])
+    kv.set('photo:test:A', { src: '', h: '' })
+    await dropUnused(now + day / 2)
+    expect(kv.has('photo:test:A')).toBe(true)
   })
 })
 

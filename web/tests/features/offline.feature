@@ -23,7 +23,7 @@ Scenario: The app is started with no network
   And see "btn-pay"
   And see "btn-receive"
 
-Rule: A scan offline still shows a profile, and the member is told to trust it or check ID
+Rule: A scan offline still shows a profile, and with no photo kept from before, the member is told to trust it or check ID
 
 Scenario: A company scans a customer it has not seen before
   When network off
@@ -31,25 +31,16 @@ Scenario: A company scans a customer it has not seen before
   Then text "messageText": "OFFLINE. Trust this member or ask for ID."
   And text "theirName": ""
 
-Scenario: A company scans a repeat customer, whose name comes from the last time
+Scenario: A company scans a repeat customer, whose name and photo come from the last time
   When scan "Dee" to "charge"
   Then see "charge-profile"
+  And see "theirPhoto"
 
   When network off
   And scan "Dee" to "charge"
-  Then see "messageText"
-
-  When click "btn1"
   Then text "theirName": "Dee Four"
-
-Scenario: A company charges a repeat customer offline, and sees the photo kept from the last time
-  When scan "Dee" to "charge"
-  Then see "theirPhoto"
-
-  When network off
-  And scan "Dee" to "charge"
-  And click "btn1"
-  Then see "theirPhoto"
+  And see "theirPhoto"
+  And see not "messageText"
 
 Rule: Offline, a customer not seen before can be charged up to a fixed limit
 
