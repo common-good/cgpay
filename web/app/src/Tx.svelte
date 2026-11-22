@@ -71,8 +71,10 @@
       description = who[paying ? 'selling' : 'isell']?.[0] ?? ''
       if (!paying) {
         const b = await idPhoto(device, card)
-        photo = URL.createObjectURL(b)
-        shrink(b).then(jpeg => cachePhoto(card, jpeg), () => {}) // a photo that cannot be made smaller is only not kept
+        if (b.size) {
+          photo = URL.createObjectURL(b)
+          shrink(b).then(jpeg => cachePhoto(card, jpeg), () => {}) // a photo that cannot be made smaller is only not kept
+        }
       }
     } catch (er) {
       const m = (er as Error).message

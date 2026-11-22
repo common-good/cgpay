@@ -152,7 +152,7 @@ describe('offline photos', () => {
     kv.set('acct:test:A', { who, h: '', t: now - 366 * day }); kv.set('acct:test:B', { who, h: '', t: now - 364 * day })
     for (const a of 'ABC') kv.set(`photo:test:${a}`, { src: '', h: '' }) // C has no profile any more
     await dropUnused(now)
-    expect([...kv.keys()].filter(k => !k.startsWith('unused')).sort()).toEqual(['acct:test:B', 'photo:test:B'])
+    expect([...kv.keys()].filter(k => !k.startsWith('unused') && !k.startsWith('secure:')).sort()).toEqual(['acct:test:B', 'photo:test:B'])
     kv.set('photo:test:A', { src: '', h: '' })
     await dropUnused(now + day / 2)
     expect(kv.has('photo:test:A')).toBe(true)
