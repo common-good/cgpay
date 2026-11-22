@@ -1,4 +1,4 @@
-// The store app's token sign-in: node is a thin proxy to PHP's /cgpay/{signin,card,demo,mfa,device,account,enter,redeem,unlock,revoke} endpoints (PHP owns passwords, MFA, flood control and the tokens).
+// The store app's token sign-in: node is a thin proxy to PHP's /cgpay/{signin,card,demo,mfa,device,account,enter,redeem,lock,unlock,revoke} endpoints (PHP owns passwords, MFA, flood control and the tokens).
 // No cookies in or out; the app keeps the token itself. CORS for the app's origins is in hooks.server.ts (appCors).
 
 import { json, type RequestHandler } from '@sveltejs/kit'
