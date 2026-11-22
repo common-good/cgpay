@@ -110,13 +110,15 @@ describe('out of space', () => {
 describe('offline photos', () => {
   const who = { name: 'Dee', agent: '', location: '', limit: 1, selling: [], isell: [] }, other = { ...card, code: 'other' }
   const day = 86_400_000, now = 1000 * day
-  it('come back only for the card code they were kept with', async () => {
-    await cachePhoto(card, 'data:x')
-    expect(await offlinePhoto(card)).toBe('data:x')
+  const jpeg = new Uint8Array([0xff, 0xd8, 1, 2])
+  it('come back only for the card code their profile was kept with', async () => {
+    await cacheProfile(card, who); await cachePhoto(card, jpeg)
+    const url = await offlinePhoto(card)
+    expect(new Uint8Array(await (await fetch(url)).arrayBuffer())).toEqual(jpeg)
     expect(await offlinePhoto(other)).toBe('')
   })
   it('are kept per env', async () => {
-    await cachePhoto(card, 'data:x')
+    await cacheProfile(card, who); await cachePhoto(card, jpeg)
     vi.stubGlobal('localStorage', { getItem: () => 'demo' })
     expect(await offlinePhoto(card)).toBe('')
   })

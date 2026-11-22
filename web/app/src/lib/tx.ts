@@ -68,7 +68,7 @@ async function sendAll(d: Device) {
 export const waiting = async () => (await store.all<Tx>('tx:')).filter(([, t]) => !t.error).length
 
 // What is kept of accounts seen before, for when the server cannot be reached, per env (an account number may mean another account on another server):
-// a profile and, for an account charged, a small copy of its photo. Both are kept with a hash of the card code, so a different code does not get them,
+// a profile and, for an account charged, a small copy of its photo. The profile is kept with a hash of the card code, so a different code gets neither,
 // and the profile with when the account was last used (t: seen online, or a transaction with it accepted). Both are only a convenience,
 // so they go together, the least used first, when the phone is out of space, and after a year unused.
 type Saved = { who: Identity, h: string, t?: number }
@@ -78,8 +78,13 @@ const photoKey = (acct: string) => `photo:${env()}:${acct}`
 const idOf = (k: string) => k.slice(k.indexOf(':') + 1) // env:account
 
 export const cacheProfile = async (c: Card, who: Identity) => roomFor(async () => store.set(profileKey(c.acct), { who, h: await sha256(c.code), t: Date.now() })).catch(() => {})
-export const cachePhoto = async (c: Card, src: string) => roomFor(async () => store.set(photoKey(c.acct), { src, h: await sha256(c.code) })).catch(() => {})
-export async function offlinePhoto(c: Card) { const p = await store.get<{ src: string, h: string }>(photoKey(c.acct)); return p && p.h === await sha256(c.code) ? p.src : '' }
+export const cachePhoto = async (c: Card, jpeg: Uint8Array) => roomFor(() => store.set(photoKey(c.acct), jpeg)).catch(() => {})
+
+/** The photo kept for this card, as an address an img can show ('' if none, or if its profile was kept for another card code). */
+export async function offlinePhoto(c: Card) {
+  const p = await store.get<Saved>(profileKey(c.acct)), jpeg = p?.h === await sha256(c.code) && await store.get<Uint8Array<ArrayBuffer>>(photoKey(c.acct))
+  return jpeg ? URL.createObjectURL(new Blob([jpeg], { type: 'image/jpeg' })) : ''
+}
 
 // A transaction with the account was accepted: its profile counts as used then, unless it was seen online since.
 async function seen(acct: string, when: number) {

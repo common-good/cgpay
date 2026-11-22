@@ -72,7 +72,7 @@
       if (!paying) {
         const b = await idPhoto(device, card)
         photo = URL.createObjectURL(b)
-        shrink(b).then(src => cachePhoto(card, src), () => {}) // a photo that cannot be shrunk is only not kept
+        shrink(b).then(jpeg => cachePhoto(card, jpeg), () => {}) // a photo that cannot be made smaller is only not kept
       }
     } catch (er) {
       const m = (er as Error).message

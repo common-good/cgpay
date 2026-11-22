@@ -46,7 +46,7 @@ export function indexedDbStore(): Store {
   }
 }
 
-const KEY = 'storeKey'
+const KEY = 'storeKey', BYTES = 1
 const b64 = (u: Uint8Array) => { let s = ''; for (const c of u) s += String.fromCharCode(c); return btoa(s) }
 const unb64 = (s: string) => Uint8Array.from(atob(s), c => c.charCodeAt(0))
 const utf8 = (s: string) => new TextEncoder().encode(s)
@@ -71,9 +71,10 @@ const storeKey = () => aes ??= (async () => {
 })().catch(er => { aes = undefined; throw er })
 
 // A value as kept: iv.ciphertext, with its key name bound in, so a value moved to another key does not read.
+// Bytes (a photo) are kept as they are, after a 1 that no JSON starts with, rather than as JSON.
 async function seal(k: string, v: unknown) {
-  const iv = crypto.getRandomValues(new Uint8Array(12))
-  const c = await crypto.subtle.encrypt({ name: 'AES-GCM', iv, additionalData: utf8(k) }, await storeKey(), utf8(JSON.stringify(v)))
+  const iv = crypto.getRandomValues(new Uint8Array(12)), plain = v instanceof Uint8Array ? new Uint8Array([BYTES, ...v]) : utf8(JSON.stringify(v))
+  const c = await crypto.subtle.encrypt({ name: 'AES-GCM', iv, additionalData: utf8(k) }, await storeKey(), plain)
   return b64(iv) + '.' + b64(new Uint8Array(c))
 }
 
@@ -81,7 +82,10 @@ async function seal(k: string, v: unknown) {
 async function unseal<T>(k: string, s: string | null): Promise<T | undefined> {
   if (!s) return undefined
   const key = await storeKey(), [iv, c] = s.split('.').map(unb64)
-  try { return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv, additionalData: utf8(k) }, key, c))) } catch { return undefined }
+  try {
+    const p = new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv, additionalData: utf8(k) }, key, c))
+    return (p[0] === BYTES ? p.slice(1) : JSON.parse(new TextDecoder().decode(p))) as T
+  } catch { return undefined }
 }
 
 let conn: Promise<SQLiteDBConnection> | undefined

@@ -40,6 +40,8 @@ const memory = (kv: Map<string, unknown>) => ({
 // A fresh module each time, so the key is read and the database opened again, as when the page reloads or the app starts.
 const fresh = async (old = new Map<string, unknown>()) => { vi.resetModules(); return (await import('../../app/src/storage')).nativeStore(() => memory(old)) }
 
+const prefsLen = (k: string) => rows.get(k)!.length
+
 beforeEach(() => { rows.clear(); native = false; secure.clear(); secureFails = secureDrops = secureRemoves = false })
 
 describe('the phone\'s store', () => {
@@ -52,6 +54,12 @@ describe('the phone\'s store', () => {
     await s.del('tx:1'); await s.set('device', undefined)
     expect(await s.all('')).toEqual([['tx:2', { amount: '-2.00' }]])
     expect(await (await fresh()).get('tx:2')).toEqual({ amount: '-2.00' }) // the same key next time the app starts
+  })
+  it('keeps bytes as bytes, in less room than as JSON', async () => {
+    const s = await fresh(), jpeg = Uint8Array.from({ length: 3000 }, (_, i) => i % 256)
+    await s.set('photo:x', jpeg)
+    expect(await s.get('photo:x')).toEqual(jpeg)
+    expect(prefsLen('photo:x')).toBeLessThan(3000 * 1.4)
   })
   it('takes over what the WebView kept, without overwriting what it has', async () => {
     const old = new Map<string, unknown>([['tx:1', { amount: '-1.00' }], ['acct', 7]])
