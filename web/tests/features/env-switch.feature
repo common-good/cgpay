@@ -36,15 +36,17 @@ Scenario: A test card signs in to demo
   | uid | label   | trusted |
   | Abe | web app | 0       |
 
-Scenario: A company card signs in the cardholder, acting for the company
+Scenario: A company card signs in the cardholder, acting for the company as its cash register
   Given server is demo
   When scan "Bea/Cit test card" to "charge"
   And click "btn-switch"
-  And click "nav-app"
-  Then text "acct": "Account: Citre"
+  Then on page "scan"
   And these "app_tokens" rows:
-  | uid | label   | trusted |
-  | Bea | web app | 0       |
+  | uid | label   | trusted | lockedTo |
+  | Bea | web app | 0       | Cit      |
+
+  When click "btn-back"
+  Then text "acct": "Account: Citre"
 
 Scenario: A member with MFA gets no passcode in demo, if skipping is chosen
   Given server is demo

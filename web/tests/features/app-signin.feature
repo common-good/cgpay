@@ -278,11 +278,10 @@ Scenario: A member changes account from the dashboard's menu
 
   When select "account": "Citre"
   And click "btn-use"
-  Then on page ""
-  And signed in as "Cit"
-
-  When click "nav-app"
-  Then text "acct": "Account: Citre"
+  Then on page "scan"
+  And these "app_tokens" rows:
+  | uid | lockedTo |
+  | Bea | Cit      |
 
 Scenario: The default account comes up after signing in again
   Given store app has no account
@@ -295,9 +294,13 @@ Scenario: The default account comes up after signing in again
   And select "account": "Citre"
   And click "dft"
   And click "btn-use"
-  Then signed in as "Cit"
+  Then on page "scan"
 
-  When click "btn-acct-menu"
+  When click "btn-back"
+  And click "btn-manager"
+  And input "password": "k"
+  And click "btn-unlock"
+  And click "btn-acct-menu"
   And click "menu-signout"
   Then on page "signin"
 
@@ -305,7 +308,7 @@ Scenario: The default account comes up after signing in again
   | identifier | password |
   | Bea Two    | k        |
   And click "btn-signin"
-  Then signed in as "Cit"
+  Then on page "scan"
 
 Scenario: A member changes account with no connection
   Given store app has no account
@@ -321,8 +324,10 @@ Scenario: A member changes account with no connection
   And click "menu-accounts"
   And select "account": "Citre"
   And click "btn-use"
-  Then on page "home"
-  And text "acct": "Account: Citre"
+  Then on page "scan"
+
+  When click "btn-back"
+  Then text "acct": "Account: Citre"
 
 Scenario: An admin types the account to act for
   Given store app has no account

@@ -4,7 +4,7 @@ import type { Device } from '$lib/app-shell'
 import { store } from '../storage'
 
 export type Account = { uid: number, name: string, isCo: boolean, photo: string | null, device: Device | null }
-export type Member = { uid: number, admin: boolean, accounts: Account[] }
+export type Member = { uid: number, admin: boolean, accounts: Account[], lockedTo?: number } // lockedTo: the company a locked cash register's token works for
 
 export const member = () => store.get<Member>('member')
 export const dftAcct = () => store.get<number>('dftAcct') // survives sign-out: the account that comes up after signing in on this phone

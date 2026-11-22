@@ -9,7 +9,7 @@
   async function go() {
     error = ''; busy = true
     try {
-      const { data } = await unlock(password)
+      const { data } = await unlock({ password })
       if (data.ok) onunlocked(); else error = MESSAGES[data.error] ?? 'That did not work. Try again.'
     } catch { error = 'No connection. Connect to the internet to unlock.' } finally { busy = false }
   }
