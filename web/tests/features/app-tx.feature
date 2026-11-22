@@ -25,3 +25,38 @@ Scenario: A member signed in on the app pays another member
   And these "txs" rows:
   | uid1 | uid2 | amt   | for2  |
   | Bea  | Dee  | 12.34 | food! |
+
+Rule: A payment made while the sign-in stopped working waits for the next sign-in, and is not lost
+
+Scenario: A member signed out elsewhere signs in again, and the waiting payment goes out
+  Given store app has no account
+  When input:
+  | identifier | password |
+  | Bea Two    | k        |
+  And click "btn-signin"
+  Then on page ""
+
+  When network off
+  And scan "Dee" to "pay"
+  And click "btn1"
+  And input:
+  | input-amount | input-description |
+  | 12.34        | food!             |
+  And click "btn-submit"
+  And click "btn-done"
+  Then count "txs" is 0
+
+  When all devices signed out for "Bea"
+  And network on
+  And store app opens
+  Then on page "signin"
+  And count "txs" is 0
+
+  When input:
+  | identifier | password |
+  | Bea Two    | k        |
+  And click "btn-signin"
+  Then on page ""
+  And these "txs" rows:
+  | uid1 | uid2 | amt   | for2  |
+  | Bea  | Dee  | 12.34 | food! |
