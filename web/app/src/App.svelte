@@ -150,6 +150,9 @@
     if (!await goLive()) screen = 'home'
   }
 
+  // The member chose to go on with the app's account, though the website was using another: on to what they came for.
+  function proceed() { if (device && (intent === 'pay' || intent === 'charge')) start(intent); else otherAcct = '' }
+
   function start(what: string) { intent = what; seen = ''; otherAcct = ''; screen = device!.isCo ? 'scan' : 'tx-start' }
 </script>
 
@@ -185,9 +188,11 @@
       {/if}
     </div>
     {#if otherAcct}
-      <div class="warn" data-testid="acct-warning">
-        <p>The website was acting for {otherAcct}, but this app pays and charges as {acct?.name}.</p>
+      <div class="warn" role="alertdialog" data-testid="acct-warning">
+        <p>The website is using {otherAcct}, but this app is set to {acct?.name}.</p>
+        <button data-testid="btn-acct-proceed" onclick={proceed}>Continue as {acct?.name}</button>
         <button data-testid="btn-acct-change" onclick={() => open('accounts')}>Change account</button>
+        <button class="out" data-testid="btn-acct-cancel" onclick={() => toDashboard(live())}>Cancel</button>
       </div>
     {/if}
     {#if offlineMsg}<p class="err" data-testid="offline-msg">{offlineMsg}</p>{/if}
