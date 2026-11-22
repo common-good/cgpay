@@ -10,6 +10,8 @@ export interface Store {
   del(k: string): Promise<void>
   /** Every [key, value] whose key starts with prefix, in key order (a queue is a prefix: 'tx:' + a sortable id). */
   all<T = unknown>(prefix: string): Promise<[string, T][]>
+  /** Every key that starts with prefix, in key order, without reading the values. */
+  keys(prefix: string): Promise<string[]>
 }
 
 const DB = 'cgpay', TABLE = 'kv'
@@ -30,16 +32,17 @@ export function indexedDbStore(): Store {
     req.onerror = () => no(req.error)
   })
   opened.catch(() => {}) // a failure surfaces on each use, not as an unhandled rejection at startup
+  const range = (prefix: string) => IDBKeyRange.bound(prefix, prefix + '\uffff')
   const run = async (mode: IDBTransactionMode, go: (t: IDBObjectStore) => IDBRequest) => idb(await opened, mode, go)
   return {
     get: k => run('readonly', t => t.get(k)),
     set: async (k, v) => { await run('readwrite', t => t.put(v, k)) },
     del: async k => { await run('readwrite', t => t.delete(k)) },
     all: async prefix => {
-      const range = IDBKeyRange.bound(prefix, prefix + '\uffff')
-      const [keys, vals] = await Promise.all([run('readonly', t => t.getAllKeys(range)), run('readonly', t => t.getAll(range))])
+      const [keys, vals] = await Promise.all([run('readonly', t => t.getAllKeys(range(prefix))), run('readonly', t => t.getAll(range(prefix)))])
       return keys.map((k: string, i: number) => [k, vals[i]])
-    }
+    },
+    keys: prefix => run('readonly', t => t.getAllKeys(range(prefix)))
   }
 }
 
@@ -108,7 +111,8 @@ export function nativeStore(old: () => Store = indexedDbStore): Store {
     all: async prefix => {
       const rs = await rows(`SELECT k, v FROM ${TABLE} WHERE substr(k, 1, ?) = ? ORDER BY k`, [prefix.length, prefix])
       return (await Promise.all(rs.map(async r => [r.k, await unseal(r.k, r.v)] as [string, any]))).filter(([, v]) => v !== undefined)
-    }
+    },
+    keys: async prefix => (await rows(`SELECT k FROM ${TABLE} WHERE substr(k, 1, ?) = ? ORDER BY k`, [prefix.length, prefix])).map(r => r.k)
   }
   const ready = (async () => {
     try {
@@ -117,7 +121,7 @@ export function nativeStore(old: () => Store = indexedDbStore): Store {
     } catch { /* nothing to take over, or it will be tried again next time */ }
   })()
   const after = <A extends unknown[], R>(f: (...a: A) => Promise<R>) => async (...a: A) => { await ready; return f(...a) }
-  return { get: after(s.get), set: after(s.set), del: after(s.del), all: after(s.all) } as Store
+  return { get: after(s.get), set: after(s.set), del: after(s.del), all: after(s.all), keys: after(s.keys) } as Store
 }
 
 // The one store the screens use.

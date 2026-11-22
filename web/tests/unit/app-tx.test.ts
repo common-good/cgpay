@@ -7,11 +7,12 @@ vi.mock('../../app/src/storage', () => ({
     get: async (k: string) => kv.get(k),
     set: async (k: string, v: unknown) => { if (!kv.has(k) && kv.size >= cap) throw new Error('full'); kv.set(k, v) },
     del: async (k: string) => { kv.delete(k) },
-    all: async (p: string) => [...kv].filter(([k]) => k.startsWith(p)).sort(([a], [b]) => a < b ? -1 : 1)
+    all: async (p: string) => [...kv].filter(([k]) => k.startsWith(p)).sort(([a], [b]) => a < b ? -1 : 1),
+    keys: async (p: string) => [...kv.keys()].filter(k => k.startsWith(p)).sort()
   }
 }))
 
-const { cacheProfile, enqueue, flush, waiting } = await import('../../app/src/lib/tx')
+const { cachePhoto, cacheProfile, dropOldPhotos, enqueue, flush, offlinePhoto, waiting } = await import('../../app/src/lib/tx')
 const { identity, unreachable } = await import('../../app/src/lib/api')
 const { parseQr } = await import('../../app/src/lib/qr')
 
@@ -102,6 +103,32 @@ describe('out of space', () => {
     cap = 0
     await expect(cacheProfile(card, who)).resolves.toBeUndefined()
     expect(kv.size).toBe(0)
+  })
+})
+
+describe('offline photos', () => {
+  const who = { name: 'Dee', agent: '', location: '', limit: 1, selling: [], isell: [] }, other = { ...card, code: 'other' }
+  const day = 86_400_000, now = 1000 * day
+  it('come back only for the card code they were kept with', async () => {
+    await cachePhoto(card, 'data:x')
+    expect(await offlinePhoto(card)).toBe('data:x')
+    expect(await offlinePhoto(other)).toBe('')
+  })
+  it('go before any profile when there is no room, the least recently used first', async () => {
+    for (const [acct, t] of [['A', 3], ['B', 1], ['C', 4], ['D', 2]] as const) { kv.set(`acct:${acct}`, { who, h: '', t }); kv.set(`photo:${acct}`, { src: '', h: '' }) }
+    cap = 8
+    await enqueue(tx(1))
+    expect([...kv.keys()].filter(k => k.startsWith('photo:')).sort()).toEqual(['photo:A', 'photo:C'])
+    expect([...kv.keys()].filter(k => k.startsWith('acct:')).length).toBe(4)
+  })
+  it('are forgotten when not used for a year, checked at most once a day', async () => {
+    kv.set('acct:A', { who, h: '', t: now - 366 * day }); kv.set('acct:B', { who, h: '', t: now - 364 * day })
+    for (const a of 'ABC') kv.set(`photo:${a}`, { src: '', h: '' }) // C has no profile any more
+    await dropOldPhotos(now)
+    expect([...kv.keys()].filter(k => k.startsWith('photo:'))).toEqual(['photo:B'])
+    kv.set('photo:A', { src: '', h: '' })
+    await dropOldPhotos(now + day / 2)
+    expect(kv.has('photo:A')).toBe(true)
   })
 })
 

@@ -3,7 +3,8 @@
   import type { Device } from '$lib/app-shell'
   import { identity, idPhoto, unreachable, type Identity } from './lib/api'
   import { mainId, parseQr, type Card } from './lib/qr'
-  import { cacheProfile, checkAmount, enqueue, flush, makeTx, money, offlineProfile, unqueue, type Tx } from './lib/tx'
+  import { cachePhoto, cacheProfile, checkAmount, enqueue, flush, makeTx, money, offlinePhoto, offlineProfile, unqueue, type Tx } from './lib/tx'
+  import { shrink } from './lib/photo'
 
   let { device, intent, qr, onfail, onrescan, ondone }: { device: Device, intent: string, qr: string, onfail: (msg: string) => void, onrescan: () => void, ondone: (msg?: string, offline?: boolean) => void } = $props()
   const paying = intent === 'pay'
@@ -62,12 +63,17 @@
       } catch (er) {
         if (!unreachable(er)) throw er
         who = await offlineProfile(card)
+        if (!paying) photo = await offlinePhoto(card)
         alert('OFFLINE. Trust this member or ask for ID.')
         return
       }
       if (who.limit <= 0) throw new Error('This account has no remaining funds, so a transaction is not possible at this time.')
       description = who[paying ? 'selling' : 'isell']?.[0] ?? ''
-      if (!paying) photo = await idPhoto(device, card)
+      if (!paying) {
+        const b = await idPhoto(device, card)
+        photo = URL.createObjectURL(b)
+        shrink(b).then(src => cachePhoto(card, src), () => {}) // a photo that cannot be shrunk is only not kept
+      }
     } catch (er) {
       const m = (er as Error).message
       onfail(m === '404' ? 'That is not a valid Common Good member QR Code.' : isNaN(+m) ? m : "An unexpected error occurred. Please alert Common Good's support team.")

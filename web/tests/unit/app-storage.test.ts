@@ -33,7 +33,8 @@ const memory = (kv: Map<string, unknown>) => ({
   get: async (k: string) => kv.get(k) as any,
   set: async (k: string, v: unknown) => { kv.set(k, v) },
   del: async (k: string) => { kv.delete(k) },
-  all: async (p: string) => [...kv].filter(([k]) => k.startsWith(p)) as any
+  all: async (p: string) => [...kv].filter(([k]) => k.startsWith(p)) as any,
+  keys: async (p: string) => [...kv.keys()].filter(k => k.startsWith(p))
 })
 
 // A fresh module each time, so the key is read and the database opened again, as when the page reloads or the app starts.
@@ -47,6 +48,7 @@ describe('the phone\'s store', () => {
     await s.set('tx:2', { amount: '-2.00' }); await s.set('tx:1', { amount: '-1.00' }); await s.set('device', { cardCode: 'SECRETCODE' })
     expect([...rows.values()].join()).not.toMatch(/SECRETCODE|amount/)
     expect(await s.all('tx:')).toEqual([['tx:1', { amount: '-1.00' }], ['tx:2', { amount: '-2.00' }]])
+    expect(await s.keys('tx:')).toEqual(['tx:1', 'tx:2'])
     await s.del('tx:1'); await s.set('device', undefined)
     expect(await s.all('')).toEqual([['tx:2', { amount: '-2.00' }]])
     expect(await (await fresh()).get('tx:2')).toEqual({ amount: '-2.00' }) // the same key next time the app starts

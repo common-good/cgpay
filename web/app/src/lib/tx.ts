@@ -79,11 +79,30 @@ async function seen(acct: string, when: number) {
   if (p && (p.t ?? 0) < when) await store.set(profileKey(acct), { ...p, t: when }).catch(() => {})
 }
 
-/** Write; if that fails (the phone may be out of space), drop the least recently seen half of the saved profiles and try once more. */
+// Small copies of the photos of accounts charged before, for charging them offline: kept with the card code's hash like the profile, and used when it is.
+const photoKey = (acct: string) => `photo:${acct}`
+const DAY = 86_400_000, YEAR = 365 * DAY
+export const cachePhoto = async (c: Card, src: string) => roomFor(async () => store.set(photoKey(c.acct), { src, h: await sha256(c.code) })).catch(() => {})
+export async function offlinePhoto(c: Card) { const p = await store.get<{ src: string, h: string }>(photoKey(c.acct)); return p && p.h === await sha256(c.code) ? p.src : '' }
+
+const acctOf = (k: string) => k.slice(k.indexOf(':') + 1)
+// When each saved profile was last used, by account (0 for an account with no profile).
+const lastUsed = async () => { const t = Object.fromEntries((await store.all<Saved>('acct:')).map(([k, p]) => [acctOf(k), p.t ?? 0])); return (k: string) => t[acctOf(k)] ?? 0 }
+
+/** Forget the photos of accounts not used for a year. At most once a day, since it reads every saved profile. */
+export async function dropOldPhotos(now = Date.now()) {
+  if ((await store.get<number>('photosChecked') ?? 0) > now - DAY) return
+  const used = await lastUsed()
+  for (const k of await store.keys('photo:')) if (used(k) < now - YEAR) await store.del(k)
+  await store.set('photosChecked', now).catch(() => {})
+}
+
+/** Write; if that fails (the phone may be out of space), drop the least recently used half of the saved photos (or, with none left, profiles) and try once more. */
 async function roomFor(write: () => Promise<void>) {
   try { return await write() } catch { /* make room below */ }
-  const ps = (await store.all<Saved>('acct:')).sort(([, a], [, b]) => (a.t ?? 0) - (b.t ?? 0))
-  for (const [k] of ps.slice(0, Math.ceil(ps.length / 2))) await store.del(k)
+  const used = await lastUsed(), photos = await store.keys('photo:')
+  const ks = (photos.length ? photos : await store.keys('acct:')).sort((a, b) => used(a) - used(b))
+  for (const k of ks.slice(0, Math.ceil(ks.length / 2))) await store.del(k)
   await write()
 }
 

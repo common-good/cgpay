@@ -42,6 +42,15 @@ Scenario: A company scans a repeat customer, whose name comes from the last time
   When click "btn1"
   Then text "theirName": "Dee Four"
 
+Scenario: A company charges a repeat customer offline, and sees the photo kept from the last time
+  When scan "Dee" to "charge"
+  Then see "theirPhoto"
+
+  When network off
+  And scan "Dee" to "charge"
+  And click "btn1"
+  Then see "theirPhoto"
+
 Rule: Offline, a customer not seen before can be charged up to a fixed limit
 
 Scenario: A cashier charges more than the offline limit
