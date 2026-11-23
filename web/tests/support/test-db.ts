@@ -4,7 +4,8 @@ import type { APIRequestContext } from '@playwright/test'
 // cgmembers/rcredits/forms/api.inc). It refuses to run on production/stage.
 //
 // Ops: initialize (reset to the default test accounts), update (users table
-// only), rows ("txs", "tx_requests" or "grants"). Same protocol the old app's tests used.
+// only), insert ("txs" or "tx_requests", between test accounts), rows ("txs",
+// "tx_requests" or "grants"). Same protocol the old app's tests used.
 const API = (process.env.TEST_API_URL ?? 'http://localhost/cg/cgmembers/api/').replace(/\/?$/, '/')
 
 // Must match the format fixVersion() in cgmembers/rcredits/forms/api.inc accepts.
@@ -43,6 +44,11 @@ export class TestDb {
   /** Update rows of the users table. Each row must include uid. */
   updateUsers(rows: Record<string, unknown>[]) {
     return this.post('update', { table: 'users', keyedValues: JSON.stringify(rows) })
+  }
+
+  /** Add transactions or invoices between test accounts, made the way the PHP features make them (txs: uid1, uid2, amt, for1, for2; tx_requests: payer, payee, amount, purpose). */
+  insert(table: 'txs' | 'tx_requests', rows: Record<string, unknown>[]) {
+    return this.post('insert', { table, keyedValues: JSON.stringify(rows) })
   }
 
   /** All the test accounts' records in a table ("txs", "tx_requests" or "grants"), in key order. */

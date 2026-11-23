@@ -173,7 +173,7 @@
                 <span class="action-label">Pay</span>
               </a>
               {#if info.summary.pendingPay > 0}
-                <button type="button" class="pending" onclick={openPayPending}>{@render pending(fmtMoney(info.summary.pendingPay))}</button>
+                <button type="button" class="pending" data-testid="btn-pending-pay" onclick={openPayPending}>{@render pending(fmtMoney(info.summary.pendingPay))}</button>
               {/if}
             </div>
             <div class="action">
@@ -182,7 +182,7 @@
                 <span class="action-label">Receive</span>
               </a>
               {#if info.summary.pendingReceive > 0}
-                <button type="button" class="pending" onclick={openReceivePending}>{@render pending(fmtMoney(info.summary.pendingReceive))}</button>
+                <button type="button" class="pending" data-testid="btn-pending-receive" onclick={openReceivePending}>{@render pending(fmtMoney(info.summary.pendingReceive))}</button>
               {/if}
             </div>
             <div class="action">
