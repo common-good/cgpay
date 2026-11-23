@@ -22,6 +22,7 @@ const bddProject = defineBddProject({
   name: 'bdd',
   features: ['tests/features/**/*.feature', ...(process.env.E2E_SCREENS === 'bundled' ? ['!tests/features/dashboard-handoff.feature'] : [])], // the handoff to the legacy app does not exist in bundled mode
   steps: 'tests/steps/**/*.ts',
+  tags: process.env.E2E_SCREENS === 'bundled' ? undefined : 'not @bundled', // @bundled: only the bundled screens do this (the legacy app is going away)
   matchKeywords: true // the same step text can mean setup/action after Given and When, and a check after Then
 })
 

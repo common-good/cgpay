@@ -7,6 +7,9 @@
   import type { InfoResponse, InfoTx } from './api/me/info/+server'
   import { phpUrl } from '$lib/utils'
   import { inApp, appLink, device, type Device } from '$lib/app-shell'
+  import { fade, fly } from 'svelte/transition'
+  import { cubicOut } from 'svelte/easing'
+  import { ms, focusIn, swipeDown, lockScroll } from '$lib/motion'
 
   let { data }: { data: PageData } = $props()
 
@@ -108,11 +111,7 @@
     return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   }
 
-  function fmtDate(unixSec: number) {
-    return new Date(unixSec * 1000).toLocaleDateString('en-US', {
-      month: 'short', day: 'numeric', year: 'numeric'
-    })
-  }
+  const yearAgo = Date.now() / 1000 - 365 * 86400
 
   function payPendingItems(i: InfoResponse): InfoTx[] {
     return i.txs.filter(t => t.pending && t.amount < 0)
@@ -124,6 +123,7 @@
   function openPayPending() { modal = 'pay' }
   function openReceivePending() { modal = 'receive' }
   function closeModal() { modal = null }
+  $effect(() => lockScroll(!!modal))
 
   function onKeydown(e: KeyboardEvent) {
     if (e.key === 'Escape' && modal) closeModal()
@@ -144,155 +144,105 @@
 
 <svelte:window onkeydown={onKeydown} onpageshow={onPageShow} onvisibilitychange={onVisible} />
 
-<div class="page">
+{#snippet chevron()}<span class="row-end"><Icon name="chevron" size={18} /></span>{/snippet}
+{#snippet pending(amt: string)}<span>Pending:</span> <span class="nowrap">{amt}<Icon name="chevron" size={14} /></span>{/snippet}
+{#snippet txDate(t: number)}{@const d = new Date(t * 1000)}<time class="tx-date" datetime={d.toISOString().slice(0, 10)}>
+  <span class="md">{d.toLocaleDateString('en-US', { month: 'short' })} {String(d.getDate()).padStart(2, '0')}</span>{#if t < yearAgo}<span class="yr">{d.getFullYear()}</span>{/if}
+</time>{/snippet}
+
+<div class="dash">
   {#if loading}
-    <main class="centered"><p class="state">Loading…</p></main>
+    <main class="centered"><p class="muted">Loading...</p></main>
   {:else if error}
     <main class="centered">
-      <div class="error-card" role="alert">
-        <strong>Something went wrong</strong>
-        <span>{error}</span>
-      </div>
+      <div class="alert alert-error" role="alert"><Icon name="alert" size={20} /><p><strong>Something went wrong</strong><br />{error}</p></div>
     </main>
   {:else if info}
-    {#if message}
-      <div class="notice-wrap">
-        <div class="notice {message.kind}" role={message.kind === 'error' ? 'alert' : 'status'} data-testid="notice-{message.kind}">
-          <Icon name={message.kind === 'error' ? 'alert' : 'check'} size={22} />
+    <main class="container">
+      {#if message}
+        <div class="alert notice {message.kind === 'error' ? 'alert-error' : 'alert-ok'}" role={message.kind === 'error' ? 'alert' : 'status'} data-testid="notice-{message.kind}">
+          <Icon name={message.kind === 'error' ? 'alert' : 'check'} size={20} />
           <p>{#if message.kind === 'error'}<strong>Something went wrong</strong>{/if}<span data-testid="msg">{message.text}</span></p>
           <button type="button" class="notice-close" aria-label="Dismiss" data-testid="msg-close" onclick={() => message = null}><Icon name="x" size={18} /></button>
         </div>
-      </div>
-    {/if}
-    <div class="hero">
-      <div class="hero-inner">
-        <h1>Welcome back, {firstName(info.name)}!</h1>
-        <p>Here's what's happening with your account.</p>
-      </div>
-    </div>
+      {/if}
 
-    <main class="container">
-      <section class="summary">
-        <article class="card summary-card">
-          <div class="icon-wrap tone-green"><Icon name="bank" size={20} /></div>
-          <div class="card-body">
-            <span class="s-label">Available Funds</span>
-            <span class="s-value" data-testid="balance">{fmtMoney(info.balance)}</span>
+      <div class="layout">
+        <section class="card balance">
+          <h1>Welcome back, {firstName(info.name)}</h1>
+          <div class="bal">
+            <span class="bal-label">Available funds</span>
+            <span class="bal-value" data-testid="balance">{fmtMoney(info.balance)}</span>
           </div>
-        </article>
-
-        <article class="card summary-card muted">
-          <div class="icon-wrap tone-purple"><Icon name="chat" size={20} /></div>
-          <div class="card-body">
-            <span class="s-label">Unread Messages</span>
-            <span class="s-value">0</span>
-            <span class="s-note">Coming soon</span>
-          </div>
-        </article>
-      </section>
-
-      <section class="actions">
-        <article class="card action">
-          <a class="action-btn" data-testid="btn-pay" href={transactionUrl('pay') || '#'} aria-disabled={!phpBase && !(hasCamera && data.cgpayPwaUrl) || undefined}>
-            <div class="action-head">
-              <div class="icon-wrap tone-rose"><Icon name="upload" size={20} /></div>
-              <h2>Pay</h2>
-            </div>
-            <p class="action-desc">Send funds to another member.</p>
-          </a>
-          {#if info.summary.pendingPay > 0}
-            <button type="button" class="pending-link" onclick={openPayPending}>
-              Pending: {fmtMoney(info.summary.pendingPay)}
-            </button>
-          {/if}
-        </article>
-
-        <article class="card action">
-          <a class="action-btn" data-testid="btn-receive" href={transactionUrl('charge') || '#'} aria-disabled={!phpBase && !(hasCamera && data.cgpayPwaUrl) || undefined}>
-            <div class="action-head">
-              <div class="icon-wrap tone-green"><Icon name="download" size={20} /></div>
-              <h2>Receive</h2>
-            </div>
-            <p class="action-desc">Request funds from another member.</p>
-          </a>
-          {#if info.summary.pendingReceive > 0}
-            <button type="button" class="pending-link" onclick={openReceivePending}>
-              Pending: {fmtMoney(info.summary.pendingReceive)}
-            </button>
-          {/if}
-        </article>
-
-        <article class="card action">
-          <a class="action-btn" href={phpUrl('get') || '#'} aria-disabled={!phpBase || undefined}>
-            <div class="action-head">
-              <div class="icon-wrap tone-blue"><Icon name="bank" size={20} /></div>
-              <h2>Transfer</h2>
-            </div>
-            <p class="action-desc">Move funds in or out of your account.</p>
-          </a>
-          {#if transferLabel(info)}
-            <span class="pending-static">{transferLabel(info)}</span>
-          {/if}
-        </article>
-      </section>
-
-      <section class="quick-actions card">
-        <h2>Quick Actions</h2>
-        <ul>
-          {#if info.sponsored}
-            <li>
-              <a href="/grants">
-                <div class="qa-icon tone-green"><Icon name="plus" size={18} /></div>
-                <div class="qa-body">
-                  <span class="qa-title">Expected Grants</span>
-                  <span class="qa-desc">View reported grants or notify us about incoming funding.</span>
-                </div>
+          <div class="actions">
+            <div class="action">
+              <a class="action-btn" data-testid="btn-pay" href={transactionUrl('pay') || '#'} aria-disabled={!phpBase && !(hasCamera && data.cgpayPwaUrl) || undefined}>
+                <span class="action-icon out"><Icon name="upload" size={22} /></span>
+                <span class="action-label">Pay</span>
               </a>
-            </li>
-          {/if}
-          <li>
-            <a href={phpUrl('settings') || '#'} aria-disabled={!phpBase || undefined}>
-              <div class="qa-icon tone-purple"><Icon name="user" size={18} /></div>
-              <div class="qa-body">
-                <span class="qa-title">Profile & Settings</span>
-                <span class="qa-desc">Update your account details.</span>
-              </div>
-            </a>
-          </li>
-        </ul>
-      </section>
+              {#if info.summary.pendingPay > 0}
+                <button type="button" class="pending" onclick={openPayPending}>{@render pending(fmtMoney(info.summary.pendingPay))}</button>
+              {/if}
+            </div>
+            <div class="action">
+              <a class="action-btn" data-testid="btn-receive" href={transactionUrl('charge') || '#'} aria-disabled={!phpBase && !(hasCamera && data.cgpayPwaUrl) || undefined}>
+                <span class="action-icon"><Icon name="download" size={22} /></span>
+                <span class="action-label">Receive</span>
+              </a>
+              {#if info.summary.pendingReceive > 0}
+                <button type="button" class="pending" onclick={openReceivePending}>{@render pending(fmtMoney(info.summary.pendingReceive))}</button>
+              {/if}
+            </div>
+            <div class="action">
+              <a class="action-btn" href={phpUrl('get') || '#'} aria-disabled={!phpBase || undefined}>
+                <span class="action-icon info"><Icon name="bank" size={22} /></span>
+                <span class="action-label">Transfer</span>
+              </a>
+              {#if transferLabel(info)}<span class="pending static">{transferLabel(info)}</span>{/if}
+            </div>
+          </div>
+        </section>
 
-      <section class="bottom">
-        <div class="recent card">
-          <h2>Recent Actions</h2>
+        <section class="card recent">
+          <h2 class="card-title">Recent activity</h2>
           {#if info.txs.filter(t => !t.pending).length === 0}
-            <p class="empty">No activity yet.</p>
+            <p class="empty">No activity yet. Payments you make and receive will show up here.</p>
           {:else}
-            <ul>
+            <ul class="list-rows">
               {#each info.txs.filter(t => !t.pending) as tx (tx.xid)}
-                <li>
-                  <div class="icon-wrap {tx.amount >= 0 ? 'tone-green' : 'tone-rose'}">
-                    <Icon name={tx.amount >= 0 ? 'download' : 'upload'} size={18} />
-                  </div>
-                  <span class="r-text">
-                    {tx.amount >= 0 ? 'Received from' : 'Paid to'} {tx.counterparty}{tx.description ? ` — ${tx.description}` : ''}
+                <li class="tx">
+                  {@render txDate(tx.created)}
+                  <span class="row-text">
+                    <span class="row-title"><span class="sr-only">{tx.amount >= 0 ? 'Received from' : 'Paid to'}</span> {tx.counterparty}</span>
+                    {#if tx.description}<span class="row-sub">{tx.description}</span>{/if}
                   </span>
-                  <span class="r-pill pill-green">Completed</span>
-                  <span class="r-date">{fmtDate(tx.created)}</span>
+                  <span class="amt" class:in={tx.amount >= 0}>{tx.amount >= 0 ? '+' : '-'}{fmtMoney(Math.abs(tx.amount))}</span>
                 </li>
               {/each}
             </ul>
           {/if}
-        </div>
+        </section>
 
-        <aside class="help card">
-          <h3>Need help?</h3>
-          <p>Our team is here for you.</p>
-          <a class="help-btn" href={phpUrl('help') || 'mailto:support@commongood.earth'}>
-            <Icon name="help" size={16} /> Contact Support
-          </a>
+        <aside class="card quick">
+          <h2 class="card-title">Quick Actions</h2>
+          <ul class="list-rows">
+            {#if info.sponsored}
+              <li><a class="row-link" href="/grants">
+                <span class="icon-dot"><Icon name="plus" size={18} /></span>
+                <span class="row-text"><span class="row-title">Expected Grants</span><span class="row-sub">View reported grants or tell us about incoming funding</span></span>{@render chevron()}
+              </a></li>
+            {/if}
+            <li><a class="row-link" href={phpUrl('settings') || '#'} aria-disabled={!phpBase || undefined}>
+              <span class="icon-dot info"><Icon name="user" size={18} /></span>
+              <span class="row-text"><span class="row-title">Profile & Settings</span><span class="row-sub">Update your account details</span></span>{@render chevron()}
+            </a></li>
+            <li><a class="row-link" href={phpUrl('help') || 'mailto:support@commongood.earth'}>
+              <span class="icon-dot info"><Icon name="help" size={18} /></span>
+              <span class="row-text"><span class="row-title">Contact Support</span><span class="row-sub">Our team is here for you</span></span>{@render chevron()}
+            </a></li>
+          </ul>
         </aside>
-      </section>
+      </div>
     </main>
 
     <footer class="footer">
@@ -310,332 +260,118 @@
     </footer>
   {/if}
 
-  {#if modal}
-    <button class="modal-backdrop" type="button" onclick={closeModal} aria-label="Close dialog"></button>
-    <div class="modal card" role="dialog" aria-labelledby="modal-title" aria-modal="true" tabindex="-1">
-      {#if modal === 'pay' && info}
-        <h3 id="modal-title">Pending payments</h3>
-        <p class="modal-sub">Invoices waiting on you.</p>
-        <ul class="modal-list">
-          {#each payPendingItems(info) as tx}
-            <li>
-              <div class="modal-row">
-                <span class="modal-cp">{tx.counterparty}</span>
-                <span class="modal-amt">{fmtMoney(Math.abs(tx.amount))}</span>
-              </div>
-              {#if tx.description}
-                <span class="modal-desc">{tx.description}</span>
-              {/if}
-              <span class="modal-date">{fmtDate(tx.created)}</span>
-            </li>
-          {/each}
-        </ul>
-        <button class="primary-btn" onclick={closeModal}>Close</button>
-      {:else if modal === 'receive' && info}
-        <h3 id="modal-title">Pending receivables</h3>
-        <p class="modal-sub">Invoices you're waiting on.</p>
-        <ul class="modal-list">
-          {#each receivePendingItems(info) as tx}
-            <li>
-              <div class="modal-row">
-                <span class="modal-cp">{tx.counterparty}</span>
-                <span class="modal-amt receive">{fmtMoney(tx.amount)}</span>
-              </div>
-              {#if tx.description}
-                <span class="modal-desc">{tx.description}</span>
-              {/if}
-              <span class="modal-date">{fmtDate(tx.created)}</span>
-            </li>
-          {/each}
-        </ul>
-        <button class="primary-btn" onclick={closeModal}>Close</button>
-      {/if}
+  {#if modal && info}
+    {@const pay = modal === 'pay'}
+    <button class="sheet-backdrop" type="button" onclick={closeModal} aria-label="Close dialog" transition:fade={{ duration: ms(200) }}></button>
+    <div class="sheet" role="dialog" aria-labelledby="modal-title" aria-modal="true" tabindex="-1"
+      use:focusIn use:swipeDown={closeModal} transition:fly={{ y: 64, duration: ms(280), easing: cubicOut }}>
+      <div class="grip" aria-hidden="true"></div>
+      <h3 id="modal-title">{pay ? 'Pending payments' : 'Pending receivables'}</h3>
+      <ul class="list-rows">
+        {#each pay ? payPendingItems(info) : receivePendingItems(info) as tx}
+          <li class="tx">
+            {@render txDate(tx.created)}
+            <span class="row-text">
+              <span class="row-title">{tx.counterparty}</span>
+              {#if tx.description}<span class="row-sub">{tx.description}</span>{/if}
+            </span>
+            <span class="amt" class:in={!pay}>{fmtMoney(Math.abs(tx.amount))}</span>
+          </li>
+        {/each}
+      </ul>
+      <button class="btn btn-secondary btn-block" onclick={closeModal}>Close</button>
     </div>
   {/if}
 </div>
 
 <style>
-  .page { min-height: 100vh; display: flex; flex-direction: column; }
+  .dash { flex: 1; display: flex; flex-direction: column; }
+  .centered { flex: 1; display: grid; place-items: center; padding: var(--sp-6) var(--gutter); }
+  .container { flex: 1; display: grid; gap: var(--sp-4); align-content: start; }
 
+  .notice p { flex: 1; display: grid; gap: 2px; }
+  .notice-close { border: 0; background: none; color: inherit; cursor: pointer; display: grid; place-items: center; width: var(--tap); height: var(--tap); margin: -12px -12px -12px 0; }
 
-
-  .centered { flex: 1; display: grid; place-items: center; padding: 2rem 1.5rem; }
-  .state { color: var(--cg-text-muted); }
-  .error-card {
-    max-width: 400px; display: grid; gap: 0.4rem;
-    padding: 1.25rem 1.5rem;
-    background: var(--cg-surface);
-    border: 1px solid var(--cg-border); border-left: 3px solid var(--cg-error);
-    border-radius: var(--cg-radius-sm); color: var(--cg-text);
-  }
-  .error-card strong { color: var(--cg-error); }
-  .error-card span { color: var(--cg-text-muted); font-size: 0.9rem; }
-
-  .hero {
-    background:
-      linear-gradient(to right, rgba(245,247,244,1) 0%, rgba(245,247,244,0.6) 60%, rgba(245,247,244,0) 100%),
-      linear-gradient(180deg, #eaf1ea 0%, #f5f7f4 100%);
-    padding: 2.5rem 0 3.5rem;
-    border-bottom: 1px solid var(--cg-border);
-  }
-  .hero-inner { max-width: 1280px; margin: 0 auto; padding: 0 1.75rem; }
-  .hero h1 { margin: 0 0 0.4rem; font-size: 2rem; font-weight: 600; letter-spacing: -0.01em; color: var(--cg-text); }
-  .hero p { margin: 0; color: var(--cg-text-muted); }
-
-  .container {
-    flex: 1;
-    max-width: 1280px; width: 100%; margin: -2rem auto 3rem;
-    padding: 0 1.75rem;
-    display: grid; gap: 1.5rem;
-  }
-  @media (max-width: 560px) {
-    .hero { padding: 1.5rem 0 2.5rem; }
-    .hero h1 { font-size: 1.5rem; }
-    .hero-inner { padding: 0 1rem; }
-    .container { padding: 0 1rem; }
+  .layout { display: grid; gap: var(--sp-4); align-items: start; }
+  @media (min-width: 960px) {
+    .layout { grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr); grid-template-areas: "bal quick" "recent recent"; gap: var(--sp-5); }
+    .balance { grid-area: bal; }
+    .quick { grid-area: quick; align-self: stretch; }
+    .recent { grid-area: recent; }
   }
 
-  .summary {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 1rem;
-  }
-  .summary-card {
-    display: flex; gap: 1rem; padding: 1.25rem; align-items: flex-start;
-  }
-  .summary-card.muted { opacity: 0.75; }
-  .summary-card .icon-wrap {
-    flex-shrink: 0; width: 2.75rem; height: 2.75rem;
-    border-radius: 50%; display: grid; place-items: center;
-  }
-  .card-body { display: grid; gap: 0.25rem; }
-  .s-label { font-size: 0.85rem; color: var(--cg-text-muted); font-weight: 500; }
-  .notice-wrap { max-width: 1280px; width: 100%; margin: 1rem auto 0; padding: 0 1.75rem; box-sizing: border-box; }
-  .notice { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.9rem 1rem; border-radius: var(--cg-radius-sm); border: 1px solid var(--cg-border); border-left: 4px solid var(--cg-green); background: var(--cg-green-soft); color: var(--cg-text); }
-  .notice.error { border-color: var(--cg-error); border-left-color: var(--cg-error); background: #fdecea; color: #3a0b08; }
-  .notice.error :global(svg) { color: var(--cg-error); }
-  .notice p { margin: 0; flex: 1; display: grid; gap: 0.15rem; }
-  .notice strong { color: var(--cg-error); }
-  .notice-close { border: 0; background: none; padding: 0.15rem; cursor: pointer; color: inherit; line-height: 0; }
-  .s-value { font-size: 1.4rem; font-weight: 700; color: var(--cg-text); letter-spacing: -0.01em; }
-  .s-note { font-size: 0.75rem; color: var(--cg-text-muted); font-style: italic; margin-top: 0.15rem; }
-  .tone-purple { background: rgba(120,80,180,0.1); color: #785ab4; }
+  .card-title { font-size: var(--fs-base); padding: var(--sp-4) var(--sp-4) var(--sp-2); }
+  .empty { padding: var(--sp-2) var(--sp-4) var(--sp-5); color: var(--cg-text-muted); }
+  .list-rows > li > .row-link { border-radius: 0; }
+  .list-rows > li:last-child > .row-link { border-radius: 0 0 var(--r-md) var(--r-md); }
 
-  .quick-actions { padding: 1.5rem; }
-  .quick-actions h2 {
-    margin: 0 0 1rem; font-size: 1rem; font-weight: 600; color: var(--cg-text);
-  }
-  .quick-actions ul {
-    list-style: none; padding: 0; margin: 0;
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 0.75rem;
-  }
-  .quick-actions li a {
-    display: flex; gap: 0.85rem; align-items: flex-start;
-    padding: 1rem;
-    border: 1px solid var(--cg-border);
-    border-radius: var(--cg-radius-sm);
-    text-decoration: none; color: inherit;
-    transition: border-color 0.15s, background 0.15s;
-  }
-  .quick-actions li a:hover { border-color: var(--cg-green); background: var(--cg-green-soft); }
-  .quick-actions li a[aria-disabled="true"] { opacity: 0.55; cursor: not-allowed; pointer-events: none; }
-  .qa-icon {
-    flex-shrink: 0; width: 2.4rem; height: 2.4rem;
-    border-radius: 50%; display: grid; place-items: center;
-  }
-  .qa-body { display: flex; flex-direction: column; gap: 0.15rem; }
-  .qa-title { font-weight: 600; font-size: 0.9rem; color: var(--cg-text); }
-  .qa-desc { font-size: 0.8rem; color: var(--cg-text-muted); line-height: 1.35; }
+  .balance { padding: var(--sp-5) var(--sp-4) var(--sp-4); display: grid; gap: var(--sp-5); }
+  .balance h1 { font-size: var(--fs-base); font-weight: 500; color: var(--cg-text-muted); letter-spacing: 0; }
+  .bal { display: grid; gap: var(--sp-1); margin-top: calc(-1 * var(--sp-3)); }
+  .bal-label { font-size: var(--fs-sm); color: var(--cg-text-muted); }
+  .bal-value { font-size: var(--fs-num); font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; font-variant-numeric: tabular-nums; }
 
-  .bottom {
-    display: grid; grid-template-columns: 1fr 320px; gap: 1.5rem;
-  }
-  @media (max-width: 900px) { .bottom { grid-template-columns: 1fr; } }
-
-  .r-text { font-size: 0.9rem; color: var(--cg-text); }
-  .r-date { font-size: 0.82rem; color: var(--cg-text-muted); }
-  .r-pill { font-size: 0.72rem; font-weight: 600; padding: 0.2rem 0.6rem; border-radius: 999px; }
-  .pill-green { background: rgba(30,122,58,0.12); color: var(--cg-green); }
-
-  .recent li {
-    grid-template-columns: auto 1fr auto auto !important;
-  }
-
-  .help {
-    padding: 1.5rem;
-    background: linear-gradient(180deg, #e9efe9 0%, #f0f4f0 100%);
-  }
-  .help h3 { margin: 0 0 0.4rem; font-size: 1rem; font-weight: 600; color: var(--cg-text); }
-  .help p { margin: 0 0 1rem; color: var(--cg-text-muted); font-size: 0.9rem; }
-  .help-btn {
-    width: 100%;
-    display: inline-flex; align-items: center; gap: 0.4rem; justify-content: center;
-    padding: 0.65rem 1rem;
-    background: var(--cg-surface); color: var(--cg-text);
-    border: 1px solid var(--cg-border);
-    border-radius: var(--cg-radius-sm);
-    font-weight: 500;
-    text-decoration: none;
-    transition: border-color 0.15s;
-  }
-  .help-btn:hover { border-color: var(--cg-green); text-decoration: none; }
-
-  .card {
-    background: var(--cg-surface);
-    border: 1px solid var(--cg-border);
-    border-radius: var(--cg-radius);
-    box-shadow: var(--cg-shadow);
-  }
-
-  .actions {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
-  }
-  @media (max-width: 720px) {
-    .actions { grid-template-columns: 1fr; gap: 0.75rem; }
-  }
-  @media (max-width: 560px) {
-    .action-btn { padding: 0.85rem 0.75rem 0.6rem !important; }
-    .action h2 { font-size: 1rem !important; }
-    .action-desc { font-size: 0.78rem !important; }
-    .pending-link, .pending-static { padding: 0.55rem 0.75rem !important; font-size: 0.78rem !important; }
-  }
-  .action {
-    display: flex; flex-direction: column;
-    overflow: hidden;
-  }
+  .actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-2); }
+  .action { display: grid; grid-template-rows: 1fr auto; background: var(--cg-surface-2); border-radius: var(--r-md); overflow: hidden; }
   .action-btn {
-    text-align: left; width: 100%;
-    background: var(--cg-surface); color: inherit;
-    text-decoration: none;
-    border: none; padding: 1.25rem 1.25rem 1rem;
-    cursor: pointer; display: flex; flex-direction: column; gap: 0.4rem;
-    transition: background 0.15s;
+    display: grid; justify-items: center; align-content: center; gap: var(--sp-2);
+    min-height: 92px; padding: var(--sp-3) var(--sp-2);
+    color: var(--cg-text); text-align: center; text-decoration: none;
+    transition: background-color var(--dur-fast), transform var(--dur-fast) var(--ease-out);
   }
-  .action-btn:hover { background: var(--cg-green-soft); text-decoration: none; }
-  .action-btn[aria-disabled="true"] { opacity: 0.55; cursor: not-allowed; pointer-events: none; }
-  .action-head { display: flex; align-items: center; gap: 0.75rem; }
-  .action h2 { margin: 0; font-size: 1.15rem; font-weight: 600; }
-  .action-desc { margin: 0; color: var(--cg-text-muted); font-size: 0.88rem; line-height: 1.4; }
-
-  .icon-wrap {
-    flex-shrink: 0; width: 2.4rem; height: 2.4rem;
-    border-radius: 50%; display: grid; place-items: center;
+  .action-btn:hover { text-decoration: none; }
+  .action-btn:active { transform: scale(0.97); background: var(--cg-border); }
+  @media (hover: hover) { .action-btn:hover, .pending:not(.static):hover { background: var(--cg-border); } }
+  .action-icon { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--cg-surface); color: var(--cg-green); box-shadow: var(--shadow-1); }
+  .action-icon.out { color: var(--cg-out); }
+  .action-icon.info { color: var(--cg-info); }
+  .action-label { font-weight: 600; }
+  .pending {
+    display: block; width: 100%; min-height: var(--tap); padding: var(--sp-2); border: 0; border-top: 1px solid var(--cg-border-strong);
+    background: none; color: var(--cg-text-muted); font: inherit; font-size: var(--fs-xs); line-height: 1.35; text-align: center; cursor: pointer;
+    transition: background-color var(--dur-fast);
   }
-  .tone-green { background: rgba(30,122,58,0.1); color: var(--cg-green); }
-  .tone-rose  { background: rgba(185,76,102,0.12); color: #b94c66; }
-  .tone-blue  { background: rgba(45,108,189,0.10); color: #2d6cbd; }
-
-  .pending-link, .pending-static {
-    border-top: 1px solid var(--cg-border);
-    padding: 0.75rem 1.25rem;
-    font-size: 0.88rem;
-    font-weight: 600;
-    text-align: left;
-    background: transparent;
-  }
-  .pending-link {
-    color: var(--cg-green);
-    border-left: none; border-right: none; border-bottom: none;
-    cursor: pointer;
-    transition: background 0.15s;
-  }
-  .pending-link:hover { background: var(--cg-green-soft); text-decoration: underline; }
-  .pending-static { color: var(--cg-text-muted); }
-
-  .recent { padding: 1.5rem; }
-  .recent h2 { margin: 0 0 1rem; font-size: 1rem; font-weight: 600; }
-  .empty { color: var(--cg-text-muted); margin: 0; }
-  .recent ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.5rem; }
-  .recent li {
-    display: grid;
-    grid-template-columns: auto 1fr auto auto;
-    gap: 0.85rem; align-items: center;
-    padding: 0.7rem 0.85rem;
-    border-radius: var(--cg-radius-sm);
-  }
-  .recent li:hover { background: var(--cg-bg); }
-  /* On phones, swap the 4-column grid for a flex row that wraps so the pill
-     and date tuck under the description instead of running off-screen (#183). */
-  @media (max-width: 560px) {
-    .recent li {
-      display: flex !important;
-      flex-wrap: wrap;
-      row-gap: 0.3rem;
-      column-gap: 0.6rem;
-    }
-    .recent li .r-text { flex: 1 1 100%; }
-    .recent li .r-pill, .recent li .r-date { flex: 0 0 auto; }
+  .pending :global(svg) { vertical-align: -2px; margin-left: 2px; }
+  .pending.static { cursor: default; display: grid; place-items: center; }
+  .nowrap { white-space: nowrap; }
+  @media (min-width: 640px) {
+    .balance { padding: var(--sp-5); }
+    .action-btn { min-height: 112px; }
+    .pending { font-size: var(--fs-sm); }
   }
 
-  .footer {
-    border-top: 1px solid var(--cg-border);
-    background: var(--cg-surface);
-    padding: 1.5rem 1.75rem;
-    text-align: center;
-  }
-  @media (max-width: 560px) {
-    .footer { padding: 1.25rem 1rem; }
-    /* The | separators eat width when wrapped; hide them on narrow screens. */
-    .footer-links li:not(:last-child)::after { display: none; }
-  }
-  .footer-links {
-    list-style: none; padding: 0; margin: 0 0 0.75rem;
-    display: flex; flex-wrap: wrap; justify-content: center;
-    gap: 0.4rem 0.85rem;
-    font-size: 0.88rem;
-  }
-  .footer-links a { color: var(--cg-text-muted); }
-  .footer-links a:hover { color: var(--cg-green); }
-  .footer-links li:not(:last-child)::after {
-    content: '|';
-    color: var(--cg-border);
-    margin-left: 0.85rem;
-  }
-  .copyright {
-    margin: 0; font-size: 0.8rem; color: var(--cg-text-muted);
-  }
+  .tx { display: flex; align-items: center; gap: var(--sp-3); min-height: 56px; padding: var(--sp-2) var(--sp-4); }
+  .tx-date { display: inline-grid; justify-items: start; flex: none; min-width: 3.4em; color: var(--cg-text-muted); line-height: 1.15; font-variant-numeric: tabular-nums; }
+  .tx-date .md { font-size: var(--fs-sm); font-weight: 600; color: var(--cg-text); }
+  .tx-date .yr { font-size: 11px; }
+  .tx .row-title { font-size: 15px; font-weight: 500; }
+  .tx .row-sub { font-size: 13px; }
+  .row-text .row-title, .row-text .row-sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .amt { font-size: 15px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .amt.in { color: var(--cg-green); }
 
-  .modal-backdrop {
-    position: fixed; inset: 0;
-    background: rgba(26, 31, 28, 0.4);
-    border: none; padding: 0; cursor: pointer;
-    z-index: 100;
+  .footer { padding: var(--sp-5) var(--gutter) var(--sp-2); text-align: center; border-top: 1px solid var(--cg-border); }
+  .footer-links { list-style: none; padding: 0; margin: 0 auto var(--sp-2); max-width: 44rem; display: flex; flex-wrap: wrap; justify-content: center; }
+  .footer-links a { display: inline-block; padding: var(--sp-2) var(--sp-3); color: var(--cg-text-muted); font-size: var(--fs-sm); }
+  .copyright { font-size: var(--fs-xs); color: var(--cg-text-subtle); }
+
+  .sheet-backdrop { position: fixed; inset: 0; z-index: 100; border: 0; padding: 0; background: rgba(16, 24, 20, 0.45); cursor: pointer; }
+  .sheet {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 101;
+    max-height: 85dvh; overflow-y: auto; overscroll-behavior: contain;
+    padding: var(--sp-2) var(--sp-4) calc(var(--sp-4) + env(safe-area-inset-bottom));
+    background: var(--cg-surface); border-radius: var(--r-lg) var(--r-lg) 0 0; box-shadow: var(--shadow-2);
+    display: grid; gap: var(--sp-3);
   }
-  .modal {
-    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    max-width: 460px; width: calc(100% - 2rem);
-    padding: 1.5rem;
-    background: var(--cg-surface);
-    z-index: 101;
-    max-height: 80vh;
-    overflow-y: auto;
+  .sheet:focus { outline: none; }
+  .grip { width: 40px; height: 5px; border-radius: 3px; background: var(--cg-border-strong); justify-self: center; margin-bottom: var(--sp-2); }
+  .sheet h3 { font-size: var(--fs-lg); }
+  .sheet .tx { padding: var(--sp-3) 0; align-items: baseline; }
+  .sheet .tx-date { min-width: 40px; }
+  .sheet .tx-date .md { font-size: 11px; }
+  .sheet .tx-date .yr { font-size: 10px; }
+  @media (min-width: 640px) {
+    .sheet { inset: 0; margin: auto; width: min(460px, calc(100% - 2 * var(--gutter))); height: fit-content; max-height: 80vh; border-radius: var(--r-md); padding: var(--sp-5); }
+    .grip { display: none; }
   }
-  .modal h3 { margin: 0 0 0.4rem; font-size: 1.15rem; font-weight: 600; }
-  .modal p { margin: 0 0 1rem; color: var(--cg-text-muted); font-size: 0.9rem; }
-  .modal-sub { margin-bottom: 0.75rem; }
-  .modal-list { list-style: none; padding: 0; margin: 0 0 1.25rem; display: grid; gap: 0.6rem; }
-  .modal-list li {
-    padding: 0.7rem 0.85rem;
-    background: var(--cg-bg);
-    border-radius: var(--cg-radius-sm);
-    display: grid; gap: 0.2rem;
-  }
-  .modal-row { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
-  .modal-cp { font-weight: 600; font-size: 0.92rem; color: var(--cg-text); }
-  .modal-amt { font-weight: 700; font-size: 0.95rem; color: var(--cg-text); }
-  .modal-amt.receive { color: var(--cg-green); }
-  .modal-desc { font-size: 0.85rem; color: var(--cg-text-muted); }
-  .modal-date { font-size: 0.78rem; color: var(--cg-text-muted); }
-  .primary-btn {
-    width: 100%;
-    display: inline-flex; align-items: center; gap: 0.4rem; justify-content: center;
-    padding: 0.65rem 1rem;
-    background: var(--cg-surface); color: var(--cg-text);
-    border: 1px solid var(--cg-border); border-radius: var(--cg-radius-sm);
-    cursor: pointer; font-weight: 500;
-  }
-  .primary-btn:hover { border-color: var(--cg-green); }
 </style>
