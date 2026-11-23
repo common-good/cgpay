@@ -290,6 +290,23 @@ Scenario: A touch keeps it unlocked another two minutes
   When wait 90 seconds
   Then see "manager-mode"
 
+Scenario: Five minutes after the sign-in lock it again, even in use
+  Given click "btn-use"
+  And click "btn-back"
+  And click "btn-acct-menu"
+  And click "btn-password"
+  And input "password": "k"
+  And click "btn-unlock"
+  Then see "manager-mode"
+
+  Given wait 100 seconds
+  And click "btn-acct-menu"
+  And wait 100 seconds
+  And click "btn-acct-menu"
+  When wait 101 seconds
+  Then see not "manager-mode"
+  And see "btn-scan"
+
 Scenario: A touch on the Manager Mode banner does not keep it unlocked
   Given click "btn-use"
   And click "btn-back"
