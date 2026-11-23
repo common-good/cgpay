@@ -171,7 +171,17 @@ When you learn durable infra facts (not secret values), propose the edit to the 
 ### Local setup (varies by developer; clone the repos wherever suits you)
 
 - **Windows:** work in WSL mode. Keep both repos in WSL (e.g. `~/cgpay` and `~/cg`) and open them in VS Code through the Remote - WSL extension (the lower left corner should read "WSL: Ubuntu-22.04"), so node, npm, git, PHP and Claude Code all run natively in Ubuntu and files keep LF line endings. Serve cgmembers-frame from WSL with nginx, PHP 8.2-FPM and MariaDB 10.11 (the test server's versions), so the PHP side is reachable at a local URL such as `http://localhost/cg/cgmembers`.
-- **Mac:** TODO (Chris or another Mac developer): document how to run the PHP side locally and where the repos live.
+- **Mac:** keep both repos side by side (e.g. `~/cg` and `~/cgpay`). PHP 8.5 from Homebrew works out of the box; the custom bootstrap in `rcredits/boot.inc` suppresses PHP 8.4+ deprecations. MariaDB 10.11+ from Homebrew with default unix-socket auth. Serve cgmembers-frame with PHP's built-in server from inside `cgmembers/` so `DRUPAL_ROOT = getcwd()` resolves correctly:
+  ```bash
+  cd /path/to/cgmembers-frame/cgmembers
+  php -S localhost:8000 -t . index.php
+  ```
+  First-time DB (matches `config/config.json`'s `cg_user:pass`): create the `cg` database + the user and grant, then from the cgmembers-frame root run `./importdb.sh startup` and `vendor/robmorgan/phinx/bin/phinx migrate -e development -c config/phinx.json`. Known gotcha: `cgmembers/gherkin/test.php` strips the port when it HTTP-fetches the compile endpoint, so a PHP server on port 8000 ends up hitting port 80 (where a Docker container or another dev server often lives) and the recompile step fails. Workaround: CLI-compile the module first, then hit the test endpoint with `compile=0`:
+  ```bash
+  cd cgmembers/gherkin
+  TZ=America/New_York php -d date.timezone=America/New_York compile.php PHP /path/to/cgmembers-frame/cgmembers/rcredits/<module>
+  # Then in a browser: http://localhost:8000/tests?module=rcredits/<module>&feature=<name>&restart=1&compile=0
+  ```
 - Run the dev server from `web/` (`cd web && npm run dev`). Running it from the repo root starts the legacy PWA.
 
 ## People
