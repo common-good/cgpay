@@ -30,9 +30,14 @@ const cutOff = (r: Route) => new URL(r.request().url()).origin === BUNDLED ? r.c
 async function setField(app: App, id: string, value: unknown) {
   const el = app.page.getByTestId(id)
   const v = text(app, value, id)
-  if (await el.evaluate(e => e.tagName) === 'SELECT') await el.selectOption({ label: v })
+  const tag = await el.evaluate(e => e.tagName)
+  if (tag === 'SELECT') await el.selectOption({ label: v })
+  else if (tag === 'SPAN') await tapPad(app, 'c' + Math.round(+v * 100)) // the store app's amount pad
   else await el.fill(v)
 }
+
+/** Tap the amount pad's keys: digits, c (clear) and b (backspace). */
+async function tapPad(app: App, keys: string) { for (const k of keys) await app.page.getByTestId('pad-' + k).click() }
 
 async function checkSignedIn(app: App, who: string) {
   if (who === 'nobody') return await expect(hi(app), `signed in as "nobody"`).toHaveCount(0)
@@ -111,6 +116,10 @@ export default {
   async click(app: App, id: string) { await app.page.getByTestId(id).click() },
 
   async input(app: App, id: string, value: unknown) { await setField(app, id, value) },
+
+  async pad(app: App, keys: string) { await tapPad(app, keys) },
+  async press(app: App, key: string) { await app.page.keyboard.press(key) },
+  async type(app: App, text: string) { await app.page.keyboard.type(text) },
 
   /** Fill in several elements: a table with the element ids in the header row and the values in the one row below. Selects work too. */
   async inputRow(app: App, table: { raw(): string[][] }) {

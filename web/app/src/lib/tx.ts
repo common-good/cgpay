@@ -15,15 +15,11 @@ export const OFFLINE_LIMIT = 250 // how much an account not seen before can be c
 
 const sha256 = async (s: string) => [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)))].map(b => b.toString(16).padStart(2, '0')).join('')
 
-/** The rounded amount and the reason to refuse it (or '' if fine). The rounded amount comes back so the form can show it. */
-export function checkAmount(typed: number, limit: number): [number, string] {
-  const a = +typed.toFixed(2)
-  const err = a != typed ? 'The amount has been rounded to two decimal places. Make sure this is what you intended and try again.'
-    : a > ONLINE_LIMIT ? `CGPay transactions are limited to $${money(ONLINE_LIMIT)}`
-    : a > limit ? `This transaction is limited to $${money(limit)}.`
-    : a <= 0 ? 'The amount must be greater than zero.' : ''
-  return [a, err]
-}
+/** The reason to refuse an amount, or '' if it is fine. */
+export const checkAmount = (a: number, limit: number) =>
+  a > ONLINE_LIMIT ? `CGPay transactions are limited to $${money(ONLINE_LIMIT)}`
+  : a > limit ? `This transaction is limited to $${money(limit)}.`
+  : a <= 0 ? 'The amount must be greater than zero.' : ''
 
 /**
  * The transaction as the server wants it, with proof that this device made it (a hash of the amount, the accounts and the other's card code).

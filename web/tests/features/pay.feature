@@ -72,32 +72,6 @@ Scenario: A company pays an individual, then thinks twice about undoing it, then
   And text "msg": "The transaction has been reversed."
   And count "txs" is 0
 
-Rule: The amount must be a whole number of cents
-
-Scenario: A cashier enters too many decimal places (to be rounded up)
-  Given signed in as "Bea"
-  And acting as "Cit"
-  When scan "Dee" to "pay"
-  And input:
-  | input-amount | input-description |
-  | 1.235        | food!             |
-  And click "btn-submit"
-  Then text "messageText": "The amount has been rounded to two decimal places. Make sure this is what you intended and try again."
-  And on page "tx"
-  And text "input-amount": "1.24"
-  And count "txs" is 0
-
-Scenario: A cashier enters too many decimal places (to be rounded down)
-  Given signed in as "Bea"
-  And acting as "Cit"
-  When scan "Dee" to "pay"
-  And input:
-  | input-amount | input-description |
-  | 1.234        | food!             |
-  And click "btn-submit"
-  Then text "input-amount": "1.23"
-  And count "txs" is 0
-
 Rule: A transaction cannot exceed the other account's limit or the app's limit
 
 Scenario: The other account has no balance and no credit
