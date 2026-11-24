@@ -118,7 +118,6 @@ export default {
   async input(app: App, id: string, value: unknown) { await setField(app, id, value) },
 
   async pad(app: App, keys: string) { await tapPad(app, keys) },
-  async press(app: App, key: string) { await app.page.keyboard.press(key) },
   async type(app: App, text: string) { await app.page.keyboard.type(text) },
 
   /** Fill in several elements: a table with the element ids in the header row and the values in the one row below. Selects work too. */
@@ -154,6 +153,7 @@ export default {
   async onPage(app: App, path: string) { await app.page.goto('/' + path) },
 
   async onPhpPage(app: App, path: string) { await app.page.goto(`${(process.env.PUBLIC_PHP_BASE_URL ?? 'http://localhost/cg/cgmembers').replace(/\/+$/, '')}/${path}`) },
+  async press(app: App, key: string, n = 1) { for (let i = 0; i < n; i++) await app.page.keyboard.press(key) },
 
   async reload(app: App) { await app.page.reload() },
 
@@ -297,6 +297,8 @@ export default {
   async soError(app: App, message: string) {
     await expect(app.page.getByRole('alert').filter({ hasText: message }).first(), `error "${message}"`).toBeVisible({ timeout: 10_000 })
   },
+
+  async soFocusOn(app: App, id: string) { await expect(app.page.getByTestId(id), `focus on "${id}"`).toBeFocused() },
 
   async soOnPage(app: App, path: string) {
     if ((BUNDLED_MODE || app.storeApp) && ['signin', 'home', 'tx-start', 'scan', 'switch', 'tx', 'accounts', 'settings', 'unlock'].includes(path)) return await expect(app.page.locator(`[data-screen="${path}"]`), `on page "${path}" (bundled screen)`).toBeVisible({ timeout: 15_000 })

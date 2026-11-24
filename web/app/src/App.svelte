@@ -8,7 +8,7 @@
   import { toDashboard } from './lib/leave'
   import { enterUrl, keep, refresh, signOut, token, type Signed } from './lib/auth'
   import { choose, current, member, type Account } from './lib/accounts'
-  import { IDLE_MS, isRegister, lock, release, sendLock, setOwnerOperated, touch, unlockBy, unlocked, type Scope } from './lib/register'
+  import { endOf, isRegister, lock, release, sendLock, setOwnerOperated, touch, unlockBy, unlocked, type Scope } from './lib/register'
   import { settings } from './lib/settings'
   import { cardKind, type Card } from './lib/qr'
   import { isDemo, live, mismatch, switchTo, target } from './lib/env'
@@ -58,7 +58,7 @@
   let scope = $state<Scope | ''>('') // what a manager's unlock opens ('' while locked)
   let notice = $state(''), unlockError = $state(''), busy = $state(false)
   let asking = $state(false), menuOpen = $state(false), owner = $state('') // the Manager Sign-in dialog; the account menu, opened after an unlock from it; whose password unlocks
-  let idle: ReturnType<typeof setTimeout> | undefined, touched = 0, until = $state(0) // until: when Manager Mode ends, unless the device is used
+  let idle: ReturnType<typeof setTimeout> | undefined, touched = 0, since = 0, until = $state(0) // since: when the unlock began; until: when Manager Mode ends, unless the device is used
   let manager: Card | null = null // the card of the manager whose unlock is on, kept only in memory: a payment carries its proof (see makeTx)
   const fail = (msg: string) => register ? void (notice = msg, screen = 'home') : toDashboard(live(), msg, 'error') // a cash register never leaves for the live site on its own
   const UNLOCK_ERRORS: Record<string, string> = {
@@ -98,7 +98,10 @@
     if (sent && acct && acct.uid !== sent) { otherA = (await member())?.accounts.find(a => a.uid === sent); otherAcct = otherA?.name || 'another account' }
     const want = hash.get('screen')
     queued = await waiting()
-    if (await settle() && !(scope = cold ? '' : await unlocked())) return void await openRegister() // a cash register opens to Charge, locked again (unless a manager's unlock is still on, coming back from the live site)
+    if (await settle()) { // a cash register opens to Charge, locked again (unless a manager's unlock is still on, coming back from the live site)
+      const u = cold ? null : await unlocked(); scope = u?.scope ?? ''; since = u?.since ?? 0
+      if (!scope) return void await openRegister()
+    }
     if (scope) active()
     if (want === 'signout') return void (queued ? (screen = 'home', confirming = true) : leave())
     if (want === 'accounts' || want === 'settings') return void open(want)
@@ -132,7 +135,7 @@
 
   // Lock the cash register again (Manager Mode is over): only the company stays on the phone, and the home screen offers just Charge and the Manager Sign-in.
   async function relock() {
-    clearTimeout(idle); scope = ''; manager = null; until = 0; asking = menuOpen = false
+    clearTimeout(idle); scope = ''; manager = null; since = until = 0; asking = menuOpen = false
     if (!acct) return
     await lock(acct); acct = await current(); device = acct?.device ?? null; owner = (await member())?.name ?? ''
     screen = 'home'
@@ -141,11 +144,11 @@
   // A cash register opens to Charge, locked. ignore: a card still in front of the camera (the one that switched envs), not to be taken as a customer's.
   async function openRegister(ignore = '') { await relock(); if (device) { start('charge'); seen = ignore } }
 
-  // Someone touched the screen (not the Manager Mode banner): an unlocked cash register stays unlocked another IDLE_MS (kept on the phone too, for the trip to the live site and back).
+  // Someone touched the screen (not the Manager Mode banner): an unlocked cash register stays unlocked another IDLE_MS, up to MAX_MS since the unlock (kept on the phone too, for the trip to the live site and back).
   function active(e?: Event) {
     if (!scope || (e?.target instanceof Element && e.target.closest('.manager-banner'))) return
-    clearTimeout(idle); idle = setTimeout(relock, IDLE_MS); until = Date.now() + IDLE_MS
-    if (Date.now() - touched > 10000) { touched = Date.now(); touch(scope) }
+    until = endOf(since); clearTimeout(idle); idle = setTimeout(relock, until - Date.now())
+    if (Date.now() - touched > 10000) { touched = Date.now(); touch(scope, since) }
   }
 
   // A manager's card (qr) or the signed-in member's password unlocks the cash register.
@@ -154,7 +157,7 @@
     try {
       const r = await unlockBy(how, device?.real ?? true)
       if (r.error) return void (unlockError = UNLOCK_ERRORS[r.error] ?? 'That did not work. Try again.', asking = true, screen = 'home')
-      scope = r.scope!; manager = r.card ?? null; acct = await current(); device = acct?.device ?? null; notice = ''; touched = 0; asking = false; active()
+      scope = r.scope!; since = Date.now(); manager = r.card ?? null; acct = await current(); device = acct?.device ?? null; notice = ''; touched = 0; asking = false; active()
       const next = after; after = ''
       if (next === 'pay' && device) { start('pay'); seen = how.qr ?? '' } // the manager's card is still in front of the camera
       else if (next === 'accounts' || next === 'settings') await open(next)

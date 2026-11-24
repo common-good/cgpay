@@ -63,127 +63,85 @@
   }
 </script>
 
-<div class="container">
-  <nav class="crumbs">
-    <a href="/">Dashboard</a> <span>›</span> <span>Expected Grants</span>
-  </nav>
+<main class="container">
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/">Dashboard</a> <span aria-hidden="true">/</span> <span>Expected Grants</span></nav>
 
-  <header>
-    <div>
+  <header class="head">
+    <div class="page-head">
       <h1>Expected Grants</h1>
       <p>Grants you've reported to Common Good, and their current status.</p>
     </div>
-    <div class="header-actions">
-      <a class="primary" href="/grants/new"><Icon name="plus" size={16} /> Report Expected Grant</a>
-    </div>
+    {#if !forbidden && grants.length}
+      <a class="btn btn-primary" href="/grants/new"><Icon name="plus" size={18} /> Report Expected Grant</a>
+    {/if}
   </header>
 
   {#if loading}
-    <div class="notice">Loading…</div>
+    <p class="muted">Loading...</p>
   {:else if forbidden}
     <div class="empty card">
-      <h3>Expected Grants is for fiscally sponsored partners</h3>
+      <h2>Expected Grants is for fiscally sponsored partners</h2>
       <p>Your account isn't currently marked as fiscally sponsored. If you believe that's wrong, please reach out to Common Good staff.</p>
-      <a class="primary" href="/">← Back to Dashboard</a>
+      <a class="btn btn-secondary" href="/">Back to Dashboard</a>
     </div>
   {:else if error}
-    <div class="notice err" role="alert">{error}</div>
+    <div class="alert alert-error" role="alert">{error}</div>
   {:else if grants.length === 0}
     <div class="empty card">
-      <h3>No expected grants yet</h3>
+      <h2>No expected grants yet</h2>
       <p>When you have a donor sending funds, report it here so we can match and process it quickly.</p>
-      <a class="primary" href="/grants/new"><Icon name="plus" size={16} /> Report Your First Grant</a>
+      <a class="btn btn-primary" href="/grants/new"><Icon name="plus" size={18} /> Report Your First Grant</a>
     </div>
   {:else}
-    <div class="table-wrap">
+    <div class="card table-wrap">
       <table>
         <thead>
-          <tr>
-            <th>Status</th>
-            <th>Grantor</th>
-            <th>Amount</th>
-            <th>Method</th>
-            <th>Reported</th>
-            <th>Received</th>
-          </tr>
+          <tr><th>Grantor</th><th>Amount</th><th>Status</th><th>Method</th><th>Reported</th><th>Received</th></tr>
         </thead>
         <tbody>
           {#each grants as g}
             {@const s = statusOf(g)}
             <tr>
-              <td><span class="pill {s.cls}">{s.label}</span></td>
-              <td>{g.grantor || '—'}</td>
-              <td>{fmtAmount(g.amount)}</td>
-              <td>{fmtBy(g.by)}</td>
-              <td>{fmtDate(g.created)}</td>
-              <td>{fmtDate(g.received)}</td>
+              <td class="grantor">{g.grantor || '-'}</td>
+              <td class="amount">{fmtAmount(g.amount)}</td>
+              <td class="status"><span class="pill {s.cls}">{s.label}</span></td>
+              <td data-label="Method">{fmtBy(g.by)}</td>
+              <td data-label="Reported">{fmtDate(g.created)}</td>
+              <td data-label="Received">{fmtDate(g.received)}</td>
             </tr>
           {/each}
         </tbody>
       </table>
     </div>
   {/if}
-</div>
+</main>
 
 <style>
-  .container { max-width: 1280px; margin: 0 auto; padding: 1.5rem 1.75rem 3rem; }
-  .crumbs { font-size: 0.85rem; color: var(--cg-text-muted); margin-bottom: 1rem; }
-  .crumbs a { color: var(--cg-green); }
-  .crumbs span { margin: 0 0.5rem; }
+  .crumbs { font-size: var(--fs-sm); color: var(--cg-text-muted); margin-bottom: var(--sp-4); display: flex; gap: var(--sp-2); }
+  .head { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--sp-4); flex-wrap: wrap; margin-bottom: var(--sp-5); }
+  .head .page-head { margin: 0; }
 
-  header { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; margin-bottom: 1.5rem; }
-  header h1 { margin: 0 0 0.2rem; font-size: 1.5rem; font-weight: 600; letter-spacing: -0.01em; }
-  header p { margin: 0; color: var(--cg-text-muted); font-size: 0.9rem; }
+  .empty { display: grid; justify-items: center; gap: var(--sp-3); padding: var(--sp-7) var(--sp-5); text-align: center; }
+  .empty h2 { font-size: var(--fs-lg); }
+  .empty p { color: var(--cg-text-muted); max-width: 28rem; margin-bottom: var(--sp-2); }
 
-  .header-actions { display: flex; gap: 0.5rem; }
-  .primary {
-    padding: 0.55rem 1.05rem; background: var(--cg-green); color: white; border: 0;
-    border-radius: var(--cg-radius-sm); font-size: 0.9rem; font-weight: 500; cursor: pointer;
-    text-decoration: none; display: inline-flex; align-items: center; gap: 0.35rem;
-  }
-
-  .notice { padding: 1rem 1.2rem; color: var(--cg-text-muted); }
-  .notice.err {
-    background: #fef2f2; border: 1px solid #fecaca; color: #991b1b;
-    border-radius: var(--cg-radius-sm);
-  }
-
-  .empty {
-    padding: 2.5rem 2rem; text-align: center; background: var(--cg-surface);
-    border: 1px solid var(--cg-border); border-radius: var(--cg-radius);
-  }
-  .empty h3 { margin: 0 0 0.4rem; font-size: 1.1rem; }
-  .empty p { margin: 0 0 1.2rem; color: var(--cg-text-muted); font-size: 0.9rem; }
-
-  .table-wrap {
-    background: var(--cg-surface); border: 1px solid var(--cg-border);
-    border-radius: var(--cg-radius); overflow-x: auto;
-  }
-  table { width: 100%; border-collapse: collapse; min-width: 480px; }
-  th, td { padding: 0.75rem 1rem; text-align: left; font-size: 0.9rem; }
-  th { background: var(--cg-bg); font-weight: 600; color: var(--cg-text); font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.04em; }
+  .table-wrap { overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: var(--sp-3) var(--sp-4); text-align: left; font-size: var(--fs-sm); }
+  th { background: var(--cg-surface-2); font-weight: 600; color: var(--cg-text-muted); font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 0.04em; }
   tbody tr { border-top: 1px solid var(--cg-border); }
-  tbody tr:hover { background: var(--cg-bg); }
+  .amount { font-variant-numeric: tabular-nums; font-weight: 600; }
 
-  .pill {
-    display: inline-block; padding: 0.15rem 0.55rem; border-radius: 999px;
-    font-size: 0.78rem; font-weight: 600;
-  }
-  .pill-green { background: #dcfce7; color: #166534; }
-  .pill-blue  { background: #dbeafe; color: #1e40af; }
-  .pill-amber { background: #fef3c7; color: #92400e; }
-
-  /* Phone-width tweaks (#183): stack the header and tighten padding so the
-     Report-Grant action sits under the heading instead of crowding it off
-     the right edge. The table itself scrolls horizontally. */
-  @media (max-width: 640px) {
-    .container { padding: 1.25rem 1rem 2.5rem; }
-    header {
-      flex-direction: column;
-      align-items: stretch;
-      gap: 0.75rem;
-    }
-    .header-actions { justify-content: flex-start; }
-    th, td { padding: 0.6rem 0.75rem; }
+  /* Phones: one stacked block per grant instead of a sideways-scrolling table. */
+  @media (max-width: 639px) {
+    .head .btn { width: 100%; }
+    thead { display: none; }
+    tbody tr { display: grid; grid-template-columns: 1fr auto; gap: var(--sp-1) var(--sp-3); padding: var(--sp-4); }
+    td { padding: 0; }
+    .grantor { font-weight: 600; font-size: var(--fs-base); }
+    .amount { text-align: right; font-size: var(--fs-base); }
+    .status { grid-column: 1 / -1; margin: var(--sp-1) 0; }
+    td[data-label] { grid-column: 1 / -1; display: flex; justify-content: space-between; color: var(--cg-text-muted); }
+    td[data-label]::before { content: attr(data-label); }
   }
 </style>

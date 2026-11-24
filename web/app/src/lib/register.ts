@@ -1,13 +1,13 @@
 // The app as a company's cash register. A company account (only its managers can choose one) opens to Charge with everything else locked,
 // until a manager unlocks it with their card or the token owner's password. The server enforces the lock too: a locked token works for the company alone
-// (PHP's /cgpay/lock and /cgpay/unlock). An unlock lasts until IDLE_MS pass without a touch, or the activity it was for is over.
+// (PHP's /cgpay/lock and /cgpay/unlock). An unlock lasts until IDLE_MS pass without a touch, MAX_MS pass since it began, or the activity it was for is over.
 import { store } from '../storage'
 import { lockCall, token, unlock } from './auth'
 import { keepMember, member, type Account, type Member } from './accounts'
 import { parseQr, type Card } from './qr'
 import { env } from './env'
 
-export const IDLE_MS = 120000
+export const IDLE_MS = 120000, MAX_MS = 300000 // the server's limits too (APP_UNLOCK_SECS, APP_UNLOCK_MAX_SECS)
 export type Scope = 'full' | 'company' // another manager's card opens only the company; the token owner's password or own card opens everything
 
 const CARDS = 'mgrCards', PENDING = 'pendingLock', UNLOCKED = 'unlocked'
@@ -27,14 +27,22 @@ export async function setOwnerOperated(uid: number, on: boolean) {
 /** Whether the account is a cash register on this phone: a company, not owner-operated, signed in with a token (the lock needs the server). */
 export const isRegister = async (a: Account | null) => !!a?.isCo && !!await token() && !(await ownerOperated()).includes(a.uid)
 
-/** The unlock still in force (the bundled screens start again after each visit to the live site), or ''. Each call slides it forward. */
-export async function unlocked(): Promise<Scope | ''> {
-  const u = await store.get<{ scope: Scope, until: number }>(UNLOCKED)
-  if (!u || u.until < Date.now()) return ''
-  await touch(u.scope)
-  return u.scope
+type Unlock = { scope: Scope, since: number, until: number }
+
+/** The unlock still in force (the bundled screens start again after each visit to the live site), or null. Each call slides it forward. */
+export async function unlocked() {
+  const u = await store.get<Unlock>(UNLOCKED)
+  return (!u || u.until < Date.now()) ? null : touch(u.scope, u.since)
 }
-export const touch = (scope: Scope) => store.set(UNLOCKED, { scope, until: Date.now() + IDLE_MS })
+
+/** When an unlock that began at since ends, if the phone is touched now. */
+export const endOf = (since: number) => Math.min(Date.now() + IDLE_MS, since + MAX_MS)
+
+export async function touch(scope: Scope, since = Date.now()) {
+  const u: Unlock = { scope, since, until: endOf(since) }
+  await store.set(UNLOCKED, u)
+  return u
+}
 
 /** Lock the phone to the company: forget every other account's credentials here at once, and tell the server (later, if there is no connection). */
 export async function lock(co: Account) {

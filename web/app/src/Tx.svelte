@@ -23,6 +23,7 @@
   const arm = () => { clearTimeout(timer); timer = setTimeout(done, TIMEOUT_S * 1000) }
 
   const alert = (text: string) => dialog = { text, yes: () => dialog = null }
+  const focus = (n: HTMLElement, on = true) => { if (on) n.focus() } // a message with only OK takes Enter; Yes/No needs a deliberate choice
   onDestroy(() => clearTimeout(timer))
   const word = paying ? 'Pay' : 'Charge'
 
@@ -127,7 +128,7 @@
   <div class="back"></div>
   <div class="dialog" role="dialog" aria-modal="true">
     <p data-testid="messageText">{dialog.text}</p>
-    <button data-testid="btn1" onclick={dialog.yes}>{dialog.no ? 'Yes' : 'OK'}</button>
+    <button data-testid="btn1" use:focus={!dialog.no} onclick={dialog.yes}>{dialog.no ? 'Yes' : 'OK'}</button>
     {#if dialog.no}<button class="plain" data-testid="btn2" onclick={dialog.no}>No</button>{/if}
   </div>
 {/if}
