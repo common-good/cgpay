@@ -5,13 +5,14 @@
   import { mainId, parseQr, type Card } from './lib/qr'
   import { cachePhoto, cacheProfile, checkAmount, enqueue, flush, makeTx, money, offlinePhoto, offlineProfile, refusals, unqueue, type Tx } from './lib/tx'
   import { shrink } from './lib/photo'
+  import AmountPad from './AmountPad.svelte'
 
   let { device, intent, qr, manager = null, onfail, onrescan, ondone }: { device: Device, intent: string, qr: string, manager?: Card | null, onfail: (msg: string) => void, onrescan: () => void, ondone: (msg?: string, offline?: boolean) => void } = $props()
   const paying = intent === 'pay'
   let who = $state<Identity | null>(null)
   let photo = $state('')
   let card: Card
-  let amount = $state<number | null>(null)
+  let cents = $state(0)
   let description = $state('')
   let dialog = $state<{ text: string, yes?: () => void, no?: () => void } | null>(null)
   let sent = $state<{ tx: Tx, key: string } | null>(null)
@@ -28,8 +29,7 @@
 
   async function submit(e: Event) {
     e.preventDefault()
-    const [a, err] = checkAmount(amount ?? 0, who!.limit)
-    amount = a
+    const a = cents / 100, err = checkAmount(a, who!.limit)
     if (err) return alert(err)
     const tx = await makeTx(device, card, paying, a, description, manager)
     try { sent = { tx, key: await enqueue(tx) } } catch { return alert('This phone is out of space, so the transaction could not be saved. Free some space on the phone and try again.') }
@@ -116,8 +116,7 @@
       <p data-testid="theirLocation">{who.location}</p>
     </section>
     <form onsubmit={submit}>
-      <label for="amount">Amount</label>
-      <input id="amount" data-testid="input-amount" use:focus type="number" step="any" placeholder="$0.00" bind:value={amount} required />
+      <AmountPad bind:cents off={!!dialog} />
       <label for="description">Description</label>
       <input id="description" data-testid="input-description" type="text" placeholder="e.g. lunch, rent, supplies, loan, etc." bind:value={description} required />
       <button data-testid="btn-submit" type="submit">{word}</button>
