@@ -453,3 +453,58 @@ Scenario: A member who switched to demo signs out of both envs
   | uid | revoked |
   | Bea | !       |
   | Abe | !       |
+
+Rule: The live site hands the app's screens no credentials (the app has its own, from its token)
+
+Scenario: The dashboard's Pay and Charge open the app's screens with the intent alone
+  Given signed in as "Bea"
+  When in the store app
+  Then pay and charge go to "bundled screens"
+
+Rule: When the live site acts for another account than the app does, the app says so and asks: go on with its own account, change account, or cancel
+
+Scenario: A member acting for Citre on the live site taps Pay while the app acts for the member, and goes on
+  Given signed in as "Bea"
+  And in the store app
+  And acting as "Cit"
+  And store app acts as "Bea"
+  When click "btn-pay"
+  Then see "acct-warning"
+  And on page "home"
+
+  When click "btn-acct-proceed"
+  Then on page "tx-start"
+
+Scenario: A member acting for Citre on the live site taps Pay while the app acts for the member, and changes account
+  Given signed in as "Bea"
+  And in the store app
+  And acting as "Cit"
+  And store app acts as "Bea"
+  When click "btn-pay"
+  And click "btn-acct-change"
+  Then on page "accounts"
+
+Scenario: A member acting for Citre on the live site taps Pay while the app acts for the member, and cancels
+  Given signed in as "Bea"
+  And in the store app
+  And acting as "Cit"
+  And store app acts as "Bea"
+  When click "btn-pay"
+  And click "btn-acct-cancel"
+  Then on page ""
+
+Scenario: A member acting for Citre on the live site taps Pay while the app acts for the member, and switches to Citre
+  Given signed in as "Bea"
+  And in the store app
+  And acting as "Cit"
+  And store app acts as "Bea"
+  When click "btn-pay"
+  And click "btn-acct-switch"
+  Then on page "scan"
+
+Scenario: A member taps Pay while the app acts for the same account as the live site
+  Given signed in as "Bea"
+  And in the store app
+  When click "btn-pay"
+  Then on page "tx-start"
+  And see not "acct-warning"

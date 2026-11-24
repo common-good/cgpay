@@ -36,4 +36,4 @@ export async function identity(d: Device, card: Card): Promise<Identity> {
 }
 
 /** The other account's photo, as an address a page can show. */
-export const idPhoto = async (d: Device, card: Card) => URL.createObjectURL(await (await post(d, 'idPhoto', who(d, card))).blob())
+export const idPhoto = async (d: Device, card: Card) => (await post(d, 'idPhoto', who(d, card))).blob()

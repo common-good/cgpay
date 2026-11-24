@@ -6,7 +6,7 @@ import { writeCameraVideo } from '../support/camera'
 import resetCodes from '../support/reset-codes'
 
 // What the steps work with: the page, the test database, the scenario's variables, and the time the scenario started (unix seconds).
-export type App = { page: Page, testDb: TestDb, vars: Vars, now: number, reply?: Record<string, unknown>, storeApp?: boolean, offline?: boolean, mfa?: string }
+export type App = { page: Page, testDb: TestDb, vars: Vars, now: number, reply?: Record<string, unknown>, storeApp?: boolean, offline?: boolean, mfa?: string, who?: string, acting?: string, appToken?: string }
 
 type Fixtures = { testDb: TestDb, app: App }
 

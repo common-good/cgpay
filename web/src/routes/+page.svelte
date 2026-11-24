@@ -6,7 +6,7 @@
   import Icon from '$lib/components/Icon.svelte'
   import type { InfoResponse, InfoTx } from './api/me/info/+server'
   import { phpUrl } from '$lib/utils'
-  import { inApp, appLink, device, type Device } from '$lib/app-shell'
+  import { inApp, appUrl } from '$lib/app-shell'
   import { fade, fly } from 'svelte/transition'
   import { cubicOut } from 'svelte/easing'
   import { ms, focusIn, swipeDown, lockScroll } from '$lib/motion'
@@ -18,7 +18,6 @@
   let info = $state<InfoResponse | null>(null)
   let hasCamera = $state(false)
   let app = $state(false)
-  let dev = $state<Device | null>(null)
   let message = $state<{ kind: 'info' | 'error', text: string } | null>(null)
 
   type ModalKind = 'pay' | 'receive' | null
@@ -44,7 +43,7 @@
   }
 
   function transactionUrl(intent: 'pay' | 'charge'): string {
-    if (app) return appLink(dev, { intent }, env.PUBLIC_APP_URL)
+    if (app) return appUrl({ intent, acct: data.user?.uid }, env.PUBLIC_APP_URL)
     const pwaBase = data.cgpayPwaUrl.replace(/\/+$/, '')
     return hasCamera && pwaBase
       ? `${pwaBase}/handoff#intent=${intent}`
@@ -98,7 +97,6 @@
   onMount(async () => {
     message = takeMessage()
     app = inApp()
-    if (app && data.user) device(data.user.name).then(d => dev = d)
     detectCamera().then(found => hasCamera = found) // without a camera this takes a moment; the account info need not wait
     await loadInfo()
   })

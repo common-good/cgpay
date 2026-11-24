@@ -3,6 +3,7 @@ import type { Device } from '$lib/app-shell'
 import { store } from '../storage'
 import { body, post, TX_TIMEOUT_MS, unreachable, VERSION, type Identity } from './api'
 import { noCardCode, type Card } from './qr'
+import { env } from './env'
 
 export const ONLINE_LIMIT = 10000 // the most any account can be charged on the app
 export const money = (n: number | string) => (+n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -32,7 +33,7 @@ export async function makeTx(d: Device, card: Card, paying: boolean, amount: num
 const key = (t: Tx) => `tx:${t.created}:${t.proof.slice(0, 8)}`
 
 /** Keep the transaction until the server has it. Returns its key. */
-export async function enqueue(t: Tx) { const k = key(t); await store.set(k, t); return k }
+export async function enqueue(t: Tx) { const k = key(t); await roomFor(() => store.set(k, t)); return k }
 
 /** Forget a transaction that was never sent. */
 export const unqueue = (k: string) => store.del(k)
@@ -54,7 +55,7 @@ async function sendAll(d: Device) {
     if (t.error) continue
     try {
       const res = await body(await post(d, 'transactions', { ...t }, TX_TIMEOUT_MS))
-      if (res?.ok === true) await store.del(k); else await store.set(k, { ...t, error: String(res?.message ?? 'refused') })
+      if (res?.ok === true) { await store.del(k); await seen(t.otherId, t.created * 1000) } else await store.set(k, { ...t, error: String(res?.message ?? 'refused') })
     } catch (er) {
       if (unreachable(er)) return true
       await store.set(k, { ...t, error: (er as Error).message })
@@ -66,12 +67,55 @@ async function sendAll(d: Device) {
 /** How many queued transactions still wait for the server (not counting refused ones). */
 export const waiting = async () => (await store.all<Tx>('tx:')).filter(([, t]) => !t.error).length
 
-// Profiles of accounts seen before, for when the server cannot be reached. Kept with a hash of the card code, so a different code does not get the old profile.
-const profileKey = (c: Card) => `acct:${c.acct}`
-export const cacheProfile = async (c: Card, who: Identity) => store.set(profileKey(c), { who, h: await sha256(c.code) })
+// What is kept of accounts seen before, for when the server cannot be reached, per env (an account number may mean another account on another server):
+// a profile and, for an account charged, a small copy of its photo. The profile is kept with a hash of the card code, so a different code gets neither,
+// and the profile with when the account was last used (t: seen online, or a transaction with it accepted). Both are only a convenience,
+// so they go together, the least used first, when the phone is out of space, and after a year unused.
+type Saved = { who: Identity, h: string, t?: number }
+const DAY = 86_400_000, YEAR = 365 * DAY
+const profileKey = (acct: string) => `acct:${env()}:${acct}`
+const photoKey = (acct: string) => `photo:${env()}:${acct}`
+const idOf = (k: string) => k.slice(k.indexOf(':') + 1) // env:account
+
+export const cacheProfile = async (c: Card, who: Identity) => roomFor(async () => store.set(profileKey(c.acct), { who, h: await sha256(c.code), t: Date.now() })).catch(() => {})
+export const cachePhoto = async (c: Card, jpeg: Uint8Array) => roomFor(() => store.set(photoKey(c.acct), jpeg)).catch(() => {})
+
+/** The photo kept for this card, as an address an img can show ('' if none, or if its profile was kept for another card code). */
+export async function offlinePhoto(c: Card) {
+  const p = await store.get<Saved>(profileKey(c.acct)), jpeg = p?.h === await sha256(c.code) && await store.get<Uint8Array<ArrayBuffer>>(photoKey(c.acct))
+  return jpeg ? URL.createObjectURL(new Blob([jpeg], { type: 'image/jpeg' })) : ''
+}
+
+// A transaction with the account was accepted: its profile counts as used then, unless it was seen online since.
+async function seen(acct: string, when: number) {
+  const p = await store.get<Saved>(profileKey(acct))
+  if (p && (p.t ?? 0) < when) await store.set(profileKey(acct), { ...p, t: when }).catch(() => {})
+}
+
+// The accounts with anything kept, least recently used first (a photo whose profile is gone, first of all). Reads every profile.
+async function byUse() {
+  const t = new Map((await store.all<Saved>('acct:')).map(([k, p]) => [idOf(k), p.t ?? 0]))
+  const ids = new Set([...t.keys(), ...(await store.keys('photo:')).map(idOf)])
+  return [...ids].map(id => [id, t.get(id) ?? 0] as const).sort(([, a], [, b]) => a - b)
+}
+const forget = async (id: string) => { await store.del(`acct:${id}`); await store.del(`photo:${id}`) }
+
+/** Forget the accounts not used for a year. At most once a day, since it reads every profile. */
+export async function dropUnused(now = Date.now()) {
+  if ((await store.get<number>('unusedChecked') ?? 0) > now - DAY) return
+  for (const [id, t] of await byUse()) if (t < now - YEAR) await forget(id)
+  await store.set('unusedChecked', now).catch(() => {})
+}
+
+/** Write; if that fails (the phone may be out of space), forget the two least recently used accounts kept and try once more. */
+async function roomFor(write: () => Promise<void>) {
+  try { return await write() } catch { /* make room below */ }
+  for (const [id] of (await byUse()).slice(0, 2)) await forget(id)
+  await write()
+}
 
 /** The profile to go by when offline: the one saved earlier for this card, else a blank one with the offline limit. */
 export async function offlineProfile(c: Card): Promise<Identity> {
-  const saved = await store.get<{ who: Identity, h: string }>(profileKey(c))
+  const saved = await store.get<Saved>(profileKey(c.acct))
   return saved && saved.h === await sha256(c.code) ? saved.who : { name: '', agent: '', location: '', limit: OFFLINE_LIMIT, selling: [], isell: [] }
 }

@@ -9,7 +9,9 @@ const config: CapacitorConfig = {
   appName: 'CGPay Trial',
   webDir: 'dist',
   appendUserAgent: 'CGPayApp',
-  server: { allowNavigation: [...new Set([...hosts(start), ...hosts('demo')])] }
+  server: { allowNavigation: [...new Set([...hosts(start), ...hosts('demo')])] },
+  // The store's database (storage.ts encrypts its values itself): on iOS in Library, not Documents, which the Files app can show.
+  plugins: { CapacitorSQLite: { iosDatabaseLocation: 'Library/CapacitorDatabase', iosIsEncryption: false, androidIsEncryption: false } }
 }
 
 export default config

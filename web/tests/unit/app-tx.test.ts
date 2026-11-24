@@ -1,16 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const kv = new Map<string, unknown>()
+let cap = Infinity // how many entries the phone has room for
 vi.mock('../../app/src/storage', () => ({
   store: {
     get: async (k: string) => kv.get(k),
-    set: async (k: string, v: unknown) => { kv.set(k, v) },
+    set: async (k: string, v: unknown) => { if (!kv.has(k) && kv.size >= cap) throw new Error('full'); kv.set(k, v) },
     del: async (k: string) => { kv.delete(k) },
-    all: async (p: string) => [...kv].filter(([k]) => k.startsWith(p)).sort(([a], [b]) => a < b ? -1 : 1)
+    all: async (p: string) => [...kv].filter(([k]) => k.startsWith(p)).sort(([a], [b]) => a < b ? -1 : 1),
+    keys: async (p: string) => [...kv.keys()].filter(k => k.startsWith(p)).sort()
   }
 }))
 
-const { flush, waiting } = await import('../../app/src/lib/tx')
+const { cachePhoto, cacheProfile, dropUnused, enqueue, flush, offlinePhoto, waiting } = await import('../../app/src/lib/tx')
 const { identity, unreachable } = await import('../../app/src/lib/api')
 const { parseQr } = await import('../../app/src/lib/qr')
 
@@ -24,7 +26,7 @@ const answer = (...bodies: (string | (() => Promise<Response>))[]) => {
   return f
 }
 
-beforeEach(() => { kv.clear(); vi.unstubAllGlobals() })
+beforeEach(() => { kv.clear(); cap = Infinity; vi.unstubAllGlobals() })
 
 describe('unreachable', () => {
   it('is true only when no answer came', () => {
@@ -75,6 +77,59 @@ describe('flush', () => {
     await Promise.all(runs)
     expect(f).toHaveBeenCalledTimes(2)
     expect(kv.size).toBe(0)
+  })
+})
+
+describe('out of space', () => {
+  const who = { name: 'Dee', agent: '', location: '', limit: 1, selling: [], isell: [] }
+  const keep = (...acctTs: [string, number][]) => { for (const [a, t] of acctTs) { kv.set(`acct:test:${a}`, { who, h: '', t }); kv.set(`photo:test:${a}`, { src: '', h: '' }) } }
+  it('forgets the two least recently used accounts kept (profile and photo) to keep a transaction', async () => {
+    keep(['A', 3], ['B', 1], ['C', 4], ['D', 2])
+    cap = 8
+    await enqueue(tx(1))
+    expect([...kv.keys()].sort()).toEqual(['acct:test:A', 'acct:test:C', 'photo:test:A', 'photo:test:C', 'tx:1:proof1'])
+  })
+  it('counts a profile as used when a transaction with it is accepted, unless it was seen online later', async () => {
+    kv.set('acct:test:B', { who, h: '', t: 5000 }); kv.set('acct:test:C', { who, h: '', t: 1000 })
+    kv.set('tx:9', { ...tx(3), otherId: 'B' }); kv.set('tx:8', { ...tx(2), otherId: 'C' })
+    answer('{"ok":true}', '{"ok":true}')
+    await flush(d)
+    expect([(kv.get('acct:test:B') as any).t, (kv.get('acct:test:C') as any).t]).toEqual([5000, 2000])
+  })
+  it('fails when there is still no room, so the transaction is not taken for kept', async () => {
+    cap = 0
+    await expect(enqueue(tx(1))).rejects.toThrow()
+  })
+  it('never fails a scan for want of room to keep the profile', async () => {
+    cap = 0
+    await expect(cacheProfile(card, who)).resolves.toBeUndefined()
+    expect(kv.size).toBe(0)
+  })
+})
+
+describe('offline photos', () => {
+  const who = { name: 'Dee', agent: '', location: '', limit: 1, selling: [], isell: [] }, other = { ...card, code: 'other' }
+  const day = 86_400_000, now = 1000 * day
+  const jpeg = new Uint8Array([0xff, 0xd8, 1, 2])
+  it('come back only for the card code their profile was kept with', async () => {
+    await cacheProfile(card, who); await cachePhoto(card, jpeg)
+    const url = await offlinePhoto(card)
+    expect(new Uint8Array(await (await fetch(url)).arrayBuffer())).toEqual(jpeg)
+    expect(await offlinePhoto(other)).toBe('')
+  })
+  it('are kept per env', async () => {
+    await cacheProfile(card, who); await cachePhoto(card, jpeg)
+    vi.stubGlobal('localStorage', { getItem: () => 'demo' })
+    expect(await offlinePhoto(card)).toBe('')
+  })
+  it('go with their profiles when not used for a year, checked at most once a day', async () => {
+    kv.set('acct:test:A', { who, h: '', t: now - 366 * day }); kv.set('acct:test:B', { who, h: '', t: now - 364 * day })
+    for (const a of 'ABC') kv.set(`photo:test:${a}`, { src: '', h: '' }) // C has no profile any more
+    await dropUnused(now)
+    expect([...kv.keys()].filter(k => !k.startsWith('unused')).sort()).toEqual(['acct:test:B', 'photo:test:B'])
+    kv.set('photo:test:A', { src: '', h: '' })
+    await dropUnused(now + day / 2)
+    expect(kv.has('photo:test:A')).toBe(true)
   })
 })
 

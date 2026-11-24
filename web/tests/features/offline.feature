@@ -23,7 +23,7 @@ Scenario: The app is started with no network
   And see "btn-pay"
   And see "btn-receive"
 
-Rule: A scan offline still shows a profile, and the member is told to trust it or check ID
+Rule: A scan offline still shows a profile, and with no photo kept from before, the member is told to trust it or check ID
 
 Scenario: A company scans a customer it has not seen before
   When network off
@@ -31,16 +31,16 @@ Scenario: A company scans a customer it has not seen before
   Then text "messageText": "OFFLINE. Trust this member or ask for ID."
   And text "theirName": ""
 
-Scenario: A company scans a repeat customer, whose name comes from the last time
+Scenario: A company scans a repeat customer, whose name and photo come from the last time
   When scan "Dee" to "charge"
   Then see "charge-profile"
+  And see "theirPhoto"
 
   When network off
   And scan "Dee" to "charge"
-  Then see "messageText"
-
-  When click "btn1"
   Then text "theirName": "Dee Four"
+  And see "theirPhoto"
+  And see not "messageText"
 
 Rule: Offline, a customer not seen before can be charged up to a fixed limit
 
@@ -54,6 +54,20 @@ Scenario: A cashier charges more than the offline limit
   And click "btn-submit"
   Then text "messageText": "This transaction is limited to $250.00."
   And count "txs" is 0
+
+Rule: When the phone is out of space, a transaction that cannot be saved is not taken
+
+Scenario: A cashier charges offline on a phone that is out of space
+  When network off
+  And storage full
+  And scan "Dee" to "charge"
+  And click "btn1"
+  And input:
+  | input-amount | input-description |
+  | 12.34        | food!             |
+  And click "btn-submit"
+  Then text "messageText": "This phone is out of space, so the transaction could not be saved. Free some space on the phone and try again."
+  And see not "tx-summary"
 
 Rule: What was charged offline is sent when the connection is back
 
