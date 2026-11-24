@@ -1,7 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import { goto } from '$app/navigation'
-  import Icon from '$lib/components/Icon.svelte'
 
   // No client-side auth check here - +layout.server.ts fails 401 for anonymous
   // callers to /api/grants below, at which point we redirect.
@@ -207,316 +206,195 @@
   }
 </script>
 
-<div class="container">
-  <nav class="crumbs">
-    <a href="/">Dashboard</a> <span>›</span>
-    <a href="/grants">Expected Grants</a> <span>›</span>
-    <span>Report Expected Grant</span>
+<main class="container">
+  <nav class="crumbs" aria-label="Breadcrumb">
+    <a href="/">Dashboard</a> <span aria-hidden="true">/</span>
+    <a href="/grants">Expected Grants</a> <span aria-hidden="true">/</span>
+    <span>Report</span>
   </nav>
 
-  <div class="layout">
-    <aside class="side">
-      <div class="help card">
-        <Icon name="help" size={18} class="help-icon" />
-        <div>
-          <strong>Need help?</strong>
-          <p>Fill in as much as you know about the grantor. We'll match the funds when they arrive.</p>
-        </div>
-      </div>
-    </aside>
+  <section class="form-area">
+    <div class="page-head">
+      <h1>Report Expected Grant</h1>
+      <p>Let us know about an incoming grant so we can match and process it quickly. Fill in as much as you know about the grantor; we'll match the funds when they arrive.</p>
+    </div>
 
-    <section class="form-area">
-      <div class="header-row">
-        <div>
-          <h1>Report Expected Grant</h1>
-          <p>Let us know about an incoming grant so we can match and process it quickly.</p>
-        </div>
-      </div>
+    {#if error}
+      <div class="alert alert-error" role="alert">{error}</div>
+    {/if}
 
-      {#if error}
-        <div class="err" role="alert">{error}</div>
-      {/if}
-
-      <form class="form-card" onsubmit={(e) => { e.preventDefault(); submit() }} novalidate>
-        <fieldset>
-          <legend>Grant details</legend>
-          <div class="grid-2">
-            <div class="field span-2" class:has-err={fe('fullName')}>
-              <label for="grantor">Grantor Name <span class="req">*</span></label>
-              <div class="autocomplete">
-                <input id="grantor" data-testid="grantor" type="text" value={fullName}
-                  oninput={onGrantorInput}
-                  onkeydown={onGrantorKeydown}
-                  onblur={onGrantorBlur}
-                  onfocus={() => { if (suggestions.length > 0) suggestOpen = true }}
-                  placeholder="Full name of donor / funder"
-                  autocomplete="off"
-                  aria-autocomplete="list"
-                  aria-expanded={suggestOpen}
-                  aria-invalid={!!fe('fullName')} />
-                {#if suggestOpen && suggestions.length > 0}
-                  <ul class="suggest-list" role="listbox">
-                    {#each suggestions as p, i}
-                      <li role="option" aria-selected={i === suggestIndex} class:active={i === suggestIndex}
-                        onmousedown={(e) => { e.preventDefault(); pickSuggestion(p) }}>
-                        <span class="suggest-name">{p.fullName}</span>
-                        {#if p.city || p.zip}
-                          <span class="suggest-meta">{[p.city, p.zip].filter(Boolean).join(' • ')}</span>
-                        {/if}
-                      </li>
-                    {/each}
-                  </ul>
-                {/if}
-              </div>
-              {#if fe('fullName')}<span class="field-err">{fe('fullName')}</span>{/if}
+    <form class="form-card" onsubmit={(e) => { e.preventDefault(); submit() }} novalidate>
+      <fieldset>
+        <legend>Grant details</legend>
+        <div class="grid-2">
+          <div class="field span-2" class:has-err={fe('fullName')}>
+            <label for="grantor">Grantor Name <span class="req">*</span></label>
+            <div class="autocomplete">
+              <input id="grantor" data-testid="grantor" type="text" value={fullName}
+                oninput={onGrantorInput}
+                onkeydown={onGrantorKeydown}
+                onblur={onGrantorBlur}
+                onfocus={() => { if (suggestions.length > 0) suggestOpen = true }}
+                placeholder="Full name of donor / funder"
+                autocomplete="off"
+                aria-autocomplete="list"
+                aria-expanded={suggestOpen}
+                aria-invalid={!!fe('fullName')} />
+              {#if suggestOpen && suggestions.length > 0}
+                <ul class="suggest-list" role="listbox">
+                  {#each suggestions as p, i}
+                    <li role="option" aria-selected={i === suggestIndex} class:active={i === suggestIndex}
+                      onmousedown={(e) => { e.preventDefault(); pickSuggestion(p) }}>
+                      <span class="suggest-name">{p.fullName}</span>
+                      {#if p.city || p.zip}
+                        <span class="suggest-meta">{[p.city, p.zip].filter(Boolean).join(' - ')}</span>
+                      {/if}
+                    </li>
+                  {/each}
+                </ul>
+              {/if}
             </div>
-
-            <div class="field" class:has-err={fe('amount')}>
-              <label for="amount">Expected Amount <span class="req">*</span></label>
-              <div class="input-wrap"><span class="prefix">$</span><input id="amount" data-testid="amount" type="text" inputmode="decimal" bind:value={amount} placeholder="25,000.00" aria-invalid={!!fe('amount')} /></div>
-              {#if fe('amount')}<span class="field-err">{fe('amount')}</span>{/if}
-            </div>
-
-            <div class="field" class:has-err={fe('by')}>
-              <label for="by">Payment Method <span class="req">*</span></label>
-              <select id="by" data-testid="by" bind:value={by} aria-invalid={!!fe('by')}>
-                <option value="ach">ACH</option>
-                <option value="check">Check</option>
-                <option value="wire">Wire</option>
-              </select>
-              {#if fe('by')}<span class="field-err">{fe('by')}</span>{/if}
-            </div>
-
-            {#if by === 'check' && isAdmin}
-              <div class="field" class:has-err={fe('ckNum')}>
-                <label for="ckNum">Check Number <span class="req">*</span></label>
-                <input id="ckNum" data-testid="ckNum" type="text" bind:value={ckNum} placeholder="e.g. 1234" autocomplete="off" aria-invalid={!!fe('ckNum')} />
-                {#if fe('ckNum')}<span class="field-err">{fe('ckNum')}</span>{/if}
-              </div>
-              <div class="field" class:has-err={fe('ckDate')}>
-                <label for="ckDate">Check Date <span class="req">*</span></label>
-                <input id="ckDate" data-testid="ckDate" type="date" bind:value={ckDate} autocomplete="off" aria-invalid={!!fe('ckDate')} />
-                {#if fe('ckDate')}<span class="field-err">{fe('ckDate')}</span>{/if}
-              </div>
-            {/if}
-
-            {#if showAgreementUpload}
-              <div class="field span-2" class:has-err={fe('agreement')}>
-                <label for="agreement">Grant Agreement <span class="opt">(PDF, optional)</span></label>
-                <input id="agreement" type="file" accept="application/pdf,image/*"
-                  onchange={(e) => { agreementFile = (e.currentTarget as HTMLInputElement).files?.[0] ?? null }}
-                  aria-invalid={!!fe('agreement')} />
-                <span class="hint">For grants over ${UNDOC_GRANT_MAX.toLocaleString()}, please attach the signed agreement if you have it. You can also send it later - an admin will file it when the funds arrive.</span>
-                {#if fe('agreement')}<span class="field-err">{fe('agreement')}</span>{/if}
-              </div>
-            {/if}
+            {#if fe('fullName')}<span class="field-err">{fe('fullName')}</span>{/if}
           </div>
-        </fieldset>
 
-        <fieldset>
-          <legend>Grantor Contact Information</legend>
-          <div class="grid-2">
-            <div class="field span-2" class:has-err={fe('address')}>
-              <label for="address">Street Address <span class="req">*</span></label>
-              <input id="address" data-testid="address" type="text" bind:value={address} autocomplete="off" aria-invalid={!!fe('address')} />
-              {#if fe('address')}<span class="field-err">{fe('address')}</span>{/if}
-            </div>
-            <div class="field" class:has-err={fe('city')}>
-              <label for="city">City <span class="req">*</span></label>
-              <input id="city" data-testid="city" type="text" bind:value={city} autocomplete="off" aria-invalid={!!fe('city')} />
-              {#if fe('city')}<span class="field-err">{fe('city')}</span>{/if}
-            </div>
-            <div class="field" class:has-err={fe('state')}>
-              <label for="state">State <span class="req">*</span></label>
-              <select id="state" data-testid="state" bind:value={stateCode} aria-invalid={!!fe('state')}>
-                <option value="">Select…</option>
-                {#each data.states as s}
-                  <option value={String(s.id)}>{s.abbrev}</option>
-                {/each}
-              </select>
-              {#if fe('state')}<span class="field-err">{fe('state')}</span>{/if}
-            </div>
-            <div class="field" class:has-err={fe('zip')}>
-              <label for="zip">ZIP <span class="req">*</span></label>
-              <input id="zip" data-testid="zip" type="text" bind:value={zip} autocomplete="off" aria-invalid={!!fe('zip')} />
-              {#if fe('zip')}<span class="field-err">{fe('zip')}</span>{/if}
-            </div>
-            <div class="field" class:has-err={fe('email')}>
-              <label for="email">Email <span class="opt">(optional)</span></label>
-              <input id="email" type="email" bind:value={email} autocomplete="off" aria-invalid={!!fe('email')} />
-              {#if fe('email')}<span class="field-err">{fe('email')}</span>{/if}
-            </div>
-            <div class="field" class:has-err={fe('phone')}>
-              <label for="phone">Phone <span class="opt">(optional)</span></label>
-              <input id="phone" type="tel" bind:value={phone} autocomplete="off" aria-invalid={!!fe('phone')} />
-              {#if fe('phone')}<span class="field-err">{fe('phone')}</span>{/if}
-            </div>
+          <div class="field" class:has-err={fe('amount')}>
+            <label for="amount">Expected Amount <span class="req">*</span></label>
+            <div class="input-wrap"><span class="prefix">$</span><input id="amount" data-testid="amount" type="text" inputmode="decimal" bind:value={amount} placeholder="25,000.00" aria-invalid={!!fe('amount')} /></div>
+            {#if fe('amount')}<span class="field-err">{fe('amount')}</span>{/if}
           </div>
-        </fieldset>
 
-        <div class="form-footer">
-          {#if !submitting && missing.length}
-            <span class="submit-hint">Still needed: {missing.join(', ')}</span>
+          <div class="field" class:has-err={fe('by')}>
+            <label for="by">Payment Method <span class="req">*</span></label>
+            <select id="by" data-testid="by" bind:value={by} aria-invalid={!!fe('by')}>
+              <option value="ach">ACH</option>
+              <option value="check">Check</option>
+              <option value="wire">Wire</option>
+            </select>
+            {#if fe('by')}<span class="field-err">{fe('by')}</span>{/if}
+          </div>
+
+          {#if by === 'check' && isAdmin}
+            <div class="field" class:has-err={fe('ckNum')}>
+              <label for="ckNum">Check Number <span class="req">*</span></label>
+              <input id="ckNum" data-testid="ckNum" type="text" bind:value={ckNum} placeholder="e.g. 1234" autocomplete="off" aria-invalid={!!fe('ckNum')} />
+              {#if fe('ckNum')}<span class="field-err">{fe('ckNum')}</span>{/if}
+            </div>
+            <div class="field" class:has-err={fe('ckDate')}>
+              <label for="ckDate">Check Date <span class="req">*</span></label>
+              <input id="ckDate" data-testid="ckDate" type="date" bind:value={ckDate} autocomplete="off" aria-invalid={!!fe('ckDate')} />
+              {#if fe('ckDate')}<span class="field-err">{fe('ckDate')}</span>{/if}
+            </div>
           {/if}
-          <a class="ghost" href="/grants">Cancel</a>
-          <button class="primary" type="submit" data-testid="btn-report" disabled={!canSubmit}>
-            {submitting ? 'Saving…' : 'Report Grant'}
-          </button>
+
+          {#if showAgreementUpload}
+            <div class="field span-2" class:has-err={fe('agreement')}>
+              <label for="agreement">Grant Agreement <span class="opt">(PDF, optional)</span></label>
+              <input id="agreement" type="file" accept="application/pdf,image/*"
+                onchange={(e) => { agreementFile = (e.currentTarget as HTMLInputElement).files?.[0] ?? null }}
+                aria-invalid={!!fe('agreement')} />
+              <span class="hint">For grants over ${UNDOC_GRANT_MAX.toLocaleString()}, please attach the signed agreement if you have it. You can also send it later - an admin will file it when the funds arrive.</span>
+              {#if fe('agreement')}<span class="field-err">{fe('agreement')}</span>{/if}
+            </div>
+          {/if}
         </div>
-      </form>
-    </section>
-  </div>
-</div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Grantor Contact Information</legend>
+        <div class="grid-2">
+          <div class="field span-2" class:has-err={fe('address')}>
+            <label for="address">Street Address <span class="req">*</span></label>
+            <input id="address" data-testid="address" type="text" bind:value={address} autocomplete="off" aria-invalid={!!fe('address')} />
+            {#if fe('address')}<span class="field-err">{fe('address')}</span>{/if}
+          </div>
+          <div class="field" class:has-err={fe('city')}>
+            <label for="city">City <span class="req">*</span></label>
+            <input id="city" data-testid="city" type="text" bind:value={city} autocomplete="off" aria-invalid={!!fe('city')} />
+            {#if fe('city')}<span class="field-err">{fe('city')}</span>{/if}
+          </div>
+          <div class="field" class:has-err={fe('state')}>
+            <label for="state">State <span class="req">*</span></label>
+            <select id="state" data-testid="state" bind:value={stateCode} aria-invalid={!!fe('state')}>
+              <option value="">Select...</option>
+              {#each data.states as s}
+                <option value={String(s.id)}>{s.abbrev}</option>
+              {/each}
+            </select>
+            {#if fe('state')}<span class="field-err">{fe('state')}</span>{/if}
+          </div>
+          <div class="field" class:has-err={fe('zip')}>
+            <label for="zip">ZIP <span class="req">*</span></label>
+            <input id="zip" data-testid="zip" type="text" bind:value={zip} autocomplete="off" aria-invalid={!!fe('zip')} />
+            {#if fe('zip')}<span class="field-err">{fe('zip')}</span>{/if}
+          </div>
+          <div class="field" class:has-err={fe('email')}>
+            <label for="email">Email <span class="opt">(optional)</span></label>
+            <input id="email" type="email" bind:value={email} autocomplete="off" aria-invalid={!!fe('email')} />
+            {#if fe('email')}<span class="field-err">{fe('email')}</span>{/if}
+          </div>
+          <div class="field" class:has-err={fe('phone')}>
+            <label for="phone">Phone <span class="opt">(optional)</span></label>
+            <input id="phone" type="tel" bind:value={phone} autocomplete="off" aria-invalid={!!fe('phone')} />
+            {#if fe('phone')}<span class="field-err">{fe('phone')}</span>{/if}
+          </div>
+        </div>
+      </fieldset>
+
+      <div class="form-footer">
+        {#if !submitting && missing.length}
+          <span class="submit-hint">Still needed: {missing.join(', ')}</span>
+        {/if}
+        <a class="btn btn-secondary" href="/grants">Cancel</a>
+        <button class="btn btn-primary" type="submit" data-testid="btn-report" disabled={!canSubmit}>
+          {submitting ? 'Saving...' : 'Report Grant'}
+        </button>
+      </div>
+    </form>
+  </section>
+</main>
 
 <style>
-  .container { max-width: 1280px; margin: 0 auto; padding: 1.5rem 1.75rem 3rem; }
-  .crumbs { font-size: 0.85rem; color: var(--cg-text-muted); margin-bottom: 1.5rem; }
-  .crumbs a { color: var(--cg-green); }
-  .crumbs span { margin: 0 0.5rem; }
+  .crumbs { font-size: var(--fs-sm); color: var(--cg-text-muted); margin-bottom: var(--sp-4); display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+  .form-area { display: grid; gap: var(--sp-4); max-width: 760px; }
+  .form-area .page-head { margin: 0; }
 
-  .layout { display: grid; grid-template-columns: 260px 1fr; gap: 1.5rem; align-items: flex-start; }
-  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+  .form-card { display: grid; gap: var(--sp-6); padding: var(--sp-5); background: var(--cg-surface); border: 1px solid var(--cg-border); border-radius: var(--r-md); box-shadow: var(--shadow-1); }
+  .form-card fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+  .form-card legend { font-weight: 650; font-size: var(--fs-md); padding: 0; margin-bottom: var(--sp-4); }
+  .opt { font-weight: 400; color: var(--cg-text-muted); }
+  .hint { font-size: var(--fs-sm); color: var(--cg-text-muted); line-height: 1.4; }
+  .req { color: var(--cg-error); margin-left: 2px; }
 
-  .help {
-    padding: 1.1rem; background: var(--cg-surface); border: 1px solid var(--cg-border);
-    border-radius: var(--cg-radius); display: flex; gap: 0.75rem;
-  }
-  :global(.help-icon) { color: var(--cg-green); flex-shrink: 0; margin-top: 0.15rem; }
-  .help strong { font-weight: 600; font-size: 0.9rem; }
-  .help p { margin: 0.25rem 0 0; font-size: 0.82rem; color: var(--cg-text-muted); }
-
-  .form-area { display: grid; gap: 1.25rem; }
-
-  .header-row h1 { margin: 0 0 0.2rem; font-size: 1.5rem; font-weight: 600; letter-spacing: -0.01em; }
-  .header-row p { margin: 0; color: var(--cg-text-muted); font-size: 0.9rem; }
-
-  .err {
-    padding: 0.8rem 1rem; border-radius: var(--cg-radius-sm);
-    background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; font-size: 0.9rem;
-  }
-
-  .form-card {
-    background: var(--cg-surface); border: 1px solid var(--cg-border);
-    border-radius: var(--cg-radius); padding: 1.75rem;
-    display: grid; gap: 1.75rem;
-    border-top: 3px solid var(--cg-navy);
-    box-shadow: var(--cg-shadow);
-  }
-  .form-card fieldset { border: 0; padding: 0; margin: 0; }
-  .form-card legend {
-    font-weight: 600; margin-bottom: 0.85rem; font-size: 1rem;
-    color: var(--cg-text);
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid var(--cg-border);
-    width: 100%;
-  }
-  .opt { font-weight: 400; color: var(--cg-text-muted); font-size: 0.85rem; }
-  .hint { display: block; font-size: 0.8rem; color: var(--cg-text-muted); margin-top: 0.35rem; line-height: 1.4; }
-  .req { color: #b91c1c; margin-left: 0.15rem; }
-
-  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-  .field { display: flex; flex-direction: column; gap: 0.35rem; }
-  .field label { font-size: 0.85rem; font-weight: 500; color: var(--cg-text); }
-  .field input, .field select {
-    width: 100%; padding: 0.55rem 0.75rem; box-sizing: border-box;
-    border: 1px solid var(--cg-border); border-radius: var(--cg-radius-sm);
-    font-size: 0.95rem; background: white; color: var(--cg-text);
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
-  }
-  .field input:focus, .field select:focus {
-    outline: none;
-    border-color: var(--cg-green);
-    box-shadow: 0 0 0 3px rgba(30, 122, 58, 0.15);
-  }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4); }
   .field.span-2 { grid-column: span 2; }
-  @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } .field.span-2 { grid-column: auto; } }
+  .field.has-err > label { color: var(--cg-error); }
+  input[type="file"] { font-size: var(--fs-sm); min-height: var(--tap); }
 
-  .input-wrap {
-    display: flex; align-items: center; gap: 0.5rem;
-    border: 1px solid var(--cg-border); border-radius: var(--cg-radius-sm);
-    padding-left: 0.75rem; background: white;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
-  }
-  .input-wrap input { border: 0; padding: 0.55rem 0.5rem; }
-  .input-wrap input:focus { box-shadow: none; }
-  .input-wrap .prefix { color: var(--cg-text-muted); }
+  .input-wrap { position: relative; }
+  .input-wrap .prefix { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--cg-text-muted); pointer-events: none; }
+  .input-wrap input { padding-left: 30px; }
 
-  /* Grantor autocomplete */
   .autocomplete { position: relative; }
   .suggest-list {
     position: absolute; top: 100%; left: 0; right: 0; z-index: 20;
-    list-style: none; margin: 0.25rem 0 0; padding: 0.25rem 0;
-    background: white; border: 1px solid var(--cg-border);
-    border-radius: var(--cg-radius-sm); box-shadow: var(--cg-shadow);
-    max-height: 220px; overflow-y: auto;
+    list-style: none; margin: var(--sp-1) 0 0; padding: var(--sp-1) 0;
+    background: var(--cg-surface); border: 1px solid var(--cg-border); border-radius: var(--r-sm); box-shadow: var(--shadow-2);
+    max-height: 260px; overflow-y: auto; animation: cg-rise var(--dur) var(--ease-out);
   }
-  .suggest-list li {
-    padding: 0.5rem 0.8rem; cursor: pointer;
-    display: flex; flex-direction: column; gap: 0.1rem;
-    font-size: 0.9rem;
-  }
-  .suggest-list li:hover, .suggest-list li.active {
-    background: var(--cg-green-soft);
-  }
-  .suggest-name { color: var(--cg-text); font-weight: 500; }
-  .suggest-meta { color: var(--cg-text-muted); font-size: 0.8rem; }
+  .suggest-list li { display: grid; gap: 2px; min-height: var(--tap); padding: var(--sp-2) var(--sp-3); cursor: pointer; }
+  .suggest-list li:hover, .suggest-list li.active { background: var(--cg-green-soft); }
+  .suggest-name { font-weight: 500; }
+  .suggest-meta { color: var(--cg-text-muted); font-size: var(--fs-sm); }
 
-  /* Field-error highlighting */
-  .field.has-err input,
-  .field.has-err select {
-    border-color: #b91c1c;
-    background: #fef2f2;
-  }
-  .field.has-err .input-wrap {
-    border-color: #b91c1c;
-    background: #fef2f2;
-  }
-  .field.has-err label {
-    color: #991b1b;
-  }
-  .field-err {
-    color: #991b1b;
-    font-size: 0.8rem;
-    margin-top: 0.15rem;
-  }
+  .form-footer { display: flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: var(--sp-3); padding-top: var(--sp-4); border-top: 1px solid var(--cg-border); }
+  .submit-hint { margin-right: auto; color: var(--cg-text-muted); font-size: var(--fs-sm); }
 
-  .form-footer {
-    display: flex; justify-content: flex-end; gap: 0.5rem;
-    padding-top: 0.5rem; border-top: 1px solid var(--cg-border);
-    margin-top: 0.5rem; padding-top: 1rem;
-    flex-wrap: wrap; align-items: center;
-  }
-  .submit-hint { margin-right: auto; color: var(--cg-text-muted); font-size: 0.85rem; }
-  .ghost {
-    padding: 0.55rem 0.95rem; background: var(--cg-surface);
-    border: 1px solid var(--cg-border); border-radius: var(--cg-radius-sm);
-    font-size: 0.88rem; cursor: pointer; color: var(--cg-text); text-decoration: none;
-    display: inline-flex; align-items: center;
-  }
-  .primary {
-    padding: 0.55rem 1.05rem; background: var(--cg-green); color: white; border: 0;
-    border-radius: var(--cg-radius-sm); font-size: 0.9rem; font-weight: 500; cursor: pointer;
-  }
-  .primary:disabled { opacity: 0.5; cursor: not-allowed; }
-
-  /* Phone-width tweaks (#183): tighten the container and form-card so the
-     content doesn't run off the right edge. Form-footer buttons go full-width
-     so they're reachable with a thumb. */
-  @media (max-width: 560px) {
-    .container { padding: 1.25rem 1rem 2.5rem; }
-    .form-card { padding: 1.25rem; }
-    .form-footer {
-      flex-direction: column-reverse;
-      align-items: stretch;
-      gap: 0.6rem;
-    }
-    .form-footer .ghost,
-    .form-footer .primary {
-      width: 100%;
-      padding: 0.75rem 1rem;
-      text-align: center;
-      justify-content: center;
-    }
-    .submit-hint { margin-right: 0; text-align: center; }
+  /* Phones: one column, full-width buttons with the main action on top, nearest the thumb's reach after the last field. */
+  @media (max-width: 639px) {
+    .form-card { padding: var(--sp-4); gap: var(--sp-5); }
+    .grid-2 { grid-template-columns: 1fr; }
+    .field.span-2 { grid-column: auto; }
+    .form-footer { flex-direction: column-reverse; align-items: stretch; }
+    .submit-hint { margin: 0; text-align: center; }
   }
 </style>
