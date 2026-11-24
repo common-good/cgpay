@@ -24,6 +24,7 @@ const bddProject = defineBddProject({
   name: 'bdd',
   features: ['tests/features/**/*.feature', ...(LEGACY ? [] : ['!tests/features/dashboard-handoff.feature'])], // the handoff to the legacy app exists only in legacy mode
   steps: 'tests/steps/**/*.ts',
+  tags: LEGACY ? 'not @bundled' : undefined, // @bundled: only the bundled screens do this (the legacy app is going away)
   matchKeywords: true // the same step text can mean setup/action after Given and When, and a check after Then
 })
 

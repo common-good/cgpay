@@ -24,8 +24,11 @@ jobs:
         with:
           node-version: 20
           cache: npm
-          cache-dependency-path: web/package-lock.json
+          cache-dependency-path: |
+            web/package-lock.json
+            web/app/package-lock.json
       - run: npm ci
+      - run: npm ci --prefix app # the unit tests also cover the store app's code (web/app), which needs its own packages
       - run: npm run check
       - run: npm run test:unit
 
