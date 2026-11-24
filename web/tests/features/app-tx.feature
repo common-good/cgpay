@@ -60,3 +60,59 @@ Scenario: A member signed out elsewhere signs in again, and the waiting payment 
   And these "txs" rows:
   | uid1 | uid2 | amt   | for2  |
   | Bea  | Dee  | 12.34 | food! |
+
+Rule: A transaction the server refuses is told once, then forgotten on the phone (the server keeps it and emails the account)
+
+Scenario: A payment the server refuses is told before the summary closes
+  Given store app has no account
+  When input:
+  | identifier | password |
+  | Bea Two    | k        |
+  And click "btn-signin"
+  Then on page ""
+
+  When scan "Dee" to "pay"
+  And input:
+  | input-amount | input-description |
+  | 12.34        | food!             |
+  And click "btn-submit"
+  Then see "tx-summary"
+
+  Given these "users" rows:
+  | uid | flags |
+  | Dee | 0     |
+  When click "btn-done"
+  Then see "messageText"
+  And app keeps 1 refused
+
+  When click "btn1"
+  Then on page ""
+  And count "txs" is 0
+
+Scenario: A company's offline charge to an account closed since is told on the home screen
+  Given signed in as "Bea"
+  And acting as "Cit"
+  And in the store app
+  And camera shows "Dee"
+  When click "nav-app"
+  And network off
+  And scan "Dee" to "charge"
+  And click "btn1"
+  And input:
+  | input-amount | input-description |
+  | 12.34        | food!             |
+  And click "btn-submit"
+  And click "btn-done"
+  Then see "queued"
+
+  Given these "users" rows:
+  | uid | flags |
+  | Dee | 0     |
+  When network on
+  Then see "refusals"
+  And see not "queued"
+  And count "txs" is 0
+
+  When click "btn-refusals-ok"
+  Then see not "refusals"
+  And app keeps 0 refused

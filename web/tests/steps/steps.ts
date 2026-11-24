@@ -21,6 +21,7 @@ GWhen('press {string} {int} times', async ({ app }, key: string, n: number) => t
 GWhen('reload', async ({ app }) => t.reload(app))
 GWhen('scan {string} to {string}', async ({ app }, who: string, why: string) => t.scan(app, who, why))
 GWhen('select {string}: {string}', async ({ app }, id: string, label: string) => t.select(app, id, label))
+GWhen('server answers {string} again', async ({ app }, endpoint: string) => t.serverAnswersAgain(app, endpoint))
 GWhen('server answers {string} with an error page', async ({ app }, endpoint: string) => t.serverErrorPage(app, endpoint))
 GWhen('server is demo', async ({ app }) => t.serverIsDemo(app, true))
 GWhen('server is not demo', async ({ app }) => t.serverIsDemo(app, false))

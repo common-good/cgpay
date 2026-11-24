@@ -93,7 +93,7 @@ Scenario: A company charges offline, then the connection returns
   | Dee  | Cit  | Dee  | Bea  | 234.50 | food! |
   And see not "queued"
 
-Rule: A broken answer from the server is not taken for a lost connection, and does not count as a yes
+Rule: A broken answer from the server is not taken for a lost connection, a yes or a refusal
 
 Scenario: The server answers a scan with an error page
   When server answers "identity" with an error page
@@ -115,6 +115,13 @@ Scenario: The server answers a queued transaction with an error page
 
   When server answers "tx" with an error page
   And network on
-  Then app keeps 1 refused
-  And see not "queued"
+  And wait 2 seconds
+  Then see "queued"
+  And app keeps 0 refused
   And count "txs" is 0
+
+  When server answers "tx" again
+  Then see not "queued"
+  And these "txs" rows:
+  | uid1 | uid2 | amt   | for2  |
+  | Dee  | Cit  | 12.34 | food! |

@@ -3,7 +3,7 @@
   import type { Device } from '$lib/app-shell'
   import { identity, idPhoto, unreachable, type Identity } from './lib/api'
   import { mainId, parseQr, type Card } from './lib/qr'
-  import { cachePhoto, cacheProfile, checkAmount, enqueue, flush, makeTx, money, offlinePhoto, offlineProfile, unqueue, type Tx } from './lib/tx'
+  import { cachePhoto, cacheProfile, checkAmount, enqueue, flush, makeTx, money, offlinePhoto, offlineProfile, refusals, unqueue, type Tx } from './lib/tx'
   import { shrink } from './lib/photo'
 
   let { device, intent, qr, onfail, onrescan, ondone }: { device: Device, intent: string, qr: string, onfail: (msg: string) => void, onrescan: () => void, ondone: (msg?: string, offline?: boolean) => void } = $props()
@@ -49,7 +49,15 @@
   export function back() { if (sent) askUndo(); else onrescan() }
 
   // Sending waits for Done, so that Undo can still take the transaction back before the server has it.
-  async function done() { clearTimeout(timer); let off = false; try { off = await flush() } finally { ondone('', off) } }
+  // A refusal is told right away, while the other member is still there (the server keeps it, so the phone then forgets it).
+  async function done() {
+    clearTimeout(timer); let off = false
+    try { off = await flush() } finally {
+      const r = (await refusals()).find(([k]) => k === sent?.key)
+      if (r) dialog = { text: `Common Good could not complete this transaction. ${r[1]}`, yes: async () => { await unqueue(r[0]); ondone('', off) } }
+      else ondone('', off)
+    }
+  }
 
   // The other account's profile. Anything wrong with the scanned code sends the member back to the dashboard with the reason.
   onMount(async () => {
