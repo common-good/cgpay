@@ -41,3 +41,11 @@ Scenario: Someone tries to sign in with a wrong password
 Scenario: Someone who forgot their password asks for a new one
   When click "lnk-reset"
   Then on page "reset"
+
+Rule: The sign-in page is ready to type into, and the reset link is the last tab stop
+
+Scenario: Someone tabs through the sign-in page
+  Then focus on "identifier"
+
+  When press "Tab" 4 times
+  Then focus on "lnk-reset"
