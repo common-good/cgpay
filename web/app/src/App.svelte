@@ -53,7 +53,7 @@
 
   // Send what waited for a connection, and show how much still waits.
   async function sendQueued() {
-    if (device) await flush(device).catch(() => {})
+    await flush().catch(() => {})
     queued = await waiting()
   }
 
@@ -104,15 +104,15 @@
   // Ask the server whether the token still works and fetch the device credentials again; a token that no longer works signs the member out here too.
   async function check() {
     const r = await refresh()
-    if (r.state === 'out') await leave()
+    if (r.state === 'out') await leave(false)
     else if (r.state === 'ok') { acct = r.account; device = acct?.device ?? null }
   }
 
-  // Forget the account on this phone (token, credentials, anything waiting to send) and show the sign-in screen.
-  async function leave() {
+  // Forget the account on this phone (token, credentials and, with drop, anything waiting to send) and show the sign-in screen.
+  async function leave(drop = true) {
     // The live site's cookie session would outlive the app's sign-out in the WebView, so the live site clears it and sends the app back here.
     const base = live() // signOut returns the app to its own env, but the cookie to clear is the one of the env being left
-    if (await signOut()) return location.assign(`${base}/app-signout?${new URLSearchParams({ back: location.origin + '/' })}`)
+    if (await signOut(drop)) return location.assign(`${base}/app-signout?${new URLSearchParams({ back: location.origin + '/' })}`)
     device = acct = null; signedIn = confirming = demo = false; queued = 0; seen = ''
     screen = 'signin'
   }
@@ -183,7 +183,7 @@
   {:else if screen === 'settings'}
     <Settings />
   {:else if screen === 'tx-start' && device}
-    <TxStart {device} {intent} onscan={() => screen = 'scan'} phpBase={device.api.replace(/api\/?$/, '')} />
+    <TxStart {device} {intent} onscan={() => screen = 'scan'} phpBase={device.php} />
   {:else if screen === 'scan'}
     <Scan {intent} ignore={seen} onscan={scanned} onfail={fail} />
   {:else if screen === 'switch'}
@@ -222,7 +222,7 @@
     {#if confirming}
       <div class="warn" role="alertdialog" data-testid="signout-warning">
         <p>{queued} transaction{queued == 1 ? '' : 's'} still waiting to send will be lost if you sign out now.</p>
-        <button data-testid="btn-signout-anyway" onclick={leave}>Sign out anyway</button>
+        <button data-testid="btn-signout-anyway" onclick={() => leave()}>Sign out anyway</button>
         <button class="out" data-testid="btn-cancel-signout" onclick={() => confirming = false}>Cancel</button>
       </div>
     {/if}

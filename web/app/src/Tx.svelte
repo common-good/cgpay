@@ -49,7 +49,7 @@
   export function back() { if (sent) askUndo(); else onrescan() }
 
   // Sending waits for Done, so that Undo can still take the transaction back before the server has it.
-  async function done() { clearTimeout(timer); let off = false; try { off = await flush(device) } finally { ondone('', off) } }
+  async function done() { clearTimeout(timer); let off = false; try { off = await flush() } finally { ondone('', off) } }
 
   // The other account's profile. Anything wrong with the scanned code sends the member back to the dashboard with the reason.
   onMount(async () => {
@@ -72,8 +72,10 @@
       description = who[paying ? 'selling' : 'isell']?.[0] ?? ''
       if (!paying) {
         const b = await idPhoto(device, card)
-        photo = URL.createObjectURL(b)
-        shrink(b).then(jpeg => cachePhoto(card, jpeg), () => {}) // a photo that cannot be made smaller is only not kept
+        if (b.size) {
+          photo = URL.createObjectURL(b)
+          shrink(b).then(jpeg => cachePhoto(card, jpeg), () => {}) // a photo that cannot be made smaller is only not kept
+        }
       }
     } catch (er) {
       const m = (er as Error).message

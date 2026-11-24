@@ -22,14 +22,14 @@ describe('appCall', () => {
     expect(f.mock.calls[0][0]).toContain('/cgpay/signin')
   })
 
-  it('adds the transaction API address to each account\'s device credentials', async () => {
+  it('adds the PHP site\'s address to each account\'s device credentials', async () => {
     global.fetch = reply(200, { uid: 1, accounts: [{ uid: 1, device: { accountId: 'K6A' } }, { uid: 2, device: null }] })
-    expect((await appCall('device', post({ token: 't' }), '1.1.1.1', ['token'])).data).toEqual({ uid: 1, accounts: [{ uid: 1, device: { accountId: 'K6A', api: 'https://demo.example/cgmembers/api/' } }, { uid: 2, device: null }] })
+    expect((await appCall('device', post({ token: 't' }), '1.1.1.1', ['token'])).data).toEqual({ uid: 1, accounts: [{ uid: 1, device: { accountId: 'K6A', php: 'https://demo.example/cgmembers/' } }, { uid: 2, device: null }] })
   })
 
-  it('adds the transaction API address to a typed account', async () => {
+  it('adds the PHP site\'s address to a typed account', async () => {
     global.fetch = reply(200, { account: { uid: 3, device: { accountId: 'K6C' } } })
-    expect((await appCall('account', post({ token: 't', who: 'c' }), '1.1.1.1', ['token', 'who'])).data).toEqual({ account: { uid: 3, device: { accountId: 'K6C', api: 'https://demo.example/cgmembers/api/' } } })
+    expect((await appCall('account', post({ token: 't', who: 'c' }), '1.1.1.1', ['token', 'who'])).data).toEqual({ account: { uid: 3, device: { accountId: 'K6C', php: 'https://demo.example/cgmembers/' } } })
   })
 
   it('shows only the error code PHP gave, with its status', async () => {
@@ -40,6 +40,18 @@ describe('appCall', () => {
   it('passes on a card of the wrong kind as refused, not as a failure', async () => {
     global.fetch = reply(406, { error: 'wrong-kind' })
     expect(await appCall('card', post({}), '1.1.1.1', [])).toEqual({ status: 406, data: { error: 'wrong-kind' } })
+  })
+
+  it('passes on a card that is not a member\'s as not found', async () => {
+    global.fetch = vi.fn().mockResolvedValue(new Response('Not found', { status: 404 }))
+    expect(await appCall('identity', post({}), '1.1.1.1', [])).toEqual({ status: 404, data: { error: 'failed' } })
+  })
+
+  it('passes on the old transaction API\'s reason for a malformed transaction, but never a page', async () => {
+    global.fetch = vi.fn().mockResolvedValue(new Response('bad proof', { status: 400 }))
+    expect(await appCall('tx', post({}), '1.1.1.1', [])).toEqual({ status: 400, data: { error: 'bad-request', message: 'bad proof' } })
+    global.fetch = vi.fn().mockResolvedValue(new Response('<b>Warning</b> in /srv/x.php', { status: 400 }))
+    expect(await appCall('tx', post({}), '1.1.1.1', [])).toEqual({ status: 400, data: { error: 'bad-request' } })
   })
 
   it('maps any other failure to a bad gateway without internals', async () => {
