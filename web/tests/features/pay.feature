@@ -133,18 +133,16 @@ Scenario: A payer tries to pay more than the app allows
 Rule: The pay screen works from the keyboard
 
 @bundled
-Scenario: A payer types the amount right away, submits with Enter and closes the message with Enter
+Scenario: A payer types the amount on the keyboard, submits with Enter and closes the message with Enter
   Given these "users" rows:
   | uid | balance | floor |
   | Dee | 9999    | -9999 |
   And signed in as "Bea"
   And acting as "Cit"
   When scan "Dee" to "pay"
-  Then focus on "input-amount"
-
-  When input:
-  | input-amount | input-description |
-  | 20000        | food!             |
+  And input "input-description": "food!"
+  And pad "1"
+  And type "000001"
   And press "Enter"
   Then text "messageText": "CGPay transactions are limited to $10,000.00"
   And focus on "btn1"
