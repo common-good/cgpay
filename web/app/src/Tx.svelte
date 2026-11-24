@@ -3,7 +3,7 @@
   import type { Device } from '$lib/app-shell'
   import { identity, idPhoto, unreachable, type Identity } from './lib/api'
   import { mainId, parseQr, type Card } from './lib/qr'
-  import { cachePhoto, cacheProfile, checkAmount, enqueue, flush, makeTx, money, offlinePhoto, offlineProfile, refusals, unqueue, type Tx } from './lib/tx'
+  import { cachePhoto, cacheProfile, checkAmount, enqueue, flush, makeTx, money, offlinePhoto, offlineProfile, refusals, twin, unqueue, type Tx } from './lib/tx'
   import { shrink } from './lib/photo'
   import AmountPad from './AmountPad.svelte'
 
@@ -14,6 +14,7 @@
   let card: Card
   let cents = $state(0)
   let description = $state('')
+  let choices = $state<string[]>([])
   let dialog = $state<{ text: string, yes?: () => void, no?: () => void } | null>(null)
   let sent = $state<{ tx: Tx, key: string } | null>(null)
   let timer: ReturnType<typeof setTimeout>
@@ -32,6 +33,11 @@
     const a = cents / 100, err = checkAmount(a, who!.limit)
     if (err) return alert(err)
     const tx = await makeTx(device, card, paying, a, description, manager)
+    if (!await twin(tx)) return keep(tx)
+    dialog = { text: `You just ${paying ? 'paid' : 'charged'} ${who!.name || 'this member'} $${money(a)}. ${word} again?`, yes: () => { dialog = null; keep({ ...tx, dupOk: true }) }, no: () => dialog = null }
+  }
+
+  async function keep(tx: Tx) {
     try { sent = { tx, key: await enqueue(tx) } } catch { return alert('This phone is out of space, so the transaction could not be saved. Free some space on the phone and try again.') }
     arm()
   }
@@ -77,7 +83,8 @@
         return
       }
       if (who.limit <= 0) throw new Error('This account has no remaining funds, so a transaction is not possible at this time.')
-      description = who[paying ? 'selling' : 'isell']?.[0] ?? ''
+      choices = (who[paying ? 'selling' : 'isell'] ?? []).filter(Boolean)
+      description = choices[0] ?? ''
       if (!paying) {
         const b = await idPhoto(device, card)
         if (b.size) {
@@ -119,6 +126,11 @@
       <AmountPad bind:cents off={!!dialog} />
       <label for="description">Description</label>
       <input id="description" data-testid="input-description" type="text" placeholder="e.g. lunch, rent, supplies, loan, etc." bind:value={description} required />
+      {#if choices.length > 1}
+        <div class="choices" data-testid="desc-choices">
+          {#each choices as d, i}<button type="button" class="plain" class:on={d === description} data-testid="desc-{i + 1}" onclick={() => description = d}>{d}</button>{/each}
+        </div>
+      {/if}
       <button data-testid="btn-submit" type="submit">{word}</button>
     </form>
   {/if}
@@ -139,6 +151,9 @@
   form { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
   input { font: inherit; padding: 12px; border: 1px solid #9aa39d; border-radius: 8px; }
   button.plain { background: none; border: 1px solid #1e7a3a; color: #1e7a3a; }
+  .choices { display: flex; flex-wrap: wrap; gap: 8px; }
+  .choices button { padding: 8px 12px; }
+  .choices button.on { background: #1e7a3a; color: #fff; }
   .note { font-size: 0.8rem; border-top: 1px dashed; padding-top: 8px; }
   .back { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.3); }
   .dialog { position: fixed; left: 16px; right: 16px; top: 30%; max-width: 440px; margin: 0 auto; background: #fff; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 8px; }

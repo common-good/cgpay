@@ -9,7 +9,7 @@ import { env } from './env'
 export const ONLINE_LIMIT = 10000 // the most any account can be charged on the app
 export const money = (n: number | string) => (+n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
-export type Tx = { actorId: string, otherId: string, amount: string, description: string, created: number, proof: string, offline: boolean, pending: boolean, manager?: string, managerProof?: string, error?: string }
+export type Tx = { actorId: string, otherId: string, amount: string, description: string, created: number, proof: string, offline: boolean, pending: boolean, manager?: string, managerProof?: string, dupOk?: boolean, error?: string }
 
 export const OFFLINE_LIMIT = 250 // how much an account not seen before can be charged without the server's word on what it has
 
@@ -35,10 +35,28 @@ export async function makeTx(d: Device, card: Card, paying: boolean, amount: num
 const key = (t: Tx) => `tx:${t.created}:${t.proof.slice(0, 8)}`
 
 /** Keep the transaction until the server has it. Returns its key. */
-export async function enqueue(t: Tx) { const k = key(t); await roomFor(() => store.set(k, t)); return k }
+export async function enqueue(t: Tx) {
+  const k = key(t)
+  await roomFor(() => store.set(k, t))
+  await store.set(recentKey(), [...await recent(), { k, other: t.otherId, amount: t.amount, at: Date.now() }]).catch(() => {})
+  return k
+}
 
-/** Forget a transaction that was never sent. */
-export const unqueue = (k: string) => store.del(k)
+/** Forget a transaction that was never sent (undone, or refused and shown). */
+export async function unqueue(k: string) {
+  await store.del(k)
+  await store.set(recentKey(), (await recent()).filter(r => r.k !== k)).catch(() => {})
+}
+
+// The transactions this phone made in the server's duplicate window, so the app can ask before a likely duplicate.
+// The server's own check is too late for that: the app sends only after Done (or, offline, much later), when the goods are gone.
+const DUP_MS = 3 * 60_000 // the server's DUPTX_SECS
+type Recent = { k: string, other: string, amount: string, at: number }
+const recentKey = () => `recent:${env()}`
+const recent = async (now = Date.now()) => ((await store.get<Recent[]>(recentKey())) ?? []).filter(r => now - r.at < DUP_MS)
+
+/** This phone made a transaction with the same account for the same amount (and direction) within the server's duplicate window. */
+export const twin = async (t: Tx) => (await recent()).some(r => r.other === t.otherId && r.amount === t.amount)
 
 let running: Promise<boolean> | null = null, next: Promise<boolean> | null = null
 

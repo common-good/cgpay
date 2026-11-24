@@ -12,7 +12,7 @@ vi.mock('../../app/src/storage', () => ({
   }
 }))
 
-const { cachePhoto, cacheProfile, dropUnused, enqueue, flush, offlinePhoto, refusals, waiting } = await import('../../app/src/lib/tx')
+const { cachePhoto, cacheProfile, dropUnused, enqueue, flush, offlinePhoto, refusals, twin, unqueue, waiting } = await import('../../app/src/lib/tx')
 const { identity, unreachable } = await import('../../app/src/lib/api')
 const { parseQr } = await import('../../app/src/lib/qr')
 
@@ -128,7 +128,7 @@ describe('out of space', () => {
     keep(['A', 3], ['B', 1], ['C', 4], ['D', 2])
     cap = 8
     await enqueue(tx(1))
-    expect([...kv.keys()].sort()).toEqual(['acct:test:A', 'acct:test:C', 'photo:test:A', 'photo:test:C', 'tx:1:proof1'])
+    expect([...kv.keys()].sort()).toEqual(['acct:test:A', 'acct:test:C', 'photo:test:A', 'photo:test:C', 'recent:test', 'tx:1:proof1'])
   })
   it('counts a profile as used when a transaction with it is accepted, unless it was seen online later', async () => {
     kv.set('acct:test:B', { who, h: '', t: 5000 }); kv.set('acct:test:C', { who, h: '', t: 1000 })
@@ -171,6 +171,31 @@ describe('offline photos', () => {
     kv.set('photo:test:A', { src: '', h: '' })
     await dropUnused(now + day / 2)
     expect(kv.has('photo:test:A')).toBe(true)
+  })
+})
+
+describe('twin', () => {
+  it('finds a transaction with the same account and amount, until it is undone', async () => {
+    const k = await enqueue(tx(1))
+    expect(await twin(tx(2))).toBe(true)
+    expect(await twin({ ...tx(2), amount: '2.00' })).toBe(false)
+    expect(await twin({ ...tx(2), amount: '-1.00' })).toBe(false)
+    expect(await twin({ ...tx(2), otherId: 'C' })).toBe(false)
+    await unqueue(k)
+    expect(await twin(tx(2))).toBe(false)
+  })
+
+  it('forgets a transaction after 3 minutes, even once the server has it', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    try {
+      await enqueue(tx(1))
+      answer()
+      await flush()
+      vi.setSystemTime(Date.now() + 179_000)
+      expect(await twin(tx(2))).toBe(true)
+      vi.setSystemTime(Date.now() + 2_000)
+      expect(await twin(tx(2))).toBe(false)
+    } finally { vi.useRealTimers() }
   })
 })
 
