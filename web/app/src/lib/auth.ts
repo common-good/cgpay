@@ -85,5 +85,8 @@ export async function signOut(drop = true) {
 /** An account an admin typed (code, email, phone or name): the reply has account, or an error code. Rejects with no connection. */
 export const typeAccount = async (who: string) => call('account', { token: await token(), who })
 
-/** The password again, before changing account or settings (when the settings ask for it). Rejects with no connection. */
-export const unlock = async (password: string) => call('unlock', { token: await token(), password })
+/** The password again, before changing account or settings (when the settings ask for it), or a manager's card (qr) to unlock a cash register. Rejects with no connection. */
+export const unlock = async (how: { password?: string, qr?: string }) => call('unlock', { token: await token(), ...how })
+
+/** Make the token a company's cash register (account), let it go (account 0), or end a manager's unlock (no account). Rejects with no connection. */
+export const lockCall = async (account?: number) => call('lock', { token: await token(), ...(account === undefined ? {} : { account }) }, 8000)

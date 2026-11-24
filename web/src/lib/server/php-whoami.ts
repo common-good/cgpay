@@ -10,6 +10,7 @@ export type WhoamiUser = {
   sponsored: boolean
   admin: boolean
   menu: string[]
+  register: boolean // a store app cash register's session: it ends when the register locks again
 }
 
 /**
@@ -23,7 +24,7 @@ export type WhoamiResult =
   | { ok: true; user: WhoamiUser }
   | { ok: false; reason: 'no_session' | 'php_error' }
 
-type WhoamiRaw = { uid: unknown; name: unknown; sponsored?: unknown; admin?: unknown; menu?: unknown }
+type WhoamiRaw = { uid: unknown; name: unknown; sponsored?: unknown; admin?: unknown; menu?: unknown; register?: unknown }
 
 export async function phpWhoami(ssid: string | undefined | null): Promise<WhoamiResult> {
   if (!ssid) return { ok: false, reason: 'no_session' }
@@ -52,7 +53,8 @@ export async function phpWhoami(ssid: string | undefined | null): Promise<Whoami
         name: data.name,
         sponsored: !!data.sponsored,
         admin: !!data.admin,
-        menu: Array.isArray(data.menu) ? data.menu.filter((s: unknown): s is string => typeof s === 'string') : []
+        menu: Array.isArray(data.menu) ? data.menu.filter((s: unknown): s is string => typeof s === 'string') : [],
+        register: !!data.register
       }
     }
   } catch (e) {

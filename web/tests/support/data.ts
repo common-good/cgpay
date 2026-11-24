@@ -9,7 +9,7 @@ import resetCodes from './reset-codes'
 type Rows = Record<string, unknown>[]
 
 const readers: Record<string, (app: App) => Promise<Rows>> = { grants: app => app.testDb.rows('grants'), txs: app => app.testDb.rows('txs'), tx_requests: app => app.testDb.rows('tx_requests'), app_tokens: app => app.testDb.rows('app_tokens'), reset_codes: () => resetCodes.rows() }
-const writers: Record<string, (app: App, rows: Rows) => Promise<unknown>> = { users: (app, rows) => app.testDb.updateUsers(rows), reset_codes: (app, rows) => resetCodes.insert(rows, app.now) }
+const writers: Record<string, (app: App, rows: Rows) => Promise<unknown>> = { users: (app, rows) => app.testDb.update('users', rows), app_tokens: (app, rows) => app.testDb.update('app_tokens', rows), u_relations: (app, rows) => app.testDb.relate(rows), reset_codes: (app, rows) => resetCodes.insert(rows, app.now) }
 
 // Retry a data check for a while: some writes land after the screen moves on (the app uploads queued transactions in the background; reset-request answers before the code is made).
 const settled = (check: () => Promise<void>) => expect(check).toPass({ timeout: 10_000, intervals: [250, 500, 1000] })
@@ -21,7 +21,7 @@ async function read(app: App, name: string): Promise<Rows> {
 }
 
 export default {
-  /** Set records ("users" and "reset_codes"): each row has the uid (a nickname works) and the fields to change. */
+  /** Set records ("users", "app_tokens" and "reset_codes": each row has the uid, a nickname works, and the fields to change), or add relations ("u_relations": main, other, permission). */
   async setThese(app: App, name: string, table: { raw(): string[][] }) {
     const write = writers[name]
     if (!write) throw new Error(`these "${name}" rows: cannot be set. Can set: ${Object.keys(writers).join(', ')}.`)

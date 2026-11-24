@@ -15,6 +15,8 @@ const BUNDLED_MODE = process.env.E2E_SCREENS !== 'legacy'
 // Where the tests serve the store app's bundled screens (PUBLIC_APP_URL in playwright.config.ts).
 const BUNDLED = `http://localhost:${process.env.E2E_APP_PORT ?? '5180'}`
 
+const REAL_WAIT_MAX = 5 // seconds
+
 // An element id (like btn-signin or ckNum) starts with a lowercase letter and has no spaces or punctuation except - and _.
 const looksLikeId = (s: string) => /^[a-z][A-Za-z0-9_-]*$/.test(s)
 
@@ -50,6 +52,7 @@ export default {
   /**
    * Sign the store app's screens in by token as the member signed in on the live site, acting for the account the live site acts for:
    * put in the app's store what its own sign-in and choice of account would (the screens take no credentials from the dashboard).
+   * The app starts in the test env (ownerOp:test, see the app's lib/register).
    */
   async appSignIn(app: App, as = app.acting ?? app.who) {
     if (!app.who || !as) return
@@ -70,7 +73,7 @@ export default {
         tx.oncomplete = () => { r.result.close(); ok(null) }
         tx.onerror = () => no(tx.error)
       }
-    }), [['secure:token', app.appToken], ['member', m], ['acct', uid], ['device', device]] as [string, unknown][])
+    }), [['secure:token', app.appToken], ['member', m], ['acct', uid], ['device', device], ['ownerOp:test', [uid]]] as [string, unknown][]) // a company chosen here is owner-operated, not a cash register (cash-register.feature covers that)
     await p.close()
   },
 
@@ -141,6 +144,7 @@ export default {
 
   async onPage(app: App, path: string) { await app.page.goto('/' + path) },
 
+  async onPhpPage(app: App, path: string) { await app.page.goto(`${(process.env.PUBLIC_PHP_BASE_URL ?? 'http://localhost/cg/cgmembers').replace(/\/+$/, '')}/${path}`) },
   async press(app: App, key: string, n = 1) { for (let i = 0; i < n; i++) await app.page.keyboard.press(key) },
 
   async reload(app: App) { await app.page.reload() },
@@ -214,7 +218,15 @@ export default {
   /** Make the server act as demo (the store app switches to demo by a test card there), or not. */
   async serverIsDemo(app: App, on: boolean) { await app.testDb.demo(on) },
 
-  async wait(seconds: number) { await new Promise(ok => setTimeout(ok, seconds * 1000)) },
+  /**
+   * Let this many seconds pass. Up to REAL_WAIT_MAX they pass for real; longer waits jump the page's clock ahead (see the app fixture),
+   * as if the device lay untouched that long, so a long timeout costs no testing time.
+   */
+  async wait(app: App, seconds: number) {
+    if (seconds <= REAL_WAIT_MAX) return await new Promise(ok => setTimeout(ok, seconds * 1000))
+    await app.page.waitForLoadState('networkidle') // what the last click started (an unlock, say) is done, so its timers start before the jump
+    await app.page.clock.fastForward(seconds * 1000)
+  },
 
   async select(app: App, id: string, label: string) { await setField(app, id, label) },
 

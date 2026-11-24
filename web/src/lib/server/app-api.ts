@@ -1,4 +1,4 @@
-// The store app's token sign-in and transaction service: node is a thin proxy to PHP's /cgpay/{signin,card,demo,mfa,device,account,enter,redeem,unlock,revoke,identity,photo,tx}
+// The store app's token sign-in and transaction service: node is a thin proxy to PHP's /cgpay/{signin,card,demo,mfa,device,account,enter,redeem,lock,unlock,revoke,identity,photo,tx}
 // endpoints (PHP owns passwords, MFA, flood control, the tokens and the transaction engine).
 // No cookies in or out; the app keeps the token itself. CORS for the app's origins is in hooks.server.ts (appCors).
 

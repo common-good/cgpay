@@ -40,10 +40,13 @@ export class TestDb {
   /** Reset the server's test accounts (and remove their stray transactions) to the defaults. */
   initialize() { return this.post('initialize') }
 
-  /** Update rows of the users table. Each row must include uid. */
-  updateUsers(rows: Record<string, unknown>[]) {
-    return this.post('update', { table: 'users', keyedValues: JSON.stringify(rows) })
+  /** Update rows of the users table, or the app_tokens table (by uid: all that member's tokens). Each row must include uid. */
+  update(table: 'users' | 'app_tokens', rows: Record<string, unknown>[]) {
+    return this.post('update', { table, keyedValues: JSON.stringify(rows) })
   }
+
+  /** Relate test accounts: each row has main, other and permission (a name like "manage"). Initialize removes them again. */
+  relate(rows: Record<string, unknown>[]) { return this.post('relate', { rows: JSON.stringify(rows) }) }
 
   /** All the test accounts' records in a table ("txs", "tx_requests" or "grants"), in key order. */
   rows(table: string): Promise<Record<string, unknown>[]> { return this.post('rows', { fieldList: '*', table }) }

@@ -13,10 +13,27 @@
   import { inApp, appUrl } from '$lib/app-shell'
   import { isDemoSite } from '$lib/demo'
   import AcctMenu, { type Item } from '$lib/components/AcctMenu.svelte'
+  import ManagerBanner from '$lib/components/ManagerBanner.svelte'
 
   let { data, children } = $props()
   let app = $state(false)
-  onMount(() => app = inApp())
+  onMount(() => { app = inApp(); if (app) register() })
+
+  // A cash register's live session ends when the register locks again (after REGISTER_IDLE_MS without a touch, see PHP's appGate): then the page goes back to the app's own (locked) screens,
+  // which lock it again when they start. Until then the page shows the app's Manager Mode banner. Touches on the banner itself do not count as use.
+  const REGISTER_IDLE_MS = 120000
+  let until = $state(0)
+  const back = () => location.assign(appUrl({}, env.PUBLIC_APP_URL))
+  function register() {
+    const key = 'register', mark = (on: boolean) => { try { on ? sessionStorage.setItem(key, '1') : sessionStorage.removeItem(key) } catch { /* no storage: the server still ends the session */ } }
+    let was = false; try { was = !!sessionStorage.getItem(key) } catch { /* as above */ }
+    if (!data.user?.register) { mark(false); if (was && !data.user) back(); return }
+    mark(true)
+    let t: ReturnType<typeof setTimeout> | undefined
+    const used = (e?: Event) => { if (e?.target instanceof Element && e.target.closest('.manager-banner')) return; clearTimeout(t); t = setTimeout(back, REGISTER_IDLE_MS); until = Date.now() + REGISTER_IDLE_MS }
+    used()
+    for (const e of ['pointerdown', 'keydown', 'scroll']) addEventListener(e, used, { passive: true })
+  }
 
   // Hide the app header on preview routes (they use their own layout + white-bg TopNav).
   const isPreview = $derived(page.url.pathname.startsWith('/preview'))
@@ -92,6 +109,7 @@
 
 <div class="shell">
 {#if isDemoSite(phpBase)}<div class="demo-banner" data-testid="demo-banner">DEMO: no money here is real</div>{/if}
+{#if until}<ManagerBanner {until} onexit={back} />{/if}
 {#if showHeader}
   <nav class="topnav" class:open={menuOpen} data-testid="topnav">
     <Brand size={32} />
