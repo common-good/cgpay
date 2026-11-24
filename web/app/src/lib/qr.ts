@@ -5,7 +5,6 @@ const ACCT_LENS = '222233332222333322223333444444445555'
 const AGENT_LENS = '012301230123012301230123012301230123'
 const MAIN_LENS = '.12.13.22.23.32.33.34.44.45' // region and acct lengths without the agent
 const QR_REGEX = /^HTTP:\/\/[0-9A-Za-z]{1,4}\.RC[24]\.ME\/[0-9A-Z]{2,5}[0-9A-Za-z]{0,25}$/
-const TEST_QR_START = 'HTTP://6VM.RC4.ME/'
 
 export type Card = { acct: string, main: string, code: string }
 
@@ -26,13 +25,18 @@ export function qrUrl(id: string, real: boolean) {
   return `HTTP://${id.substring(1, 1 + regLen)}.${real ? 'RC2.ME' : 'RC4.ME'}/${id[0]}${id.substring(1 + regLen)}`
 }
 
+const norm = (qr: string) => qr.replace(/^[^/]*\/\/[^/]*\//, s => s.toUpperCase()) // a scanner may hand over the address part in lowercase; the card code after it is case-sensitive
+
+/** 'test' for a test card (RC4.ME, which belongs to demo), 'real' for a real one (RC2.ME), null for anything that is not a card. */
+export const cardKind = (qr: string) => QR_REGEX.test(qr = norm(qr)) ? (qr.includes('.RC4.ME/') ? 'test' : 'real') : null
+
 /** Split a scanned QR code into account and card code. Throws an Error whose message is for the member. */
 export function parseQr(qr: string, real: boolean): Card {
-  qr = qr.replace(/^[^/]*\/\/[^/]*\//, s => s.toUpperCase()) // a scanner may hand over the address part in lowercase; the card code after it is case-sensitive
+  qr = norm(qr)
   if (!QR_REGEX.test(qr)) throw new Error('That is not a valid Common Good QR Code format.')
   const parts = qr.split(/[\/.]/)
   const acct = parts[5][0] + parts[2] + parts[5].substring(1)
-  const testing = qr.startsWith(TEST_QR_START)
+  const testing = cardKind(qr) === 'test'
   if (testing && real) throw new Error('That is a CGPay test QR Code and cannot be used in production mode.')
   if (!testing && !real) throw new Error('That is a real Common Good QR Code and cannot be used in test mode.')
   const main = mainId(acct)

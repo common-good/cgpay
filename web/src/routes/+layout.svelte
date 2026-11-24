@@ -11,6 +11,7 @@
   import favicon from '$lib/assets/favicon.svg'
   import { onMount } from 'svelte'
   import { inApp, appLink, appUrl, device, type Device } from '$lib/app-shell'
+  import { isDemoSite } from '$lib/demo'
   import AcctMenu, { type Item } from '$lib/components/AcctMenu.svelte'
 
   let { data, children } = $props()
@@ -90,6 +91,7 @@
 </svelte:head>
 
 <div class="shell">
+{#if isDemoSite(phpBase)}<div class="demo-banner" data-testid="demo-banner">DEMO: no money here is real</div>{/if}
 {#if showHeader}
   <nav class="topnav" class:open={menuOpen} data-testid="topnav">
     <Brand size={32} />
@@ -135,6 +137,7 @@
 <style>
   .shell { min-height: 100dvh; display: flex; flex-direction: column; }
   .shell-main { flex: 1; display: flex; flex-direction: column; }
+  .demo-banner { padding: 4px 16px; text-align: center; font-weight: 700; letter-spacing: 0.1em; background: #f5b301; color: #1a1f1c; }
 
   .topnav {
     view-transition-name: topnav;
