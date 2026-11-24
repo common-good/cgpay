@@ -5,13 +5,13 @@
   import { env } from '$env/dynamic/public'
   import Brand from '$lib/components/Brand.svelte'
   import Icon from '$lib/components/Icon.svelte'
-  import { phpUrl } from '$lib/utils'
   import { fade } from 'svelte/transition'
   import { ms, lockScroll } from '$lib/motion'
   import { appVersion } from '$lib/version'
   import favicon from '$lib/assets/favicon.svg'
   import { onMount } from 'svelte'
-  import { inApp, appLink, device, type Device } from '$lib/app-shell'
+  import { inApp, appLink, appUrl, device, type Device } from '$lib/app-shell'
+  import AcctMenu, { type Item } from '$lib/components/AcctMenu.svelte'
 
   let { data, children } = $props()
   let app = $state(false)
@@ -41,6 +41,17 @@
     return ''
   })
 
+  // In the store app, changing account, settings and signing out belong to the app's own screens (they work offline and keep the app's token in step).
+  const acctItems = $derived<Item[]>(app ? [
+    { id: 'accounts', label: 'Change account', href: appUrl({ screen: 'accounts' }, env.PUBLIC_APP_URL) },
+    { id: 'settings', label: 'Settings', href: appUrl({ screen: 'settings' }, env.PUBLIC_APP_URL) },
+    { id: 'signout', label: 'Sign out', href: appUrl({ screen: 'signout' }, env.PUBLIC_APP_URL) }
+  ] : [
+    { id: 'accounts', label: 'Change account', href: menuHref('Dashboard') }, // the member site's dashboard has its account switcher
+    { id: 'settings', label: 'Settings', href: menuHref('Settings') },
+    { id: 'signout', label: 'Sign out', onclick: signOut }
+  ])
+
   // Cross-fade between pages where the browser supports it; app.css shortens it to nothing under reduced motion.
   onNavigate(nav => {
     if (!document.startViewTransition || nav.from?.url.pathname === nav.to?.url.pathname) return
@@ -51,7 +62,6 @@
   let menuOpen = $state(false)
   afterNavigate(() => menuOpen = false)
   $effect(() => lockScroll(menuOpen))
-  let noPhoto = $state(false)
 
   const built = $derived.by(() => {
     if (!appVersion.builtAt) return null
@@ -100,17 +110,12 @@
             <li><a class:active={activeLabel === 'Grants'} href="/grants">Grants</a></li>
           {/if}
         </ul>
-        <div class="account">
-          <span class="hi">Hi, {data.user.name}</span>
-          <button class="signout" onclick={signOut}>Sign out</button>
-        </div>
+        <div class="account"><span class="hi">Hi, {data.user.name}</span></div>
       </div>
       <button type="button" class="menu-btn" aria-label="Menu" aria-controls="main-menu" aria-expanded={menuOpen} onclick={() => menuOpen = !menuOpen}>
         <Icon name={menuOpen ? 'x' : 'menu'} size={24} />
       </button>
-      <a class="avatar" href={phpUrl('settings') || '#'} aria-label="Profile and settings">
-        {#if noPhoto}{data.user.name.split(' ').map(w => w[0]).slice(0, 2).join('')}{:else}<img src={phpUrl('account-photo')} alt="" onerror={() => noPhoto = true} />{/if}
-      </a>
+      <AcctMenu name={data.user.name} photo={phpBase ? phpBase.replace(/\/$/, '') + '/account-thumb' : null} items={acctItems} />
     {:else}
       <div class="spacer"></div>
     {/if}
@@ -135,7 +140,7 @@
     view-transition-name: topnav;
     position: relative; z-index: 50;
     display: grid;
-    grid-template-columns: auto 1fr;
+    grid-template-columns: auto 1fr auto;
     align-items: center;
     column-gap: var(--sp-6);
     padding: 0 var(--gutter);
@@ -157,12 +162,7 @@
   .nav-disabled { background: none; border: 0; opacity: 0.55; cursor: not-allowed; }
   .account { display: flex; align-items: center; gap: var(--sp-3); }
   .hi { font-size: var(--fs-sm); }
-  .signout {
-    min-height: 36px; padding: 0 var(--sp-3); background: transparent; color: var(--cg-on-navy);
-    border: 1px solid var(--cg-on-navy-muted); border-radius: var(--r-sm); font-size: var(--fs-sm); cursor: pointer;
-  }
-  @media (hover: hover) { .signout:hover { background: var(--cg-navy-soft); } }
-  .menu-btn, .avatar, .menu-backdrop { display: none; }
+  .menu-btn, .menu-backdrop { display: none; }
 
   /* Phones: brand on the left; the menu button and the profile picture on the right; the menu opens as a panel under the bar. */
   @media (max-width: 799px) {
@@ -172,12 +172,6 @@
       background: none; color: var(--cg-on-navy); cursor: pointer;
     }
     .open .menu-btn { background: var(--cg-navy-soft); }
-    .avatar {
-      display: grid; place-items: center; width: 36px; height: 36px; margin: 4px; border-radius: 50%; overflow: hidden;
-      background: var(--cg-navy-soft); color: var(--cg-on-navy); font-size: var(--fs-xs); font-weight: 600; text-decoration: none;
-      box-shadow: 0 0 0 2px var(--cg-on-navy-muted);
-    }
-    .avatar img { width: 100%; height: 100%; object-fit: cover; }
     .menu {
       display: none; position: absolute; top: 100%; left: 0; right: 0;
       flex-direction: column; align-items: stretch; gap: 0;
@@ -193,9 +187,9 @@
     .nav-links a.active::after { left: 0; right: auto; top: 12px; bottom: 12px; width: 3px; height: auto; }
     .account { justify-content: space-between; padding: var(--sp-3) var(--gutter) 0; margin-top: var(--sp-2); border-top: 1px solid var(--cg-border); }
     .hi { color: var(--cg-text-muted); }
-    .signout { color: var(--cg-text); border-color: var(--cg-border-strong); min-height: var(--tap); }
     .menu-backdrop { display: block; position: fixed; inset: 0; z-index: 40; border: 0; padding: 0; background: rgba(16, 24, 20, 0.45); cursor: pointer; }
   }
+  .spacer { flex: 1; }
   @keyframes cg-drop { from { opacity: 0; transform: translateY(-8px); } }
 
   .app-version {

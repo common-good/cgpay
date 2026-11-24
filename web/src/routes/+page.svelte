@@ -76,14 +76,22 @@
     }
   }
 
-  // A message the legacy app left for us in a cookie (see setDashboardMessage in the legacy app's handoff.js): show it once, as text.
+  // A message to show once, as text: from the store app's screens in the address (#msg=kind:text), or from the legacy app in a cookie (see setDashboardMessage in its handoff.js).
   function takeMessage(): { kind: 'info' | 'error', text: string } | null {
-    const found = document.cookie.split('; ').find(c => c.startsWith('cgpay-msg='))
-    const parts = location.hostname.split('.'), ip = /^\d+(\.\d+){3}$/.test(location.hostname)
-    const domains = ['', ...(ip ? [] : parts.slice(0, -1).map((_, i) => `; domain=.${parts.slice(i).join('.')}`))] // whichever scope the sender chose (the legacy app's is the whole site)
-    for (const d of domains) document.cookie = `cgpay-msg=; path=/; max-age=0${d}`
-    if (!found) return null
-    const m = decodeURIComponent(found.slice('cgpay-msg='.length)).match(/^(error|info):([\s\S]*)$/)
+    const hash = new URLSearchParams(location.hash.slice(1))
+    let raw = hash.get('msg')
+    if (raw !== null) {
+      hash.delete('msg')
+      history.replaceState(history.state, '', location.pathname + location.search + (hash.size ? '#' + hash : '')) // not $app/navigation's replaceState, which throws before the router is up (this runs in onMount); keeping history.state keeps SvelteKit's
+    } else {
+      const found = document.cookie.split('; ').find(c => c.startsWith('cgpay-msg='))
+      const parts = location.hostname.split('.'), ip = /^\d+(\.\d+){3}$/.test(location.hostname)
+      const domains = ['', ...(ip ? [] : parts.slice(0, -1).map((_, i) => `; domain=.${parts.slice(i).join('.')}`))] // whichever scope the sender chose (the legacy app's is the whole site)
+      for (const d of domains) document.cookie = `cgpay-msg=; path=/; max-age=0${d}`
+      if (!found) return null
+      raw = decodeURIComponent(found.slice('cgpay-msg='.length))
+    }
+    const m = raw.match(/^(error|info):([\s\S]*)$/)
     return { kind: m?.[1] === 'error' ? 'error' : 'info', text: (m ? m[2] : '').slice(0, 300) }
   }
 

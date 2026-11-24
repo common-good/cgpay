@@ -8,7 +8,7 @@ import resetCodes from './reset-codes'
 // Data in the test database (through the PHP test endpoint, see test-db.ts) and scenario variables.
 type Rows = Record<string, unknown>[]
 
-const readers: Record<string, (app: App) => Promise<Rows>> = { grants: app => app.testDb.rows('grants'), txs: app => app.testDb.rows('txs'), tx_requests: app => app.testDb.rows('tx_requests'), reset_codes: () => resetCodes.rows() }
+const readers: Record<string, (app: App) => Promise<Rows>> = { grants: app => app.testDb.rows('grants'), txs: app => app.testDb.rows('txs'), tx_requests: app => app.testDb.rows('tx_requests'), app_tokens: app => app.testDb.rows('app_tokens'), reset_codes: () => resetCodes.rows() }
 const writers: Record<string, (app: App, rows: Rows) => Promise<unknown>> = { users: (app, rows) => app.testDb.updateUsers(rows), reset_codes: (app, rows) => resetCodes.insert(rows, app.now) }
 
 // Retry a data check for a while: some writes land after the screen moves on (the app uploads queued transactions in the background; reset-request answers before the code is made).
@@ -41,7 +41,7 @@ export default {
     app.vars.set(name, tableData(table, shape, app, { nicknames: false }))
   },
 
-  /** The app has this many records ("txs", "tx_requests", "grants" and "reset_codes"). */
+  /** The app has this many records ("txs", "tx_requests", "grants", "app_tokens" and "reset_codes"). */
   async soCount(app: App, name: string, n: number) {
     await settled(async () => {
       const got = (await read(app, name)).length

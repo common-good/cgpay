@@ -10,6 +10,7 @@ import type { Handle } from '@sveltejs/kit'
 import { assertRequiredEnv } from '$lib/server/env'
 import { healSsoCookies } from '$lib/server/sso-cookies'
 import { phpWhoami } from '$lib/server/php-whoami'
+import { appCors } from '$lib/server/app-cors'
 
 try {
   assertRequiredEnv()
@@ -20,6 +21,7 @@ try {
 
 // A browser that sends the session cookie twice (an old scope left behind) is healed before anything reads it.
 export const handle: Handle = async ({ event, resolve }) => {
+  if (event.url.pathname.startsWith('/api/app/')) return appCors(event.request, event.request.method === 'OPTIONS' ? new Response(null, { status: 204 }) : await resolve(event))
   await healSsoCookies(event.cookies, event.request.headers.get('cookie'), async v => (await phpWhoami(v)).ok)
   return resolve(event)
 }
