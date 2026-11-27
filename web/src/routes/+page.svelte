@@ -338,14 +338,15 @@
     .pending { font-size: var(--fs-sm); }
   }
 
-  .tx { display: flex; align-items: center; gap: var(--sp-3); min-height: 56px; padding: var(--sp-2) var(--sp-4); }
-  .tx-date { display: inline-grid; justify-items: start; flex: none; min-width: 3.4em; color: var(--cg-text-muted); line-height: 1.15; font-variant-numeric: tabular-nums; }
-  .tx-date .md { font-size: var(--fs-sm); font-weight: 600; color: var(--cg-text); }
-  .tx-date .yr { font-size: 11px; }
-  .tx .row-title { font-size: 15px; font-weight: 500; }
+  .tx { display: flex; align-items: flex-start; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); }
+  .tx-date, .tx .row-title, .amt { font-size: 15px; line-height: 1.35; }
+  .tx-date { display: grid; justify-items: start; flex: 0 0 4.2em; color: var(--cg-text-muted); font-variant-numeric: tabular-nums; }
+  .tx-date .md { font-weight: 600; color: var(--cg-text); }
+  .tx-date .yr { font-size: 11px; line-height: 1.2; }
+  .tx .row-title { font-weight: 500; }
   .tx .row-sub { font-size: 13px; }
   .row-text .row-title, .row-text .row-sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .amt { font-size: 15px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .amt { font-variant-numeric: tabular-nums; white-space: nowrap; }
   .amt.in { color: var(--cg-green); }
 
   .footer { padding: var(--sp-5) var(--gutter) var(--sp-2); text-align: center; border-top: 1px solid var(--cg-border); }
@@ -364,10 +365,7 @@
   .sheet:focus { outline: none; }
   .grip { width: 40px; height: 5px; border-radius: 3px; background: var(--cg-border-strong); justify-self: center; margin-bottom: var(--sp-2); }
   .sheet h3 { font-size: var(--fs-lg); }
-  .sheet .tx { padding: var(--sp-3) 0; align-items: baseline; }
-  .sheet .tx-date { min-width: 40px; }
-  .sheet .tx-date .md { font-size: 11px; }
-  .sheet .tx-date .yr { font-size: 10px; }
+  .sheet .tx { padding: var(--sp-3) 0; }
   @media (min-width: 640px) {
     .sheet { inset: 0; margin: auto; width: min(460px, calc(100% - 2 * var(--gutter))); height: fit-content; max-height: 80vh; border-radius: var(--r-md); padding: var(--sp-5); }
     .grip { display: none; }
