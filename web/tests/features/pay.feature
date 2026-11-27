@@ -47,6 +47,22 @@ Scenario: A company pays a company
   | uid1 | uid2 | agt1 | agt2 | amt     | for1  |
   | Cit  | Gis  | Bea  | Flo  | 1234.50 | food! |
 
+Scenario: A company pays a member who has no funds
+  Given these "users" rows:
+  | uid | balance | floor |
+  | Dee | 0       | 0     |
+  And signed in as "Bea"
+  And acting as "Cit"
+  When scan "Dee" to "pay"
+  And input:
+  | input-amount | input-description |
+  | 12.34        | refund!           |
+  And click "btn-submit"
+  And click "btn-done"
+  Then these "txs" rows:
+  | uid1 | uid2 | agt1 | agt2 | amt   | for1    |
+  | Cit  | Dee  | Bea  | Dee  | 12.34 | refund! |
+
 Rule: A payer can undo a payment from its summary
 
 Scenario: A company pays an individual, then thinks twice about undoing it, then undoes it

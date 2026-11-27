@@ -253,7 +253,7 @@ Scenario: An undone transaction does not count as a repeat
   And click "btn-submit"
   Then see "tx-summary"
 
-Rule: An exchange for cash is marked as one, not as a purchase
+Rule: An exchange for cash is marked as one, not as a purchase, and is limited to what the customer can cash out
 
 Scenario: A company charges an individual for cash
   Given signed in as "Bea"
@@ -268,3 +268,16 @@ Scenario: A company charges an individual for cash
   Then these "txs" rows:
   | uid1 | uid2 | agt1 | agt2 | amt   | goods |
   | Dee  | Cit  | Dee  | Bea  | 20.00 | 1     |
+
+Scenario: A cashier cannot give more cash than the customer can cash out, though the customer could buy that much
+  Given these "users" rows:
+  | uid | balance | floor | bankAccount              |
+  | Dee | 23      | -4    | USkk21187028101234567890 |
+  And signed in as "Bea"
+  And acting as "Cit"
+  When scan "Dee" to "charge"
+  And click "cash"
+  And input "input-amount": "25"
+  And click "btn-submit"
+  Then text "messageText": "This transaction is limited to $23.00."
+  And count "txs" is 0
