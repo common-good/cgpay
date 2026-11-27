@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import { Html5Qrcode } from 'html5-qrcode'
+  import { settings } from './lib/settings'
 
   let { intent, ignore = '', onscan, onfail }: { intent: string, ignore?: string, onscan: (qr: string) => void, onfail: (msg: string) => void } = $props()
   let loading = $state(true)
@@ -18,7 +19,7 @@
     try {
       if (!(await Html5Qrcode.getCameras()).length) return onfail('No camera is available.')
       scanner = new Html5Qrcode('scanner')
-      await scanner.start({ facingMode: 'environment' }, { fps: 2, qrbox: { width: 250, height: 250 } }, async text => {
+      await scanner.start({ facingMode: (await settings()).frontCamera ? 'user' : 'environment' }, { fps: 2, qrbox: { width: 250, height: 250 } }, async text => {
         if (text === ignore) return
         await halt()
         onscan(text)

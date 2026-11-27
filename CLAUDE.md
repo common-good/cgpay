@@ -41,12 +41,16 @@ routes/
   login/                   sign-in page
   grants/                  fiscal-sponsorship grant intake + list
   api/                     server endpoints (JSON)
+    app/                   store app token sign-in: signin, mfa, device, account, enter, unlock, revoke (proxies to PHP /cgpay/*; CORS for the app's origins only)
     login/                 POST /api/login - verifies password, hands off to PHP SSO
     logout/                POST /api/logout - clears the PHP session cookie
     me/                    /api/me/info, /api/me/balance
     grants/                grants CRUD (proxies to PHP)
     people-autocomplete/   grantor typeahead (proxies to PHP)
   preview/                 design previews for review (isolated from real auth)
+  app-enter/               one-time link from the store app: PHP session cookie, then the page
+  app-signout/             store app sign-out: clears the live site's cookie, then back to the app
+  forgot/                  redirect to the password reset page (link on the store app's sign-in screen)
 lib/
   server/                  server-only code
     db.ts                  MySQL pool (`<DB_NAME>_cgpay` user: SELECT everywhere; writes only to allowlisted tables via data.ts, all other writes go via PHP)
@@ -58,7 +62,11 @@ lib/
     php-people.ts          server-to-server client for /cgpay/people-autocomplete
     drive.ts               Google Drive upload for grant agreement PDFs
     rate-limit.ts          in-memory rate limiter for auth endpoints
+    app-api.ts             the /api/app/* proxies (fields passed on, error codes, per-IP limit)
+    app-cors.ts            the store app's origins: CORS for /api/app/*, and where /app-signout may send it back
+    php-login.ts           server-to-server clients for /cgpay/lookup and /cgpay/sso (login, reset, /app-enter)
   components/              shared Svelte components (Brand, etc.)
+    AcctMenu.svelte        the account picture and its menu (change account, settings, sign out); live header and the store app's screens
   assets/                  static assets bundled at build time
 ```
 
@@ -69,6 +77,7 @@ lib/
 - **Login flow:** `/api/login` verifies password against `users.pass` (via `drupal-password.ts`), calls PHP `/cgpay/sso` to create a session, sets the SSO cookie on the browser scoped to the PHP host.
 - **Identity on every request:** `+layout.server.ts` reads the SSO cookie and calls PHP `/cgpay/whoami` to get `{uid, name, sponsored, menu}`. This runs on every full page load (SSR), but client-side navigation reuses the cached layout data unless something invalidates it (see Common gotchas), so a PHP account switch shows up on the next full load.
 - **Sign out:** `/api/logout` clears the SSO cookie.
+- **Store app:** the bundled screens sign in with a revocable token through `/api/app/*` (PHP checks the password, MFA and flood control, and keeps only a hash of the token in `app_tokens`; the app keeps the token in Keychain/Keystore). No cookie between the app and the server. A live page opened from the app gets its cookie session from the token through a one-time link (`/app-enter`). This path does not have the known login gap below.
 
 **No JWT:** endpoints authenticate with the SSO cookie. Use `requireUser(cookies)` (401 when signed out) or `currentUser(cookies)` (null when signed out) from `lib/server/auth.ts`.
 

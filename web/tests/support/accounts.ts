@@ -29,7 +29,7 @@ export function uidOf(nick: string): number {
   return UID_FIRST + nicks.indexOf(nick)
 }
 
-const uidFields = 'uid uid1 uid2 agt1 agt2 actorUid payer payee'.split(' ')
+const uidFields = 'uid uid1 uid2 agt1 agt2 actorUid payer payee lockedTo unlockedBy main other'.split(' ')
 const qidFields = 'qid identifier'.split(' ')
 
 /**
@@ -47,8 +47,8 @@ export function nicknameFor(nick: string, field: string | undefined): string | n
 // Cards that are not an account's own, as in the legacy app's tests. Agents' cards for companies are the company's account ID with
 // the agent's number (u_relations.otherNum - 1; a company's only agent has otherNum 1, so 0) and the agent's card code. Invalid is Flo's card for Gisette with a wrong card code (lost or stolen).
 const cards: Record<string, string> = {
-  'Bea/Cit': 'HTTP://6VM.RC4.ME/LDCC098765b', 'Flo/Gis': 'HTTP://6VM.RC4.ME/LDCG098765f',
-  Invalid: 'HTTP://6VM.RC4.ME/LDCG098765x', Other: 'garbage'
+  'Bea/Cit': 'HTTP://6VM.RC2.ME/LDCC098765b', 'Flo/Gis': 'HTTP://6VM.RC2.ME/LDCG098765f',
+  Invalid: 'HTTP://6VM.RC2.ME/LDCG098765x', Other: 'garbage'
 }
 
 /**
@@ -57,7 +57,9 @@ const cards: Record<string, string> = {
  * Also the cards above: "Flo/Gis" is the card Flo uses for Gisette; "Invalid" and "Other" are not usable.
  */
 export function qrOf(nick: string): string {
+  const test = nick.endsWith(' test card') // the same card as a demo account's (RC4.ME instead of RC2.ME)
+  if (test) return qrOf(nick.slice(0, -' test card'.length)).replace('.RC2.ME', '.RC4.ME')
   if (cards[nick]) return cards[nick]
   const a = acct(nick).identifier.slice(-1) // A to I
-  return `HTTP://6VM.RC4.ME/KDC${a}12345${a.toLowerCase()}`
+  return `HTTP://6VM.RC2.ME/KDC${a}12345${a.toLowerCase()}`
 }

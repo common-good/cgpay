@@ -72,32 +72,6 @@ Scenario: A company pays an individual, then thinks twice about undoing it, then
   And text "msg": "The transaction has been reversed."
   And count "txs" is 0
 
-Rule: The amount must be a whole number of cents
-
-Scenario: A cashier enters too many decimal places (to be rounded up)
-  Given signed in as "Bea"
-  And acting as "Cit"
-  When scan "Dee" to "pay"
-  And input:
-  | input-amount | input-description |
-  | 1.235        | food!             |
-  And click "btn-submit"
-  Then text "messageText": "The amount has been rounded to two decimal places. Make sure this is what you intended and try again."
-  And on page "tx"
-  And text "input-amount": "1.24"
-  And count "txs" is 0
-
-Scenario: A cashier enters too many decimal places (to be rounded down)
-  Given signed in as "Bea"
-  And acting as "Cit"
-  When scan "Dee" to "pay"
-  And input:
-  | input-amount | input-description |
-  | 1.234        | food!             |
-  And click "btn-submit"
-  Then text "input-amount": "1.23"
-  And count "txs" is 0
-
 Rule: A transaction cannot exceed the other account's limit or the app's limit
 
 Scenario: The other account has no balance and no credit
@@ -159,18 +133,16 @@ Scenario: A payer tries to pay more than the app allows
 Rule: The pay screen works from the keyboard
 
 @bundled
-Scenario: A payer types the amount right away, submits with Enter and closes the message with Enter
+Scenario: A payer types the amount on the keyboard, submits with Enter and closes the message with Enter
   Given these "users" rows:
   | uid | balance | floor |
   | Dee | 9999    | -9999 |
   And signed in as "Bea"
   And acting as "Cit"
   When scan "Dee" to "pay"
-  Then focus on "input-amount"
-
-  When input:
-  | input-amount | input-description |
-  | 20000        | food!             |
+  And input "input-description": "food!"
+  And pad "1"
+  And type "000001"
   And press "Enter"
   Then text "messageText": "CGPay transactions are limited to $10,000.00"
   And focus on "btn1"

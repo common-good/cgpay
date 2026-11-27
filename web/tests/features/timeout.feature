@@ -19,6 +19,7 @@ Background:
 Rule: If nothing happens soon after the summary appears, the app goes back to the dashboard and the transaction is sent
 
 Scenario: Nothing happens soon after the summary appears
+  When wait 7 seconds
   Then on page ""
   And these "txs" rows:
   | uid1 | uid2 | agt1 | agt2 | amt  | for2  |

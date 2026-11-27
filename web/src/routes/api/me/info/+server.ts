@@ -149,6 +149,7 @@ export const GET: RequestHandler = async ({ cookies, url }) => {
   }
 
   // 5) Merge + shape
+  // txs can now hold up to three times the limit (the newest pending each way, plus the newest completed)
   const txs: InfoTx[] = [
     ...pendingRows.map(r => ({
       xid: 0,

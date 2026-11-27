@@ -87,31 +87,33 @@ Scenario: A company charges an individual, then thinks twice about undoing it, t
   And text "msg": "The transaction has been reversed."
   And count "txs" is 0
 
-Rule: The amount must be a whole number of cents
+Rule: The amount is typed on a pad, filling in from the cents end, as on a cash register
 
-Scenario: A cashier enters too many decimal places (to be rounded up)
+Scenario: A cashier types an amount, corrects it and starts over
   Given signed in as "Bea"
   And acting as "Cit"
   When scan "Dee" to "charge"
-  And input:
-  | input-amount | input-description |
-  | 1.235        | food!             |
-  And click "btn-submit"
-  Then text "messageText": "The amount has been rounded to two decimal places. Make sure this is what you intended and try again."
-  And on page "tx"
-  And text "input-amount": "1.24"
-  And count "txs" is 0
+  Then text "input-amount": "0.00"
 
-Scenario: A cashier enters too many decimal places (to be rounded down)
+  When pad "125"
+  Then text "input-amount": "1.25"
+
+  When pad "b7"
+  Then text "input-amount": "1.27"
+
+  When pad "c"
+  Then text "input-amount": "0.00"
+
+Scenario: A cashier uses a keyboard for the amount and presses Enter
   Given signed in as "Bea"
   And acting as "Cit"
   When scan "Dee" to "charge"
-  And input:
-  | input-amount | input-description |
-  | 1.234        | food!             |
-  And click "btn-submit"
-  Then text "input-amount": "1.23"
-  And count "txs" is 0
+  And input "input-description": "food!"
+  And pad "1"
+  And type "250"
+  And press "Enter"
+  Then see "tx-summary"
+  And text "amount": "12.50"
 
 Rule: A charge cannot exceed what the buyer has or the app's limit
 

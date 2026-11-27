@@ -3,14 +3,16 @@
   import type { Device } from '$lib/app-shell'
   import { identity, idPhoto, unreachable, type Identity } from './lib/api'
   import { mainId, parseQr, type Card } from './lib/qr'
-  import { cacheProfile, checkAmount, enqueue, flush, makeTx, money, offlineProfile, unqueue, type Tx } from './lib/tx'
+  import { cachePhoto, cacheProfile, checkAmount, enqueue, flush, makeTx, money, offlinePhoto, offlineProfile, refusals, unqueue, type Tx } from './lib/tx'
+  import { shrink } from './lib/photo'
+  import AmountPad from './AmountPad.svelte'
 
-  let { device, intent, qr, onfail, onrescan, ondone }: { device: Device, intent: string, qr: string, onfail: (msg: string) => void, onrescan: () => void, ondone: (msg?: string, offline?: boolean) => void } = $props()
+  let { device, intent, qr, manager = null, onfail, onrescan, ondone }: { device: Device, intent: string, qr: string, manager?: Card | null, onfail: (msg: string) => void, onrescan: () => void, ondone: (msg?: string, offline?: boolean) => void } = $props()
   const paying = intent === 'pay'
   let who = $state<Identity | null>(null)
   let photo = $state('')
   let card: Card
-  let amount = $state<number | null>(null)
+  let cents = $state(0)
   let description = $state('')
   let dialog = $state<{ text: string, yes?: () => void, no?: () => void } | null>(null)
   let sent = $state<{ tx: Tx, key: string } | null>(null)
@@ -27,11 +29,10 @@
 
   async function submit(e: Event) {
     e.preventDefault()
-    const [a, err] = checkAmount(amount ?? 0, who!.limit)
-    amount = a
+    const a = cents / 100, err = checkAmount(a, who!.limit)
     if (err) return alert(err)
-    const tx = await makeTx(device, card, paying, a, description)
-    sent = { tx, key: await enqueue(tx) }
+    const tx = await makeTx(device, card, paying, a, description, manager)
+    try { sent = { tx, key: await enqueue(tx) } } catch { return alert('This phone is out of space, so the transaction could not be saved. Free some space on the phone and try again.') }
     arm()
   }
 
@@ -48,7 +49,15 @@
   export function back() { if (sent) askUndo(); else onrescan() }
 
   // Sending waits for Done, so that Undo can still take the transaction back before the server has it.
-  async function done() { clearTimeout(timer); let off = false; try { off = await flush(device) } finally { ondone('', off) } }
+  // A refusal is told right away, while the other member is still there (the server keeps it, so the phone then forgets it).
+  async function done() {
+    clearTimeout(timer); let off = false
+    try { off = await flush() } finally {
+      const r = (await refusals()).find(([k]) => k === sent?.key)
+      if (r) dialog = { text: `Common Good could not complete this transaction. ${r[1]}`, yes: async () => { await unqueue(r[0]); ondone('', off) } }
+      else ondone('', off)
+    }
+  }
 
   // The other account's profile. Anything wrong with the scanned code sends the member back to the dashboard with the reason.
   onMount(async () => {
@@ -63,12 +72,19 @@
       } catch (er) {
         if (!unreachable(er)) throw er
         who = await offlineProfile(card)
-        alert('OFFLINE. Trust this member or ask for ID.')
+        if (!paying) photo = await offlinePhoto(card)
+        if (!photo) alert('OFFLINE. Trust this member or ask for ID.') // with a photo, the cashier can check the face
         return
       }
       if (who.limit <= 0) throw new Error('This account has no remaining funds, so a transaction is not possible at this time.')
       description = who[paying ? 'selling' : 'isell']?.[0] ?? ''
-      if (!paying) photo = await idPhoto(device, card)
+      if (!paying) {
+        const b = await idPhoto(device, card)
+        if (b.size) {
+          photo = URL.createObjectURL(b)
+          shrink(b).then(jpeg => cachePhoto(card, jpeg), () => {}) // a photo that cannot be made smaller is only not kept
+        }
+      }
     } catch (er) {
       const m = (er as Error).message
       onfail(m === '404' ? 'That is not a valid Common Good member QR Code.' : isNaN(+m) ? m : "An unexpected error occurred. Please alert Common Good's support team.")
@@ -100,8 +116,7 @@
       <p data-testid="theirLocation">{who.location}</p>
     </section>
     <form onsubmit={submit}>
-      <label for="amount">Amount</label>
-      <input id="amount" data-testid="input-amount" use:focus type="number" step="any" placeholder="$0.00" bind:value={amount} required />
+      <AmountPad bind:cents off={!!dialog} />
       <label for="description">Description</label>
       <input id="description" data-testid="input-description" type="text" placeholder="e.g. lunch, rent, supplies, loan, etc." bind:value={description} required />
       <button data-testid="btn-submit" type="submit">{word}</button>

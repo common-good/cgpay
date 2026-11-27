@@ -1,19 +1,21 @@
-import { expect, type Route } from '@playwright/test'
+import { expect, type Frame, type Route } from '@playwright/test'
 import type { App } from '../steps/fixtures'
 import { acct } from './accounts'
 import { resolve } from './magic'
 import { writeCameraVideo } from './camera'
-import { qrOf } from './accounts'
+import { qrOf, uidOf } from './accounts'
 
 // What the steps do in the browser. The only place that knows element ids (data-testid) and URLs.
 // Checks are named so... and say what they were looking for when they fail.
 
 // Where the Pay and Charge buttons lead when the device has a camera (the legacy app, see CGPAY_PWA_URL).
 const LEGACY_APP = `http://localhost:${process.env.E2E_PWA_PORT ?? '3000'}`
-// E2E_SCREENS=bundled runs the transaction features against the store app's bundled screens instead of the legacy app.
-const BUNDLED_MODE = process.env.E2E_SCREENS === 'bundled'
+// The transaction features run against the store app's bundled screens; E2E_SCREENS=legacy uses the legacy app instead (see playwright.config.ts).
+const BUNDLED_MODE = process.env.E2E_SCREENS !== 'legacy'
 // Where the tests serve the store app's bundled screens (PUBLIC_APP_URL in playwright.config.ts).
 const BUNDLED = `http://localhost:${process.env.E2E_APP_PORT ?? '5180'}`
+
+const REAL_WAIT_MAX = 5 // seconds
 
 // An element id (like btn-signin or ckNum) starts with a lowercase letter and has no spaces or punctuation except - and _.
 const looksLikeId = (s: string) => /^[a-z][A-Za-z0-9_-]*$/.test(s)
@@ -28,9 +30,14 @@ const cutOff = (r: Route) => new URL(r.request().url()).origin === BUNDLED ? r.c
 async function setField(app: App, id: string, value: unknown) {
   const el = app.page.getByTestId(id)
   const v = text(app, value, id)
-  if (await el.evaluate(e => e.tagName) === 'SELECT') await el.selectOption({ label: v })
+  const tag = await el.evaluate(e => e.tagName)
+  if (tag === 'SELECT') await el.selectOption({ label: v })
+  else if (tag === 'SPAN') await tapPad(app, 'c' + Math.round(+v * 100)) // the store app's amount pad
   else await el.fill(v)
 }
+
+/** Tap the amount pad's keys: digits, c (clear) and b (backspace). */
+async function tapPad(app: App, keys: string) { for (const k of keys) await app.page.getByTestId('pad-' + k).click() }
 
 async function checkSignedIn(app: App, who: string) {
   if (who === 'nobody') return await expect(hi(app), `signed in as "nobody"`).toHaveCount(0)
@@ -42,7 +49,37 @@ export default {
   async actingAs(app: App, who: string) {
     const php = (process.env.PUBLIC_PHP_BASE_URL ?? 'http://localhost/cg/cgmembers').replace(/\/+$/, '')
     await app.page.request.get(`${php}/change-account/acct=${acct(who).identifier}`, { maxRedirects: 0 }) // shares the page's cookies; PHP then redirects to a dashboard we don't need
+    app.acting = who
+    if (app.appToken) await this.appSignIn(app)
     await app.page.goto('/')
+  },
+
+  /**
+   * Sign the store app's screens in by token as the member signed in on the live site, acting for the account the live site acts for:
+   * put in the app's store what its own sign-in and choice of account would (the screens take no credentials from the dashboard).
+   * The app starts in the test env (ownerOp:test, see the app's lib/register).
+   */
+  async appSignIn(app: App, as = app.acting ?? app.who) {
+    if (!app.who || !as) return
+    const req = app.page.request, a = acct(app.who), uid = uidOf(as)
+    if (!app.appToken) app.appToken = (await (await req.post('/api/app/signin', { data: { identifier: a.fullName, password: a.password, label: 'test' } })).json()).token
+    if (!app.appToken) throw new Error(`in the store app: signing the app in as "${app.who}" gave no token`)
+    const m = await (await req.post('/api/app/device', { data: { token: app.appToken } })).json()
+    const device = m.accounts?.find((x: { uid: number }) => x.uid === uid)?.device
+    if (!device) throw new Error(`in the store app: "${app.who}" cannot use the app for "${as}"`)
+    const p = await app.page.context().newPage()
+    await p.goto(BUNDLED + '/#screen=home')
+    await p.evaluate(kv => new Promise((ok, no) => {
+      const r = indexedDB.open('cgpay', 1)
+      r.onupgradeneeded = () => r.result.createObjectStore('kv')
+      r.onsuccess = () => {
+        const tx = r.result.transaction('kv', 'readwrite')
+        for (const [k, v] of kv) tx.objectStore('kv').put(v, k as string)
+        tx.oncomplete = () => { r.result.close(); ok(null) }
+        tx.onerror = () => no(tx.error)
+      }
+    }), [['secure:token', app.appToken], ['member', m], ['acct', uid], ['device', device], ['ownerOp:test', [uid]]] as [string, unknown][]) // a company chosen here is owner-operated, not a cash register (cash-register.feature covers that)
+    await p.close()
   },
 
   /**
@@ -73,12 +110,15 @@ export default {
     })
     await app.page.reload()
     app.storeApp = true
-    if (!app.page.url().includes('/login')) await expect(app.page.getByTestId('nav-app'), 'in the store app: the dashboard got the device credentials').toHaveAttribute('href', /device=/)
+    if (!app.page.url().includes('/login')) await this.appSignIn(app)
   },
 
   async click(app: App, id: string) { await app.page.getByTestId(id).click() },
 
   async input(app: App, id: string, value: unknown) { await setField(app, id, value) },
+
+  async pad(app: App, keys: string) { await tapPad(app, keys) },
+  async type(app: App, text: string) { await app.page.keyboard.type(text) },
 
   /** Fill in several elements: a table with the element ids in the header row and the values in the one row below. Selects work too. */
   async inputRow(app: App, table: { raw(): string[][] }) {
@@ -101,11 +141,55 @@ export default {
     } else await ctx.route('**/*', cutOff)
   },
 
+  /** Turn multi-factor authentication on for this account, so signing in asks for the emailed passcode. */
+  async mfaOn(app: App, who: string) { await app.testDb.mfaOn(uidOf(who)) },
+
+  /** Read the passcode PHP emailed for the sign-in that asked for one into the variable "passcode" (the email itself is out of reach of a test). */
+  async passcodeEmailed(app: App) {
+    await expect.poll(() => app.mfa, 'passcode emailed: the sign-in asked for one').toBeTruthy()
+    app.vars.set('passcode', await app.testDb.passcode(app.mfa!))
+  },
+
   async onPage(app: App, path: string) { await app.page.goto('/' + path) },
 
+  async onPhpPage(app: App, path: string) { await app.page.goto(`${(process.env.PUBLIC_PHP_BASE_URL ?? 'http://localhost/cg/cgmembers').replace(/\/+$/, '')}/${path}`) },
   async press(app: App, key: string, n = 1) { for (let i = 0; i < n; i++) await app.page.keyboard.press(key) },
 
   async reload(app: App) { await app.page.reload() },
+
+  /** Sign this member out of every device on the server, as from another phone: sign in there, then sign out everywhere. */
+  async allSignedOut(app: App, who: string) {
+    const req = app.page.request, a = acct(who)
+    const { token } = await (await req.post('/api/app/signin', { data: { identifier: a.fullName, password: a.password, label: 'elsewhere' } })).json()
+    if (!token) throw new Error(`all devices signed out for "${who}": signing in elsewhere gave no token`)
+    expect((await req.post('/api/app/revoke', { data: { token, everywhere: true } })).ok(), 'all devices signed out: the server signed them out').toBeTruthy()
+  },
+
+  /** Open the store app's own screens on a phone with no account on it (each scenario's browser starts with empty storage). */
+  /** The phone has no room left: every write to the bundled screens' store fails, now and after a reload (deleting still works). */
+  async storageFull(app: App) {
+    const full = () => { IDBObjectStore.prototype.put = () => { throw new DOMException('The quota has been exceeded.', 'QuotaExceededError') } }
+    await app.page.addInitScript(full)
+    await app.page.evaluate(full)
+  },
+
+  /** The store app acts for this account, whatever the live site acts for (as after switching account on a PHP page). */
+  async storeAppActsAs(app: App, who: string) { await this.appSignIn(app, who) },
+
+  async storeAppNoAccount(app: App) { await this.storeAppOpens(app) },
+
+  /**
+   * Open the store app's own screens, as when the member opens the app (what the phone keeps stays).
+   * Pages it opens on the live site run in its WebView, which marks the user agent (see inStoreApp).
+   */
+  async storeAppOpens(app: App) {
+    if (!app.storeApp) await app.page.addInitScript(() => {
+      const ua = navigator.userAgent + ' CGPayApp'
+      Object.defineProperty(navigator, 'userAgent', { configurable: true, get: () => ua })
+    })
+    await app.page.goto(BUNDLED + '/')
+    app.storeApp = true
+  },
 
   /**
    * Scan this account's QR code to pay or charge it ("pay" or "charge"), starting from the dashboard: the camera shows the code,
@@ -126,24 +210,40 @@ export default {
 
   // The store app's bundled screens: the dashboard (in the app) opens them, the start page is skipped by companies, and a failed scan returns to the dashboard.
   async scanInBundled(app: App, btn: string) {
-    if (!app.offline) {
-      if (!app.storeApp) await this.inStoreApp(app)
-      await expect(app.page.getByTestId('nav-app'), 'scan: the dashboard got the device credentials').toHaveAttribute('href', /device=/)
-    }
+    if (!app.offline && !app.storeApp) await this.inStoreApp(app)
+    let opened = app.page.url().startsWith(BUNDLED) // the screens can open, scan and fail back to the dashboard before a locator sees them
+    const saw = (f: Frame) => { if (f === app.page.mainFrame() && f.url().startsWith(BUNDLED)) opened = true }
+    app.page.on('framenavigated', saw)
     await app.page.getByTestId(btn).click()
-    const screen = (name: string) => app.page.locator(`[data-screen="${name}"]`)
-    await expect(screen('tx-start').or(screen('scan')).or(screen('tx')), 'scan: the bundled screens opened').toBeVisible({ timeout: 15_000 })
-    if (await screen('tx-start').count()) await app.page.getByTestId('btn-scan').click()
-    await expect(screen('tx').or(app.page.getByTestId('balance')), 'scan: the transaction screen, or the dashboard when the scan fails').toBeVisible({ timeout: 15_000 })
+    await expect.poll(() => opened, { message: 'scan: the bundled screens opened', timeout: 15_000 }).toBe(true)
+    app.page.off('framenavigated', saw)
+    const screen = (name: string) => app.page.locator(`[data-screen="${name}"]`), end = screen('tx').or(screen('switch')).or(app.page.getByTestId('balance'))
+    const at = 'scan: the transaction screen, the switch screen, or the dashboard when the scan fails'
+    await expect(screen('tx-start').or(end), at).toBeVisible({ timeout: 15_000 })
+    if (await screen('tx-start').count()) { await app.page.getByTestId('btn-scan').click(); await expect(end, at).toBeVisible({ timeout: 15_000 }) }
   },
 
-  async wait(seconds: number) { await new Promise(ok => setTimeout(ok, seconds * 1000)) },
+  /** Make the server act as demo (the store app switches to demo by a test card there), or not. */
+  async serverIsDemo(app: App, on: boolean) { await app.testDb.demo(on) },
+
+  /**
+   * Let this many seconds pass. Up to REAL_WAIT_MAX they pass for real; longer waits jump the page's clock ahead (see the app fixture),
+   * as if the device lay untouched that long, so a long timeout costs no testing time.
+   */
+  async wait(app: App, seconds: number) {
+    if (seconds <= REAL_WAIT_MAX) return await new Promise(ok => setTimeout(ok, seconds * 1000))
+    await app.page.waitForLoadState('networkidle') // what the last click started (an unlock, say) is done, so its timers start before the jump
+    await app.page.clock.fastForward(seconds * 1000)
+  },
 
   async select(app: App, id: string, label: string) { await setField(app, id, label) },
 
-  /** From now on PHP's API answers this endpoint with an error page (status 200, not JSON), as when PHP crashes. */
+  /** The live site answers this /api/app endpoint as it should again (after serverErrorPage). */
+  async serverAnswersAgain(app: App, endpoint: string) { await app.page.context().unroute(`**/api/app/${endpoint}`) },
+
+  /** From now on the live site answers this /api/app endpoint with an error page (status 200, not JSON), as when a proxy in between fails. */
   async serverErrorPage(app: App, endpoint: string) {
-    await app.page.context().route(`**/api/${endpoint}`, r => r.fulfill({ status: 200, contentType: 'text/html', body: '<html><body>Fatal error</body></html>' }))
+    await app.page.context().route(`**/api/app/${endpoint}`, r => r.fulfill({ status: 200, contentType: 'text/html', body: '<html><body>Fatal error</body></html>' }))
   },
 
   /**
@@ -153,6 +253,7 @@ export default {
   async signedIn(app: App, who: string) {
     const { page } = app
     if (page.url() === 'about:blank') await page.goto('/')
+    app.who = who === 'nobody' ? undefined : who
     if (who === 'nobody' || await hi(app).count()) return await checkSignedIn(app, who)
     await page.goto('/login')
     await page.getByTestId('identifier').fill(acct(who).fullName)
@@ -187,6 +288,12 @@ export default {
     await expect.poll(count, { message: `the app keeps ${n} refused transactions` }).toBe(n)
   },
 
+  /** The checkbox is ticked (yes) or not. */
+  async soChecked(app: App, id: string, yes = true) {
+    const el = app.page.getByTestId(id)
+    await (yes ? expect(el, `checked "${id}"`).toBeChecked({ timeout: 10_000 }) : expect(el, `unchecked "${id}"`).not.toBeChecked({ timeout: 10_000 }))
+  },
+
   async soError(app: App, message: string) {
     await expect(app.page.getByRole('alert').filter({ hasText: message }).first(), `error "${message}"`).toBeVisible({ timeout: 10_000 })
   },
@@ -194,7 +301,7 @@ export default {
   async soFocusOn(app: App, id: string) { await expect(app.page.getByTestId(id), `focus on "${id}"`).toBeFocused() },
 
   async soOnPage(app: App, path: string) {
-    if ((BUNDLED_MODE || app.storeApp) && ['home', 'tx-start', 'scan', 'tx'].includes(path)) return await expect(app.page.locator(`[data-screen="${path}"]`), `on page "${path}" (bundled screen)`).toBeVisible({ timeout: 15_000 })
+    if ((BUNDLED_MODE || app.storeApp) && ['signin', 'home', 'tx-start', 'scan', 'switch', 'tx', 'accounts', 'settings', 'unlock'].includes(path)) return await expect(app.page.locator(`[data-screen="${path}"]`), `on page "${path}" (bundled screen)`).toBeVisible({ timeout: 15_000 })
     if (app.storeApp && !path) await expect(app.page, 'on page "" (left the bundled screens)').not.toHaveURL(new RegExp(`^${escapeRegExp(BUNDLED)}`), { timeout: 15_000 })
     await expect(app.page, `on page "${path}"`).toHaveURL(new RegExp(`^[^/]+//[^/]+/${escapeRegExp(path)}$`), { timeout: 15_000 })
   },
@@ -215,8 +322,7 @@ export default {
       await expect(link(0), at).toHaveAttribute('href', /tx\/pay$/)
       await expect(link(1), at).toHaveAttribute('href', /tx\/charge$/)
     } else if (where === 'bundled screens') {
-      await expect(link(0), at).toHaveAttribute('href', new RegExp(`^${escapeRegExp(BUNDLED)}/#intent=pay&device=`))
-      await expect(link(1), at).toHaveAttribute('href', new RegExp(`^${escapeRegExp(BUNDLED)}/#intent=charge&device=`))
+      for (const [n, intent] of [[0, 'pay'], [1, 'charge']] as const) await expect(link(n), at).toHaveAttribute('href', new RegExp(`^${BUNDLED}/#intent=${intent}&acct=\\d+$`))
     } else throw new Error(`${at}: say "legacy app", "PHP" or "bundled screens".`)
   },
 

@@ -5,19 +5,35 @@
   import { env } from '$env/dynamic/public'
   import Brand from '$lib/components/Brand.svelte'
   import Icon from '$lib/components/Icon.svelte'
-  import { phpUrl } from '$lib/utils'
   import { fade } from 'svelte/transition'
   import { ms, lockScroll } from '$lib/motion'
   import { appVersion } from '$lib/version'
   import favicon from '$lib/assets/favicon.svg'
   import { onMount } from 'svelte'
-  import { inApp, appLink, device, type Device } from '$lib/app-shell'
+  import { inApp, appUrl } from '$lib/app-shell'
+  import { isDemoSite } from '$lib/demo'
+  import AcctMenu, { type Item } from '$lib/components/AcctMenu.svelte'
+  import ManagerBanner from '$lib/components/ManagerBanner.svelte'
 
   let { data, children } = $props()
   let app = $state(false)
-  let dev = $state<Device | null>(null)
-  onMount(() => app = inApp())
-  $effect(() => { if (app && data.user) device(data.user.name).then(d => dev = d) })
+  onMount(() => { app = inApp(); if (app) register() })
+
+  // A cash register's live session ends when the register locks again (after REGISTER_IDLE_MS without a touch, see PHP's appGate): then the page goes back to the app's own (locked) screens,
+  // which lock it again when they start. Until then the page shows the app's Manager Mode banner. Touches on the banner itself do not count as use.
+  const REGISTER_IDLE_MS = 120000
+  let until = $state(0)
+  const back = () => location.assign(appUrl({}, env.PUBLIC_APP_URL))
+  function register() {
+    const key = 'register', mark = (on: boolean) => { try { on ? sessionStorage.setItem(key, '1') : sessionStorage.removeItem(key) } catch { /* no storage: the server still ends the session */ } }
+    let was = false; try { was = !!sessionStorage.getItem(key) } catch { /* as above */ }
+    if (!data.user?.register) { mark(false); if (was && !data.user) back(); return }
+    mark(true)
+    let t: ReturnType<typeof setTimeout> | undefined
+    const used = (e?: Event) => { if (e?.target instanceof Element && e.target.closest('.manager-banner')) return; clearTimeout(t); t = setTimeout(back, REGISTER_IDLE_MS); until = Date.now() + REGISTER_IDLE_MS }
+    used()
+    for (const e of ['pointerdown', 'keydown', 'scroll']) addEventListener(e, used, { passive: true })
+  }
 
   // Hide the app header on preview routes (they use their own layout + white-bg TopNav).
   const isPreview = $derived(page.url.pathname.startsWith('/preview'))
@@ -41,6 +57,19 @@
     return ''
   })
 
+  // In the store app, changing account, settings and signing out belong to the app's own screens (they work offline and keep the app's token in step).
+  const acctItems = $derived<Item[]>(app ? [
+    { id: 'accounts', label: 'Change account', href: appUrl({ screen: 'accounts' }, env.PUBLIC_APP_URL) },
+    { id: 'settings', label: 'Settings', href: appUrl({ screen: 'settings' }, env.PUBLIC_APP_URL) },
+    { id: 'feedback', label: 'Feedback', href: '/feedback' },
+    { id: 'signout', label: 'Sign out', href: appUrl({ screen: 'signout' }, env.PUBLIC_APP_URL) }
+  ] : [
+    { id: 'accounts', label: 'Change account', href: menuHref('Dashboard') }, // the member site's dashboard has its account switcher
+    { id: 'settings', label: 'Settings', href: menuHref('Settings') },
+    { id: 'feedback', label: 'Feedback', href: '/feedback' },
+    { id: 'signout', label: 'Sign out', onclick: signOut }
+  ])
+
   // Cross-fade between pages where the browser supports it; app.css shortens it to nothing under reduced motion.
   onNavigate(nav => {
     if (!document.startViewTransition || nav.from?.url.pathname === nav.to?.url.pathname) return
@@ -51,7 +80,6 @@
   let menuOpen = $state(false)
   afterNavigate(() => menuOpen = false)
   $effect(() => lockScroll(menuOpen))
-  let noPhoto = $state(false)
 
   const built = $derived.by(() => {
     if (!appVersion.builtAt) return null
@@ -80,6 +108,8 @@
 </svelte:head>
 
 <div class="shell">
+{#if isDemoSite(phpBase)}<div class="demo-banner" data-testid="demo-banner">DEMO: no money here is real</div>{/if}
+{#if until}<ManagerBanner {until} onexit={back} />{/if}
 {#if showHeader}
   <nav class="topnav" class:open={menuOpen} data-testid="topnav">
     <Brand size={32} />
@@ -94,23 +124,18 @@
             {/if}
           {/each}
           {#if app}
-            <li><a data-testid="nav-app" href={appLink(dev, {}, env.PUBLIC_APP_URL) || '#'} aria-disabled={!dev || undefined}>Scan</a></li>
+            <li><a data-testid="nav-app" href={appUrl({ screen: 'home', acct: data.user.uid }, env.PUBLIC_APP_URL)}>Scan</a></li>
           {/if}
           {#if data.user.sponsored}
             <li><a class:active={activeLabel === 'Grants'} href="/grants">Grants</a></li>
           {/if}
         </ul>
-        <div class="account">
-          <span class="hi">Hi, {data.user.name}</span>
-          <button class="signout" onclick={signOut}>Sign out</button>
-        </div>
+        <div class="account"><span class="hi">Hi, {data.user.name}</span></div>
       </div>
       <button type="button" class="menu-btn" aria-label="Menu" aria-controls="main-menu" aria-expanded={menuOpen} onclick={() => menuOpen = !menuOpen}>
         <Icon name={menuOpen ? 'x' : 'menu'} size={24} />
       </button>
-      <a class="avatar" href={phpUrl('settings') || '#'} aria-label="Profile and settings">
-        {#if noPhoto}{data.user.name.split(' ').map(w => w[0]).slice(0, 2).join('')}{:else}<img src={phpUrl('account-photo')} alt="" onerror={() => noPhoto = true} />{/if}
-      </a>
+      <AcctMenu name={data.user.name} photo={phpBase ? phpBase.replace(/\/$/, '') + '/account-thumb' : null} items={acctItems} />
     {:else}
       <div class="spacer"></div>
     {/if}
@@ -130,12 +155,13 @@
 <style>
   .shell { min-height: 100dvh; display: flex; flex-direction: column; }
   .shell-main { flex: 1; display: flex; flex-direction: column; }
+  .demo-banner { padding: 4px 16px; text-align: center; font-weight: 700; letter-spacing: 0.1em; background: #f5b301; color: #1a1f1c; }
 
   .topnav {
     view-transition-name: topnav;
     position: relative; z-index: 50;
     display: grid;
-    grid-template-columns: auto 1fr;
+    grid-template-columns: auto 1fr auto;
     align-items: center;
     column-gap: var(--sp-6);
     padding: 0 var(--gutter);
@@ -157,12 +183,7 @@
   .nav-disabled { background: none; border: 0; opacity: 0.55; cursor: not-allowed; }
   .account { display: flex; align-items: center; gap: var(--sp-3); }
   .hi { font-size: var(--fs-sm); }
-  .signout {
-    min-height: 36px; padding: 0 var(--sp-3); background: transparent; color: var(--cg-on-navy);
-    border: 1px solid var(--cg-on-navy-muted); border-radius: var(--r-sm); font-size: var(--fs-sm); cursor: pointer;
-  }
-  @media (hover: hover) { .signout:hover { background: var(--cg-navy-soft); } }
-  .menu-btn, .avatar, .menu-backdrop { display: none; }
+  .menu-btn, .menu-backdrop { display: none; }
 
   /* Phones: brand on the left; the menu button and the profile picture on the right; the menu opens as a panel under the bar. */
   @media (max-width: 799px) {
@@ -172,12 +193,6 @@
       background: none; color: var(--cg-on-navy); cursor: pointer;
     }
     .open .menu-btn { background: var(--cg-navy-soft); }
-    .avatar {
-      display: grid; place-items: center; width: 36px; height: 36px; margin: 4px; border-radius: 50%; overflow: hidden;
-      background: var(--cg-navy-soft); color: var(--cg-on-navy); font-size: var(--fs-xs); font-weight: 600; text-decoration: none;
-      box-shadow: 0 0 0 2px var(--cg-on-navy-muted);
-    }
-    .avatar img { width: 100%; height: 100%; object-fit: cover; }
     .menu {
       display: none; position: absolute; top: 100%; left: 0; right: 0;
       flex-direction: column; align-items: stretch; gap: 0;
@@ -193,9 +208,9 @@
     .nav-links a.active::after { left: 0; right: auto; top: 12px; bottom: 12px; width: 3px; height: auto; }
     .account { justify-content: space-between; padding: var(--sp-3) var(--gutter) 0; margin-top: var(--sp-2); border-top: 1px solid var(--cg-border); }
     .hi { color: var(--cg-text-muted); }
-    .signout { color: var(--cg-text); border-color: var(--cg-border-strong); min-height: var(--tap); }
     .menu-backdrop { display: block; position: fixed; inset: 0; z-index: 40; border: 0; padding: 0; background: rgba(16, 24, 20, 0.45); cursor: pointer; }
   }
+  .spacer { flex: 1; }
   @keyframes cg-drop { from { opacity: 0; transform: translateY(-8px); } }
 
   .app-version {
