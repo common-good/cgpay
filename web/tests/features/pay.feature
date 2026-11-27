@@ -152,3 +152,18 @@ Scenario: A payer types the amount on the keyboard, submits with Enter and close
   And on page "tx"
   And count "txs" is 0
 
+Rule: An exchange for cash is marked as one, not as a purchase
+
+Scenario: A company pays an individual for cash
+  Given signed in as "Bea"
+  And acting as "Cit"
+  When scan "Dee" to "pay"
+  And click "cash"
+  Then text "input-description": "cash"
+
+  When input "input-amount": "20"
+  And click "btn-submit"
+  And click "btn-done"
+  Then these "txs" rows:
+  | uid1 | uid2 | agt1 | agt2 | amt   | goods |
+  | Cit  | Dee  | Bea  | Dee  | 20.00 | 1     |

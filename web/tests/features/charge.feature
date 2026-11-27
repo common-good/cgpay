@@ -252,3 +252,19 @@ Scenario: An undone transaction does not count as a repeat
   | 12.34        | food              |
   And click "btn-submit"
   Then see "tx-summary"
+
+Rule: An exchange for cash is marked as one, not as a purchase
+
+Scenario: A company charges an individual for cash
+  Given signed in as "Bea"
+  And acting as "Cit"
+  When scan "Dee" to "charge"
+  And click "cash"
+  Then text "input-description": "cash"
+
+  When input "input-amount": "20"
+  And click "btn-submit"
+  And click "btn-done"
+  Then these "txs" rows:
+  | uid1 | uid2 | agt1 | agt2 | amt   | goods |
+  | Dee  | Cit  | Dee  | Bea  | 20.00 | 1     |
