@@ -6,7 +6,7 @@ import { noCardCode, type Card } from './qr'
 const TIMEOUT_MS = 3200
 export const TX_TIMEOUT_MS = 30000
 
-export type Identity = { name: string, agent: string, location: string, limit: number, selling: string[], isell: string[] }
+export type Identity = { name: string, agent: string, location: string, limit: number, cashLimit?: number, selling: string[], isell: string[] }
 
 /** The service's answer. A failure status becomes an Error whose message is the status; no answer in time throws a TimeoutError. */
 async function ask(op: string, params: object, ms = TIMEOUT_MS) {

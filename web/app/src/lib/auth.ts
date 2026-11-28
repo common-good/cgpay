@@ -4,14 +4,19 @@ import { store } from '../storage'
 import { secret } from './secure'
 import { dropShelved, live, liveOf, resetEnv } from './env'
 import { current, forget, keepMember, type Account, type Member } from './accounts'
+import { log } from './log'
 
 export type Reply = { status: number, data: Record<string, any> }
 export type Signed = Member & { token: string }
 
 /** POST JSON to the live site's /api/app/<op>. Rejects when there is no answer (no connection, or too slow). */
 export async function call(op: string, body: object, ms = 20000, base = live()): Promise<Reply> {
-  const res = await fetch(`${base}/api/app/${op}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: AbortSignal.timeout(ms) })
-  return { status: res.status, data: await res.json().catch(() => ({})) }
+  try {
+    const res = await fetch(`${base}/api/app/${op}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: AbortSignal.timeout(ms) })
+    const data = await res.json().catch(() => ({}))
+    if (res.status !== 200) log(`${op}: ${res.status} ${typeof data.error === 'string' ? data.error : ''}`)
+    return { status: res.status, data }
+  } catch (e) { log(`${op}: ${(e as Error).name}`); throw e }
 }
 
 /** A random key made once per installation. The server remembers a trusted device by it, so trust outlasts a sign-out. */

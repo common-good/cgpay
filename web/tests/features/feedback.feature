@@ -1,19 +1,25 @@
 Feature: Feedback
   As a member
-  I can open a message form for the administrators from the account menu, on the live site and in the store app
-  So my questions and suggestions reach a person.
+  I can send Common Good a message from the account menu, on the live site and in the store app
+  So my ideas, praise and problems reach a person.
 
-  The form is the member site's general help page.
+  The message goes to the member's community administrator, as from the member site's help form. From the store app, the app's recent log goes too, to the tech team.
 
-Rule: The account menu's Feedback opens the member site's message form
+Rule: The live site's Feedback is a form of its own
 
-Scenario: A member opens Feedback on the live site
+Scenario: A member sends feedback on the live site
   Given signed in as "Bea"
   When click "btn-acct-menu"
   And click "menu-feedback"
-  Then on PHP page "help"
+  Then see "feedback-form"
 
-Scenario: A member opens Feedback from the store app's home screen
+  When input "input-message": "Nice work!"
+  And click "btn-send"
+  Then see "feedback-sent"
+
+Rule: The store app's Feedback is a screen of its own, which also sends the app's log
+
+Scenario: A member sends feedback from the store app
   Given signed in as "Bea"
   And in the store app
   When click "nav-app"
@@ -21,11 +27,15 @@ Scenario: A member opens Feedback from the store app's home screen
 
   When click "btn-acct-menu"
   And click "menu-feedback"
-  Then on PHP page "help"
+  Then on page "feedback"
 
-Rule: With no connection the app says Feedback needs one
+  When input "input-message": "Nice work!"
+  And click "btn-send"
+  Then see "feedback-sent"
 
-Scenario: A member opens Feedback offline
+Rule: With no connection the app says sending needs one
+
+Scenario: A member sends feedback offline
   Given signed in as "Bea"
   And in the store app
   When click "nav-app"
@@ -34,5 +44,7 @@ Scenario: A member opens Feedback offline
   When network off
   And click "btn-acct-menu"
   And click "menu-feedback"
-  Then see "offline-msg"
-  And on page "home"
+  And input "input-message": "Nice work!"
+  And click "btn-send"
+  Then see "feedback-error"
+  And on page "feedback"

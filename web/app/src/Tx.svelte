@@ -15,6 +15,7 @@
   let cents = $state(0)
   let description = $state('')
   let choices = $state<string[]>([])
+  let cash = $state(false), before = ''
   let dialog = $state<{ text: string, yes?: () => void, no?: () => void } | null>(null)
   let sent = $state<{ tx: Tx, key: string } | null>(null)
   let timer: ReturnType<typeof setTimeout>
@@ -30,9 +31,9 @@
 
   async function submit(e: Event) {
     e.preventDefault()
-    const a = cents / 100, err = checkAmount(a, who!.limit)
+    const a = cents / 100, err = checkAmount(a, paying ? Infinity : cash ? (who!.cashLimit ?? who!.limit) : who!.limit) // paying, the payer's own funds are the server's to check
     if (err) return alert(err)
-    const tx = await makeTx(device, card, paying, a, description, manager)
+    const tx = { ...await makeTx(device, card, paying, a, description, manager), ...(cash ? { cash } : {}) }
     if (!await twin(tx)) return keep(tx)
     dialog = { text: `You just ${paying ? 'paid' : 'charged'} ${who!.name || 'this member'} $${money(a)}. ${word} again?`, yes: () => { dialog = null; keep({ ...tx, dupOk: true }) }, no: () => dialog = null }
   }
@@ -82,7 +83,7 @@
         if (!photo) alert('OFFLINE. Trust this member or ask for ID.') // with a photo, the cashier can check the face
         return
       }
-      if (who.limit <= 0) throw new Error('This account has no remaining funds, so a transaction is not possible at this time.')
+      if (!paying && who.limit <= 0) throw new Error('This account has no remaining funds, so a transaction is not possible at this time.')
       choices = (who[paying ? 'selling' : 'isell'] ?? []).filter(Boolean)
       description = choices[0] ?? ''
       if (!paying) {
@@ -126,6 +127,7 @@
       <AmountPad bind:cents off={!!dialog} />
       <label for="description">Description</label>
       <input id="description" data-testid="input-description" type="text" placeholder="e.g. lunch, rent, supplies, loan, etc." bind:value={description} required />
+      <label class="check"><input type="checkbox" data-testid="cash" bind:checked={cash} onchange={() => [before, description] = cash ? [description, 'cash'] : ['', before]} /> {paying ? 'Pay the customer for cash they give you' : 'Charge the customer for cash you give them'}</label>
       {#if choices.length > 1}
         <div class="choices" data-testid="desc-choices">
           {#each choices as d, i}<button type="button" class="plain" class:on={d === description} data-testid="desc-{i + 1}" onclick={() => description = d}>{d}</button>{/each}
@@ -152,6 +154,7 @@
   input { font: inherit; padding: 12px; border: 1px solid #9aa39d; border-radius: 8px; }
   button.plain { background: none; border: 1px solid #1e7a3a; color: #1e7a3a; }
   .choices { display: flex; flex-wrap: wrap; gap: 8px; }
+  .check { display: flex; align-items: center; gap: 8px; }
   .choices button { padding: 8px 12px; }
   .choices button.on { background: #1e7a3a; color: #fff; }
   .note { font-size: 0.8rem; border-top: 1px dashed; padding-top: 8px; }

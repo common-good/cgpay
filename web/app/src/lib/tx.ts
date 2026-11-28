@@ -9,7 +9,7 @@ import { env } from './env'
 export const ONLINE_LIMIT = 10000 // the most any account can be charged on the app
 export const money = (n: number | string) => (+n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
-export type Tx = { actorId: string, otherId: string, amount: string, description: string, created: number, proof: string, offline: boolean, pending: boolean, manager?: string, managerProof?: string, dupOk?: boolean, error?: string }
+export type Tx = { actorId: string, otherId: string, amount: string, description: string, created: number, proof: string, offline: boolean, pending: boolean, manager?: string, managerProof?: string, dupOk?: boolean, cash?: boolean, error?: string }
 
 export const OFFLINE_LIMIT = 250 // how much an account not seen before can be charged without the server's word on what it has
 

@@ -1,6 +1,9 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import { App as CapApp } from '@capacitor/app'
+  import { needsUpdate, updateNow } from './lib/update'
+  import Feedback from './Feedback.svelte'
+  import { KeepAwake } from '@capacitor-community/keep-awake'
   import { Capacitor } from '@capacitor/core'
   import type { Device } from '$lib/app-shell'
   import { store } from './storage'
@@ -34,7 +37,7 @@
   const sent = Number(hash.get('acct')) || 0
   history.replaceState(null, '', location.pathname)
 
-  type Screen = 'signin' | 'home' | 'tx-start' | 'scan' | 'switch' | 'tx' | 'accounts' | 'settings' | 'unlock'
+  type Screen = 'signin' | 'home' | 'tx-start' | 'scan' | 'switch' | 'tx' | 'accounts' | 'settings' | 'unlock' | 'feedback'
   let device = $state<Device | null>(null)
   let acct = $state<Account | null>(null) // the account chosen on this phone (null before a token sign-in)
   let unlocking: 'accounts' | 'settings' = 'accounts' // what the password opens
@@ -45,7 +48,6 @@
   let demo = $state(isDemo()) // shows the DEMO mark
   let queued = $state(0)
   let refused = $state<[string, string][]>([]) // transactions the server refused, to show once on the home screen
-  let offlineMsg = $state('')
   let otherAcct = $state('') // the account the live site acted for, when it is not the one this app acts for
   let otherA: Account | undefined // that account, when this app has it too
   let wanted: Account | undefined // the account the mismatch dialog switches to, as soon as the accounts screen opens (after any unlock it needs)
@@ -55,8 +57,10 @@
   let txView = $state<Tx>()
   let seen = '' // the card the scanner returned last: still in view when Back returns to the scanner, so it is not taken again
   let register = $state(false) // the chosen account is a company's cash register on this phone (see lib/register)
+  $effect(() => { if (Capacitor.isNativePlatform()) (register ? KeepAwake.keepAwake() : KeepAwake.allowSleep()).catch(() => {}) }) // a cash register's screen stays on
   let scope = $state<Scope | ''>('') // what a manager's unlock opens ('' while locked)
   let notice = $state(''), unlockError = $state(''), busy = $state(false)
+  let update = $state<string | null>(null) // the store page for a needed update ('' if none named)
   let asking = $state(false), menuOpen = $state(false), owner = $state('') // the Manager Sign-in dialog; the account menu, opened after an unlock from it; whose password unlocks
   let idle: ReturnType<typeof setTimeout> | undefined, touched = 0, since = 0, until = $state(0) // since: when the unlock began; until: when Manager Mode ends, unless the device is used
   let manager: Card | null = null // the card of the manager whose unlock is on, kept only in memory: a payment carries its proof (see makeTx)
@@ -86,6 +90,7 @@
     const tick = setInterval(() => queued && sendQueued(), 5000) // the online event is not reliable on phones
     if (Capacitor.isNativePlatform()) CapApp.addListener('backButton', () => screen && screen !== 'home' ? back() : (clearInterval(tick), CapApp.exitApp()))
     const sending = sendQueued()
+    needsUpdate().then(u => update = u) // in the background: a slow server must not hold up the screens, and queued payments still go out
     dropUnused().catch(() => {})
     const hasToken = !!await token()
     signedIn = hasToken
@@ -292,6 +297,8 @@
     <Unlock onunlocked={() => screen = unlocking} />
   {:else if screen === 'accounts'}
     <Accounts ondone={chosen} />
+  {:else if screen === 'feedback'}
+    <Feedback />
   {:else if screen === 'settings'}
     <Settings co={acct?.isCo && signedIn && scope !== 'company' ? acct : null} onownerop={ownerOp} />
   {:else if screen === 'tx-start' && device}
@@ -319,7 +326,7 @@
         <AcctMenu bind:open={menuOpen} name={acct?.name ?? device?.name ?? ''} photo={acct?.photo} items={[
           ...(scope === 'company' ? [] : [{ id: 'accounts', label: 'Change account', onclick: () => open('accounts') }]), // another manager's unlock opens only the company
           { id: 'settings', label: 'Settings', onclick: () => open('settings') },
-          { id: 'feedback', label: 'Feedback', onclick: async () => { if (!await goLive('feedback')) offlineMsg = 'Feedback needs a connection. Try again when you have a signal.' } },
+          { id: 'feedback', label: 'Feedback', onclick: () => screen = 'feedback' },
           { id: 'signout', label: 'Sign out', onclick: () => queued ? confirming = true : leave() }
         ]} />
       {/if}
@@ -335,7 +342,6 @@
       </div>
     {/if}
     {@render refusalBox()}
-    {#if offlineMsg}<p class="err" data-testid="offline-msg">{offlineMsg}</p>{/if}
     {#if queued}<p data-testid="queued">{queued} transaction{queued == 1 ? '' : 's'} waiting to send</p>{/if}
     <p data-testid="acct">{device ? `Account: ${device.name}` : 'This account cannot use the app yet. Open the dashboard to finish setting it up.'}</p>
     {#if device}
@@ -352,9 +358,17 @@
     {/if}
     <p class="foot">Live site: {live()}</p>
   {/if}
+  {#if update !== null}
+    <div class="update" data-testid="update" role="alertdialog" aria-modal="true">
+      <p>This version of CGPay is too old. Update it to keep paying and charging.</p>
+      {#if update || Capacitor.getPlatform() === 'android'}<button data-testid="btn-update" onclick={() => updateNow(update!)}>Update</button>{:else}<p>Get the new version from your phone's app store.</p>{/if}
+    </div>
+  {/if}
 </main>
 
 <style>
+  .update { position: fixed; inset: 0; background: #f5f7f4; display: flex; flex-direction: column; justify-content: center; gap: 16px; padding: 24px; text-align: center; z-index: 10; }
+  .update button { padding: 14px; border-radius: 8px; background: #1e7a3a; color: #fff; border: 0; font: inherit; }
   :global(body) { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: #f5f7f4; color: #1a1f1c; }
   main { padding: max(16px, env(safe-area-inset-top)) 16px 16px; max-width: 480px; margin: 0 auto; }
   h1 { color: #0946A6; font-size: 1.5rem; }

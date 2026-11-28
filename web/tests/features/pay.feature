@@ -72,48 +72,23 @@ Scenario: A company pays an individual, then thinks twice about undoing it, then
   And text "msg": "The transaction has been reversed."
   And count "txs" is 0
 
-Rule: A transaction cannot exceed the other account's limit or the app's limit
+Rule: A payment is limited by the app's limit, not by what the account paid has
 
-Scenario: The other account has no balance and no credit
+Scenario: A company pays a member who has no funds
   Given these "users" rows:
   | uid | balance | floor |
   | Dee | -23     | 0     |
   And signed in as "Bea"
   And acting as "Cit"
   When scan "Dee" to "pay"
-  Then on page ""
-  And see "notice-error"
-  And text "msg": "This account has no remaining funds, so a transaction is not possible at this time."
-
-Scenario: The other account has a balance and a credit line, but no connected bank account, so the credit line does not count
-  Given these "users" rows:
-  | uid | balance | floor |
-  | Dee | 23      | -4    |
-  And signed in as "Bea"
-  And acting as "Cit"
-  When scan "Dee" to "pay"
   And input:
   | input-amount | input-description |
-  | 30           | food!             |
+  | 30           | refund!           |
   And click "btn-submit"
-  Then text "messageText": "This transaction is limited to $23.00."
-  And on page "tx"
-  And count "txs" is 0
-
-Scenario: The other account has a balance and a credit line with a connected bank account, but not enough
-  Given these "users" rows:
-  | uid | balance | floor | bankAccount              |
-  | Dee | 23      | -4    | USkk21187028101234567890 |
-  And signed in as "Bea"
-  And acting as "Cit"
-  When scan "Dee" to "pay"
-  And input:
-  | input-amount | input-description |
-  | 30           | food!             |
-  And click "btn-submit"
-  Then text "messageText": "This transaction is limited to $27.00."
-  And on page "tx"
-  And count "txs" is 0
+  And click "btn-done"
+  Then these "txs" rows:
+  | uid1 | uid2 | agt1 | agt2 | amt   | for1    |
+  | Cit  | Dee  | Bea  | Dee  | 30.00 | refund! |
 
 Scenario: A payer tries to pay more than the app allows
   Given these "users" rows:
@@ -152,3 +127,18 @@ Scenario: A payer types the amount on the keyboard, submits with Enter and close
   And on page "tx"
   And count "txs" is 0
 
+Rule: An exchange for cash is marked as one, not as a purchase
+
+Scenario: A company pays an individual for cash
+  Given signed in as "Bea"
+  And acting as "Cit"
+  When scan "Dee" to "pay"
+  And click "cash"
+  Then text "input-description": "cash"
+
+  When input "input-amount": "20"
+  And click "btn-submit"
+  And click "btn-done"
+  Then these "txs" rows:
+  | uid1 | uid2 | agt1 | agt2 | amt   | goods |
+  | Cit  | Dee  | Bea  | Dee  | 20.00 | 1     |
