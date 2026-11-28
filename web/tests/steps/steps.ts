@@ -4,6 +4,7 @@ import t from '../support/t'
 
 GWhen('acting as {string}', async ({ app }, who: string) => t.actingAs(app, who))
 GWhen('all devices signed out for {string}', async ({ app }, who: string) => t.allSignedOut(app, who))
+GWhen('battery at {int}%', async ({ app }, pct: number) => t.battery(app, pct))
 GWhen('camera {string}', async ({ app }, state: string) => t.camera(app, state))
 GWhen('camera shows {string}', async ({ app }, who: string) => t.cameraShows(app, who))
 GWhen('click {string}', async ({ app }, id: string) => t.click(app, id))

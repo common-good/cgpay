@@ -118,6 +118,9 @@ async function sendAll() {
 /** How many queued transactions still wait for the server (not counting refused ones). */
 export const waiting = async () => (await store.all<Tx>('tx:')).filter(([, t]) => !t.error).length
 
+/** When the oldest transaction still waiting to send was made (unix seconds), or 0. The server refuses one more than 90 days old. */
+export async function oldestWaiting() { const c = (await store.all<Tx>('tx:')).filter(([, t]) => !t.error).map(([, t]) => t.created); return c.length ? Math.min(...c) : 0 }
+
 const REASONS: Record<string, string> = { 'bad-actor': 'You may not act for that account.', locked: 'This device is a cash register. Only a manager can pay from it.' }
 
 /** The refused transactions, each as its key and what to tell the member. Forget each (unqueue) once shown: the server keeps them. */

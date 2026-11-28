@@ -288,6 +288,9 @@ export default {
     await expect.poll(count, { message: `the app keeps ${n} refused transactions` }).toBe(n)
   },
 
+  /** The phone's battery is at this level, not charging (for pages loaded from now on). */
+  async battery(app: App, pct: number) { await app.page.addInitScript(level => { (navigator as any).getBattery = async () => ({ level, charging: false }) }, pct / 100) },
+
   /** The browser's clock (the phone's, to the app) is this many hours behind the real time. */
   async phoneClockSlow(app: App, hours: number) { await app.page.clock.setSystemTime(Date.now() - hours * 3600_000) },
 

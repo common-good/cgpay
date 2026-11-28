@@ -2,13 +2,14 @@
   import { onMount } from 'svelte'
   import { App as CapApp } from '@capacitor/app'
   import { needsUpdate, updateNow } from './lib/update'
-  import { clockOff, loadClock } from './lib/clock'
+  import { clockOff, loadClock, now } from './lib/clock'
+  import { batteryLow } from './lib/battery'
   import Feedback from './Feedback.svelte'
   import { KeepAwake } from '@capacitor-community/keep-awake'
   import { Capacitor } from '@capacitor/core'
   import type { Device } from '$lib/app-shell'
   import { store } from './storage'
-  import { dropUnused, flush, lastTx, money, refusals, undoLast, unqueue, waiting, UNDO_MS, type Last } from './lib/tx'
+  import { dropUnused, flush, lastTx, money, oldestWaiting, refusals, undoLast, unqueue, waiting, UNDO_MS, type Last } from './lib/tx'
   import { toDashboard } from './lib/leave'
   import { enterUrl, keep, refresh, signOut, token, type Signed } from './lib/auth'
   import { choose, current, member, type Account } from './lib/accounts'
@@ -67,6 +68,7 @@
   let notice = $state(''), unlockError = $state(''), busy = $state(false)
   let update = $state<string | null>(null) // the store page for a needed update ('' if none named)
   let clock = $state(0) // minutes the phone's clock is slow (or, negative, fast), when far off
+  let stale = $state(false), low = $state(false) // a transaction has waited more than a day to send; the battery is low
   let asking = $state(false), menuOpen = $state(false), owner = $state('') // the Manager Sign-in dialog; the account menu, opened after an unlock from it; whose password unlocks
   let idle: ReturnType<typeof setTimeout> | undefined, touched = 0, since = 0, until = $state(0) // since: when the unlock began; until: when Manager Mode ends, unless the device is used
   let manager: Card | null = null // the card of the manager whose unlock is on, kept only in memory: a payment carries its proof (see makeTx)
@@ -87,6 +89,8 @@
   async function sendQueued() {
     await flush().catch(() => {})
     queued = await waiting(); refused = await refusals()
+    const old = await oldestWaiting(); stale = !!old && now() / 1000 - old > 86400
+    low = await batteryLow()
   }
 
   // The member has seen the refusals: forget them here (the server keeps them).
@@ -100,7 +104,8 @@
     window.addEventListener('online', sendQueued)
     for (const e of ['pointerdown', 'keydown']) window.addEventListener(e, active)
     const tick = setInterval(() => queued && sendQueued(), 5000) // the online event is not reliable on phones
-    if (Capacitor.isNativePlatform()) CapApp.addListener('backButton', () => screen && screen !== 'home' ? back() : (clearInterval(tick), CapApp.exitApp()))
+    const power = setInterval(async () => low = await batteryLow(), 60_000)
+    if (Capacitor.isNativePlatform()) CapApp.addListener('backButton', () => screen && screen !== 'home' ? back() : (clearInterval(tick), clearInterval(power), CapApp.exitApp()))
     const sending = sendQueued()
     await loadClock(); clock = clockOff()
     needsUpdate().then(u => { update = u; clock = clockOff() }) // in the background: a slow server must not hold up the screens, and queued payments still go out
@@ -303,6 +308,8 @@
 
 <main data-screen={screen}>
   {#if demo}<p class="demo" data-testid="demo-mark">DEMO</p>{/if}
+  {#if stale && screen === 'home'}<p class="notice warn-old" data-testid="stale-warning">Some transactions have waited more than a day to send. Connect to the internet soon: Common Good refuses transactions more than 90 days old.</p>{/if}
+  {#if low && screen === 'home'}<p class="notice" data-testid="battery-warning">The battery is low. Plug in the phone, so payments do not stop.</p>{/if}
   {#if clock && screen === 'home'}<p class="notice" data-testid="clock-notice">This phone's clock is {Math.abs(clock)} minutes {clock > 0 ? 'slow' : 'fast'}. The app records transactions at the right time anyway, but please set the phone to get its time automatically.</p>{/if}
   {#if register && scope && screen && screen !== 'signin'}<ManagerBanner {until} onexit={relock} slim={screen === 'scan'} />{/if}
   {#if screen && screen !== 'home' && screen !== 'signin'}<button class="back" data-testid="btn-back" onclick={back}>Back</button>{/if}
