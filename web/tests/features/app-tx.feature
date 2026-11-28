@@ -89,6 +89,11 @@ Scenario: A payment the server refuses is told before the summary closes
   Then on page ""
   And count "txs" is 0
 
+  When click "nav-app"
+  Then on page "home"
+  And see not "refusals"
+  And app keeps 0 refused
+
 Scenario: A company's offline charge to an account closed since is told on the home screen
   Given signed in as "Bea"
   And acting as "Cit"
@@ -116,3 +121,28 @@ Scenario: A company's offline charge to an account closed since is told on the h
   When click "btn-refusals-ok"
   Then see not "refusals"
   And app keeps 0 refused
+
+Rule: Typing a payment opens the member site's page, signed in from the app's own sign-in (not whatever the WebView's cookie holds)
+
+Scenario: A member types a payment from the app, as the account the app acts for
+  Given signed in as "Bea"
+  And in the store app
+  And acting as "Cit"
+  And store app acts as "Bea"
+  When click "btn-pay"
+  And click "btn-acct-proceed"
+  And click "btn-type"
+  Then on PHP page "tx/pay"
+
+  When on page ""
+  Then signed in as "Bea"
+
+Scenario: A member types a payment from the app with no connection
+  Given signed in as "Bea"
+  And in the store app
+  When click "nav-app"
+  And click "btn-pay"
+  And network off
+  And click "btn-type"
+  Then see "type-offline"
+  And on page "tx-start"

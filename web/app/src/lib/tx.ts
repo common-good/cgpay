@@ -53,8 +53,8 @@ export function flush(): Promise<boolean> {
   return next ??= running.then(() => { next = null; return flush() })
 }
 
-/** The server's own refusal, which it keeps (not an error page, or a fault on the way): no, with the reason. */
-const refusal = (status: number, data: Record<string, unknown>) => (status === 200 && data.ok === false && !!data.message) || (status === 400 && !!data.message) || (status === 403 && ['bad-actor', 'locked'].includes(String(data.error)))
+/** The server's own refusal, which it keeps (not an error page, or a fault on the way): no, with the reason (a no without one is still a no, so it is not sent again forever). */
+const refusal = (status: number, data: Record<string, unknown>) => (status === 200 && data.ok === false) || (status === 400 && !!data.message) || (status === 403 && ['bad-actor', 'locked'].includes(String(data.error)))
 
 async function sendAll() {
   for (const [k, t] of await store.all<Tx>('tx:')) {
@@ -64,7 +64,7 @@ async function sendAll() {
     const { status, data } = r
     if (status === 401 || data.error === 'unavailable') return true
     if (status === 200 && data.ok === true) { await store.del(k); await seen(t.otherId, t.created * 1000) }
-    else if (refusal(status, data)) await store.set(k, { ...t, error: String(data.message ?? data.error) })
+    else if (refusal(status, data)) await store.set(k, { ...t, error: String(data.message || data.error || 'refused') })
   }
   return false
 }
@@ -72,7 +72,7 @@ async function sendAll() {
 /** How many queued transactions still wait for the server (not counting refused ones). */
 export const waiting = async () => (await store.all<Tx>('tx:')).filter(([, t]) => !t.error).length
 
-const REASONS: Record<string, string> = { 'bad-actor': 'You may not act for that account.', locked: 'This device is a cash register. Only a manager can pay from it.' }
+const REASONS: Record<string, string> = { refused: 'No reason was given.', 'bad-actor': 'You may not act for that account.', locked: 'This device is a cash register. Only a manager can pay from it.' }
 
 /** The refused transactions, each as its key and what to tell the member. Forget each (unqueue) once shown: the server keeps them. */
 export async function refusals(): Promise<[string, string][]> {
