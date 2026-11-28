@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import { App as CapApp } from '@capacitor/app'
+  import { needsUpdate } from './lib/update'
   import { Capacitor } from '@capacitor/core'
   import type { Device } from '$lib/app-shell'
   import { store } from './storage'
@@ -57,6 +58,7 @@
   let register = $state(false) // the chosen account is a company's cash register on this phone (see lib/register)
   let scope = $state<Scope | ''>('') // what a manager's unlock opens ('' while locked)
   let notice = $state(''), unlockError = $state(''), busy = $state(false)
+  let update = $state<string | null>(null) // the store page for a needed update ('' if none named)
   let asking = $state(false), menuOpen = $state(false), owner = $state('') // the Manager Sign-in dialog; the account menu, opened after an unlock from it; whose password unlocks
   let idle: ReturnType<typeof setTimeout> | undefined, touched = 0, since = 0, until = $state(0) // since: when the unlock began; until: when Manager Mode ends, unless the device is used
   let manager: Card | null = null // the card of the manager whose unlock is on, kept only in memory: a payment carries its proof (see makeTx)
@@ -86,6 +88,7 @@
     const tick = setInterval(() => queued && sendQueued(), 5000) // the online event is not reliable on phones
     if (Capacitor.isNativePlatform()) CapApp.addListener('backButton', () => screen && screen !== 'home' ? back() : (clearInterval(tick), CapApp.exitApp()))
     const sending = sendQueued()
+    needsUpdate().then(u => update = u) // in the background: a slow server must not hold up the screens, and queued payments still go out
     dropUnused().catch(() => {})
     const hasToken = !!await token()
     signedIn = hasToken
@@ -352,9 +355,17 @@
     {/if}
     <p class="foot">Live site: {live()}</p>
   {/if}
+  {#if update !== null}
+    <div class="update" data-testid="update" role="alertdialog" aria-modal="true">
+      <p>This version of CGPay is too old. Update it to keep paying and charging.</p>
+      {#if update}<a data-testid="btn-update" href={update}>Update</a>{:else}<p>Get the new version from your phone's app store.</p>{/if}
+    </div>
+  {/if}
 </main>
 
 <style>
+  .update { position: fixed; inset: 0; background: #f5f7f4; display: flex; flex-direction: column; justify-content: center; gap: 16px; padding: 24px; text-align: center; z-index: 10; }
+  .update a { padding: 14px; border-radius: 8px; background: #1e7a3a; color: #fff; text-decoration: none; }
   :global(body) { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: #f5f7f4; color: #1a1f1c; }
   main { padding: max(16px, env(safe-area-inset-top)) 16px 16px; max-width: 480px; margin: 0 auto; }
   h1 { color: #0946A6; font-size: 1.5rem; }
