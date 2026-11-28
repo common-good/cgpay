@@ -179,7 +179,7 @@
                 <span class="action-label">Pay</span>
               </a>
               {#if info.summary.pendingPay > 0}
-                <button type="button" class="pending" onclick={openPayPending}>{@render pending(fmtMoney(info.summary.pendingPay))}</button>
+                <button type="button" class="pending" data-testid="btn-pending-pay" onclick={openPayPending}>{@render pending(fmtMoney(info.summary.pendingPay))}</button>
               {/if}
             </div>
             <div class="action">
@@ -188,7 +188,7 @@
                 <span class="action-label">Receive</span>
               </a>
               {#if info.summary.pendingReceive > 0}
-                <button type="button" class="pending" onclick={openReceivePending}>{@render pending(fmtMoney(info.summary.pendingReceive))}</button>
+                <button type="button" class="pending" data-testid="btn-pending-receive" onclick={openReceivePending}>{@render pending(fmtMoney(info.summary.pendingReceive))}</button>
               {/if}
             </div>
             <div class="action">
@@ -260,13 +260,15 @@
 
   {#if modal && info}
     {@const pay = modal === 'pay'}
+    {@const items = pay ? payPendingItems(info) : receivePendingItems(info)}
+    {@const n = pay ? info.summary.pendingPayCount : info.summary.pendingReceiveCount}
     <button class="sheet-backdrop" type="button" onclick={closeModal} aria-label="Close dialog" transition:fade={{ duration: ms(200) }}></button>
     <div class="sheet" role="dialog" aria-labelledby="modal-title" aria-modal="true" tabindex="-1"
       use:focusIn use:swipeDown={closeModal} transition:fly={{ y: 64, duration: ms(280), easing: cubicOut }}>
       <div class="grip" aria-hidden="true"></div>
       <h3 id="modal-title">{pay ? 'Pending payments' : 'Pending receivables'}</h3>
       <ul class="list-rows">
-        {#each pay ? payPendingItems(info) : receivePendingItems(info) as tx}
+        {#each items as tx}
           <li class="tx">
             {@render txDate(tx.created)}
             <span class="row-text">
@@ -277,6 +279,7 @@
           </li>
         {/each}
       </ul>
+      {#if n > items.length}<p class="muted" data-testid="pending-more">The newest {items.length} of {n}.</p>{/if}
       <button class="btn btn-secondary btn-block" onclick={closeModal}>Close</button>
     </div>
   {/if}

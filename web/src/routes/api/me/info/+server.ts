@@ -33,6 +33,8 @@ export type InfoTx = {
 export type InfoSummary = {
   pendingPay: number          // $ I owe (sum of pending tx_requests where I'm payer)
   pendingReceive: number      // $ owed to me (sum of pending tx_requests where I'm payee)
+  pendingPayCount: number     // how many of each (the list in txs may show fewer)
+  pendingReceiveCount: number
   pendingTransferIn: number   // $ coming to my bank (sum of txs2 where payee=me, completed=0)
   pendingTransferOut: number  // $ leaving my bank (sum of txs2 where payer=me, completed=0)
 }
@@ -63,6 +65,7 @@ type TxRow = RowDataPacket & {
   description: string | null
   created: number
 }
+type PendingSumRow = RowDataPacket & { pay: string | null; receive: string | null; payN: string | null; receiveN: string | null }
 type NameRow = RowDataPacket & { uid: number; fullName: string | null; name: string }
 type TransferSumRow = RowDataPacket & { transfer_in: string | null; transfer_out: string | null }
 
@@ -96,19 +99,21 @@ export const GET: RequestHandler = async ({ cookies, url }) => {
     // UI will simply hide Grants nav + Report Expected Grant tile for this user.
   }
 
-  // 2) Pending invoices (from tx_requests) — direction depends on who's the payer/payee
+  // 2) Pending invoices (from tx_requests): the newest `limit` each way, so neither way crowds out the other.
   // amount is signed: positive when we'd receive, negative when we'd pay
+  const pendingSql = (mine: string, other: string, sign: string) =>
+    `(SELECT ${sign}amount AS amount, ${other} AS other_uid, purpose AS description, created
+      FROM tx_requests WHERE ${mine} = ? AND status = ? ORDER BY created DESC LIMIT ?)`
   const [pendingRows] = await pool.query<PendingRow[]>(
-    `SELECT
-       CASE WHEN payee = ? THEN amount ELSE -amount END AS amount,
-       CASE WHEN payee = ? THEN payer ELSE payee END AS other_uid,
-       purpose AS description,
-       created
-     FROM tx_requests
-     WHERE (payer = ? OR payee = ?) AND status = ?
-     ORDER BY created DESC
-     LIMIT ?`,
-    [me.uid, me.uid, me.uid, me.uid, TX_PENDING, limit]
+    pendingSql('payee', 'payer', '') + ' UNION ALL ' + pendingSql('payer', 'payee', '-'),
+    [me.uid, TX_PENDING, limit, me.uid, TX_PENDING, limit]
+  )
+
+  // The totals count every pending invoice, not just the ones listed.
+  const [[sums]] = await pool.query<PendingSumRow[]>(
+    `SELECT SUM(IF(payer = ?, amount, 0)) AS pay, SUM(IF(payee = ?, amount, 0)) AS receive, SUM(payer = ?) AS payN, SUM(payee = ?) AS receiveN
+     FROM tx_requests WHERE (payer = ? OR payee = ?) AND status = ?`,
+    [me.uid, me.uid, me.uid, me.uid, me.uid, me.uid, TX_PENDING]
   )
 
   // 3) Recent completed transactions (from txs) — main pair only (type = E_PRIME)
@@ -144,6 +149,7 @@ export const GET: RequestHandler = async ({ cookies, url }) => {
   }
 
   // 5) Merge + shape
+  // txs can now hold up to three times the limit (the newest pending each way, plus the newest completed)
   const txs: InfoTx[] = [
     ...pendingRows.map(r => ({
       xid: 0,
@@ -161,7 +167,7 @@ export const GET: RequestHandler = async ({ cookies, url }) => {
       description: r.description ?? '',
       created: r.created
     }))
-  ].sort((a, b) => b.created - a.created).slice(0, limit)
+  ].sort((a, b) => b.created - a.created)
 
   // Bank-side pending (from txs2) — per William's note: the bank ledger uses a `completed`
   // flag, payer/payee are the two sides. Failures (table missing, etc) downgrade to zeros
@@ -183,14 +189,11 @@ export const GET: RequestHandler = async ({ cookies, url }) => {
     // txs2 absent or schema-different — leave at 0; UI will simply hide Transfer pending.
   }
 
-  // pendingRows are signed: positive = receivable, negative = payable.
   const summary: InfoSummary = {
-    pendingPay: pendingRows
-      .filter(r => Number(r.amount) < 0)
-      .reduce((sum, r) => sum + Math.abs(Number(r.amount)), 0),
-    pendingReceive: pendingRows
-      .filter(r => Number(r.amount) > 0)
-      .reduce((sum, r) => sum + Number(r.amount), 0),
+    pendingPay: Number(sums?.pay ?? 0),
+    pendingReceive: Number(sums?.receive ?? 0),
+    pendingPayCount: Number(sums?.payN ?? 0),
+    pendingReceiveCount: Number(sums?.receiveN ?? 0),
     pendingTransferIn,
     pendingTransferOut
   }

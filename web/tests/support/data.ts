@@ -9,7 +9,9 @@ import resetCodes from './reset-codes'
 type Rows = Record<string, unknown>[]
 
 const readers: Record<string, (app: App) => Promise<Rows>> = { grants: app => app.testDb.rows('grants'), txs: app => app.testDb.rows('txs'), tx_requests: app => app.testDb.rows('tx_requests'), app_tokens: app => app.testDb.rows('app_tokens'), reset_codes: () => resetCodes.rows() }
-const writers: Record<string, (app: App, rows: Rows) => Promise<unknown>> = { users: (app, rows) => app.testDb.update('users', rows), app_tokens: (app, rows) => app.testDb.update('app_tokens', rows), u_relations: (app, rows) => app.testDb.relate(rows), reset_codes: (app, rows) => resetCodes.insert(rows, app.now) }
+const writers: Record<string, (app: App, rows: Rows) => Promise<unknown>> = {
+  users: (app, rows) => app.testDb.update('users', rows), app_tokens: (app, rows) => app.testDb.update('app_tokens', rows), u_relations: (app, rows) => app.testDb.relate(rows), reset_codes: (app, rows) => resetCodes.insert(rows, app.now),
+  txs: (app, rows) => app.testDb.insert('txs', rows), tx_requests: (app, rows) => app.testDb.insert('tx_requests', rows) }
 
 // Retry a data check for a while: some writes land after the screen moves on (the app uploads queued transactions in the background; reset-request answers before the code is made).
 const settled = (check: () => Promise<void>) => expect(check).toPass({ timeout: 10_000, intervals: [250, 500, 1000] })
