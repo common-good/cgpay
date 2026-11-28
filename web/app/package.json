@@ -21,8 +21,10 @@
 		"vite": "^8.0.7"
 	},
 	"dependencies": {
+		"@capacitor-community/keep-awake": "8.0.1",
 		"@capacitor-community/sqlite": "8.1.1",
 		"@capacitor/app": "^8.1.2",
+		"@capawesome/capacitor-app-update": "8.1.1",
 		"capacitor-secure-storage-plugin": "0.14.2"
 	}
 }

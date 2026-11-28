@@ -2,6 +2,7 @@
 // Only a store build asks: the screens served on the website are always current.
 import { App as CapApp } from '@capacitor/app'
 import { Capacitor } from '@capacitor/core'
+import { AppUpdate, AppUpdateAvailability } from '@capawesome/capacitor-app-update'
 import { call } from './auth'
 
 /** Version a is older than b (dotted numbers: 1.10 is newer than 1.9). */
@@ -18,4 +19,13 @@ export async function needsUpdate(): Promise<string | null> {
     const [{ version }, { status, data }] = await Promise.all([CapApp.getInfo(), call('version', {}, 5000)])
     return status === 200 && data.min && older(version, String(data.min)) ? String(data.store?.[Capacitor.getPlatform()] ?? '') : null
   } catch { return null }
+}
+
+/** Update now: on Android, Google Play's own update screen when it offers one; otherwise the store page (url). */
+export async function updateNow(url: string) {
+  if (Capacitor.getPlatform() === 'android') try {
+    const i = await AppUpdate.getAppUpdateInfo()
+    if (i.updateAvailability === AppUpdateAvailability.UPDATE_AVAILABLE && i.immediateUpdateAllowed) return void await AppUpdate.performImmediateUpdate()
+  } catch {} // not installed from Google Play, or Play cannot be reached
+  if (url) location.href = url
 }

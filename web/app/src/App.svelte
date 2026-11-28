@@ -1,7 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import { App as CapApp } from '@capacitor/app'
-  import { needsUpdate } from './lib/update'
+  import { needsUpdate, updateNow } from './lib/update'
+  import { KeepAwake } from '@capacitor-community/keep-awake'
   import { Capacitor } from '@capacitor/core'
   import type { Device } from '$lib/app-shell'
   import { store } from './storage'
@@ -56,6 +57,7 @@
   let txView = $state<Tx>()
   let seen = '' // the card the scanner returned last: still in view when Back returns to the scanner, so it is not taken again
   let register = $state(false) // the chosen account is a company's cash register on this phone (see lib/register)
+  $effect(() => { if (Capacitor.isNativePlatform()) (register ? KeepAwake.keepAwake() : KeepAwake.allowSleep()).catch(() => {}) }) // a cash register's screen stays on
   let scope = $state<Scope | ''>('') // what a manager's unlock opens ('' while locked)
   let notice = $state(''), unlockError = $state(''), busy = $state(false)
   let update = $state<string | null>(null) // the store page for a needed update ('' if none named)
@@ -358,14 +360,14 @@
   {#if update !== null}
     <div class="update" data-testid="update" role="alertdialog" aria-modal="true">
       <p>This version of CGPay is too old. Update it to keep paying and charging.</p>
-      {#if update}<a data-testid="btn-update" href={update}>Update</a>{:else}<p>Get the new version from your phone's app store.</p>{/if}
+      {#if update || Capacitor.getPlatform() === 'android'}<button data-testid="btn-update" onclick={() => updateNow(update!)}>Update</button>{:else}<p>Get the new version from your phone's app store.</p>{/if}
     </div>
   {/if}
 </main>
 
 <style>
   .update { position: fixed; inset: 0; background: #f5f7f4; display: flex; flex-direction: column; justify-content: center; gap: 16px; padding: 24px; text-align: center; z-index: 10; }
-  .update a { padding: 14px; border-radius: 8px; background: #1e7a3a; color: #fff; text-decoration: none; }
+  .update button { padding: 14px; border-radius: 8px; background: #1e7a3a; color: #fff; border: 0; font: inherit; }
   :global(body) { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: #f5f7f4; color: #1a1f1c; }
   main { padding: max(16px, env(safe-area-inset-top)) 16px 16px; max-width: 480px; margin: 0 auto; }
   h1 { color: #0946A6; font-size: 1.5rem; }

@@ -31,7 +31,7 @@
 
   async function submit(e: Event) {
     e.preventDefault()
-    const a = cents / 100, err = checkAmount(a, cash && !paying ? (who!.cashLimit ?? who!.limit) : who!.limit)
+    const a = cents / 100, err = checkAmount(a, paying ? Infinity : cash ? (who!.cashLimit ?? who!.limit) : who!.limit) // paying, the payer's own funds are the server's to check
     if (err) return alert(err)
     const tx = { ...await makeTx(device, card, paying, a, description, manager), ...(cash ? { cash } : {}) }
     if (!await twin(tx)) return keep(tx)
@@ -83,7 +83,7 @@
         if (!photo) alert('OFFLINE. Trust this member or ask for ID.') // with a photo, the cashier can check the face
         return
       }
-      if (who.limit <= 0) throw new Error('This account has no remaining funds, so a transaction is not possible at this time.')
+      if (!paying && who.limit <= 0) throw new Error('This account has no remaining funds, so a transaction is not possible at this time.')
       choices = (who[paying ? 'selling' : 'isell'] ?? []).filter(Boolean)
       description = choices[0] ?? ''
       if (!paying) {
