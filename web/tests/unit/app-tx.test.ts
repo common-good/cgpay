@@ -65,11 +65,11 @@ describe('identity', () => {
 
 describe('flush', () => {
   it('deletes a queued transaction on a clear yes, marks it with the reason when the server refuses it, and keeps it to send again on anything else (a fault, an error page)', async () => {
-    for (const [i, t] of [1, 2, 3, 4, 5, 6].entries()) kv.set(`tx:${i}`, tx(t))
-    answer('{"ok":true}', ['{"error":"failed"}', 502], '{"ok":false,"message":"no funds"}', '{}', ['{"error":"bad-request","message":"bad proof"}', 400], ['{"error":"bad-actor"}', 403])
+    for (const [i, t] of [1, 2, 3, 4, 5, 6, 7].entries()) kv.set(`tx:${i}`, tx(t))
+    answer('{"ok":true}', ['{"error":"failed"}', 502], '{"ok":false,"message":"no funds"}', '{}', ['{"error":"bad-request","message":"bad proof"}', 400], ['{"error":"bad-actor"}', 403], '{"ok":false}')
     expect(await flush()).toBe(false)
     const errs = [...kv.entries()].filter(([k]) => k.startsWith('tx:')).map(([k, v]) => [k, (v as any).error])
-    expect(errs).toEqual([['tx:1', undefined], ['tx:2', 'no funds'], ['tx:3', undefined], ['tx:4', 'bad proof'], ['tx:5', 'bad-actor']])
+    expect(errs).toEqual([['tx:1', undefined], ['tx:2', 'no funds'], ['tx:3', undefined], ['tx:4', 'bad proof'], ['tx:5', 'bad-actor'], ['tx:6', 'refused']])
     expect(await waiting()).toBe(2)
   })
   it('sends each transaction with the token to the live site', async () => {
@@ -113,9 +113,11 @@ describe('refusals', () => {
     kv.set('tx:1', { ...tx(at), amount: '40.00', error: 'That account is not active.' })
     kv.set('tx:2', { ...tx(at), amount: '-5.00', otherId: 'C', error: 'bad-actor' })
     kv.set('tx:3', tx(at))
+    kv.set('tx:4', { ...tx(at), amount: '-1.00', otherId: 'C', error: 'refused' })
     expect(await refusals()).toEqual([
       ['tx:1', 'Charge of $40.00 to Dee Four on Nov 3: That account is not active.'],
-      ['tx:2', 'Payment of $5.00 to C on Nov 3: You may not act for that account.']
+      ['tx:2', 'Payment of $5.00 to C on Nov 3: You may not act for that account.'],
+      ['tx:4', 'Payment of $1.00 to C on Nov 3: No reason was given.']
     ])
   })
 })

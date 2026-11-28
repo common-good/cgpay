@@ -5,19 +5,8 @@
 import { json, type RequestHandler } from '@sveltejs/kit'
 import { callPhp, PhpCallError } from './php-client'
 import { rateLimit } from './rate-limit'
-import { phpEndpointUrl } from './env'
 
 const NO_STORE = { 'Cache-Control': 'no-store' }
-
-type Acct = { device?: Record<string, unknown> | null }
-/** Add the PHP site's address (for the live pages the app links to, see Device) to each account's device credentials. */
-function withPhp(data: Record<string, unknown>) {
-  const php = phpEndpointUrl('')
-  const fix = (a: Acct) => { if (a?.device && typeof a.device === 'object') a.device = { ...a.device, php } }
-  if (Array.isArray(data.accounts)) data.accounts.forEach(fix)
-  if (data.account && typeof data.account === 'object') fix(data.account as Acct)
-  return data
-}
 
 /** The error code PHP sent, or one made from its status. Never anything else, so internals do not leak to the app. */
 const errCode = (status: number, body: unknown) => (body && typeof body === 'object' && typeof (body as { error?: unknown }).error === 'string') ? (body as { error: string }).error : status === 400 ? 'bad-request' : 'failed'
@@ -40,7 +29,7 @@ export async function appCall(op: string, request: Request, ip: string, fields: 
   for (const f of fields) if (['string', 'number', 'boolean'].includes(typeof b[f])) body[f] = b[f]
   try {
     const r = await callPhp<Record<string, unknown>>(`cgpay/${op}`, { body })
-    return r.ok ? { status: 200, data: withPhp(r.data) } : { status: [400, 401, 403, 404, 406, 429].includes(r.status) ? r.status : 502, data: { error: errCode(r.status, r.body), ...reason(r.status, r.body) } }
+    return r.ok ? { status: 200, data: r.data } : { status: [400, 401, 403, 404, 406, 429].includes(r.status) ? r.status : 502, data: { error: errCode(r.status, r.body), ...reason(r.status, r.body) } }
   } catch (e) {
     if (!(e instanceof PhpCallError)) throw e
     console.error(`[app-${op}]`, e.message)

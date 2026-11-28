@@ -295,7 +295,7 @@
   {:else if screen === 'settings'}
     <Settings co={acct?.isCo && signedIn && scope !== 'company' ? acct : null} onownerop={ownerOp} />
   {:else if screen === 'tx-start' && device}
-    <TxStart {device} {intent} onscan={() => screen = 'scan'} phpBase={device.php} />
+    <TxStart {device} {intent} onscan={() => screen = 'scan'} ontype={() => goLive(`tx/${intent}`)} />
   {:else if screen === 'scan'}
     {#key intent}<Scan {intent} ignore={seen} onscan={scanned} onfail={fail} />{/key}<!-- a new scanner after a card unlock goes on to paying: the one that read the card has stopped -->
   {:else if screen === 'switch'}
@@ -308,7 +308,7 @@
     {@render refusalBox()}
     {#if queued}<p data-testid="queued">{queued} transaction{queued == 1 ? '' : 's'} waiting to send</p>{/if}
     <p data-testid="acct">Account: {device?.name ?? acct?.name}</p>
-    {#if device}<TxStart {device} intent="charge" onscan={() => start('charge')} onpay={() => ask('pay')} phpBase={device.php} />{/if}
+    {#if device}<TxStart {device} intent="charge" onscan={() => start('charge')} onpay={() => ask('pay')} />{/if}
     {#if asking}
       <ManagerSignin {busy} {owner} error={unlockError} onscan={() => { intent = 'unlock'; seen = ''; screen = 'scan' }} onpassword={p => doUnlock({ password: p })} oncancel={() => { asking = false; after = '' }} />
     {/if}

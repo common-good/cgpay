@@ -1,9 +1,9 @@
 // The live site also runs inside the store app's WebView, which marks its user agent (appendUserAgent in capacitor.config.ts).
 export const inApp = () => typeof navigator !== 'undefined' && navigator.userAgent.includes('CGPayApp')
 
-// What the bundled screens need to transact with PHP's API on the account's behalf. The app fetches it with its token (/api/app/device), never from a page.
-// api is PHP's transaction API (base address, ends in a slash); real is true on production, where QR codes are the real ones.
-export type Device = { accountId: string, qr: string, isCo: boolean, name: string, selling: string[] | null, real: boolean, php: string }
+// What the bundled screens need to transact on the account's behalf (through the live site, with the token). The app fetches it with its token (/api/app/device), never from a page.
+// real is true on production, where QR codes are the real ones.
+export type Device = { accountId: string, qr: string, isCo: boolean, name: string, selling: string[] | null, real: boolean }
 
 /**
  * The URL of the app's bundled screens, with these parameters in the hash (which never reaches a server; undefined ones are left out).
