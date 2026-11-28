@@ -2,6 +2,7 @@
   import { onMount } from 'svelte'
   import { App as CapApp } from '@capacitor/app'
   import { needsUpdate, updateNow } from './lib/update'
+  import { clockOff, loadClock } from './lib/clock'
   import Feedback from './Feedback.svelte'
   import { KeepAwake } from '@capacitor-community/keep-awake'
   import { Capacitor } from '@capacitor/core'
@@ -61,6 +62,7 @@
   let scope = $state<Scope | ''>('') // what a manager's unlock opens ('' while locked)
   let notice = $state(''), unlockError = $state(''), busy = $state(false)
   let update = $state<string | null>(null) // the store page for a needed update ('' if none named)
+  let clock = $state(0) // minutes the phone's clock is slow (or, negative, fast), when far off
   let asking = $state(false), menuOpen = $state(false), owner = $state('') // the Manager Sign-in dialog; the account menu, opened after an unlock from it; whose password unlocks
   let idle: ReturnType<typeof setTimeout> | undefined, touched = 0, since = 0, until = $state(0) // since: when the unlock began; until: when Manager Mode ends, unless the device is used
   let manager: Card | null = null // the card of the manager whose unlock is on, kept only in memory: a payment carries its proof (see makeTx)
@@ -90,7 +92,8 @@
     const tick = setInterval(() => queued && sendQueued(), 5000) // the online event is not reliable on phones
     if (Capacitor.isNativePlatform()) CapApp.addListener('backButton', () => screen && screen !== 'home' ? back() : (clearInterval(tick), CapApp.exitApp()))
     const sending = sendQueued()
-    needsUpdate().then(u => update = u) // in the background: a slow server must not hold up the screens, and queued payments still go out
+    await loadClock(); clock = clockOff()
+    needsUpdate().then(u => { update = u; clock = clockOff() }) // in the background: a slow server must not hold up the screens, and queued payments still go out
     dropUnused().catch(() => {})
     const hasToken = !!await token()
     signedIn = hasToken
@@ -289,6 +292,7 @@
 
 <main data-screen={screen}>
   {#if demo}<p class="demo" data-testid="demo-mark">DEMO</p>{/if}
+  {#if clock && screen === 'home'}<p class="notice" data-testid="clock-notice">This phone's clock is {Math.abs(clock)} minutes {clock > 0 ? 'slow' : 'fast'}. The app records transactions at the right time anyway, but please set the phone to get its time automatically.</p>{/if}
   {#if register && scope && screen && screen !== 'signin'}<ManagerBanner {until} onexit={relock} slim={screen === 'scan'} />{/if}
   {#if screen && screen !== 'home' && screen !== 'signin'}<button class="back" data-testid="btn-back" onclick={back}>Back</button>{/if}
   {#if screen === 'signin'}

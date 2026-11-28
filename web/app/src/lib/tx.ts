@@ -5,6 +5,7 @@ import { TX_TIMEOUT_MS, type Identity } from './api'
 import { call, token } from './auth'
 import { noCardCode, type Card } from './qr'
 import { env } from './env'
+import { now } from './clock'
 
 export const ONLINE_LIMIT = 10000 // the most any account can be charged on the app
 export const money = (n: number | string) => (+n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -26,7 +27,7 @@ export const checkAmount = (a: number, limit: number) =>
  * A payment from a cash register unlocked by a manager's card (manager) also carries that card's proof, since the server may see the register locked by the time it arrives.
  */
 export async function makeTx(d: Device, card: Card, paying: boolean, amount: number, description: string, manager?: Card | null): Promise<Tx> {
-  const actorId = noCardCode(d.accountId), amt = (paying ? -amount : amount).toFixed(2), created = Math.floor(Date.now() / 1000)
+  const actorId = noCardCode(d.accountId), amt = (paying ? -amount : amount).toFixed(2), created = Math.floor(now() / 1000)
   const proofWith = (code: string) => sha256(actorId + amt + card.acct + code + created)
   const tx: Tx = { actorId, otherId: card.acct, amount: amt, description, created, proof: await proofWith(card.code), offline: true, pending: !(paying || d.isCo) }
   return paying && manager ? { ...tx, manager: manager.acct, managerProof: await proofWith(manager.code) } : tx

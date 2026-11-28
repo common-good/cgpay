@@ -288,6 +288,9 @@ export default {
     await expect.poll(count, { message: `the app keeps ${n} refused transactions` }).toBe(n)
   },
 
+  /** The browser's clock (the phone's, to the app) is this many hours behind the real time. */
+  async phoneClockSlow(app: App, hours: number) { await app.page.clock.setSystemTime(Date.now() - hours * 3600_000) },
+
   /** The checkbox is ticked (yes) or not. */
   async soChecked(app: App, id: string, yes = true) {
     const el = app.page.getByTestId(id)
