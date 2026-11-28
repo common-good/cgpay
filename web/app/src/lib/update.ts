@@ -4,6 +4,7 @@ import { App as CapApp } from '@capacitor/app'
 import { Capacitor } from '@capacitor/core'
 import { AppUpdate, AppUpdateAvailability } from '@capawesome/capacitor-app-update'
 import { call } from './auth'
+import { setClock } from './clock'
 
 /** Version a is older than b (dotted numbers: 1.10 is newer than 1.9). */
 export function older(a: string, b: string) {
@@ -12,12 +13,17 @@ export function older(a: string, b: string) {
   return false
 }
 
-/** The store page for an update this build needs ('' if the server names none), or null when none is needed or the server cannot say (offline never blocks). */
+/**
+ * Ask the server about this build, and set the app's clock from its answer (see clock.ts).
+ * Returns the store page for an update this build needs ('' if the server names none), or null when none is needed or the server cannot say (offline never blocks).
+ */
 export async function needsUpdate(): Promise<string | null> {
-  if (!Capacitor.isNativePlatform()) return null
   try {
-    const [{ version }, { status, data }] = await Promise.all([CapApp.getInfo(), call('version', {}, 5000)])
-    return status === 200 && data.min && older(version, String(data.min)) ? String(data.store?.[Capacitor.getPlatform()] ?? '') : null
+    const sent = Date.now(), { status, data } = await call('version', {}, 5000)
+    if (status !== 200) return null
+    if (typeof data.time === 'number') await setClock(data.time, sent)
+    if (!Capacitor.isNativePlatform() || !data.min) return null
+    return older((await CapApp.getInfo()).version, String(data.min)) ? String(data.store?.[Capacitor.getPlatform()] ?? '') : null
   } catch { return null }
 }
 

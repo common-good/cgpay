@@ -5,11 +5,12 @@ import { TX_TIMEOUT_MS, type Identity } from './api'
 import { call, token } from './auth'
 import { noCardCode, type Card } from './qr'
 import { env } from './env'
+import { now } from './clock'
 
 export const ONLINE_LIMIT = 10000 // the most any account can be charged on the app
 export const money = (n: number | string) => (+n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
-export type Tx = { actorId: string, otherId: string, amount: string, description: string, created: number, proof: string, offline: boolean, pending: boolean, manager?: string, managerProof?: string, dupOk?: boolean, cash?: boolean, error?: string }
+export type Tx = { actorId: string, otherId: string, amount: string, description: string, created: number, proof: string, offline: boolean, pending: boolean, manager?: string, managerProof?: string, dupOk?: boolean, cash?: boolean, undo?: boolean, error?: string }
 
 export const OFFLINE_LIMIT = 250 // how much an account not seen before can be charged without the server's word on what it has
 
@@ -26,13 +27,13 @@ export const checkAmount = (a: number, limit: number) =>
  * A payment from a cash register unlocked by a manager's card (manager) also carries that card's proof, since the server may see the register locked by the time it arrives.
  */
 export async function makeTx(d: Device, card: Card, paying: boolean, amount: number, description: string, manager?: Card | null): Promise<Tx> {
-  const actorId = noCardCode(d.accountId), amt = (paying ? -amount : amount).toFixed(2), created = Math.floor(Date.now() / 1000)
+  const actorId = noCardCode(d.accountId), amt = (paying ? -amount : amount).toFixed(2), created = Math.floor(now() / 1000)
   const proofWith = (code: string) => sha256(actorId + amt + card.acct + code + created)
   const tx: Tx = { actorId, otherId: card.acct, amount: amt, description, created, proof: await proofWith(card.code), offline: true, pending: !(paying || d.isCo) }
   return paying && manager ? { ...tx, manager: manager.acct, managerProof: await proofWith(manager.code) } : tx
 }
 
-const key = (t: Tx) => `tx:${t.created}:${t.proof.slice(0, 8)}`
+const key = (t: Tx) => `tx:${t.created}:${t.proof.slice(0, 8)}${t.undo ? ':u' : ''}`
 
 /** Keep the transaction until the server has it. Returns its key. */
 export async function enqueue(t: Tx) {
@@ -48,6 +49,29 @@ export async function unqueue(k: string) {
   await store.set(recentKey(), (await recent()).filter(r => r.k !== k)).catch(() => {})
 }
 
+// The last transaction this phone made, for 15 minutes, so it can still be undone after it went to the server (per env, like the queue).
+export const UNDO_MS = 15 * 60_000
+export type Last = { k: string, tx: Tx, name: string, at: number }
+const lastKey = () => `last:${env()}`
+
+export const keepLast = (k: string, tx: Tx, name: string) => store.set(lastKey(), { k, tx, name, at: Date.now() }).catch(() => {}) // tx: a plain object (a Svelte state proxy cannot be stored)
+
+/** The last transaction, while it can still be undone. */
+export async function lastTx() { const l = await store.get<Last>(lastKey()).catch(() => undefined); return l && Date.now() - l.at < UNDO_MS ? l : null }
+
+/**
+ * Undo the last transaction: forget it if it never went out, otherwise queue its reversal, the same transaction with the amount negated,
+ * which the server's proof check recognizes as an undo (as for the old app). Returns false when it is too late.
+ */
+export async function undoLast() {
+  const l = await lastTx()
+  if (!l) return false
+  await store.del(lastKey())
+  if (await store.get(l.k)) await unqueue(l.k)
+  else await enqueue({ ...l.tx, amount: (-l.tx.amount).toFixed(2), undo: true, dupOk: undefined, error: undefined })
+  return true
+}
+
 // The transactions this phone made in the server's duplicate window, so the app can ask before a likely duplicate.
 // The server's own check is too late for that: the app sends only after Done (or, offline, much later), when the goods are gone.
 const DUP_MS = 3 * 60_000 // the server's DUPTX_SECS
@@ -59,6 +83,10 @@ const recent = async (now = Date.now()) => ((await store.get<Recent[]>(recentKey
 export const twin = async (t: Tx) => (await recent()).some(r => r.other === t.otherId && r.amount === t.amount)
 
 let running: Promise<boolean> | null = null, next: Promise<boolean> | null = null
+const balances = new Map<string, number>() // the other account's balance after a sent transaction, by its key (none when kept secret)
+
+/** The other account's balance once the server took the transaction with this key, if the server said. */
+export const balanceAfter = (k: string) => balances.get(k)
 
 /**
  * Send every queued transaction, each on its own. One the server refuses is marked with the reason, to be shown once (see refusals): the server keeps it too, and tells the account.
@@ -81,7 +109,7 @@ async function sendAll() {
     try { r = await call('tx', { token: await token(), ...t }, TX_TIMEOUT_MS) } catch { return true }
     const { status, data } = r
     if (status === 401 || data.error === 'unavailable') return true
-    if (status === 200 && data.ok === true) { await store.del(k); await seen(t.otherId, t.created * 1000) }
+    if (status === 200 && data.ok === true) { await store.del(k); await seen(t.otherId, t.created * 1000); if (typeof data.balance === 'number') balances.set(k, data.balance) }
     else if (refusal(status, data)) await store.set(k, { ...t, error: String(data.message ?? data.error) })
   }
   return false
@@ -89,6 +117,9 @@ async function sendAll() {
 
 /** How many queued transactions still wait for the server (not counting refused ones). */
 export const waiting = async () => (await store.all<Tx>('tx:')).filter(([, t]) => !t.error).length
+
+/** When the oldest transaction still waiting to send was made (unix seconds), or 0. The server refuses one more than 90 days old. */
+export async function oldestWaiting() { const c = (await store.all<Tx>('tx:')).filter(([, t]) => !t.error).map(([, t]) => t.created); return c.length ? Math.min(...c) : 0 }
 
 const REASONS: Record<string, string> = { 'bad-actor': 'You may not act for that account.', locked: 'This device is a cash register. Only a manager can pay from it.' }
 

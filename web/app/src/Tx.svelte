@@ -3,11 +3,12 @@
   import type { Device } from '$lib/app-shell'
   import { identity, idPhoto, unreachable, type Identity } from './lib/api'
   import { mainId, parseQr, type Card } from './lib/qr'
-  import { cachePhoto, cacheProfile, checkAmount, enqueue, flush, makeTx, money, offlinePhoto, offlineProfile, refusals, twin, unqueue, type Tx } from './lib/tx'
+  import { balanceAfter, cachePhoto, cacheProfile, checkAmount, keepLast, enqueue, flush, makeTx, money, offlinePhoto, offlineProfile, refusals, twin, unqueue, type Tx } from './lib/tx'
   import { shrink } from './lib/photo'
   import AmountPad from './AmountPad.svelte'
 
-  let { device, intent, qr, manager = null, onfail, onrescan, ondone }: { device: Device, intent: string, qr: string, manager?: Card | null, onfail: (msg: string) => void, onrescan: () => void, ondone: (msg?: string, offline?: boolean) => void } = $props()
+  // self: a self-serve cash register, where the customer scanned their own card and pays: no profile to check, no summary to undo from.
+  let { device, intent, qr, manager = null, self = false, onfail, onrescan, ondone }: { device: Device, intent: string, qr: string, manager?: Card | null, self?: boolean, onfail: (msg: string) => void, onrescan: () => void, ondone: (msg?: string, offline?: boolean) => void } = $props()
   const paying = intent === 'pay'
   let who = $state<Identity | null>(null)
   let photo = $state('')
@@ -27,7 +28,7 @@
   const alert = (text: string) => dialog = { text, yes: () => dialog = null }
   const focus = (n: HTMLElement, on = true) => { if (on) n.focus() } // a message with only OK takes Enter; Yes/No needs a deliberate choice
   onDestroy(() => clearTimeout(timer))
-  const word = paying ? 'Pay' : 'Charge'
+  const word = paying || self ? 'Pay' : 'Charge'
 
   async function submit(e: Event) {
     e.preventDefault()
@@ -35,12 +36,12 @@
     if (err) return alert(err)
     const tx = { ...await makeTx(device, card, paying, a, description, manager), ...(cash ? { cash } : {}) }
     if (!await twin(tx)) return keep(tx)
-    dialog = { text: `You just ${paying ? 'paid' : 'charged'} ${who!.name || 'this member'} $${money(a)}. ${word} again?`, yes: () => { dialog = null; keep({ ...tx, dupOk: true }) }, no: () => dialog = null }
+    dialog = { text: `You just ${self ? 'paid' : paying ? 'paid' : 'charged'} ${self ? device.name : who!.name || 'this member'} $${money(a)}. ${word} again?`, yes: () => { dialog = null; keep({ ...tx, dupOk: true }) }, no: () => dialog = null }
   }
 
   async function keep(tx: Tx) {
     try { sent = { tx, key: await enqueue(tx) } } catch { return alert('This phone is out of space, so the transaction could not be saved. Free some space on the phone and try again.') }
-    arm()
+    if (self) done(); else arm()
   }
 
   const askUndo = () => {
@@ -62,7 +63,12 @@
     try { off = await flush() } finally {
       const r = (await refusals()).find(([k]) => k === sent?.key)
       if (r) dialog = { text: `Common Good could not complete this transaction. ${r[1]}`, yes: async () => { await unqueue(r[0]); ondone('', off) } }
-      else ondone('', off)
+      else {
+        await keepLast(sent!.key, $state.snapshot(sent!.tx), who?.name || 'Unidentified Member')
+        const bal = balanceAfter(sent!.key) // for a customer with only a card
+        ondone(self ? `You paid ${device.name} $${money(+sent!.tx.amount)}.${bal === undefined ? '' : ` Your new balance is $${money(bal)}.`}`
+          : paying || bal === undefined ? '' : `${who?.name || 'The customer'}'s balance is now $${money(bal)}.`, off)
+      }
     }
   }
 
@@ -80,7 +86,7 @@
         if (!unreachable(er)) throw er
         who = await offlineProfile(card)
         if (!paying) photo = await offlinePhoto(card)
-        if (!photo) alert('OFFLINE. Trust this member or ask for ID.') // with a photo, the cashier can check the face
+        if (!photo && !self) alert('OFFLINE. Trust this member or ask for ID.') // with a photo, the cashier can check the face
         return
       }
       if (!paying && who.limit <= 0) throw new Error('This account has no remaining funds, so a transaction is not possible at this time.')
@@ -112,8 +118,8 @@
     <button class="plain" data-testid="btn-undo" onclick={askUndo}>Undo</button>
     <button data-testid="btn-done" onclick={done}>Done</button>
   {:else if who}
-    <h1 data-testid="action">{word}</h1>
-    <section data-testid="charge-profile">
+    <h1 data-testid="action">{self ? `Pay ${device.name}` : word}</h1>
+    {#if !self}<section data-testid="charge-profile">
       {#if photo}<img data-testid="theirPhoto" src={photo} alt="Customer Profile" />{/if}
       {#if who.agent}
         <h2 data-testid="theirAgent">{who.agent}</h2>
@@ -122,12 +128,12 @@
         <h2 data-testid="theirName">{who.name}</h2>
       {/if}
       <p data-testid="theirLocation">{who.location}</p>
-    </section>
+    </section>{/if}
     <form onsubmit={submit}>
       <AmountPad bind:cents off={!!dialog} />
       <label for="description">Description</label>
       <input id="description" data-testid="input-description" type="text" placeholder="e.g. lunch, rent, supplies, loan, etc." bind:value={description} required />
-      <label class="check"><input type="checkbox" data-testid="cash" bind:checked={cash} onchange={() => [before, description] = cash ? [description, 'cash'] : ['', before]} /> {paying ? 'Pay the customer for cash they give you' : 'Charge the customer for cash you give them'}</label>
+      {#if !self}<label class="check"><input type="checkbox" data-testid="cash" bind:checked={cash} onchange={() => [before, description] = cash ? [description, 'cash'] : ['', before]} /> {paying ? 'Pay the customer for cash they give you' : 'Charge the customer for cash you give them'}</label>{/if}
       {#if choices.length > 1}
         <div class="choices" data-testid="desc-choices">
           {#each choices as d, i}<button type="button" class="plain" class:on={d === description} data-testid="desc-{i + 1}" onclick={() => description = d}>{d}</button>{/each}

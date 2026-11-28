@@ -24,6 +24,7 @@
 		"@capacitor-community/keep-awake": "8.0.1",
 		"@capacitor-community/sqlite": "8.1.1",
 		"@capacitor/app": "^8.1.2",
+		"@capacitor/device": "8.0.3",
 		"@capawesome/capacitor-app-update": "8.1.1",
 		"capacitor-secure-storage-plugin": "0.14.2"
 	}

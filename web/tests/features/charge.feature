@@ -281,3 +281,57 @@ Scenario: A cashier cannot give more cash than the customer can cash out, though
   And click "btn-submit"
   Then text "messageText": "This transaction is limited to $23.00."
   And count "txs" is 0
+
+Rule: After a charge the cashier sees the customer's new balance, unless the customer keeps it secret
+
+Scenario: A company charges an individual and sees the new balance
+  Given these "users" rows:
+  | uid | balance |
+  | Dee | 100     |
+  And signed in as "Bea"
+  And acting as "Cit"
+  When scan "Dee" to "charge"
+  And input:
+  | input-amount | input-description |
+  | 12.34        | food!             |
+  And click "btn-submit"
+  And click "btn-done"
+  Then see "notice-info"
+  And text "msg": "Dee Four's balance is now $87.66."
+
+Rule: The last transaction can still be undone for 15 minutes after it was sent, from the app's home screen
+
+Scenario: A company charges an individual, then undoes the charge after it was sent
+  Given signed in as "Bea"
+  And in the store app
+  And acting as "Cit"
+  When scan "Dee" to "charge"
+  And input:
+  | input-amount | input-description |
+  | 12.34        | food!             |
+  And click "btn-submit"
+  And click "btn-done"
+  Then count "txs" is 1
+
+  When click "nav-app"
+  And click "btn-undo-last"
+  And click "btn-undo-yes"
+  Then see "notice"
+  And see not "btn-undo-last"
+  And count "txs" is 2
+
+Scenario: After 15 minutes the app no longer offers to undo
+  Given signed in as "Bea"
+  And in the store app
+  And acting as "Cit"
+  When scan "Dee" to "charge"
+  And input:
+  | input-amount | input-description |
+  | 12.34        | food!             |
+  And click "btn-submit"
+  And click "btn-done"
+  And click "nav-app"
+  Then see "btn-undo-last"
+
+  When wait 960 seconds
+  Then see not "btn-undo-last"

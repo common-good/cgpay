@@ -2,16 +2,18 @@
   import { onMount } from 'svelte'
   import { App as CapApp } from '@capacitor/app'
   import { needsUpdate, updateNow } from './lib/update'
+  import { clockOff, loadClock, now } from './lib/clock'
+  import { batteryLow } from './lib/battery'
   import Feedback from './Feedback.svelte'
   import { KeepAwake } from '@capacitor-community/keep-awake'
   import { Capacitor } from '@capacitor/core'
   import type { Device } from '$lib/app-shell'
   import { store } from './storage'
-  import { dropUnused, flush, refusals, unqueue, waiting } from './lib/tx'
+  import { dropUnused, flush, lastTx, money, oldestWaiting, refusals, undoLast, unqueue, waiting, UNDO_MS, type Last } from './lib/tx'
   import { toDashboard } from './lib/leave'
   import { enterUrl, keep, refresh, signOut, token, type Signed } from './lib/auth'
   import { choose, current, member, type Account } from './lib/accounts'
-  import { endOf, isRegister, lock, release, sendLock, setOwnerOperated, touch, unlockBy, unlocked, type Scope } from './lib/register'
+  import { endOf, isRegister, lock, release, selfServe, sendLock, setOwnerOperated, touch, unlockBy, unlocked, type Scope } from './lib/register'
   import { settings } from './lib/settings'
   import { cardKind, type Card } from './lib/qr'
   import { isDemo, live, mismatch, switchTo, target } from './lib/env'
@@ -54,13 +56,19 @@
   let resume = '' // what the member came to do (pay or charge), to carry on with after changing account from the mismatch dialog
   let signedIn = $state(false) // a token is on the phone
   let confirming = $state(false) // asking whether to sign out with transactions still waiting
+  let last = $state<Last | null>(null), undoing = $state(false) // the last transaction, while it can be undone; asking whether to
+  $effect(() => { if (screen === 'home') lastTx().then(l => last = l) })
+  $effect(() => { if (last) { const t = setTimeout(() => last = null, last.at + UNDO_MS - Date.now()); return () => clearTimeout(t) } })
   let txView = $state<Tx>()
   let seen = '' // the card the scanner returned last: still in view when Back returns to the scanner, so it is not taken again
   let register = $state(false) // the chosen account is a company's cash register on this phone (see lib/register)
+  let self = $state(false) // and a self-serve one: customers scan their own card and pay
   $effect(() => { if (Capacitor.isNativePlatform()) (register ? KeepAwake.keepAwake() : KeepAwake.allowSleep()).catch(() => {}) }) // a cash register's screen stays on
   let scope = $state<Scope | ''>('') // what a manager's unlock opens ('' while locked)
   let notice = $state(''), unlockError = $state(''), busy = $state(false)
   let update = $state<string | null>(null) // the store page for a needed update ('' if none named)
+  let clock = $state(0) // minutes the phone's clock is slow (or, negative, fast), when far off
+  let stale = $state(false), low = $state(false) // a transaction has waited more than a day to send; the battery is low
   let asking = $state(false), menuOpen = $state(false), owner = $state('') // the Manager Sign-in dialog; the account menu, opened after an unlock from it; whose password unlocks
   let idle: ReturnType<typeof setTimeout> | undefined, touched = 0, since = 0, until = $state(0) // since: when the unlock began; until: when Manager Mode ends, unless the device is used
   let manager: Card | null = null // the card of the manager whose unlock is on, kept only in memory: a payment carries its proof (see makeTx)
@@ -72,9 +80,17 @@
   }
 
   // Send what waited for a connection, and show how much still waits and what the server refused.
+  async function undoNow() {
+    undoing = false
+    notice = await undoLast() ? 'The transaction has been reversed.' : 'It is too late to undo that transaction here.'
+    last = null; queued = await waiting(); sendQueued()
+  }
+
   async function sendQueued() {
     await flush().catch(() => {})
     queued = await waiting(); refused = await refusals()
+    const old = await oldestWaiting(); stale = !!old && now() / 1000 - old > 86400
+    low = await batteryLow()
   }
 
   // The member has seen the refusals: forget them here (the server keeps them).
@@ -88,9 +104,11 @@
     window.addEventListener('online', sendQueued)
     for (const e of ['pointerdown', 'keydown']) window.addEventListener(e, active)
     const tick = setInterval(() => queued && sendQueued(), 5000) // the online event is not reliable on phones
-    if (Capacitor.isNativePlatform()) CapApp.addListener('backButton', () => screen && screen !== 'home' ? back() : (clearInterval(tick), CapApp.exitApp()))
+    const power = setInterval(async () => low = await batteryLow(), 60_000)
+    if (Capacitor.isNativePlatform()) CapApp.addListener('backButton', () => screen && screen !== 'home' ? back() : (clearInterval(tick), clearInterval(power), CapApp.exitApp()))
     const sending = sendQueued()
-    needsUpdate().then(u => update = u) // in the background: a slow server must not hold up the screens, and queued payments still go out
+    await loadClock(); clock = clockOff()
+    needsUpdate().then(u => { update = u; clock = clockOff() }) // in the background: a slow server must not hold up the screens, and queued payments still go out
     dropUnused().catch(() => {})
     const hasToken = !!await token()
     signedIn = hasToken
@@ -133,7 +151,8 @@
   }
 
   /** Whether the chosen account is a cash register here (and note it). */
-  async function settle() { return register = await isRegister(acct) }
+  async function settle() { register = await isRegister(acct); await readSelf(); return register }
+  async function readSelf() { self = register && !!acct && (await selfServe()).includes(acct.uid) }
 
   // A locked cash register asks for a manager, then goes on to what was pressed.
   function ask(next: typeof after) { after = next; unlockError = ''; asking = true; screen = 'home' }
@@ -147,7 +166,7 @@
   }
 
   // A cash register opens to Charge, locked. ignore: a card still in front of the camera (the one that switched envs), not to be taken as a customer's.
-  async function openRegister(ignore = '') { await relock(); if (device) { start('charge'); seen = ignore } }
+  async function openRegister(ignore = '') { await relock(); await readSelf(); if (device) { start('charge'); seen = ignore } }
 
   // Someone touched the screen (not the Manager Mode banner): an unlocked cash register stays unlocked another IDLE_MS, up to MAX_MS since the unlock (kept on the phone too, for the trip to the live site and back).
   function active(e?: Event) {
@@ -289,6 +308,9 @@
 
 <main data-screen={screen}>
   {#if demo}<p class="demo" data-testid="demo-mark">DEMO</p>{/if}
+  {#if stale && screen === 'home'}<p class="notice warn-old" data-testid="stale-warning">Some transactions have waited more than a day to send. Connect to the internet soon: Common Good refuses transactions more than 90 days old.</p>{/if}
+  {#if low && screen === 'home'}<p class="notice" data-testid="battery-warning">The battery is low. Plug in the phone, so payments do not stop.</p>{/if}
+  {#if clock && screen === 'home'}<p class="notice" data-testid="clock-notice">This phone's clock is {Math.abs(clock)} minutes {clock > 0 ? 'slow' : 'fast'}. The app records transactions at the right time anyway, but please set the phone to get its time automatically.</p>{/if}
   {#if register && scope && screen && screen !== 'signin'}<ManagerBanner {until} onexit={relock} slim={screen === 'scan'} />{/if}
   {#if screen && screen !== 'home' && screen !== 'signin'}<button class="back" data-testid="btn-back" onclick={back}>Back</button>{/if}
   {#if screen === 'signin'}
@@ -304,18 +326,19 @@
   {:else if screen === 'tx-start' && device}
     <TxStart {device} {intent} onscan={() => screen = 'scan'} phpBase={device.php} />
   {:else if screen === 'scan'}
-    {#key intent}<Scan {intent} ignore={seen} onscan={scanned} onfail={fail} />{/key}<!-- a new scanner after a card unlock goes on to paying: the one that read the card has stopped -->
+    {#key intent}<Scan {intent} title={self && !scope && intent === 'charge' ? 'Scan your card to pay' : ''} ignore={seen} onscan={scanned} onfail={fail} />{/key}<!-- a new scanner after a card unlock goes on to paying: the one that read the card has stopped -->
   {:else if screen === 'switch'}
     <Switch {qr} {to} {onswitched} onreuse={async () => { await switchTo(to); await arrived() }} oncancel={() => { screen = 'scan' }} />
   {:else if screen === 'tx' && device}
-    <Tx bind:this={txView} {device} {intent} {qr} manager={scope ? manager : null} onfail={fail} onrescan={() => screen = 'scan'} ondone={txDone} />
+    <Tx bind:this={txView} {device} {intent} {qr} manager={scope ? manager : null} self={self && !scope && intent === 'charge'} onfail={fail} onrescan={() => screen = 'scan'} ondone={txDone} />
   {:else if screen === 'home' && register && !scope}
     <div class="head"><h1>CGPay</h1><AcctMenu name={acct?.name ?? device?.name ?? ''} photo={acct?.photo} items={[]} gate={() => ask('menu')} /></div>
     {#if notice}<p class="notice" data-testid="notice">{notice}</p>{/if}
     {@render refusalBox()}
     {#if queued}<p data-testid="queued">{queued} transaction{queued == 1 ? '' : 's'} waiting to send</p>{/if}
     <p data-testid="acct">Account: {device?.name ?? acct?.name}</p>
-    {#if device}<TxStart {device} intent="charge" onscan={() => start('charge')} onpay={() => ask('pay')} phpBase={device.php} />{/if}
+    {#if device && self}<button data-testid="btn-self-pay" onclick={() => start('charge')}>Scan your card to pay {device.name}</button>
+    {:else if device}<TxStart {device} intent="charge" onscan={() => start('charge')} onpay={() => ask('pay')} phpBase={device.php} />{/if}
     {#if asking}
       <ManagerSignin {busy} {owner} error={unlockError} onscan={() => { intent = 'unlock'; seen = ''; screen = 'scan' }} onpassword={p => doUnlock({ password: p })} oncancel={() => { asking = false; after = '' }} />
     {/if}
@@ -348,7 +371,15 @@
       <button data-testid="btn-pay" onclick={() => start('pay')}>Pay</button>
       <button data-testid="btn-receive" onclick={() => start('charge')}>Charge</button>
     {/if}
+    {#if last}<button class="out" data-testid="btn-undo-last" onclick={() => undoing = true}>Undo: ${money(Math.abs(+last.tx.amount))} {+last.tx.amount < 0 ? 'to' : 'from'} {last.name}</button>{/if}
     <button data-testid="btn-dashboard" onclick={() => toDashboard(live())}>Dashboard (live site)</button>
+    {#if undoing && last}
+      <div class="warn" role="alertdialog" data-testid="undo-warning">
+        <p>Reverse the transaction of ${money(Math.abs(+last.tx.amount))} {+last.tx.amount < 0 ? 'to' : 'from'} {last.name}?</p>
+        <button data-testid="btn-undo-yes" onclick={undoNow}>Yes, reverse it</button>
+        <button class="out" data-testid="btn-undo-no" onclick={() => undoing = false}>No</button>
+      </div>
+    {/if}
     {#if confirming}
       <div class="warn" role="alertdialog" data-testid="signout-warning">
         <p>{queued} transaction{queued == 1 ? '' : 's'} still waiting to send will be lost if you sign out now.</p>

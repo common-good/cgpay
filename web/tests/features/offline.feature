@@ -125,3 +125,20 @@ Scenario: The server answers a queued transaction with an error page
   And these "txs" rows:
   | uid1 | uid2 | amt   | for2  |
   | Dee  | Cit  | 12.34 | food! |
+
+Rule: A transaction still waiting to send after a day is warned about on the home screen
+
+Scenario: A company charges offline and the connection stays off for more than a day
+  When network off
+  And scan "Dee" to "charge"
+  And click "btn1"
+  And input:
+  | input-amount | input-description |
+  | 12.34        | food!             |
+  And click "btn-submit"
+  And click "btn-done"
+  Then on page "home"
+  And see not "stale-warning"
+
+  When wait 90000 seconds
+  Then see "stale-warning"

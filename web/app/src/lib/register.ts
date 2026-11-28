@@ -24,6 +24,14 @@ export async function setOwnerOperated(uid: number, on: boolean) {
   await store.set(ownerKey(), on ? [...list, uid] : list)
 }
 
+/** The companies whose cash register here is self-serve: customers scan their own card and pay. Kept like the owner-operated setting. */
+const selfKey = () => `selfServe:${env()}`
+export const selfServe = async () => (await store.get<number[]>(selfKey())) ?? []
+export async function setSelfServe(uid: number, on: boolean) {
+  const list = (await selfServe()).filter(u => u !== uid)
+  await store.set(selfKey(), on ? [...list, uid] : list)
+}
+
 /** Whether the account is a cash register on this phone: a company, not owner-operated, signed in with a token (the lock needs the server). */
 export const isRegister = async (a: Account | null) => !!a?.isCo && !!await token() && !(await ownerOperated()).includes(a.uid)
 

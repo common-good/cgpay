@@ -1,13 +1,14 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import { settings, setSetting, type Settings } from './lib/settings'
-  import { ownerOperated } from './lib/register'
+  import { ownerOperated, selfServe, setSelfServe } from './lib/register'
   import type { Account } from './lib/accounts'
 
   // The app's settings, kept on the phone. co: the company account in use, when its manager may choose whether it is a cash register here (the owner-operated setting).
   let { co = null, onownerop }: { co?: Account | null, onownerop?: (on: boolean) => Promise<boolean> } = $props()
   let s = $state<Settings>(), own = $state(false), saving = $state(false), error = $state('')
-  onMount(async () => { s = await settings(); if (co) own = (await ownerOperated()).includes(co.uid) })
+  let self = $state(false)
+  onMount(async () => { s = await settings(); if (co) { own = (await ownerOperated()).includes(co.uid); self = (await selfServe()).includes(co.uid) } })
   const LABELS: [keyof Settings, string][] = [['frontCamera', 'Use the front camera'], ['locked', 'Require sign-in to change account or settings']]
 
   // The box shows the setting only once the server agrees (turning the lock off needs it), so leaving at once cannot lose the change unseen.
@@ -27,6 +28,7 @@
   {#if co}
     <label class="check"><input type="checkbox" data-testid="set-ownerOperated" checked={own} disabled={saving} onchange={e => setOwn(e.currentTarget)} /> Act as a personal account on this device (no cash register lock)</label>
     {#if error}<p class="err" role="alert">{error}</p>{/if}
+    <label class="check"><input type="checkbox" data-testid="set-selfServe" checked={self} onchange={e => setSelfServe(co!.uid, self = e.currentTarget.checked)} /> Self-serve: customers scan their own card and pay on this device</label>
   {/if}
 {/if}
 
