@@ -2,6 +2,7 @@
   import { onMount } from 'svelte'
   import { App as CapApp } from '@capacitor/app'
   import { needsUpdate, updateNow } from './lib/update'
+  import Feedback from './Feedback.svelte'
   import { KeepAwake } from '@capacitor-community/keep-awake'
   import { Capacitor } from '@capacitor/core'
   import type { Device } from '$lib/app-shell'
@@ -36,7 +37,7 @@
   const sent = Number(hash.get('acct')) || 0
   history.replaceState(null, '', location.pathname)
 
-  type Screen = 'signin' | 'home' | 'tx-start' | 'scan' | 'switch' | 'tx' | 'accounts' | 'settings' | 'unlock'
+  type Screen = 'signin' | 'home' | 'tx-start' | 'scan' | 'switch' | 'tx' | 'accounts' | 'settings' | 'unlock' | 'feedback'
   let device = $state<Device | null>(null)
   let acct = $state<Account | null>(null) // the account chosen on this phone (null before a token sign-in)
   let unlocking: 'accounts' | 'settings' = 'accounts' // what the password opens
@@ -47,7 +48,6 @@
   let demo = $state(isDemo()) // shows the DEMO mark
   let queued = $state(0)
   let refused = $state<[string, string][]>([]) // transactions the server refused, to show once on the home screen
-  let offlineMsg = $state('')
   let otherAcct = $state('') // the account the live site acted for, when it is not the one this app acts for
   let otherA: Account | undefined // that account, when this app has it too
   let wanted: Account | undefined // the account the mismatch dialog switches to, as soon as the accounts screen opens (after any unlock it needs)
@@ -297,6 +297,8 @@
     <Unlock onunlocked={() => screen = unlocking} />
   {:else if screen === 'accounts'}
     <Accounts ondone={chosen} />
+  {:else if screen === 'feedback'}
+    <Feedback />
   {:else if screen === 'settings'}
     <Settings co={acct?.isCo && signedIn && scope !== 'company' ? acct : null} onownerop={ownerOp} />
   {:else if screen === 'tx-start' && device}
@@ -324,7 +326,7 @@
         <AcctMenu bind:open={menuOpen} name={acct?.name ?? device?.name ?? ''} photo={acct?.photo} items={[
           ...(scope === 'company' ? [] : [{ id: 'accounts', label: 'Change account', onclick: () => open('accounts') }]), // another manager's unlock opens only the company
           { id: 'settings', label: 'Settings', onclick: () => open('settings') },
-          { id: 'feedback', label: 'Feedback', onclick: async () => { if (!await goLive('feedback')) offlineMsg = 'Feedback needs a connection. Try again when you have a signal.' } },
+          { id: 'feedback', label: 'Feedback', onclick: () => screen = 'feedback' },
           { id: 'signout', label: 'Sign out', onclick: () => queued ? confirming = true : leave() }
         ]} />
       {/if}
@@ -340,7 +342,6 @@
       </div>
     {/if}
     {@render refusalBox()}
-    {#if offlineMsg}<p class="err" data-testid="offline-msg">{offlineMsg}</p>{/if}
     {#if queued}<p data-testid="queued">{queued} transaction{queued == 1 ? '' : 's'} waiting to send</p>{/if}
     <p data-testid="acct">{device ? `Account: ${device.name}` : 'This account cannot use the app yet. Open the dashboard to finish setting it up.'}</p>
     {#if device}
