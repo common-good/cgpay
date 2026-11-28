@@ -3,7 +3,7 @@
   import type { Device } from '$lib/app-shell'
   import { identity, idPhoto, unreachable, type Identity } from './lib/api'
   import { mainId, parseQr, type Card } from './lib/qr'
-  import { cachePhoto, cacheProfile, checkAmount, enqueue, flush, makeTx, money, offlinePhoto, offlineProfile, refusals, twin, unqueue, type Tx } from './lib/tx'
+  import { balanceAfter, cachePhoto, cacheProfile, checkAmount, enqueue, flush, makeTx, money, offlinePhoto, offlineProfile, refusals, twin, unqueue, type Tx } from './lib/tx'
   import { shrink } from './lib/photo'
   import AmountPad from './AmountPad.svelte'
 
@@ -62,7 +62,7 @@
     try { off = await flush() } finally {
       const r = (await refusals()).find(([k]) => k === sent?.key)
       if (r) dialog = { text: `Common Good could not complete this transaction. ${r[1]}`, yes: async () => { await unqueue(r[0]); ondone('', off) } }
-      else ondone('', off)
+      else ondone(paying || balanceAfter(sent!.key) === undefined ? '' : `${who?.name || 'The customer'}'s balance is now $${money(balanceAfter(sent!.key)!)}.`, off) // for a customer with only a card
     }
   }
 

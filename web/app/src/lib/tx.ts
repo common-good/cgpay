@@ -60,6 +60,10 @@ const recent = async (now = Date.now()) => ((await store.get<Recent[]>(recentKey
 export const twin = async (t: Tx) => (await recent()).some(r => r.other === t.otherId && r.amount === t.amount)
 
 let running: Promise<boolean> | null = null, next: Promise<boolean> | null = null
+const balances = new Map<string, number>() // the other account's balance after a sent transaction, by its key (none when kept secret)
+
+/** The other account's balance once the server took the transaction with this key, if the server said. */
+export const balanceAfter = (k: string) => balances.get(k)
 
 /**
  * Send every queued transaction, each on its own. One the server refuses is marked with the reason, to be shown once (see refusals): the server keeps it too, and tells the account.
@@ -82,7 +86,7 @@ async function sendAll() {
     try { r = await call('tx', { token: await token(), ...t }, TX_TIMEOUT_MS) } catch { return true }
     const { status, data } = r
     if (status === 401 || data.error === 'unavailable') return true
-    if (status === 200 && data.ok === true) { await store.del(k); await seen(t.otherId, t.created * 1000) }
+    if (status === 200 && data.ok === true) { await store.del(k); await seen(t.otherId, t.created * 1000); if (typeof data.balance === 'number') balances.set(k, data.balance) }
     else if (refusal(status, data)) await store.set(k, { ...t, error: String(data.message ?? data.error) })
   }
   return false

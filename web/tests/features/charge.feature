@@ -281,3 +281,20 @@ Scenario: A cashier cannot give more cash than the customer can cash out, though
   And click "btn-submit"
   Then text "messageText": "This transaction is limited to $23.00."
   And count "txs" is 0
+
+Rule: After a charge the cashier sees the customer's new balance, unless the customer keeps it secret
+
+Scenario: A company charges an individual and sees the new balance
+  Given these "users" rows:
+  | uid | balance |
+  | Dee | 100     |
+  And signed in as "Bea"
+  And acting as "Cit"
+  When scan "Dee" to "charge"
+  And input:
+  | input-amount | input-description |
+  | 12.34        | food!             |
+  And click "btn-submit"
+  And click "btn-done"
+  Then see "notice-info"
+  And text "msg": "Dee Four's balance is now $87.66."
