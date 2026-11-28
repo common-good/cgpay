@@ -12,7 +12,7 @@
   import { toDashboard } from './lib/leave'
   import { enterUrl, keep, refresh, signOut, token, type Signed } from './lib/auth'
   import { choose, current, member, type Account } from './lib/accounts'
-  import { endOf, isRegister, lock, release, sendLock, setOwnerOperated, touch, unlockBy, unlocked, type Scope } from './lib/register'
+  import { endOf, isRegister, lock, release, selfServe, sendLock, setOwnerOperated, touch, unlockBy, unlocked, type Scope } from './lib/register'
   import { settings } from './lib/settings'
   import { cardKind, type Card } from './lib/qr'
   import { isDemo, live, mismatch, switchTo, target } from './lib/env'
@@ -61,6 +61,7 @@
   let txView = $state<Tx>()
   let seen = '' // the card the scanner returned last: still in view when Back returns to the scanner, so it is not taken again
   let register = $state(false) // the chosen account is a company's cash register on this phone (see lib/register)
+  let self = $state(false) // and a self-serve one: customers scan their own card and pay
   $effect(() => { if (Capacitor.isNativePlatform()) (register ? KeepAwake.keepAwake() : KeepAwake.allowSleep()).catch(() => {}) }) // a cash register's screen stays on
   let scope = $state<Scope | ''>('') // what a manager's unlock opens ('' while locked)
   let notice = $state(''), unlockError = $state(''), busy = $state(false)
@@ -145,7 +146,8 @@
   }
 
   /** Whether the chosen account is a cash register here (and note it). */
-  async function settle() { return register = await isRegister(acct) }
+  async function settle() { register = await isRegister(acct); await readSelf(); return register }
+  async function readSelf() { self = register && !!acct && (await selfServe()).includes(acct.uid) }
 
   // A locked cash register asks for a manager, then goes on to what was pressed.
   function ask(next: typeof after) { after = next; unlockError = ''; asking = true; screen = 'home' }
@@ -159,7 +161,7 @@
   }
 
   // A cash register opens to Charge, locked. ignore: a card still in front of the camera (the one that switched envs), not to be taken as a customer's.
-  async function openRegister(ignore = '') { await relock(); if (device) { start('charge'); seen = ignore } }
+  async function openRegister(ignore = '') { await relock(); await readSelf(); if (device) { start('charge'); seen = ignore } }
 
   // Someone touched the screen (not the Manager Mode banner): an unlocked cash register stays unlocked another IDLE_MS, up to MAX_MS since the unlock (kept on the phone too, for the trip to the live site and back).
   function active(e?: Event) {
@@ -317,18 +319,19 @@
   {:else if screen === 'tx-start' && device}
     <TxStart {device} {intent} onscan={() => screen = 'scan'} phpBase={device.php} />
   {:else if screen === 'scan'}
-    {#key intent}<Scan {intent} ignore={seen} onscan={scanned} onfail={fail} />{/key}<!-- a new scanner after a card unlock goes on to paying: the one that read the card has stopped -->
+    {#key intent}<Scan {intent} title={self && !scope && intent === 'charge' ? 'Scan your card to pay' : ''} ignore={seen} onscan={scanned} onfail={fail} />{/key}<!-- a new scanner after a card unlock goes on to paying: the one that read the card has stopped -->
   {:else if screen === 'switch'}
     <Switch {qr} {to} {onswitched} onreuse={async () => { await switchTo(to); await arrived() }} oncancel={() => { screen = 'scan' }} />
   {:else if screen === 'tx' && device}
-    <Tx bind:this={txView} {device} {intent} {qr} manager={scope ? manager : null} onfail={fail} onrescan={() => screen = 'scan'} ondone={txDone} />
+    <Tx bind:this={txView} {device} {intent} {qr} manager={scope ? manager : null} self={self && !scope && intent === 'charge'} onfail={fail} onrescan={() => screen = 'scan'} ondone={txDone} />
   {:else if screen === 'home' && register && !scope}
     <div class="head"><h1>CGPay</h1><AcctMenu name={acct?.name ?? device?.name ?? ''} photo={acct?.photo} items={[]} gate={() => ask('menu')} /></div>
     {#if notice}<p class="notice" data-testid="notice">{notice}</p>{/if}
     {@render refusalBox()}
     {#if queued}<p data-testid="queued">{queued} transaction{queued == 1 ? '' : 's'} waiting to send</p>{/if}
     <p data-testid="acct">Account: {device?.name ?? acct?.name}</p>
-    {#if device}<TxStart {device} intent="charge" onscan={() => start('charge')} onpay={() => ask('pay')} phpBase={device.php} />{/if}
+    {#if device && self}<button data-testid="btn-self-pay" onclick={() => start('charge')}>Scan your card to pay {device.name}</button>
+    {:else if device}<TxStart {device} intent="charge" onscan={() => start('charge')} onpay={() => ask('pay')} phpBase={device.php} />{/if}
     {#if asking}
       <ManagerSignin {busy} {owner} error={unlockError} onscan={() => { intent = 'unlock'; seen = ''; screen = 'scan' }} onpassword={p => doUnlock({ password: p })} oncancel={() => { asking = false; after = '' }} />
     {/if}

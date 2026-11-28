@@ -4,7 +4,7 @@
   import { settings } from './lib/settings'
   import { beep } from './lib/beep'
 
-  let { intent, ignore = '', onscan, onfail }: { intent: string, ignore?: string, onscan: (qr: string) => void, onfail: (msg: string) => void } = $props()
+  let { intent, title = '', ignore = '', onscan, onfail }: { intent: string, title?: string, ignore?: string, onscan: (qr: string) => void, onfail: (msg: string) => void } = $props()
   let loading = $state(true)
   let scanner: Html5Qrcode | undefined
   let torch = $state<{ apply(on: boolean): Promise<unknown> } | null>(null), lit = $state(false)
@@ -36,7 +36,7 @@
 </script>
 
 <section class="page">
-  <h1 data-testid="scan-title">Scan to {intent}</h1>
+  <h1 data-testid="scan-title">{title || `Scan to ${intent}`}</h1>
   {#if loading}<p class="loading">Loading Camera...</p>{/if}
   <div id="scanner"></div>
   {#if torch}<button class="torch" data-testid="btn-torch" onclick={() => torch!.apply(lit = !lit).catch(() => lit = !lit)}>{lit ? 'Light off' : 'Light'}</button>{/if}

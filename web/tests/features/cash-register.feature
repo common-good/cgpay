@@ -499,3 +499,48 @@ Scenario: The owner-operated setting survives a change of account
   And these "app_tokens" rows:
   | uid | lockedTo |
   | Bea |          |
+
+Rule: A self-serve cash register lets customers scan their own card and pay the company
+
+Scenario: A manager turns self-serve on
+  Given click "btn-use"
+  And click "btn-back"
+  And click "btn-acct-menu"
+  And click "btn-password"
+  And input "password": "k"
+  And click "btn-unlock"
+  When click "menu-settings"
+  And click "set-selfServe"
+  Then checked "set-selfServe"
+
+  When store app opens
+  And click "btn-back"
+  Then on page "home"
+  And see "btn-self-pay"
+  And see not "btn-scan"
+
+Scenario: A customer scans their own card and pays, with no profile shown and no summary
+  Given click "btn-use"
+  And click "btn-back"
+  And click "btn-acct-menu"
+  And click "btn-password"
+  And input "password": "k"
+  And click "btn-unlock"
+  And click "menu-settings"
+  And click "set-selfServe"
+  And camera shows "Dee"
+  When store app opens
+  Then on page "tx"
+  And see not "charge-profile"
+  And see not "cash"
+
+  When input:
+  | input-amount | input-description |
+  | 12.50        | food!             |
+  And click "btn-submit"
+  Then on page "home"
+  And see "notice"
+  And see not "tx-summary"
+  And these "txs" rows:
+  | uid1 | uid2 | amt   | for2  |
+  | Dee  | Cit  | 12.50 | food! |
