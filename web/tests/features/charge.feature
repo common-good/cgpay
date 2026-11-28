@@ -172,3 +172,83 @@ Scenario: The buyer has plenty, but the charge is more than the app allows
   Then text "messageText": "CGPay transactions are limited to $10,000.00"
   And on page "tx"
   And count "txs" is 0
+
+Rule: A company's descriptions are offered as choices, the first one chosen
+
+Scenario: A company picks another description from its list
+  Given signed in as "Bea"
+  And acting as "Cit"
+  When scan "Dee" to "charge"
+  Then text "input-description": "groceries"
+  And see "desc-3"
+
+  When click "desc-2"
+  And input "input-amount": "12.34"
+  And click "btn-submit"
+  And click "btn-done"
+  Then these "txs" rows:
+  | uid1 | uid2 | agt1 | agt2 | amt   | for2  |
+  | Dee  | Cit  | Dee  | Bea  | 12.34 | gifts |
+
+Scenario: An account with no description list offers no choices
+  Given signed in as "Bea"
+  When scan "Dee" to "charge"
+  Then see "input-description"
+  And see not "desc-choices"
+
+Rule: The same transaction again within 3 minutes asks first, since the server cannot warn until it is too late
+
+Scenario: A cashier charges the same member the same amount again, and goes ahead
+  Given signed in as "Bea"
+  And acting as "Cit"
+  When scan "Dee" to "charge"
+  And input:
+  | input-amount | input-description |
+  | 12.34        | food              |
+  And click "btn-submit"
+  And click "btn-done"
+  And scan "Dee" to "charge"
+  And input:
+  | input-amount | input-description |
+  | 12.34        | food              |
+  And click "btn-submit"
+  Then see "messageText"
+
+  When click "btn1"
+  And click "btn-done"
+  Then count "txs" is 2
+
+Scenario: A cashier charges the same member the same amount again, and stops
+  Given signed in as "Bea"
+  And acting as "Cit"
+  When scan "Dee" to "charge"
+  And input:
+  | input-amount | input-description |
+  | 12.34        | food              |
+  And click "btn-submit"
+  And click "btn-done"
+  And scan "Dee" to "charge"
+  And input:
+  | input-amount | input-description |
+  | 12.34        | food              |
+  And click "btn-submit"
+  And click "btn2"
+  Then on page "tx"
+  And count "txs" is 1
+
+Scenario: An undone transaction does not count as a repeat
+  Given signed in as "Bea"
+  And acting as "Cit"
+  When scan "Dee" to "charge"
+  And input:
+  | input-amount | input-description |
+  | 12.34        | food              |
+  And click "btn-submit"
+  And click "btn-undo"
+  And click "btn1"
+  And scan "Dee" to "charge"
+  And input:
+  | input-amount | input-description |
+  | 12.34        | food              |
+  And click "btn-submit"
+  Then see "tx-summary"
