@@ -10,7 +10,7 @@ import { now } from './clock'
 export const ONLINE_LIMIT = 10000 // the most any account can be charged on the app
 export const money = (n: number | string) => (+n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
-export type Tx = { actorId: string, otherId: string, amount: string, description: string, created: number, proof: string, offline: boolean, pending: boolean, manager?: string, managerProof?: string, dupOk?: boolean, cash?: boolean, error?: string }
+export type Tx = { actorId: string, otherId: string, amount: string, description: string, created: number, proof: string, offline: boolean, pending: boolean, manager?: string, managerProof?: string, dupOk?: boolean, cash?: boolean, undo?: boolean, error?: string }
 
 export const OFFLINE_LIMIT = 250 // how much an account not seen before can be charged without the server's word on what it has
 
@@ -33,7 +33,7 @@ export async function makeTx(d: Device, card: Card, paying: boolean, amount: num
   return paying && manager ? { ...tx, manager: manager.acct, managerProof: await proofWith(manager.code) } : tx
 }
 
-const key = (t: Tx) => `tx:${t.created}:${t.proof.slice(0, 8)}`
+const key = (t: Tx) => `tx:${t.created}:${t.proof.slice(0, 8)}${t.undo ? ':u' : ''}`
 
 /** Keep the transaction until the server has it. Returns its key. */
 export async function enqueue(t: Tx) {
@@ -47,6 +47,29 @@ export async function enqueue(t: Tx) {
 export async function unqueue(k: string) {
   await store.del(k)
   await store.set(recentKey(), (await recent()).filter(r => r.k !== k)).catch(() => {})
+}
+
+// The last transaction this phone made, for 15 minutes, so it can still be undone after it went to the server (per env, like the queue).
+export const UNDO_MS = 15 * 60_000
+export type Last = { k: string, tx: Tx, name: string, at: number }
+const lastKey = () => `last:${env()}`
+
+export const keepLast = (k: string, tx: Tx, name: string) => store.set(lastKey(), { k, tx, name, at: Date.now() }).catch(() => {}) // tx: a plain object (a Svelte state proxy cannot be stored)
+
+/** The last transaction, while it can still be undone. */
+export async function lastTx() { const l = await store.get<Last>(lastKey()).catch(() => undefined); return l && Date.now() - l.at < UNDO_MS ? l : null }
+
+/**
+ * Undo the last transaction: forget it if it never went out, otherwise queue its reversal, the same transaction with the amount negated,
+ * which the server's proof check recognizes as an undo (as for the old app). Returns false when it is too late.
+ */
+export async function undoLast() {
+  const l = await lastTx()
+  if (!l) return false
+  await store.del(lastKey())
+  if (await store.get(l.k)) await unqueue(l.k)
+  else await enqueue({ ...l.tx, amount: (-l.tx.amount).toFixed(2), undo: true, dupOk: undefined, error: undefined })
+  return true
 }
 
 // The transactions this phone made in the server's duplicate window, so the app can ask before a likely duplicate.

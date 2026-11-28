@@ -12,7 +12,7 @@ vi.mock('../../app/src/storage', () => ({
   }
 }))
 
-const { cachePhoto, cacheProfile, dropUnused, enqueue, flush, offlinePhoto, refusals, twin, unqueue, waiting } = await import('../../app/src/lib/tx')
+const { cachePhoto, cacheProfile, dropUnused, enqueue, flush, keepLast, lastTx, offlinePhoto, refusals, twin, undoLast, unqueue, waiting } = await import('../../app/src/lib/tx')
 const { identity, unreachable } = await import('../../app/src/lib/api')
 const { parseQr } = await import('../../app/src/lib/qr')
 
@@ -195,6 +195,31 @@ describe('twin', () => {
       expect(await twin(tx(2))).toBe(true)
       vi.setSystemTime(Date.now() + 2_000)
       expect(await twin(tx(2))).toBe(false)
+    } finally { vi.useRealTimers() }
+  })
+})
+
+describe('undoLast', () => {
+  it('forgets a transaction not sent yet, and queues the reversal of one sent', async () => {
+    const k = await enqueue(tx(1)); await keepLast(k, tx(1), 'Dee')
+    expect(await undoLast()).toBe(true)
+    expect(await waiting()).toBe(0)
+    const k2 = await enqueue(tx(2)); answer(); await flush(); await keepLast(k2, tx(2), 'Dee')
+    expect(await undoLast()).toBe(true)
+    const q = [...kv].filter(([key]) => key.startsWith('tx:'))
+    expect(q).toEqual([[`${k2}:u`, expect.objectContaining({ amount: '-1.00', proof: 'proof2', created: 2, undo: true })]])
+    expect(await undoLast()).toBe(false)
+  })
+
+  it('is too late after 15 minutes', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    try {
+      await keepLast('tx:1:proof1', tx(1), 'Dee')
+      vi.setSystemTime(Date.now() + 14 * 60_000)
+      expect(await lastTx()).not.toBe(null)
+      vi.setSystemTime(Date.now() + 2 * 60_000)
+      expect(await lastTx()).toBe(null)
+      expect(await undoLast()).toBe(false)
     } finally { vi.useRealTimers() }
   })
 })

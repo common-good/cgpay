@@ -8,7 +8,7 @@
   import { Capacitor } from '@capacitor/core'
   import type { Device } from '$lib/app-shell'
   import { store } from './storage'
-  import { dropUnused, flush, refusals, unqueue, waiting } from './lib/tx'
+  import { dropUnused, flush, lastTx, money, refusals, undoLast, unqueue, waiting, UNDO_MS, type Last } from './lib/tx'
   import { toDashboard } from './lib/leave'
   import { enterUrl, keep, refresh, signOut, token, type Signed } from './lib/auth'
   import { choose, current, member, type Account } from './lib/accounts'
@@ -55,6 +55,9 @@
   let resume = '' // what the member came to do (pay or charge), to carry on with after changing account from the mismatch dialog
   let signedIn = $state(false) // a token is on the phone
   let confirming = $state(false) // asking whether to sign out with transactions still waiting
+  let last = $state<Last | null>(null), undoing = $state(false) // the last transaction, while it can be undone; asking whether to
+  $effect(() => { if (screen === 'home') lastTx().then(l => last = l) })
+  $effect(() => { if (last) { const t = setTimeout(() => last = null, last.at + UNDO_MS - Date.now()); return () => clearTimeout(t) } })
   let txView = $state<Tx>()
   let seen = '' // the card the scanner returned last: still in view when Back returns to the scanner, so it is not taken again
   let register = $state(false) // the chosen account is a company's cash register on this phone (see lib/register)
@@ -74,6 +77,12 @@
   }
 
   // Send what waited for a connection, and show how much still waits and what the server refused.
+  async function undoNow() {
+    undoing = false
+    notice = await undoLast() ? 'The transaction has been reversed.' : 'It is too late to undo that transaction here.'
+    last = null; queued = await waiting(); sendQueued()
+  }
+
   async function sendQueued() {
     await flush().catch(() => {})
     queued = await waiting(); refused = await refusals()
@@ -352,7 +361,15 @@
       <button data-testid="btn-pay" onclick={() => start('pay')}>Pay</button>
       <button data-testid="btn-receive" onclick={() => start('charge')}>Charge</button>
     {/if}
+    {#if last}<button class="out" data-testid="btn-undo-last" onclick={() => undoing = true}>Undo: ${money(Math.abs(+last.tx.amount))} {+last.tx.amount < 0 ? 'to' : 'from'} {last.name}</button>{/if}
     <button data-testid="btn-dashboard" onclick={() => toDashboard(live())}>Dashboard (live site)</button>
+    {#if undoing && last}
+      <div class="warn" role="alertdialog" data-testid="undo-warning">
+        <p>Reverse the transaction of ${money(Math.abs(+last.tx.amount))} {+last.tx.amount < 0 ? 'to' : 'from'} {last.name}?</p>
+        <button data-testid="btn-undo-yes" onclick={undoNow}>Yes, reverse it</button>
+        <button class="out" data-testid="btn-undo-no" onclick={() => undoing = false}>No</button>
+      </div>
+    {/if}
     {#if confirming}
       <div class="warn" role="alertdialog" data-testid="signout-warning">
         <p>{queued} transaction{queued == 1 ? '' : 's'} still waiting to send will be lost if you sign out now.</p>
